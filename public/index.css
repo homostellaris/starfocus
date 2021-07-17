@@ -1,0 +1,28 @@
+@font-face {
+	font-family: 'Starfocus title';
+	src: url('fonts/Elianto-Regular.otf') format('opentype');
+}
+
+@font-face {
+	font-family: 'Starfocus bold';
+	src: url('fonts/Stellar-Bold.otf') format('opentype');
+}
+
+@font-face {
+	font-family: 'Starfocus light';
+	src: url('fonts/Stellar-light.otf') format('opentype');
+}
+
+* {
+	text-align: center;
+	font-family: 'Starfocus light';
+}
+
+#appname {
+	font-size: 4.17rem;
+	font-family: 'Starfocus title';
+}
+
+#tagline {
+	font-size: 2.59rem;
+}
