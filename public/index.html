@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Starfocus</title>
 
     <!-- update the version number as needed -->
@@ -23,33 +23,98 @@
     -->
     <script defer src="/__/firebase/init.js?useEmulator=true"></script>
 
-    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="index.css" />
   </head>
   <body>
-    <article>
-      <section id="introduction">
-        <header>
-          <h1 id="appname">STARFOCUS</h1>
-          <p id="tagline">Avoid earthly distractions. Stay Focused. Aim for the stars.</p>
-        </header>
-        <p id="pitch">
-          <!-- The problem with information overload and prioritisation, etc -->
+    <main>
+      <article>
+        <section id="introduction">
+          <header>
+            <h1 id="appname">Starfocus</h1>
+            <p id="tagline">
+              Avoid earthly distractions. Stay Focused. Aim for the stars.
+            </p>
+            <p id="description">
+              Starfocus is a re-thinking of the traditional todo app, designed to
+              better respect your time and attention.
+            </p>
+          </header>
+          <img
+            class="hero"
+            src="https://conceptdraw.com/a2247c3/p14/preview/640/pict--image-wireframe-vector-stencils-library"
+          />
+          <p id="pitch">
+            In today's world, our time and attention are precious resources that are
+            constantly under siege from unlimited sources making it all too easy
+            to stay endlessly distracted and failing to achieve your loftier
+            goals. Information overload, fear of missing out, and notification
+            fatigue are issues we can address at least partially with more
+            conscientious app design and that's what Starfocus aims
+            <em>todo</em> (get it? 😅).
+            <br />
+            <br />
+            We want our users be the best version of themselves be ensuring they
+            spend their time and attention on what actually matters to them. We
+            want them to be ambitious and aim for the stars ✨
+            <br />
+            <br />
+            But how can you get to the stars without a spaceship you wisely
+            ask??
+            <br />
+            <br />
+            You can't! Which is why we give you you're very own (virtual)
+            spaceship free of charge when you become a Starfocus user 🚀
+          </p>
+        </section>
+        <section id="try">
+          <button disabled>Give me my free spaceship now please!</button>
+          <p>Coming soon! 👆</p>
+        </section>
+        <section id="features">
+          <h1>Features</h1>
+          <div id="avoid-earthly-distractions" class="feature">
+            <h2>Avoid earthly distractions</h2>
+            <img
+              src="https://conceptdraw.com/a2247c3/p14/preview/640/pict--image-wireframe-vector-stencils-library"
+            />
+            <p>Stuff about icebox and other relevant features.</p>
+          </div>
+          <div id="stay-focused" class="feature">
+            <h2>Stay focused</h2>
+            <img
+              src="https://conceptdraw.com/a2247c3/p14/preview/640/pict--image-wireframe-vector-stencils-library"
+            />
+            <p>Stuff about goals and other relevant features.</p>
+          </div>
+          <div id="aim-for-the-stars" class="feature">
+            <h2>Aim for the stars</h2>
+            <img
+              src="https://conceptdraw.com/a2247c3/p14/preview/640/pict--image-wireframe-vector-stencils-library"
+            />
+            <p>
+              Stuff about roles, reviews, stats, and other relevant features.
+            </p>
+          </div>
+          <!-- Goals, chores, events, etc -->
+        </section>
+      </article>
+    </main>
+
+    <footer>
+      <section id="contact">
+        <h1>Contact</h1>
+        <p>
+          Start a discussion on
+          <a href="https://github.com/productivityguru/starfocus/discussions"
+            >our GitHub repo</a
+          >
+          and we'll get back to you.
         </p>
       </section>
-      <section id="try">
-        <p>Coming soon!</p>
-        <!-- <button>Try Starfocus for free</button> -->
-      </section>
-      <section id="features">
-        <!-- Goals, chores, events, etc -->
-      </section>
-      <section id="contact">
-        <!-- Social media links, etc -->
-      </section>
-    </article>
+    </footer>
 
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener("DOMContentLoaded", function () {
         // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
         // // The Firebase SDK is initialized and available here!
         //
@@ -68,17 +133,17 @@
         try {
           let app = firebase.app();
           let features = [
-            'auth', 
-            'database', 
-            'firestore',
-            'functions',
-            'messaging', 
-            'storage', 
-            'analytics', 
-            'remoteConfig',
-            'performance',
-          ].filter(feature => typeof app[feature] === 'function');
-          console.info(`Firebase SDK loaded with ${features.join(', ')}`);
+            "auth",
+            "database",
+            "firestore",
+            "functions",
+            "messaging",
+            "storage",
+            "analytics",
+            "remoteConfig",
+            "performance",
+          ].filter((feature) => typeof app[feature] === "function");
+          console.info(`Firebase SDK loaded with ${features.join(", ")}`);
         } catch (e) {
           console.error(e);
         }
@@ -88,16 +153,20 @@
     <script>
       window.productHuntUpcoming = {
         appId: 83010,
-        position: 'bottomLeft',
+        position: "bottomLeft",
       };
 
-      (function(doc, scr, src, a, b) {
+      (function (doc, scr, src, a, b) {
         a = doc.createElement(scr);
         b = doc.getElementsByTagName(scr)[0];
         a.async = true;
         a.src = src;
         b.parentNode.insertBefore(a, b);
-      })(document, 'script', 'https://assets.producthunt.com/assets/upwigloader.js');
+      })(
+        document,
+        "script",
+        "https://assets.producthunt.com/assets/upwigloader.js"
+      );
     </script>
   </body>
 </html>
