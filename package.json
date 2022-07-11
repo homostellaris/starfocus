@@ -1,0 +1,29 @@
+{
+  "name": "starfocus",
+  "version": "0.0.1",
+  "description": "Todo app for the future",
+  "author": "",
+  "license": "BUSL-1.1",
+  "bugs": {
+    "url": "https://github.com/productivityguru/starfocus/issues"
+  },
+  "homepage": "https://starfocus.app",
+  "keywords": ["todo", "space", "productivity", "goals", "future"],
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start",
+    "type-check": "tsc"
+  },
+  "dependencies": {
+    "next": "latest",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^12.12.21",
+    "@types/react": "^17.0.2",
+    "@types/react-dom": "^17.0.1",
+    "typescript": "4.0"
+  }
+}
