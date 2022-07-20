@@ -22,3 +22,39 @@ body {
   );
   background-size: cover;
 }
+
+.supernova {
+  background-image: radial-gradient(circle farthest-corner at 0% 50%, #EF6F6F 40%, #9FF9FF 60%, #73B0F8 80%, #ACA7FC 90%, #E88ABF 95%);
+}
+
+#title span {
+  /* background-image: radial-gradient(circle 50vw at 0% 50%, #EF6F6F 40%, #9FF9FF 50%, #73B0F8 65%, #ACA7FC 80%, #E88ABF 95%); */
+  background-image: url(/supernova.png);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+button {
+  /* background-image: radial-gradient(circle farthest-corner at 0% 50%, #EF6F6F 40%, #9FF9FF 60%, #73B0F8 80%, #ACA7FC 90%, #E88ABF 95%); */
+  background-image: url(/supernova.png);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* border-image: radial-gradient(circle farthest-corner at 0% 50%, #EF6F6F 40%, #9FF9FF 60%, #73B0F8 80%, #ACA7FC 90%, #E88ABF 95%) 10; */
+  /* mask-border: linear-gradient(#f6b73c, #4d9f0c) 30; */
+}
+
+.hint {
+  /* background-image: radial-gradient(circle 50vw at 0% 50%, #EF6F6F 40%, #9FF9FF 50%, #73B0F8 65%, #ACA7FC 80%, #E88ABF 95%); */
+  background-image: url(/supernova.png);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
