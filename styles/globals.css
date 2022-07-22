@@ -4,11 +4,16 @@
 
 * {
   box-sizing: border-box;
+  scroll-behavior: smooth;
 }
 
-body,html {
+body, html {
     margin: 0;
     padding: 0;
+}
+
+body::-webkit-scrollbar {
+  display: none;
 }
 
 body {
@@ -21,6 +26,7 @@ body {
     rgba(0, 0, 0, 1) 100%
   );
   background-size: cover;
+  background-attachment: fixed;
 }
 
 .supernova {
@@ -57,4 +63,9 @@ button {
   background-position: center;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+.off-screen {
+  opacity: 0;
+  transform: translateY(-100vh);
 }
