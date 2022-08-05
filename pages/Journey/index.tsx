@@ -1,5 +1,5 @@
-import Starship from "./Starship";
-import Tracjectory from "./Trajectory";
+import Starship from './Starship';
+import Tracjectory from './Trajectory';
 
 export default function () {
 	return (
@@ -12,5 +12,5 @@ export default function () {
 				<Starship />
 			</div>
 		</div>
-	)
+	);
 }

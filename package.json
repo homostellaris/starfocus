@@ -19,7 +19,8 @@
     "dev": "next",
     "build": "next build",
     "start": "next start",
-    "type-check": "tsc"
+    "type-check": "tsc",
+    "prettier:fix": "prettier --write components/ interfaces/ pages/ public/ styles/ utils/"
   },
   "dependencies": {
     "next": "latest",
