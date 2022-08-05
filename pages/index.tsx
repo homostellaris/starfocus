@@ -1,10 +1,10 @@
-import AppDemo from './AppDemo';
-import Layout from '../components/Layout';
-import Button from './Button';
-import StatementLarge from './StatementLarge';
-import StatementSmall from './StatementSmall';
-import FeatureSpotlight from './FeatureSpotlight';
-import Journey from './Journey';
+import AppDemo from './AppDemo'
+import Layout from '../components/Layout'
+import Button from './Button'
+import StatementLarge from './StatementLarge'
+import StatementSmall from './StatementSmall'
+import FeatureSpotlight from './FeatureSpotlight'
+import Journey from './Journey'
 
 export default function IndexPage() {
 	return (
@@ -22,7 +22,10 @@ export default function IndexPage() {
 						<span className="w-80 text-center border-b">
 							<StatementSmall>Avoid earthly distractions</StatementSmall>
 						</span>
-						<img src="/logo.png" className="w-20 mx-4"></img>
+						<img
+							src="/logo.png"
+							className="w-20 mx-4"
+						></img>
 						<span className="w-80 text-center border-b">
 							<StatementSmall>Stay focused</StatementSmall>
 						</span>
@@ -46,7 +49,10 @@ export default function IndexPage() {
 					<div className="sticky top-0">
 						<Journey />
 					</div>
-					<FeatureSpotlight id="what-is-starfocus" heading="What is Starfocus">
+					<FeatureSpotlight
+						id="what-is-starfocus"
+						heading="What is Starfocus"
+					>
 						In this age of constant distraction and information overload we need
 						more thoughtfully designed apps that learn what is important to us
 						and help us to stay focused.
@@ -56,7 +62,10 @@ export default function IndexPage() {
 						demotivating. Never-ending backlogs of todos are anxiety-inducing.
 						We prefer goal-setting, brain-dumping, and space exploration!
 					</FeatureSpotlight>
-					<FeatureSpotlight id="star-points" heading="Star Points">
+					<FeatureSpotlight
+						id="star-points"
+						heading="Star Points"
+					>
 						In this age of constant distraction and information overload we need
 						more thoughtfully designed apps that learn what is important to us
 						and help us to stay focused.
@@ -69,5 +78,5 @@ export default function IndexPage() {
 				</section>
 			</main>
 		</Layout>
-	);
+	)
 }
