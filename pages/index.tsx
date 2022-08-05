@@ -1,16 +1,12 @@
 import AppDemo from './AppDemo';
 import Layout from '../components/Layout';
 import Button from './Button';
-import P from './P';
 import StatementLarge from './StatementLarge';
 import StatementSmall from './StatementSmall';
-import { useEffect } from 'react';
 import FeatureSpotlight from './FeatureSpotlight';
 import Journey from './Journey';
 
 export default function IndexPage() {
-	useEffect(setupAnimations, []);
-
 	return (
 		<Layout title="Starfocus | The todo app for the future">
 			<main>
@@ -74,71 +70,4 @@ export default function IndexPage() {
 			</main>
 		</Layout>
 	);
-}
-
-function setupAnimations() {
-	setupWhatIsStarfocusAnimations();
-	setupStarPointsAnimations();
-	setupAppDemoAnimations();
-}
-
-function setupWhatIsStarfocusAnimations() {
-	const whatIsStarfocus = document.getElementById('what-is-starfocus');
-
-	let observer = new IntersectionObserver(
-		(entries) => {
-			const content = document.querySelector('#what-is-starfocus .content');
-			const appDemo = document.getElementById('app-demo');
-			if (entries[0].isIntersecting) {
-				content.classList.remove('off-screen');
-				appDemo.classList.add('expanded');
-			} else {
-				content.classList.add('off-screen');
-				appDemo.classList.remove('expanded');
-			}
-		},
-		{
-			threshold: 0.9,
-		}
-	);
-
-	observer.observe(whatIsStarfocus);
-}
-
-function setupStarPointsAnimations() {
-	const starPoints = document.getElementById('star-points');
-
-	let observer = new IntersectionObserver(
-		(entries) => {
-			const content = document.querySelector('#star-points .content');
-			if (entries[0].isIntersecting) {
-				content.classList.remove('off-screen');
-			} else {
-				content.classList.add('off-screen');
-			}
-		},
-		{
-			threshold: 0.9,
-		}
-	);
-
-	observer.observe(starPoints);
-}
-
-function setupAppDemoAnimations() {
-	const whatIsStarfocus = document.getElementById('what-is-starfocus');
-	let observer = new IntersectionObserver(
-		(entries) => {
-			const appDemo = document.getElementById('app-demo');
-			if (entries[0].isIntersecting) {
-				appDemo.classList.add('expanded');
-			} else {
-				appDemo.classList.remove('expanded');
-			}
-		},
-		{
-			threshold: 0,
-		}
-	);
-	observer.observe(whatIsStarfocus);
 }

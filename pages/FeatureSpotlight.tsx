@@ -20,7 +20,7 @@ function setupAnimations(id) {
 
 	let observer = new IntersectionObserver(
 		(entries) => {
-			const content = document.querySelector('#what-is-starfocus .content');
+			const content = document.querySelector(`#${id} .content`);
 			if (entries[0].isIntersecting) {
 				content.classList.remove('off-screen');
 			} else {
