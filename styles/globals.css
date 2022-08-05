@@ -16,26 +16,28 @@ body::-webkit-scrollbar {
   display: none;
 }
 
+/* TODO: https://www.freepik.com/free-vector/planets-outer-space-with-satellites-meteors-illustration_6690897.htm#query=space%20background&position=30&from_view=keyword */
 body {
   font-family: "Inter";
-  height: 100vh;
-  background: rgb(16, 15, 46);
-  background: linear-gradient(
+  height: 100%;
+  /* background: url('/space.jpg'), linear-gradient(
+    0deg,
+    rgba(16, 15, 46, 1) 0%,
+    rgba(0, 0, 0, 1) 100%
+  ); */
+  /* TODO: Parallax this background effect in the opposite way to the scroll so it looks like the ship is travelling in the right direction */
+  background: url('/space.jpg'), linear-gradient(
     0deg,
     rgba(16, 15, 46, 1) 0%,
     rgba(0, 0, 0, 1) 100%
   );
+  background-blend-mode: overlay;
   background-size: cover;
-  background-attachment: fixed;
+  /* background-attachment: fixed; */
 }
 
 .supernova {
-  background-image: radial-gradient(circle farthest-corner at 0% 50%, #EF6F6F 40%, #9FF9FF 60%, #73B0F8 80%, #ACA7FC 90%, #E88ABF 95%);
-}
-
-#title span {
-  /* background-image: radial-gradient(circle 50vw at 0% 50%, #EF6F6F 40%, #9FF9FF 50%, #73B0F8 65%, #ACA7FC 80%, #E88ABF 95%); */
-  background-image: url(/supernova.png);
+  background-image: url('/supernova - horizontal.png');
   background-attachment: fixed;
   background-repeat: no-repeat;
   background-position: center;
@@ -43,21 +45,16 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-button {
-  /* background-image: radial-gradient(circle farthest-corner at 0% 50%, #EF6F6F 40%, #9FF9FF 60%, #73B0F8 80%, #ACA7FC 90%, #E88ABF 95%); */
-  background-image: url(/supernova.png);
+.supernova-bg {
+  background-image: url('/supernova - horizontal.png');
   background-attachment: fixed;
   background-repeat: no-repeat;
   background-position: center;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  /* border-image: radial-gradient(circle farthest-corner at 0% 50%, #EF6F6F 40%, #9FF9FF 60%, #73B0F8 80%, #ACA7FC 90%, #E88ABF 95%) 10; */
-  /* mask-border: linear-gradient(#f6b73c, #4d9f0c) 30; */
 }
 
 .hint {
   /* background-image: radial-gradient(circle 50vw at 0% 50%, #EF6F6F 40%, #9FF9FF 50%, #73B0F8 65%, #ACA7FC 80%, #E88ABF 95%); */
-  background-image: url(/supernova.png);
+  background-image: url('/supernova - horizontal.png');
   background-attachment: fixed;
   background-repeat: no-repeat;
   background-position: center;
@@ -68,4 +65,15 @@ button {
 .off-screen {
   opacity: 0;
   transform: translateY(-100vh);
+}
+
+.expanded {
+  opacity: 0;
+  transform: scale(2);
+}
+
+.journey {
+  background-image: url('/supernova - radial.png');
+  background-repeat: no-repeat;
+  mask-image: repeating-linear-gradient(to bottom, transparent 0 4px, #fff 4px 8px);
 }
