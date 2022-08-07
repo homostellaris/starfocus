@@ -26,12 +26,18 @@ body {
     rgba(16, 15, 46, 1) 0%,
     rgba(0, 0, 0, 1) 100%
   ); */
+	/* background-attachment: fixed; */
+	height: 1000vh;
+}
+
+#space-stuff {
 	/* TODO: Parallax this background effect in the opposite way to the scroll so it looks like the ship is travelling in the right direction */
 	background: url('/space.jpg'),
 		linear-gradient(0deg, rgba(16, 15, 46, 1) 0%, rgba(0, 0, 0, 1) 100%);
-	background-blend-mode: overlay;
 	background-size: cover;
-	/* background-attachment: fixed; */
+	background-position: left;
+	z-index: -1;
+	/* transform: translateZ(-1px); */
 }
 
 .supernova {

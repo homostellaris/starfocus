@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 
 export default function AppDemo() {
-	useEffect(() => setupAnimations(''), [])
+	// useEffect(setupAnimations, [])
 	return (
 		<div
 			id="app-demo"
@@ -12,7 +12,7 @@ export default function AppDemo() {
 	)
 }
 
-function setupAnimations(id) {
+function setupAnimations() {
 	const whatIsStarfocus = document.getElementById('what-is-starfocus')
 
 	let observer = new IntersectionObserver(

@@ -1,14 +1,14 @@
 import { useEffect } from 'react'
 
 export default function FeatureSpotlight(props) {
-	useEffect(() => setupAnimations(props.id), [])
+	// useEffect(() => setupAnimations(props.id), [])
 
 	return (
 		<section
 			id={props.id}
 			className="h-screen relative"
 		>
-			<div className="content off-screen transition-all mx-auto my-2 max-w-prose absolute top-56 left-0 right-0">
+			<div className="content transition-all mx-auto my-2 max-w-prose absolute top-56 left-0 right-0">
 				<h1 className="text-white uppercase supernova text-5xl font-black">
 					{props.heading}
 				</h1>
