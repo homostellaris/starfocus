@@ -7,57 +7,23 @@
 	scroll-behavior: smooth;
 }
 
-body,
-html {
+html,
+body {
 	margin: 0;
 	padding: 0;
-}
-
-body::-webkit-scrollbar {
-	display: none;
 }
 
 /* TODO: https://www.freepik.com/free-vector/planets-outer-space-with-satellites-meteors-illustration_6690897.htm#query=space%20background&position=30&from_view=keyword */
 body {
 	font-family: 'Inter';
 	height: 100%;
-	/* background: url('/space.jpg'), linear-gradient(
-    0deg,
-    rgba(16, 15, 46, 1) 0%,
-    rgba(0, 0, 0, 1) 100%
-  ); */
-	/* background-attachment: fixed; */
-	height: 1000vh;
 }
 
-#space-stuff {
-	/* TODO: Parallax this background effect in the opposite way to the scroll so it looks like the ship is travelling in the right direction */
-	background: url('/space.jpg'),
-		linear-gradient(0deg, rgba(16, 15, 46, 1) 0%, rgba(0, 0, 0, 1) 100%);
-	background-size: cover;
-	background-position: left;
-	z-index: -1;
-	/* transform: translateZ(-1px); */
+body::-webkit-scrollbar {
+	display: none;
 }
 
 .supernova {
-	background-image: url('/supernova - horizontal.png');
-	background-attachment: fixed;
-	background-repeat: no-repeat;
-	background-position: center;
-	background-clip: text;
-	-webkit-text-fill-color: transparent;
-}
-
-.supernova-bg {
-	background-image: url('/supernova - horizontal.png');
-	background-attachment: fixed;
-	background-repeat: no-repeat;
-	background-position: center;
-}
-
-.hint {
-	/* background-image: radial-gradient(circle 50vw at 0% 50%, #EF6F6F 40%, #9FF9FF 50%, #73B0F8 65%, #ACA7FC 80%, #E88ABF 95%); */
 	background-image: url('/supernova - horizontal.png');
 	background-attachment: fixed;
 	background-repeat: no-repeat;
@@ -76,9 +42,7 @@ body {
 	transform: scale(2);
 }
 
-.journey {
-	background-image: url('/supernova - radial.png');
-	background-repeat: no-repeat;
+.trajectory {
 	mask-image: repeating-linear-gradient(
 		to bottom,
 		transparent 0 4px,

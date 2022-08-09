@@ -5,7 +5,7 @@ export default function AppDemo() {
 	return (
 		<div
 			id="app-demo"
-			className="border rounded-md h-full transition-all"
+			className="h-full rounded-md border transition-all"
 		>
 			{/* <p>hello</p> */}
 		</div>

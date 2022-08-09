@@ -4,7 +4,7 @@ export default function Button(props) {
 			className={
 				(props.className || '') +
 				' ' +
-				'text-white text-center text-xl uppercase border p-2 rounded-md font-semibold'
+				'rounded-md border p-2 text-center text-xl font-semibold uppercase text-white'
 			}
 		>
 			{props.children}

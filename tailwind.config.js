@@ -5,7 +5,12 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      backgroundImage: {
+        'planets': "url('/planets.jpg')",
+        'supernova': "url('/supernova - radial.png')",
+      }
+    },
     fontSize: {
       'xs': '.75rem',
       'sm': '.875rem',

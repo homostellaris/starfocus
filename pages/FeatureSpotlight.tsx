@@ -6,13 +6,13 @@ export default function FeatureSpotlight(props) {
 	return (
 		<section
 			id={props.id}
-			className="h-screen relative"
+			className="relative h-screen"
 		>
-			<div className="content transition-all mx-auto my-2 max-w-prose absolute top-56 left-0 right-0">
-				<h1 className="text-white uppercase supernova text-5xl font-black">
+			<div className="content absolute top-56 left-0 right-0 mx-auto my-2 max-w-prose transition-all">
+				<h1 className="supernova text-5xl font-black uppercase text-white">
 					{props.heading}
 				</h1>
-				<p className="text-white text-justify">{props.children}</p>
+				<p className="text-justify text-white">{props.children}</p>
 			</div>
 		</section>
 	)
