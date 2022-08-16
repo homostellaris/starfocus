@@ -49,3 +49,20 @@ body::-webkit-scrollbar {
 		#fff 4px 8px
 	);
 }
+
+/* section {
+	background: radial-gradient(circle, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+} */
+
+.glass {
+	--tw-bg-opacity: 1;
+	background-color: rgb(6 34 77 / var(--tw-bg-opacity));
+	--tw-bg-opacity: 0.6;
+	--tw-backdrop-blur: blur(8px);
+	backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness)
+		var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale)
+		var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert)
+		var(--tw-backdrop-opacity) var(--tw-backdrop-saturate)
+		var(--tw-backdrop-sepia);
+	padding: 1rem;
+}

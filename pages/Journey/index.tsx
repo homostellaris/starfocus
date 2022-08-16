@@ -7,7 +7,10 @@ export default function () {
 			<div className="h-screen">
 				<Tracjectory />
 			</div>
-			<div className="absolute bottom-44 -translate-x-1/2">
+			<div
+				id="starship"
+				className="fixed bottom-28 -translate-x-1/2"
+			>
 				{/* TODO: Animate the ship based on the scroll */}
 				<Starship />
 			</div>
