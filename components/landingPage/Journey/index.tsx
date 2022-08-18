@@ -3,7 +3,7 @@ import Tracjectory from './Trajectory'
 
 export default function () {
 	return (
-		<div className="mx-[calc(100vw/12*2)]">
+		<div>
 			<div className="h-screen">
 				<Tracjectory />
 			</div>

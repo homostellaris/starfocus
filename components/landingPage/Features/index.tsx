@@ -3,10 +3,9 @@ import Feature from './Feature'
 
 export default function Features(props) {
 	const tops = useMemo(() => {
-		const featuresCount = 7
 		const tops = []
-		for (let i = 0; i < featuresCount; i++) {
-			const top = Math.round(80 / featuresCount) * (i + 1)
+		for (let i = 0; i < props.featuresCount; i++) {
+			const top = Math.round(80 / props.featuresCount) * (i + 1)
 			tops.push(top + '%')
 		}
 		return tops
