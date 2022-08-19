@@ -2,7 +2,6 @@ import Layout from '../components/common/Layout'
 import Features from '../components/landingPage/Features'
 import Journey from '../components/landingPage/Journey'
 import { useEffect } from 'react'
-import Planets from '../components/landingPage/Planets'
 import LandingScreen from '../components/landingPage/LandingScreen'
 import Footer from '../components/landingPage/Footer'
 
@@ -16,7 +15,10 @@ export default function IndexPage() {
 
 	return (
 		<Layout title="Starfocus | The todo app for the future">
-			<main className={`h-[${screensCount * 100}vh]`}>
+			<main
+				id="landingPage"
+				className={`h-[${screensCount * 100}vh]`}
+			>
 				<div
 					id="parallax-container"
 					className="fixed bottom-0 w-screen"
@@ -24,8 +26,6 @@ export default function IndexPage() {
 					<div className="sticky top-0 z-0 mx-[calc(100vw/12*2)]">
 						<Journey />
 					</div>
-					{/* TODO: Get h-full working */}
-					<Planets />
 					<Features count={featuresCount} />
 					<LandingScreen />
 					<Footer />
@@ -36,36 +36,44 @@ export default function IndexPage() {
 }
 
 function arrowKeyNavigation() {
-	document.addEventListener(
-		'keydown',
-		event => {
-			if (!['ArrowUp', 'ArrowDown'].includes(event.code)) return
+	document.addEventListener('keydown', arrowKeyListener, false)
 
-			event.preventDefault()
-			let scrollIncrement: number
+	return () => {
+		document.removeEventListener('keydown', arrowKeyListener)
+	}
 
-			if (event.code === 'ArrowUp')
-				scrollIncrement = Math.min(
-					Math.floor(window.pageYOffset / window.innerHeight) + 1,
-					screensCount
-				)
-			if (event.code === 'ArrowDown')
-				scrollIncrement = Math.max(
-					Math.ceil(window.pageYOffset / window.innerHeight) - 1,
-					0
-				)
+	function arrowKeyListener(event) {
+		if (!['ArrowUp', 'ArrowDown'].includes(event.code)) return
 
-			window.scrollTo(0, scrollIncrement * window.innerHeight)
-		},
-		false
-	)
+		event.preventDefault()
+		let scrollIncrement: number
+
+		if (event.code === 'ArrowUp')
+			scrollIncrement = Math.min(
+				Math.floor(window.pageYOffset / window.innerHeight) + 1,
+				screensCount
+			)
+		if (event.code === 'ArrowDown')
+			scrollIncrement = Math.max(
+				Math.ceil(window.pageYOffset / window.innerHeight) - 1,
+				0
+			)
+
+		window.scrollTo(0, scrollIncrement * window.innerHeight)
+	}
 }
 
 function reverseScroll() {
 	let lastKnownScrollPosition = 0
 	let ticking = false
 
-	document.addEventListener('scroll', e => {
+	document.addEventListener('scroll', reverseScrollListener)
+
+	return () => {
+		document.removeEventListener('scroll', reverseScrollListener)
+	}
+
+	function reverseScrollListener(event) {
 		lastKnownScrollPosition = window.scrollY
 
 		if (!ticking) {
@@ -76,7 +84,7 @@ function reverseScroll() {
 
 			ticking = true
 		}
-	})
+	}
 
 	function doSomething(lastKnownScrollPosition) {
 		const top = window.pageYOffset || document.documentElement.scrollTop

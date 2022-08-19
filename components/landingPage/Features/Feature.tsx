@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { useEffect } from 'react'
 
 export default function Feature(props) {
@@ -16,9 +17,14 @@ export default function Feature(props) {
 				<h1 className="supernova text-5xl font-black uppercase text-white">
 					{props.heading}
 				</h1>
-				<p className="glass rounded-2xl text-justify text-white">
-					{props.children}
-				</p>
+				<div className="glass rounded-2xl">
+					<p className="text-justify text-white">{props.children}</p>
+					<div className="text-right">
+						<Link href={'/docs/' + props.id}>
+							<a className="text-blue-400">Learn more</a>
+						</Link>
+					</div>
+				</div>
 			</div>
 		</section>
 	)
