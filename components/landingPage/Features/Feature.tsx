@@ -12,7 +12,7 @@ export default function Feature(props) {
 			className="relative h-screen"
 		>
 			<div
-				className={`content absolute left-0 right-0 top-[${props.top}] mx-auto my-2 max-w-prose transition-all`}
+				className={`content absolute left-0 right-0 top-[${props.top}] mx-auto my-2 max-w-prose p-4 transition-all`}
 			>
 				<h1 className="supernova text-5xl font-black uppercase text-white">
 					{props.heading}

@@ -12,10 +12,10 @@ module.exports = {
       }
     },
     fontSize: {
-      'xs': '.75rem',
+      'xs': 'clamp(.5rem, 0.625vw, .75rem)',
       'sm': '.875rem',
       'base': '1rem',
-      'lg': '1.125rem',
+      'lg': 'clamp(0.75rem, 1.25vw, 1.25rem)',
       'xl': 'clamp(1rem, 1.5vw, 1.25rem)',
       '2xl': 'clamp(1rem, 2vw, 1.5rem)',
       '3xl': '1.875rem',

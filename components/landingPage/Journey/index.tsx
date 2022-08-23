@@ -3,7 +3,7 @@ import Tracjectory from './Trajectory'
 
 export default function () {
 	return (
-		<div>
+		<div className="hidden md:block">
 			<div className="h-screen">
 				<Tracjectory />
 			</div>

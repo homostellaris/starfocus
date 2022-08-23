@@ -13,14 +13,14 @@ export default function LandingScreen(props) {
 		>
 			Starfocus
 		</h1> */}
-			<h2
+			{/* <h2
 				id="title"
-				className="supernova text-center text-5xl font-extralight uppercase tracking-widest text-white"
+				className="text-center text-5xl font-light uppercase tracking-wide text-white"
 			>
-				Starfocus
-			</h2>
+				<span className="supernova">Starfocus</span>
+			</h2> */}
 			<HeroMessage />
-			<div className="left-0 right-0 m-auto w-10/12 flex-grow p-4">
+			<div className="left-0 right-0 m-auto my-4 w-10/12 flex-grow">
 				{/* Make this sticky too */}
 				<AppDemo />
 			</div>

@@ -25,11 +25,13 @@ body::-webkit-scrollbar {
 
 .supernova {
 	background-image: url('/supernova - horizontal.png');
-	background-attachment: fixed;
+	/* Uncommenting this one keeps the background at its natural size so multiple elements can share the same background positioning area. */
+	/* background-attachment: fixed; */
 	background-repeat: no-repeat;
 	background-position: center;
 	background-clip: text;
 	-webkit-text-fill-color: transparent;
+	background-size: cover;
 }
 
 .off-screen {
