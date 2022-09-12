@@ -17,7 +17,7 @@
 	],
 	"scripts": {
 		"dev": "next",
-		"build": "next build",
+		"build": "convex deploy && next build",
 		"start": "next start",
 		"type-check": "tsc",
 		"prettier:fix": "prettier --write components/ interfaces/ pages/ public/ styles/ utils/"
