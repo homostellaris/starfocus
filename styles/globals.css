@@ -56,6 +56,10 @@ body::-webkit-scrollbar {
 	background: radial-gradient(circle, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
 } */
 
+dim {
+	background: radial-gradient(circle, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+}
+
 .glass {
 	--tw-bg-opacity: 1;
 	background-color: rgb(6 34 77 / var(--tw-bg-opacity));
@@ -66,5 +70,4 @@ body::-webkit-scrollbar {
 		var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert)
 		var(--tw-backdrop-opacity) var(--tw-backdrop-saturate)
 		var(--tw-backdrop-sepia);
-	padding: 1rem;
 }

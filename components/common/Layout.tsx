@@ -21,7 +21,7 @@ const Layout = ({ children, title = 'This is the default title' }: Props) => (
 				rel="stylesheet"
 			/>
 		</Head>
-		<Planets height="h-[800vh]" />
+		{/* <Planets height="h-[800vh]" /> */}
 		{children}
 	</div>
 )

@@ -1,35 +1,39 @@
 import Todos from '../todos'
+import Today from '../todos/Today'
 
 export default function AppDemo() {
 	// useEffect(setupAnimations, [])
 	return (
 		<div
 			id="app-demo"
-			className="flex h-full rounded-md border transition-all"
+			className="h-full rounded-md border"
 		>
-			<div className="left-column hidden w-28 shrink-0 grow md:block"></div>
-			<div className="grow-[3]">
-				<Todos
-					todos={[
-						{
-							id: '1',
-							description: 'Complete Typescript course',
-							role: 'Software Creator',
-						},
-						{
-							id: '2',
-							description: 'Teach Thomas how to cook pasta',
-							role: 'Father',
-						},
-						{
-							id: '3',
-							description: 'Write bestman speech',
-							role: 'Friend',
-						},
-					]}
-				/>
+			<Today />
+			<div className="flex">
+				<div className="left-column hidden w-28 shrink-0 grow md:block"></div>
+				<div className="w-3/5 grow-[3]">
+					<Todos
+						todos={[
+							{
+								id: '1',
+								description: 'Complete Typescript course',
+								role: 'Software Creator',
+							},
+							{
+								id: '2',
+								description: 'Teach Thomas how to cook pasta',
+								role: 'Father',
+							},
+							{
+								id: '3',
+								description: 'Write bestman speech',
+								role: 'Friend',
+							},
+						]}
+					/>
+				</div>
+				<div className="right-column hidden w-28 shrink-0 grow md:block"></div>
 			</div>
-			<div className="right-column hidden w-28 shrink-0 grow md:block"></div>
 		</div>
 	)
 }

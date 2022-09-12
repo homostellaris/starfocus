@@ -4,33 +4,81 @@ import Journey from '../components/landingPage/Journey'
 import { useEffect } from 'react'
 import LandingScreen from '../components/landingPage/LandingScreen'
 import Footer from '../components/landingPage/Footer'
+import HeroMessage from '../components/landingPage/HeroMessage'
+import Register from '../components/landingPage/Register'
+import Contact from '../components/landingPage/Contact'
+import A from '../components/common/A'
 
 const featuresCount = 7
 const otherScreensCount = 1
 const screensCount = featuresCount + otherScreensCount
 
+const isComingSoonVersion = true
+
 export default function IndexPage() {
-	useEffect(reverseScroll, [])
-	useEffect(arrowKeyNavigation, [])
+	useEffect(isComingSoonVersion ? () => null : reverseScroll, [])
+	useEffect(isComingSoonVersion ? () => null : arrowKeyNavigation, [])
 
 	return (
 		<Layout title="Starfocus | The todo app for the future">
-			<main
-				id="landingPage"
-				className={`h-[${screensCount * 100}vh]`}
-			>
-				<div
-					id="parallax-container"
-					className="fixed bottom-0 w-screen"
-				>
-					<div className="sticky top-0 z-0 mx-[calc(100vw/12*2)]">
-						<Journey />
+			{isComingSoonVersion ? (
+				<div className="dim h-screen bg-planets bg-right-bottom pt-10">
+					<HeroMessage />
+					<p className="mt-20 text-center text-lg font-bold uppercase tracking-wider text-slate-200">
+						Beta coming soon
+					</p>
+					<p className="text-center text-lg text-slate-400">Until then...</p>
+					<div className="mx-auto mt-8 flex w-[90vw] flex-col items-center justify-center gap-4 space-y-5 rounded-2xl p-4">
+						<div className="m-auto text-center">
+							<Register />
+						</div>
+						<p className="max-w-prose text-center text-base text-white">
+							Join the{' '}
+							<A
+								href="https://discord.gg/TYHCj2VhpD"
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								Discord
+							</A>{' '}
+							community to nerd out on productivity and space exploration
+						</p>
+						<p className="max-w-prose text-center text-base text-white">
+							Join us on{' '}
+							<A
+								href="https://github.com/productivityguru/starfocus/discussions"
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								GitHub
+							</A>{' '}
+							where you can discuss feature ideas and report issues
+						</p>
 					</div>
-					<Features count={featuresCount} />
-					<LandingScreen />
-					<Footer />
+					{/* TODO:
+						- Decide what the description is for the product.
+						- Make the Register component nice.
+						- Hook the register button up to some sort of datastore (maybe try Hasura?)
+					*/}
 				</div>
-			</main>
+			) : (
+				<main
+					id="landingPage"
+					className={`h-[${screensCount * 100}vh]`}
+				>
+					<div
+						id="parallax-container"
+						className="fixed bottom-0 w-screen"
+					>
+						<div className="sticky top-0 z-0 mx-[calc(100vw/12*2)]">
+							<Journey />
+						</div>
+						<Features count={featuresCount} />
+						<LandingScreen />
+						<Footer />
+					</div>
+				</main>
+			)}
 		</Layout>
 	)
 }

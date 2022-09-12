@@ -19,15 +19,18 @@ export default function HeroMessage() {
 						<h2 className="text-center">
 							<StatementLarge>Aim for the stars</StatementLarge>
 						</h2> */}
-			<div className="mx-auto mt-8 p-4">
-				<h1 className="supernova text-center text-5xl font-extrabold text-white">
+			<div className="mx-auto p-4">
+				<h1 className="supernova text-center text-2xl font-extrabold text-white">
 					The todo list for our future.
 				</h1>
-				<p className="mx-auto mt-4 max-w-prose text-center text-lg text-white">
+				<p className="mx-auto mt-4 max-w-prose text-center text-lg font-medium text-white">
 					{/* TODO: Make sure you use the word 'endeavour' because Smooshy said so. Oh and make it rhyme somehow. */}
-					{/* TODO: Make it punny? "Make space for your missions" */}A sentence
-					that is about 15 words long or something like that, maybe a bit longer
-					like this. Or this?
+					{/* TODO: Make it punny? "Make space for your missions" */}
+					For humanity to realise its full potential, you must realise yours.
+					Start by asking yourself: <i>"How would I want to be remembered?"</i>.
+					Think big picture and be ambitious in your answer. Then get to work.
+					Avoid earthly distractions. Stay focused. Aim for the stars. Starfocus
+					will be there to keep you on course, one todo at time.
 				</p>
 			</div>
 			{/* <p className="m-auto max-w-prose text-center text-white">

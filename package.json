@@ -23,6 +23,7 @@
 		"prettier:fix": "prettier --write components/ interfaces/ pages/ public/ styles/ utils/"
 	},
 	"dependencies": {
+		"convex": "^0.1.10",
 		"next": "latest",
 		"react": "^17.0.2",
 		"react-dom": "^17.0.2"

@@ -45,3 +45,10 @@ class ProgressDay {
 			)
 	}
 }
+
+// Get all goals for user
+// Get all chores for user
+// Get all events for user
+// Get roles
+// Get past chores, events, and goals
+// Filter by role on any of them
