@@ -24,7 +24,7 @@ export default function Register() {
 					) : (
 						<>
 							<input
-								className="w-auto bg-transparent text-white"
+								className="w-auto bg-transparent pl-2 text-white"
 								type="email"
 								id="email"
 								name="email"

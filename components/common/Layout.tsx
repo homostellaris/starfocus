@@ -26,7 +26,7 @@ const Layout = ({ children, title = 'This is the default title' }: Props) => (
 				src="https://plausible.io/js/plausible.js"
 			></script>
 		</Head>
-		{/* <Planets height="h-[800vh]" /> */}
+		<Planets height="h-[800vh]" />
 		{children}
 	</div>
 )

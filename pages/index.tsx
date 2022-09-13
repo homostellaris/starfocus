@@ -22,7 +22,7 @@ export default function IndexPage() {
 	return (
 		<Layout title="Starfocus | The todo app for the future">
 			{isComingSoonVersion ? (
-				<div className="dim h-screen bg-planets bg-right-bottom pt-10">
+				<div className="h-screen pt-10">
 					<HeroMessage />
 					<p className="mt-20 text-center text-lg font-bold uppercase tracking-wider text-slate-200">
 						Beta coming soon
