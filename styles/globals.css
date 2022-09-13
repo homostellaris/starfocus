@@ -3,22 +3,75 @@
 @tailwind utilities;
 
 * {
-  box-sizing: border-box;
+	box-sizing: border-box;
+	scroll-behavior: smooth;
 }
 
-body,html {
-    margin: 0;
-    padding: 0;
-}
-
+html,
 body {
-  font-family: "Inter";
-  height: 100vh;
-  background: rgb(16, 15, 46);
-  background: linear-gradient(
-    0deg,
-    rgba(16, 15, 46, 1) 0%,
-    rgba(0, 0, 0, 1) 100%
-  );
-  background-size: cover;
+	margin: 0;
+	padding: 0;
+}
+
+/* TODO: https://www.freepik.com/free-vector/planets-outer-space-with-satellites-meteors-illustration_6690897.htm#query=space%20background&position=30&from_view=keyword */
+body {
+	font-family: 'Inter';
+	height: 100%;
+}
+
+body::-webkit-scrollbar {
+	display: none;
+}
+
+.supernova {
+	background-image: url('/supernova - horizontal.png');
+	/* Uncommenting this one keeps the background at its natural size so multiple elements can share the same background positioning area. */
+	/* background-attachment: fixed; */
+	background-repeat: no-repeat;
+	background-position: center;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-size: cover;
+}
+
+.off-screen {
+	opacity: 0;
+	transform: translateY(-100vh);
+}
+
+.expanded {
+	opacity: 0;
+	transform: scale(2);
+}
+
+.trajectory {
+	mask-image: repeating-linear-gradient(
+		to bottom,
+		transparent 0 4px,
+		#fff 4px 8px
+	);
+}
+
+/* section {
+	background: radial-gradient(circle, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+} */
+
+.dim {
+	background: radial-gradient(
+		circle farthest-corner,
+		rgba(0, 0, 0, 1),
+		rgba(0, 0, 0, 0)
+	);
+}
+
+.glass {
+	--tw-bg-opacity: 1;
+	background-color: rgb(6 34 77 / var(--tw-bg-opacity));
+	--tw-bg-opacity: 0.6;
+	--tw-backdrop-blur: blur(8px);
+	backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness)
+		var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale)
+		var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert)
+		var(--tw-backdrop-opacity) var(--tw-backdrop-saturate)
+		var(--tw-backdrop-sepia);
 }
