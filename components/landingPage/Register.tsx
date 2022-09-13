@@ -23,13 +23,13 @@ export default function Register() {
 				}}
 			>
 				<label htmlFor="email">Subscribe to email updates</label>
-				<div className="rounded-md border p-2 text-white">
+				<div className="flex rounded-md border p-2 text-white">
 					{isSubmitted ? (
 						<p>Subscribed as {email} ✅</p>
 					) : (
 						<>
 							<input
-								className="w-auto bg-transparent pl-2 text-white"
+								className="w-full bg-transparent pl-2 text-white"
 								type="email"
 								id="email"
 								name="email"
