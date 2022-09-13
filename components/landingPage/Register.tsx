@@ -1,4 +1,4 @@
-// import Button from '../common/Button'
+import { usePlausible } from 'next-plausible'
 import { useState } from 'react'
 import { useMutation } from '../../convex/_generated/react'
 
@@ -7,12 +7,17 @@ export default function Register() {
 	const [email, setEmail] = useState<string>()
 	const [isSubmitted, setIsSubmitted] = useState<boolean>()
 
+	const plausible = usePlausible()
+
 	return (
 		<>
 			<form
 				className="text-white"
 				onSubmit={async event => {
 					event.preventDefault()
+
+					plausible('Subscribe to email updates')
+
 					await registerEmail(email)
 					setIsSubmitted(true)
 				}}
