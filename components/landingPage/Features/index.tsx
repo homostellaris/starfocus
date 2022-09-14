@@ -9,7 +9,7 @@ export default function Features(props) {
 			tops.push(top + '%')
 		}
 		return tops
-	}, [])
+	}, [props.featuresCount])
 
 	return (
 		<section
@@ -22,7 +22,7 @@ export default function Features(props) {
 				top={tops[6]}
 			>
 				Create a unique constellation of your roles so that you never forget
-				what's important and where you're headed.
+				what&apos;s important and where you&apos;re headed.
 			</Feature>
 			<Feature
 				id="roles"

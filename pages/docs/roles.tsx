@@ -20,18 +20,18 @@ export default function Roles(props) {
 				<br />
 				<br />
 				Roles are also good frames of reference when you are reflecting on your
-				progress and we'll surface stats to help you with this. Maybe you've
-				gathered a lot of star points in the software creator role but not so
-				many in the friend role? Time to re-prioritise!
+				progress and we&apos;ll surface stats to help you with this. Maybe
+				you&apos;ve gathered a lot of star points in the software creator role
+				but not so many in the friend role? Time to re-prioritise!
 				<br />
 				<br />
-				You don't have to write your mission statements right now, but deciding
-				on the roles is the first step in your Starfocus journey and we'd like
-				you to start it right now!
+				You don&apos;t have to write your mission statements right now, but
+				deciding on the roles is the first step in your Starfocus journey and
+				we&apos;d like you to start it right now!
 				<br />
 				<br />
-				We'll even generate a completely unique constellation from your roles
-				and a unique URL to add to your bios.
+				We&apos;ll even generate a completely unique constellation from your
+				roles and a unique URL to add to your bios.
 			</Feature>
 		</Layout>
 	)

@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 export default function Feature(props) {
 	useEffect(() => {
 		setupAnimations(props.id)
-	}, [])
+	}, [props.id])
 
 	return (
 		<section

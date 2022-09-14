@@ -18,10 +18,11 @@
 	"scripts": {
 		"convex:dev": "convex dev",
 		"next:dev": "next",
-		"build": "convex deploy && next build",
-		"start": "next start",
 		"type-check": "tsc",
-		"prettier:fix": "prettier --write components/ interfaces/ pages/ public/ styles/ utils/"
+		"lint": "next lint",
+		"prettier:fix": "prettier --write components/ interfaces/ pages/ public/ styles/ utils/",
+		"start": "next start",
+		"build": "convex deploy && next build"
 	},
 	"dependencies": {
 		"convex": "^0.1.10",
@@ -36,6 +37,8 @@
 		"@types/react": "^17.0.2",
 		"@types/react-dom": "^17.0.1",
 		"autoprefixer": "^10.4.7",
+		"eslint": "8.23.1",
+		"eslint-config-next": "12.3.0",
 		"postcss": "^8.4.14",
 		"prettier": "2.7.1",
 		"prettier-plugin-tailwindcss": "^0.1.13",

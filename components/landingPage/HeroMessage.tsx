@@ -27,8 +27,9 @@ export default function HeroMessage() {
 					{/* TODO: Make sure you use the word 'endeavour' because Smooshy said so. Oh and make it rhyme somehow. */}
 					{/* TODO: Make it punny? "Make space for your missions" */}
 					For humanity to realise its full potential, you must realise yours.
-					Start by asking yourself: <i>"How would I want to be remembered?"</i>.
-					Think big picture and be ambitious in your answer. <br />
+					Start by asking yourself:{' '}
+					<i>&quot;How would I want to be remembered?&quot;</i>. Think big
+					picture and be ambitious in your answer. <br />
 					Then get to work. Avoid earthly distractions. Stay focused. Aim for
 					the stars. Starfocus will be there to keep you on course, one todo at
 					a time.
