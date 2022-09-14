@@ -16,7 +16,8 @@
 		"future"
 	],
 	"scripts": {
-		"dev": "next",
+		"convex:dev": "convex dev",
+		"next:dev": "next",
 		"build": "convex deploy && next build",
 		"start": "next start",
 		"type-check": "tsc",
