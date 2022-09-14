@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "dev",
+			"dependsOn": ["convex:dev", "next:dev"]
+		},
+		{
+			"type": "npm",
+			"label": "convex:dev",
+			"script": "convex:dev"
+		},
+		{
+			"type": "npm",
+			"label": "next:dev",
+			"script": "next:dev"
+		}
+	]
+}
