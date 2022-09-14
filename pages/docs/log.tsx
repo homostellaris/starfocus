@@ -9,7 +9,7 @@ export default function Log(props) {
 				heading="Log"
 			>
 				When a todo is completed it stays on the screen and becomes a part of
-				the log which is a record of everything you've done.
+				the log which is a record of everything you&apos;ve done.
 				<br />
 				<br />
 				As you use Starfocus you are building a giant list of your past,
@@ -17,7 +17,8 @@ export default function Log(props) {
 				at.
 				<br />
 				<br />
-				This is useful when you're asking yourself “what did I do yesterday”?
+				This is useful when you&apos;re asking yourself “what did I do
+				yesterday”?
 			</Feature>
 		</Layout>
 	)

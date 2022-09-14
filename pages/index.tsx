@@ -16,7 +16,9 @@ const screensCount = featuresCount + otherScreensCount
 const isComingSoonVersion = true
 
 export default function IndexPage() {
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	useEffect(isComingSoonVersion ? () => null : reverseScroll, [])
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	useEffect(isComingSoonVersion ? () => null : arrowKeyNavigation, [])
 
 	return (

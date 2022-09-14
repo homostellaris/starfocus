@@ -8,8 +8,8 @@ export default function Upcoming(props) {
 				id="upcoming"
 				heading="Upcoming"
 			>
-				The today view can be expanded at any time to show you everything that's
-				upcoming.
+				The today view can be expanded at any time to show you everything
+				that&apos;s upcoming.
 				<br />
 				<br />
 				Not only will events from your calendar show here, but also any dates in
@@ -17,7 +17,7 @@ export default function Upcoming(props) {
 				series of milestones.
 				<br />
 				<br />
-				Every morning you'll be prompted to review the next few days in the
+				Every morning you&apos;ll be prompted to review the next few days in the
 				upcoming view so you never miss a deadline.
 			</Feature>
 		</Layout>
