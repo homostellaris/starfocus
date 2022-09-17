@@ -1,0 +1,13 @@
+name: Build
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - run: npm ci
+      # TODO: Fix this once we know how to authenticate codegen in CI (or its changed to no longer need that)
+      # - run: npx convex codegen
+      # - run: npm run type-check
+      - run: npm run lint

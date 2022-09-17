@@ -1,4 +1,4 @@
-import React, { createContext, ReactNode, useEffect } from 'react'
+import React, { ReactNode } from 'react'
 import Head from 'next/head'
 import Planets from '../landingPage/Planets'
 import PlausibleProvider from 'next-plausible'
