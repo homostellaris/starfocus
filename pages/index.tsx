@@ -9,11 +9,13 @@ import Register from '../components/landingPage/Register'
 import Contact from '../components/landingPage/Contact'
 import A from '../components/common/A'
 
-const featuresCount = 7
+const featuresCount = 1
 const otherScreensCount = 1
-const screensCount = featuresCount + otherScreensCount
+const moreFeaturesComingSoonCount = 1
+const screensCount =
+	featuresCount + otherScreensCount + moreFeaturesComingSoonCount
 
-const isComingSoonVersion = true
+const isComingSoonVersion = false
 
 export default function IndexPage() {
 	// eslint-disable-next-line react-hooks/exhaustive-deps

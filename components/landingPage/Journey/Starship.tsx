@@ -5,6 +5,7 @@ export default function Starship() {
 		<Image
 			alt="A starship from a birds-eye view"
 			src="/starship.png"
+			layout="fill"
 		></Image>
 	)
 }

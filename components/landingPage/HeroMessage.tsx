@@ -20,10 +20,10 @@ export default function HeroMessage() {
 							<StatementLarge>Aim for the stars</StatementLarge>
 						</h2> */}
 			<div className="mx-auto p-4">
-				<h1 className="supernova text-center text-2xl font-extrabold text-white">
+				<h1 className="supernova text-center text-5xl font-extrabold text-white">
 					The todo list for our future.
 				</h1>
-				<p className="mx-auto mt-4 max-w-prose text-center text-lg font-medium text-white">
+				<p className="mx-auto mt-4 max-w-prose text-center text-xl font-medium text-white">
 					{/* TODO: Make sure you use the word 'endeavour' because Smooshy said so. Oh and make it rhyme somehow. */}
 					{/* TODO: Make it punny? "Make space for your missions" */}
 					For humanity to realise its full potential, you must realise yours.

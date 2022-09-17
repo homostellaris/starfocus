@@ -5,7 +5,7 @@ export default function LandingScreen(props) {
 	return (
 		<section
 			id="hello"
-			className="relative flex h-[calc(100vh-4rem)] flex-col"
+			className="relative flex h-[calc(100vh-5rem)] flex-col"
 		>
 			{/* <h1
 			id="title"
