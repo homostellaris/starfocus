@@ -77,7 +77,7 @@ export default function IndexPage() {
 						<div className="sticky top-0 z-0 mx-[calc(100vw/12*2)]">
 							<Journey />
 						</div>
-						<Features count={featuresCount} />
+						{/* <Features count={featuresCount} /> */}
 						<LandingScreen />
 						<Footer />
 					</div>
