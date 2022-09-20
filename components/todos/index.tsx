@@ -7,7 +7,7 @@ type TodosPropType = {
 
 export default function Todos(props: TodosPropType) {
 	return (
-		<ol>
+		<ol className="todos">
 			{props.todos.map(todo => (
 				<li key={todo.id}>
 					<Todo todo={todo} />

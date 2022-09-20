@@ -11,6 +11,11 @@ export interface Goal extends Todo {
 	frequency: Frequency
 }
 
+export interface Event extends Todo {
+	start: Date
+	end: Date
+}
+
 class StarPoints {
 	points: number
 

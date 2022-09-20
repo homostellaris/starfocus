@@ -1,5 +1,5 @@
 import Todos from '../todos'
-import Today from '../todos/Today'
+import Events from '../todos/Events'
 
 export default function AppDemo() {
 	// useEffect(setupAnimations, [])
@@ -8,7 +8,17 @@ export default function AppDemo() {
 			id="app-demo"
 			className="h-full rounded-md border"
 		>
-			<Today />
+			<Events
+				events={[
+					{
+						id: '1',
+						description: 'Meeting with Steve',
+						role: 'Software Creator',
+						start: new Date(),
+						end: new Date(),
+					},
+				]}
+			/>
 			<div className="flex">
 				<div className="left-column hidden w-28 shrink-0 grow md:block"></div>
 				<div className="w-3/5 grow-[3]">
@@ -23,6 +33,51 @@ export default function AppDemo() {
 								id: '2',
 								description: 'Teach Thomas how to cook pasta',
 								role: 'Father',
+							},
+							{
+								id: '3',
+								description: 'Write bestman speech',
+								role: 'Friend',
+							},
+							{
+								id: '3',
+								description: 'Write bestman speech',
+								role: 'Friend',
+							},
+							{
+								id: '3',
+								description: 'Write bestman speech',
+								role: 'Friend',
+							},
+							{
+								id: '3',
+								description: 'Write bestman speech',
+								role: 'Friend',
+							},
+							{
+								id: '3',
+								description: 'Write bestman speech',
+								role: 'Friend',
+							},
+							{
+								id: '3',
+								description: 'Write bestman speech',
+								role: 'Friend',
+							},
+							{
+								id: '3',
+								description: 'Write bestman speech',
+								role: 'Friend',
+							},
+							{
+								id: '3',
+								description: 'Write bestman speech',
+								role: 'Friend',
+							},
+							{
+								id: '3',
+								description: 'Write bestman speech',
+								role: 'Friend',
 							},
 							{
 								id: '3',
