@@ -9,7 +9,7 @@ export default function Contact() {
 			<div className="m-4 flex flex-grow items-center justify-between gap-4 text-center">
 				<Separator />
 				<a
-					href="https://discord.gg/TYHCj2VhpD"
+					href="https://discord.gg/Gdywcwcu"
 					className="text-white"
 					title="Join the Discord community to discuss ideas for the product and just generally nerd out on productivity and space exploration 🚀"
 					target="_blank"
