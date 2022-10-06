@@ -1,14 +1,10 @@
 import Todo from './Todo'
 import { Todo as TodoInterface } from './interfaces'
 
-type TodosPropType = {
-	todos: TodoInterface[]
-}
-
-export default function Todos(props: TodosPropType) {
+export default function Todos(props: { todos: TodoInterface[] }) {
 	return (
 		<ol className="todos">
-			{props.todos.map(todo => (
+			{props.todos.reverse().map(todo => (
 				<li key={todo.id}>
 					<Todo todo={todo} />
 				</li>
