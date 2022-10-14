@@ -6,20 +6,23 @@ export default function AppDemo() {
 	return (
 		<div
 			id="app-demo"
-			className="h-full rounded-md border"
+			className="relative h-full overflow-hidden rounded-md border"
 		>
-			<Events
-				events={[
-					{
-						id: '1',
-						description: 'Meeting with Steve',
-						role: 'Software Creator',
-						start: new Date(),
-						end: new Date(),
-					},
-				]}
-			/>
-			<div className="flex">
+			<div className="absolute w-full">
+				<Events
+					events={[
+						{
+							id: '1',
+							description: 'Meeting with Steve',
+							role: 'Software Creator',
+							start: new Date(),
+							end: new Date(),
+						},
+					]}
+				/>
+			</div>
+			{/* Need to have h-full on everything down to this point in order for overflow-auto to work 🤷‍♂️ */}
+			<div className="no-scrollbar flex h-full overflow-auto">
 				<div className="left-column hidden w-28 shrink-0 grow md:block"></div>
 				<div className="w-3/5 grow-[3]">
 					<Todos
@@ -40,49 +43,49 @@ export default function AppDemo() {
 								role: 'Friend',
 							},
 							{
-								id: '3',
-								description: 'Write bestman speech',
-								role: 'Friend',
+								id: '4',
+								description: 'Take the bins out',
+								role: 'Family Member',
 							},
 							{
-								id: '3',
-								description: 'Write bestman speech',
-								role: 'Friend',
+								id: '5',
+								description: 'Reply to Sandra',
+								role: 'Software Creator',
 							},
 							{
-								id: '3',
-								description: 'Write bestman speech',
-								role: 'Friend',
+								id: '6',
+								description: 'Do some laundry',
+								role: 'Family Member',
 							},
 							{
-								id: '3',
-								description: 'Write bestman speech',
-								role: 'Friend',
+								id: '7',
+								description: 'Arrange dentist appointment',
+								role: 'Individual',
 							},
 							{
-								id: '3',
-								description: 'Write bestman speech',
-								role: 'Friend',
+								id: '8',
+								description: 'Pay parking fine',
+								role: 'Family Member',
 							},
 							{
-								id: '3',
-								description: 'Write bestman speech',
-								role: 'Friend',
+								id: '9',
+								description: 'Take the dog out',
+								role: 'Family Member',
 							},
 							{
-								id: '3',
-								description: 'Write bestman speech',
-								role: 'Friend',
+								id: '10',
+								description: 'Call Mum',
+								role: 'Family Member',
 							},
 							{
-								id: '3',
-								description: 'Write bestman speech',
-								role: 'Friend',
+								id: '11',
+								description: 'Watch the bouldering world cup',
+								role: 'Climber',
 							},
 							{
-								id: '3',
-								description: 'Write bestman speech',
-								role: 'Friend',
+								id: '12',
+								description: 'Read Anthropocosmos',
+								role: 'Space Explorer',
 							},
 						]}
 					/>

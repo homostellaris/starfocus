@@ -23,6 +23,17 @@ body::-webkit-scrollbar {
 	display: none;
 }
 
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+	display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+	-ms-overflow-style: none; /* IE and Edge */
+	scrollbar-width: none; /* Firefox */
+}
+
 .supernova {
 	background-image: url('/supernova - horizontal.png');
 	/* Uncommenting this one keeps the background at its natural size so multiple elements can share the same background positioning area. */
