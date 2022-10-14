@@ -12,7 +12,7 @@ export default function Register() {
 	return (
 		<>
 			<form
-				className="m-4 text-center text-white"
+				className="register m-4 text-center text-white"
 				onSubmit={async event => {
 					event.preventDefault()
 

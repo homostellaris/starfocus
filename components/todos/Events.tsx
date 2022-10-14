@@ -3,7 +3,7 @@ import { Event } from '../todos/interfaces'
 
 export default function Events(props: { events: Event[] }) {
 	return (
-		<div className="glass z-10 flex rounded-md">
+		<div className="events glass z-10 flex rounded-md">
 			<div className="left-column hidden w-28 shrink-0 grow p-4 md:block">
 				<p className="text-left text-base font-light uppercase tracking-wide text-slate-400">
 					Up next

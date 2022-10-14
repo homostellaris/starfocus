@@ -19,7 +19,7 @@ export default function HeroMessage() {
 						<h2 className="text-center">
 							<StatementLarge>Aim for the stars</StatementLarge>
 						</h2> */}
-			<div className="mx-auto p-4">
+			<div className="hero-message mx-auto p-4">
 				<h1 className="supernova text-center text-5xl font-extrabold text-white">
 					The todo list for our future.
 				</h1>
