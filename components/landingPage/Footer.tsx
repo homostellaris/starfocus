@@ -8,7 +8,7 @@ export default function Footer(props) {
 		 */
 		<footer
 			id="calls-to-action"
-			className="glass sticky bottom-0 m-auto flex h-[5rem] w-[90vw] flex-wrap items-center justify-between overflow-hidden rounded-t-2xl"
+			className="glass sticky bottom-0 m-auto flex h-[5rem] flex-wrap items-center justify-between overflow-hidden md:w-[90vw] md:rounded-t-2xl"
 		>
 			<Contact />
 		</footer>
