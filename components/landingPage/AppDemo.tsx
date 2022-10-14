@@ -1,14 +1,21 @@
+import { useEffect } from 'react'
 import Todos from '../todos'
 import Events from '../todos/Events'
 
 export default function AppDemo() {
 	// useEffect(setupAnimations, [])
+	useEffect(() => {
+		const todos = document.getElementsByClassName('todo')
+		const mostImportantTodo = todos[todos.length - 1]
+		mostImportantTodo.scrollIntoView()
+	}, [])
+
 	return (
 		<div
 			id="app-demo"
 			className="relative h-full overflow-hidden rounded-md border"
 		>
-			<div className="absolute w-full">
+			<div className="absolute z-10 w-full">
 				<Events
 					events={[
 						{
