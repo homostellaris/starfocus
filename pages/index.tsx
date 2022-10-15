@@ -8,6 +8,7 @@ import HeroMessage from '../components/landingPage/HeroMessage'
 import Register from '../components/landingPage/Register'
 import Contact from '../components/landingPage/Contact'
 import A from '../components/common/A'
+import Todos from '../components/todos'
 
 const featuresCount = 1
 const otherScreensCount = 1
@@ -19,9 +20,9 @@ const isComingSoonVersion = false
 
 export default function IndexPage() {
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	useEffect(isComingSoonVersion ? () => null : reverseScroll, [])
+	// useEffect(isComingSoonVersion ? () => null : reverseScroll, [])
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	useEffect(isComingSoonVersion ? () => null : arrowKeyNavigation, [])
+	// useEffect(isComingSoonVersion ? () => null : arrowKeyNavigation, [])
 
 	return (
 		<Layout title="Starfocus | The todo app for the future">
@@ -77,7 +78,7 @@ export default function IndexPage() {
 						<div className="sticky top-0 z-0 mx-[calc(100vw/12*2)]">
 							<Journey />
 						</div>
-						{/* <Features count={featuresCount} /> */}
+						<Features count={featuresCount} />
 						<LandingScreen />
 						<Footer />
 					</div>

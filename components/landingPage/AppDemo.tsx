@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import Todos from '../todos'
 import Events from '../todos/Events'
+import Log from '../todos/Log'
 
 export default function AppDemo() {
 	// useEffect(setupAnimations, [])
@@ -34,11 +35,6 @@ export default function AppDemo() {
 				<div className="w-3/5 grow-[3]">
 					<Todos
 						todos={[
-							{
-								id: '1',
-								description: 'Complete Typescript course',
-								role: 'Software Creator',
-							},
 							{
 								id: '2',
 								description: 'Teach Thomas how to cook pasta',
@@ -93,6 +89,16 @@ export default function AppDemo() {
 								id: '12',
 								description: 'Read Anthropocosmos',
 								role: 'Space Explorer',
+							},
+						]}
+					/>
+					<Log
+						todos={[
+							{
+								id: '1',
+								completedAt: new Date('2020-01-01'),
+								description: 'Complete Typescript course',
+								role: 'Software Creator',
 							},
 						]}
 					/>
