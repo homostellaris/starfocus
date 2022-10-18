@@ -1,7 +1,7 @@
 import Layout from '../components/common/Layout'
 import Features from '../components/landingPage/Features'
 import Journey from '../components/landingPage/Journey'
-import { useEffect } from 'react'
+import { useEffect, useLayoutEffect } from 'react'
 import LandingScreen from '../components/landingPage/LandingScreen'
 import Footer from '../components/landingPage/Footer'
 import HeroMessage from '../components/landingPage/HeroMessage'
@@ -9,6 +9,8 @@ import Register from '../components/landingPage/Register'
 import Contact from '../components/landingPage/Contact'
 import A from '../components/common/A'
 import Todos from '../components/todos'
+import Planets from '../components/landingPage/Planets'
+import Starship from '../components/landingPage/Journey/Starship'
 
 const featuresCount = 1
 const otherScreensCount = 1
@@ -23,6 +25,33 @@ export default function IndexPage() {
 	// useEffect(isComingSoonVersion ? () => null : reverseScroll, [])
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	// useEffect(isComingSoonVersion ? () => null : arrowKeyNavigation, [])
+
+	useLayoutEffect(() => {
+		const scroller = document.querySelector('.parallax-container')
+		const starship = document.querySelector('#starship') as HTMLElement
+
+		const scrollerVisibleHeight = scroller.getBoundingClientRect().height
+		const scrollerTotalHeight = scroller.scrollHeight
+
+		// const fractionOfContentVisible = scrollerVisibleHeight / scrollerTotalHeight
+		// thumb.style.height = scrollerVisibleHeight * fractionOfContentVisible + 'px'
+
+		const thumbHeight = 100
+		const factor =
+			(scrollerVisibleHeight - thumbHeight) /
+			(scrollerTotalHeight - scrollerVisibleHeight)
+
+		const domRect = document.getElementById('app-demo').getBoundingClientRect()
+		const adjustmentHorizontal = domRect.width / 2 - 100
+		const adjustmentVertical = domRect.bottom - scrollerVisibleHeight / 2
+
+		starship.style.transform = `
+			scale(${1 / factor})
+			translateZ(${1 - 1 / factor}px)
+			translateX(-${adjustmentHorizontal}px)
+			translateY(${adjustmentVertical}px)
+		`
+	}, [])
 
 	return (
 		<Layout title="Starfocus | The todo app for the future">
@@ -69,17 +98,28 @@ export default function IndexPage() {
 			) : (
 				<main
 					id="landingPage"
-					className={`h-[${screensCount * 100}vh]`}
+					className="relative"
+					// className={`h-[${screensCount * 100}vh]`}
 				>
-					<div
-						id="parallax-container"
-						className="fixed bottom-0 w-screen"
-					>
-						<div className="sticky top-0 z-0 mx-[calc(100vw/12*2)]">
+					<div className="parallax-container h-screen">
+						{/* <div className="absolute mx-[calc(100vw/12*2)]">
 							<Journey />
+						</div> */}
+						<div
+							id="starship"
+							className="absolute left-0 right-0 m-auto h-[100px] w-[100px]"
+						>
+							<Starship />
 						</div>
-						<Features count={featuresCount} />
-						<LandingScreen />
+						{/* <div
+							id="landing-screen"
+							className="h-[500px] w-[500px] bg-red-500"
+						></div> */}
+						<div className="plane-0">
+							<Features count={featuresCount} />
+							<LandingScreen />
+						</div>
+						{/* <div className="h-[800vh]"></div> */}
 						<Footer />
 					</div>
 				</main>

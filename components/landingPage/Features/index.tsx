@@ -16,7 +16,7 @@ export default function Features(props) {
 			id="features"
 			className="relative"
 		>
-			{/* <Feature
+			<Feature
 				id="constellation"
 				heading="Constellation"
 				top={tops[6]}
@@ -59,8 +59,8 @@ export default function Features(props) {
 				top={tops[2]}
 			>
 				Add as much extra information as you like to any todo as Markdown.
-			</Feature> */}
-			<section className="relative h-screen">
+			</Feature>
+			{/* <section className="relative h-screen">
 				<div
 					className={`content absolute left-0 right-0 top-[${props.top}] mx-auto my-2 max-w-prose p-4 transition-all`}
 				>
@@ -74,7 +74,7 @@ export default function Features(props) {
 						</p>
 					</div>
 				</div>
-			</section>
+			</section> */}
 			<Feature
 				id="star-points"
 				heading="Star Points"

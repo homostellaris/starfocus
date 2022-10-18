@@ -4,7 +4,7 @@ import HeroMessage from './HeroMessage'
 export default function LandingScreen(props) {
 	return (
 		<section
-			id="hello"
+			id="landing-screen"
 			className="relative flex h-[calc(100vh-5rem)] flex-col"
 		>
 			{/* <h1

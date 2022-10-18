@@ -9,7 +9,7 @@ export default function Journey() {
 			</div>
 			<div
 				id="starship"
-				className="h-[100px] w-[100px] -translate-x-1/2 -translate-y-[162px]"
+				className="h-[100px] w-[100px]"
 			>
 				{/* TODO: Animate the ship based on the scroll */}
 				<Starship />

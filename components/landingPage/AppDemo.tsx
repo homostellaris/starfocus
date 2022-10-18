@@ -8,7 +8,7 @@ export default function AppDemo() {
 	useEffect(() => {
 		const todos = document.getElementsByClassName('todo')
 		const mostImportantTodo = todos[todos.length - 1]
-		mostImportantTodo.scrollIntoView()
+		// mostImportantTodo.scrollIntoView()
 	}, [])
 
 	return (
