@@ -24,7 +24,6 @@ const Layout = ({ children, title = 'This is the default title' }: Props) => {
 					src="https://plausible.io/js/plausible.js"
 				></script>
 			</Head>
-			<Planets height="h-[800vh]" />
 			<PlausibleProvider
 				domain="starfocus.app"
 				trackOutboundLinks={true}

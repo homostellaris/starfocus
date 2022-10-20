@@ -27,30 +27,44 @@ export default function IndexPage() {
 	// useEffect(isComingSoonVersion ? () => null : arrowKeyNavigation, [])
 
 	useLayoutEffect(() => {
-		const scroller = document.querySelector('.parallax-container')
-		const starship = document.querySelector('#starship') as HTMLElement
+		function updateSize() {
+			const scroller = document.querySelector('.parallax-container')
+			const starship = document.querySelector('#starship') as HTMLElement
 
-		const scrollerVisibleHeight = scroller.getBoundingClientRect().height
-		const scrollerTotalHeight = scroller.scrollHeight
+			const scrollerVisibleHeight = scroller.getBoundingClientRect().height
+			const scrollerTotalHeight = scroller.scrollHeight
 
-		// const fractionOfContentVisible = scrollerVisibleHeight / scrollerTotalHeight
-		// thumb.style.height = scrollerVisibleHeight * fractionOfContentVisible + 'px'
+			// const fractionOfContentVisible = scrollerVisibleHeight / scrollerTotalHeight
+			// thumb.style.height = scrollerVisibleHeight * fractionOfContentVisible + 'px'
 
-		const thumbHeight = 100
-		const factor =
-			(scrollerVisibleHeight - thumbHeight) /
-			(scrollerTotalHeight - scrollerVisibleHeight)
+			const thumbHeight = 100
+			const factor =
+				(scrollerVisibleHeight - thumbHeight) /
+				(scrollerTotalHeight - scrollerVisibleHeight)
 
-		const domRect = document.getElementById('app-demo').getBoundingClientRect()
-		const adjustmentHorizontal = domRect.width / 2 - 100
-		const adjustmentVertical = domRect.bottom - scrollerVisibleHeight / 2
+			const appDemoDOMRect = document
+				.getElementById('app-demo')
+				.getBoundingClientRect()
+			const leftColumnDOMRect = document
+				.querySelector('#app-demo .left-column')
+				.getBoundingClientRect()
+			const adjustmentHorizontal =
+				appDemoDOMRect.width / 2 - leftColumnDOMRect.width / 2
+			const adjustmentVertical = window.innerHeight / 2 - 6 * 16
 
-		starship.style.transform = `
-			scale(${1 / factor})
-			translateZ(${1 - 1 / factor}px)
-			translateX(-${adjustmentHorizontal}px)
-			translateY(${adjustmentVertical}px)
-		`
+			console.log(factor, 1 - 1 / factor)
+
+			starship.style.transform = `
+				scale(${1 / factor})
+				translateZ(${1 - 1 / factor}px)
+				translateX(${-adjustmentHorizontal}px)
+				translateY(${adjustmentVertical}px)
+			`
+		}
+
+		window.addEventListener('resize', updateSize)
+		updateSize()
+		return () => window.removeEventListener('resize', updateSize)
 	}, [])
 
 	return (
@@ -115,6 +129,9 @@ export default function IndexPage() {
 							id="landing-screen"
 							className="h-[500px] w-[500px] bg-red-500"
 						></div> */}
+						<div className="plane-negative-1 absolute -z-10">
+							<Planets height="h-[800vh]" />
+						</div>
 						<div className="plane-0">
 							<Features count={featuresCount} />
 							<LandingScreen />

@@ -20,7 +20,7 @@ body {
 }
 
 body::-webkit-scrollbar {
-	/* display: none; */
+	display: none;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
@@ -94,6 +94,16 @@ body::-webkit-scrollbar {
 }
 
 .plane-0 {
+	transform-origin: center;
 	transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1)
 		translateZ(-2px) translateY(-5rem);
+
+	/* The translateZ somehow moves the whole thing to the right. */
+	position: relative;
+	right: -17px;
+}
+
+.plane-negative-1 {
+	transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1)
+		translateZ(-10px) scale(9);
 }
