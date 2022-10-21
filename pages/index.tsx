@@ -11,6 +11,7 @@ import A from '../components/common/A'
 import Todos from '../components/todos'
 import Planets from '../components/landingPage/Planets'
 import Starship from '../components/landingPage/Journey/Starship'
+import Tracjectory from '../components/landingPage/Journey/Trajectory'
 
 const featuresCount = 1
 const otherScreensCount = 1
@@ -52,14 +53,17 @@ export default function IndexPage() {
 				appDemoDOMRect.width / 2 - leftColumnDOMRect.width / 2
 			const adjustmentVertical = window.innerHeight / 2 - 6 * 16
 
-			console.log(factor, 1 - 1 / factor)
-
 			starship.style.transform = `
 				scale(${1 / factor})
 				translateZ(${1 - 1 / factor}px)
 				translateX(${-adjustmentHorizontal}px)
 				translateY(${adjustmentVertical}px)
 			`
+
+			const trajectory = document.querySelector('.trajectory') as HTMLElement
+			trajectory.style.transform = `
+				translateX(${-adjustmentHorizontal + 6}px)
+			` // No idea why the 6px is necessary to align with the middle of the starship
 		}
 
 		window.addEventListener('resize', updateSize)
@@ -115,10 +119,13 @@ export default function IndexPage() {
 					className="relative"
 					// className={`h-[${screensCount * 100}vh]`}
 				>
-					<div className="parallax-container h-screen">
+					<div className="parallax-container relative h-screen">
 						{/* <div className="absolute mx-[calc(100vw/12*2)]">
 							<Journey />
 						</div> */}
+						<div className="absolute left-0 right-0 m-auto h-[800vh] w-[2px]">
+							<Tracjectory />
+						</div>
 						<div
 							id="starship"
 							className="absolute left-0 right-0 m-auto h-[100px] w-[100px]"
