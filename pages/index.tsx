@@ -47,7 +47,7 @@ export default function IndexPage() {
 				.getElementById('app-demo')
 				.getBoundingClientRect()
 			const leftColumnDOMRect = document
-				.querySelector('#app-demo .left-column')
+				.querySelector('#app-demo .app-main .left-column')
 				.getBoundingClientRect()
 			const adjustmentHorizontal =
 				appDemoDOMRect.width / 2 - leftColumnDOMRect.width / 2
@@ -128,7 +128,7 @@ export default function IndexPage() {
 						</div>
 						<div
 							id="starship"
-							className="absolute left-0 right-0 m-auto h-[100px] w-[100px]"
+							className="absolute left-0 right-0 m-auto h-[10vw] w-[10vw]"
 						>
 							<Starship />
 						</div>

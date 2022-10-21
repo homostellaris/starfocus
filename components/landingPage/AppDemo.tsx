@@ -30,9 +30,9 @@ export default function AppDemo() {
 				/>
 			</div>
 			{/* Need to have h-full on everything down to this point in order for overflow-auto to work 🤷‍♂️ */}
-			<div className="no-scrollbar flex h-full overflow-auto">
-				<div className="left-column hidden w-28 shrink-0 grow md:block"></div>
-				<div className="w-3/5 grow-[3]">
+			<div className="app-main no-scrollbar flex h-full overflow-auto">
+				<div className="left-column grow"></div>
+				<div className="w-3/5 grow">
 					<Todos
 						todos={[
 							{
@@ -103,7 +103,25 @@ export default function AppDemo() {
 						]}
 					/>
 				</div>
-				<div className="right-column hidden w-28 shrink-0 grow md:block"></div>
+				<div className="right-column mt-[80px] grow">
+					{/* <div className="text-white">
+						<h1>Software Developer</h1>
+						<h2>Mission Statement</h2>
+						<p>
+							Treat my employers company with the same care and seriousness I
+							would treat my own.
+						</p>
+						<h2>Affirmations</h2>
+						<ol>
+							<li>Stop starting, start finishing.</li>
+							<li>KISS</li>
+							<li>Always understand the why.</li>
+							<li>
+								Iteratying on plans and prototypes &gt; iterating on code.
+							</li>
+						</ol>
+					</div> */}
+				</div>
 			</div>
 		</div>
 	)

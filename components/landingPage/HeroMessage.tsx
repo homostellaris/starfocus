@@ -23,9 +23,9 @@ export default function HeroMessage() {
 				<h1 className="supernova text-center text-5xl font-extrabold text-white">
 					The todo list for our future.
 				</h1>
-				<p className="mx-auto mt-4 max-w-prose text-center text-xl font-medium text-white">
-					{/* TODO: Make sure you use the word 'endeavour' because Smooshy said so. Oh and make it rhyme somehow. */}
-					{/* TODO: Make it punny? "Make space for your missions" */}
+				{/* TODO: Make sure you use the word 'endeavour' because Smooshy said so. Oh and make it rhyme somehow. */}
+				{/* TODO: Make it punny? "Make space for your missions" */}
+				{/* <p className="mx-auto mt-4 max-w-prose text-center text-xl font-medium text-white">
 					For humanity to realise its full potential, you must realise yours.
 					Start by asking yourself:{' '}
 					<i>&quot;How would I want to be remembered?&quot;</i>. Think big
@@ -33,7 +33,7 @@ export default function HeroMessage() {
 					Then get to work. Avoid earthly distractions. Stay focused. Aim for
 					the stars. Starfocus will be there to keep you on course, one todo at
 					a time.
-				</p>
+				</p> */}
 			</div>
 			{/* <p className="m-auto max-w-prose text-center text-white">
 							We believe humanity is both destined and duty-bound to ensure life
