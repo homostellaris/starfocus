@@ -31,8 +31,8 @@ export default function AppDemo() {
 			</div>
 			{/* Need to have h-full on everything down to this point in order for overflow-auto to work 🤷‍♂️ */}
 			<div className="app-main no-scrollbar flex h-full overflow-auto">
-				<div className="left-column grow"></div>
-				<div className="w-3/5 grow">
+				<div className="left-column min-w-[20px] grow p-4"></div>
+				<div className="w-11/12 max-w-[800px] grow">
 					<Todos
 						todos={[
 							{
@@ -103,7 +103,7 @@ export default function AppDemo() {
 						]}
 					/>
 				</div>
-				<div className="right-column mt-[80px] grow">
+				<div className="right-column mt-[80px] min-w-[20px] grow p-4">
 					{/* <div className="text-white">
 						<h1>Software Developer</h1>
 						<h2>Mission Statement</h2>

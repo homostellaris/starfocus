@@ -31,7 +31,7 @@ export default function Todo(props: TodoPropType) {
 				<span className="description">{props.todo.description}</span>
 				<span className="notes-digest"></span>
 			</span>
-			<span className="role w-24 px-4 text-right text-xs font-black uppercase italic tracking-tight">
+			<span className="role hidden w-24 px-4 text-right text-xs font-black uppercase italic tracking-tight md:inline">
 				{props.todo.role}
 			</span>
 		</div>

@@ -20,7 +20,7 @@ export default function LandingScreen(props) {
 				<span className="supernova">Starfocus</span>
 			</h2> */}
 			<HeroMessage />
-			<div className="left-0 right-0 m-auto my-4 flex-grow overflow-hidden md:w-10/12">
+			<div className="left-0 right-0 m-auto my-4 w-full flex-grow overflow-hidden md:w-10/12">
 				{/* Make this sticky too */}
 				<AppDemo />
 			</div>
