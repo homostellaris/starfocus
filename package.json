@@ -22,7 +22,7 @@
 		"lint": "next lint",
 		"prettier:fix": "prettier --write components/ interfaces/ pages/ public/ styles/ utils/",
 		"start": "next start",
-		"build": "convex deploy && next build"
+		"build": "convex deploy --typecheck=disable && next build"
 	},
 	"dependencies": {
 		"convex": "^0.1.10",
