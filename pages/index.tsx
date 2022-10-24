@@ -144,8 +144,8 @@ export default function IndexPage() {
 							<LandingScreen />
 						</div>
 						{/* <div className="h-[800vh]"></div> */}
-						<Footer />
 					</div>
+					<Footer />
 				</main>
 			)}
 		</Layout>
