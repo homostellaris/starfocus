@@ -119,7 +119,7 @@ export default function IndexPage() {
 					className="relative"
 					// className={`h-[${screensCount * 100}vh]`}
 				>
-					<div className="parallax-container relative h-screen">
+					<div className="parallax-container fixed h-screen">
 						{/* <div className="absolute mx-[calc(100vw/12*2)]">
 							<Journey />
 						</div> */}
