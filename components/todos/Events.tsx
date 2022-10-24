@@ -3,12 +3,12 @@ import { Event } from '../todos/interfaces'
 
 export default function Events(props: { events: Event[] }) {
 	return (
-		<div className="events glass z-10 flex rounded-md">
-			<div className="left-column min-w-[20px] grow p-4">
+		<div className="events glass z-10 flex items-center rounded-md">
+			<div className="left-column w-1/12 grow pl-2">
 				<p className="hidden text-left text-base font-light uppercase tracking-wide text-slate-400 md:block">
 					Up next
 				</p>
-				<p className="hidden text-left text-base font-light tracking-wide text-slate-200 md:block">
+				<p className="text-left text-xs font-light tracking-wide text-slate-200 md:text-base">
 					30m
 				</p>
 			</div>
@@ -19,11 +19,11 @@ export default function Events(props: { events: Event[] }) {
 					'No events here. Sync your calendar to see them.'
 				)}
 			</div>
-			<div className="right-column min-w-[20px] grow p-4">
+			<div className="right-column w-1/12 grow pr-2">
 				<p className="hidden text-right text-base font-light uppercase tracking-wide text-slate-400 md:block">
 					Events
 				</p>
-				<p className="hidden text-right text-base font-light tracking-wide text-slate-200 md:block">
+				<p className="text-right text-xs font-light tracking-wide text-slate-200 md:text-base">
 					3/5
 				</p>
 			</div>
