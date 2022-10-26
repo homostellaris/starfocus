@@ -9,6 +9,7 @@ type Props = {
 }
 
 const Layout = ({ children, title = 'This is the default title' }: Props) => {
+	console.log(process.env.NEXT_PUBLIC_VERCEL_ENV)
 	return (
 		<div>
 			<Head>
@@ -25,7 +26,7 @@ const Layout = ({ children, title = 'This is the default title' }: Props) => {
 				></script>
 			</Head>
 			<PlausibleProvider
-				enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === 'production'}
+				enabled={false}
 				domain="starfocus.app"
 				trackOutboundLinks={true}
 			>
