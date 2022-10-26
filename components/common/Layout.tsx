@@ -27,6 +27,7 @@ const Layout = ({ children, title = 'This is the default title' }: Props) => {
 			<PlausibleProvider
 				domain="starfocus.app"
 				trackOutboundLinks={true}
+				enabled={process.env.VERCEL_ENV === 'production'}
 			>
 				{children}
 			</PlausibleProvider>
