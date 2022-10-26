@@ -51,7 +51,7 @@ export default function IndexPage() {
 			// 	.getBoundingClientRect()
 			const adjustmentHorizontal =
 				window.innerWidth / 2 - window.innerWidth / 10 / 4
-			const adjustmentVertical = window.innerHeight / 2 - 6 * 16
+			const adjustmentVertical = window.innerHeight / 2
 
 			starship.style.transform = `
 				scale(${1 / factor})
@@ -139,13 +139,17 @@ export default function IndexPage() {
 						<div className="plane-negative-1 absolute -z-10">
 							<Planets height="h-[800vh]" />
 						</div>
-						<div className="plane-0">
-							<Features count={featuresCount} />
+						<div className="plane-0 adjust-for-scrollbar">
 							<LandingScreen />
 						</div>
-						{/* <div className="h-[800vh]"></div> */}
+						<div className="absolute -mx-2">
+							<div className="h-[700vh] w-screen"></div>
+							<Footer />
+						</div>
+						<div className="plane-0 adjust-for-scrollbar">
+							<Features count={featuresCount} />
+						</div>
 					</div>
-					<Footer />
 				</main>
 			)}
 		</Layout>
