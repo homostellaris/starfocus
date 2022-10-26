@@ -19,11 +19,6 @@ const Layout = ({ children, title = 'This is the default title' }: Props) => {
 					name="viewport"
 					content="initial-scale=1.0, width=device-width"
 				/>
-				<script
-					defer
-					data-domain="starfocus.app"
-					src="https://plausible.io/js/plausible.js"
-				></script>
 			</Head>
 			<PlausibleProvider
 				enabled={false}
