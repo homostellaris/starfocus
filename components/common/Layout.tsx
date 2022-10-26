@@ -25,7 +25,7 @@ const Layout = ({ children, title = 'This is the default title' }: Props) => {
 				></script>
 			</Head>
 			<PlausibleProvider
-				enabled={process.env.VERCEL_ENV === 'production'}
+				enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === 'production'}
 				domain="starfocus.app"
 				trackOutboundLinks={true}
 			>
