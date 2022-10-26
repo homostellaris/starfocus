@@ -116,10 +116,10 @@ export default function IndexPage() {
 			) : (
 				<main
 					id="landingPage"
-					className="relative"
+					className="h-full"
 					// className={`h-[${screensCount * 100}vh]`}
 				>
-					<div className="parallax-container relative h-screen">
+					<div className="parallax-container h-full">
 						{/* <div className="absolute mx-[calc(100vw/12*2)]">
 							<Journey />
 						</div> */}
@@ -139,7 +139,7 @@ export default function IndexPage() {
 						<div className="plane-negative-1 absolute -z-10">
 							<Planets height="h-[800vh]" />
 						</div>
-						<div className="plane-0 adjust-for-scrollbar">
+						<div className="plane-0 adjust-for-scrollbar h-full">
 							<LandingScreen />
 						</div>
 						<div className="absolute -mx-2">

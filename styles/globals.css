@@ -13,6 +13,15 @@ body {
 	padding: 0;
 }
 
+/* Should just be able to set height 100% on html for the mobile URL bar workaround but for some reason this is required with NextJS */
+html,
+body,
+body > div:first-child,
+div#__next,
+div#__next > div {
+	height: 100%;
+}
+
 /* TODO: https://www.freepik.com/free-vector/planets-outer-space-with-satellites-meteors-illustration_6690897.htm#query=space%20background&position=30&from_view=keyword */
 body {
 	font-family: 'Inter';
