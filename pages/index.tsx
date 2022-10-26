@@ -43,14 +43,14 @@ export default function IndexPage() {
 				(scrollerVisibleHeight - thumbHeight) /
 				(scrollerTotalHeight - scrollerVisibleHeight)
 
-			const appDemoDOMRect = document
-				.getElementById('app-demo')
-				.getBoundingClientRect()
-			const leftColumnDOMRect = document
-				.querySelector('#app-demo .app-main .left-column')
-				.getBoundingClientRect()
+			// const appDemoDOMRect = document
+			// 	.getElementById('app-demo')
+			// 	.getBoundingClientRect()
+			// const leftColumnDOMRect = document
+			// 	.querySelector('#app-demo .app-main .left-column')
+			// 	.getBoundingClientRect()
 			const adjustmentHorizontal =
-				appDemoDOMRect.width / 2 - leftColumnDOMRect.width / 2
+				window.innerWidth / 2 - window.innerWidth / 10 / 4
 			const adjustmentVertical = window.innerHeight / 2 - 6 * 16
 
 			starship.style.transform = `
@@ -128,7 +128,7 @@ export default function IndexPage() {
 						</div>
 						<div
 							id="starship"
-							className="absolute left-0 right-0 m-auto h-[10vw] w-[10vw]"
+							className="absolute left-0 right-0 m-auto h-[5vw] w-[5vw]"
 						>
 							<Starship />
 						</div>

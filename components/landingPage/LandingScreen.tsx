@@ -1,5 +1,7 @@
+import Image from 'next/image'
 import AppDemo from './AppDemo'
 import HeroMessage from './HeroMessage'
+import appScreenshot from '../../public/the app - goals.png'
 
 export default function LandingScreen(props) {
 	return (
@@ -20,9 +22,18 @@ export default function LandingScreen(props) {
 				<span className="supernova">Starfocus</span>
 			</h2> */}
 			<HeroMessage />
-			<div className="left-0 right-0 m-auto my-4 w-full flex-grow overflow-hidden md:w-10/12">
-				{/* Make this sticky too */}
+			{/* Make this sticky too */}
+			{/* <div className="left-0 right-0 m-auto my-4 w-full flex-grow overflow-hidden md:w-10/12">
 				<AppDemo />
+			</div> */}
+			<div className="relative m-4 h-full w-full">
+				<Image
+					src={appScreenshot}
+					className="p-4"
+					alt="Screenshot of the desktop app"
+					objectFit="contain"
+					layout="fill"
+				/>
 			</div>
 		</section>
 	)
