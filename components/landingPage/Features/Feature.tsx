@@ -14,7 +14,7 @@ export default function Feature(props) {
 			<div
 				className={`content absolute left-0 right-0 top-[${props.top}] mx-auto my-2 max-w-prose p-4 transition-all`}
 			>
-				<h1 className="supernova text-5xl font-black uppercase text-white">
+				<h1 className="supernova text-4xl font-black uppercase text-white md:text-5xl">
 					{props.heading}
 				</h1>
 				<div className="glass mt-4 rounded-2xl p-4">
