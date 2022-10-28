@@ -62,7 +62,7 @@ export default function IndexPage() {
 
 			const trajectory = document.querySelector('.trajectory') as HTMLElement
 			trajectory.style.transform = `
-				translateX(${-adjustmentHorizontal + 6}px)
+				translateX(${-adjustmentHorizontal}px)
 			` // No idea why the 6px is necessary to align with the middle of the starship
 		}
 
@@ -128,7 +128,7 @@ export default function IndexPage() {
 						</div>
 						<div
 							id="starship"
-							className="absolute left-0 right-0 m-auto h-[5vw] w-[5vw]"
+							className="absolute left-0 right-0 m-auto h-[10vw] w-[10vw]"
 						>
 							<Starship />
 						</div>
