@@ -26,7 +26,7 @@ export default function LandingScreen(props) {
 			{/* <div className="left-0 right-0 m-auto my-4 w-full flex-grow overflow-hidden md:w-10/12">
 				<AppDemo />
 			</div> */}
-			<div className="relative m-4 h-full w-full">
+			<div className="relative h-full w-full">
 				<Image
 					src={appScreenshot}
 					className="p-4"
