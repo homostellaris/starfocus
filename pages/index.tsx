@@ -61,9 +61,9 @@ export default function IndexPage() {
 			`
 
 			const trajectory = document.querySelector('.trajectory') as HTMLElement
-			trajectory.style.transform = `
-				translateX(${-adjustmentHorizontal}px)
-			` // No idea why the 6px is necessary to align with the middle of the starship
+			// trajectory.style.transform = `
+			// 	translateX(${-adjustmentHorizontal}px)
+			// `
 		}
 
 		window.addEventListener('resize', updateSize)
@@ -123,12 +123,12 @@ export default function IndexPage() {
 						{/* <div className="absolute mx-[calc(100vw/12*2)]">
 							<Journey />
 						</div> */}
-						<div className="absolute left-0 right-0 m-auto h-[800vh] w-[2px]">
+						<div className="absolute left-[calc(2.5vw-2px)] h-[800vh] w-[2px]">
 							<Tracjectory />
 						</div>
 						<div
 							id="starship"
-							className="absolute left-0 right-0 m-auto h-[10vw] w-[10vw]"
+							className="absolute left-0 right-0 m-auto h-[10vmin] w-[10vmin]"
 						>
 							<Starship />
 						</div>
