@@ -11,7 +11,6 @@ export default function Journey() {
 				id="starship"
 				className="h-[100px] w-[100px]"
 			>
-				{/* TODO: Animate the ship based on the scroll */}
 				<Starship />
 			</div>
 		</div>
