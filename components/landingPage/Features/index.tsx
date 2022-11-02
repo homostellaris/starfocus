@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import Feature from './Feature'
 import starPointsFalse from '../../../public/star points=false.png'
 import starPointsTrue from '../../../public/star points=true.png'
+import notesEditing from '../../../public/expanded=true, edit=true.png'
+import notesReading from '../../../public/expanded=true, edit=false.png'
 
 export default function Features(props) {
 	const tops = useMemo(() => {
@@ -62,7 +64,7 @@ export default function Features(props) {
 			</Feature>
 			<Feature
 				id="notes"
-				images={[starPointsFalse, starPointsTrue]}
+				images={[starPointsTrue, notesEditing, notesReading]}
 				heading="Notes"
 				top={tops[2]}
 			>
