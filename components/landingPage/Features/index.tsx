@@ -5,6 +5,10 @@ import notesReading from '../../../public/expanded=true, edit=false.png'
 import notesEditing from '../../../public/expanded=true, edit=true.png'
 import starPointsFalse from '../../../public/star points=false.png'
 import starPointsTrue from '../../../public/star points=true.png'
+import todayThirtyMinutes from '../../../public/today - 30m.png'
+import todayFifteenMinutes from '../../../public/today - 15m.png'
+import upcomingCollapsed from '../../../public/upcoming - collapsed.png'
+import upcomingExpanded from '../../../public/upcoming - expanded.png'
 import Feature from './Feature'
 
 export default function Features(props) {
@@ -42,7 +46,7 @@ export default function Features(props) {
 			</Feature>
 			<Feature
 				id="upcoming"
-				images={[starPointsFalse, starPointsTrue]}
+				images={[upcomingCollapsed, upcomingExpanded]}
 				heading="Upcoming"
 				top={tops[5]}
 			>
@@ -50,7 +54,7 @@ export default function Features(props) {
 			</Feature>
 			<Feature
 				id="today"
-				images={[starPointsFalse, starPointsTrue]}
+				images={[todayThirtyMinutes, todayFifteenMinutes]}
 				heading="Today"
 				top={tops[4]}
 			>
