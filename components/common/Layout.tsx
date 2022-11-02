@@ -58,7 +58,7 @@ const Layout = ({ children, title = 'This is the default title' }: Props) => {
 			>
 				<main className="h-full">
 					<div className="parallax-container h-full">
-						<div className="absolute left-[calc(2.5vw-2px)] h-[800vh] w-[2px]">
+						<div className="absolute left-[calc(2.5vw-2px)] h-[calc(800vh+5rem)] w-[2px]">
 							<Tracjectory />
 						</div>
 						<div
