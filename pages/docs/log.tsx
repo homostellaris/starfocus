@@ -7,6 +7,8 @@ export default function Log(props) {
 			<Feature
 				id="log"
 				heading="Log"
+				images={[]}
+				top={0}
 			>
 				When a todo is completed it stays on the screen and becomes a part of
 				the log which is a record of everything you&apos;ve done.
