@@ -5,12 +5,7 @@ import PlausibleProvider from 'next-plausible'
 import Starship from '../landingPage/Journey/Starship'
 import Tracjectory from '../landingPage/Journey/Trajectory'
 
-type Props = {
-	children?: ReactNode
-	title?: string
-}
-
-const Layout = ({ children, title = 'This is the default title' }: Props) => {
+const Layout = (props: { children?: ReactNode; title?: string }) => {
 	useLayoutEffect(() => {
 		function updateSize() {
 			const scroller = document.querySelector('.parallax-container')
@@ -44,7 +39,7 @@ const Layout = ({ children, title = 'This is the default title' }: Props) => {
 	return (
 		<div>
 			<Head>
-				<title>{title}</title>
+				<title>{props.title}</title>
 				<meta charSet="utf-8" />
 				<meta
 					name="viewport"
@@ -70,7 +65,7 @@ const Layout = ({ children, title = 'This is the default title' }: Props) => {
 						<div className="plane-negative-1 absolute -z-10">
 							<Planets height="h-[800vh]" />
 						</div>
-						{children}
+						{props.children}
 					</div>
 				</main>
 			</PlausibleProvider>

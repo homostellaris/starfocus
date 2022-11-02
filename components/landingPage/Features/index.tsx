@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import Feature from './Feature'
+import starPointsFalse from '../../../public/star points=false.png'
+import starPointsTrue from '../../../public/star points=true.png'
 
 export default function Features(props) {
 	const tops = useMemo(() => {
@@ -18,6 +20,7 @@ export default function Features(props) {
 		>
 			<Feature
 				id="constellation"
+				images={[starPointsFalse, starPointsTrue]}
 				heading="Constellation"
 				top={tops[6]}
 			>
@@ -26,6 +29,7 @@ export default function Features(props) {
 			</Feature>
 			<Feature
 				id="roles"
+				images={[starPointsFalse, starPointsTrue]}
 				heading="Roles"
 				top={tops[6]}
 			>
@@ -34,6 +38,7 @@ export default function Features(props) {
 			</Feature>
 			<Feature
 				id="upcoming"
+				images={[starPointsFalse, starPointsTrue]}
 				heading="Upcoming"
 				top={tops[5]}
 			>
@@ -41,6 +46,7 @@ export default function Features(props) {
 			</Feature>
 			<Feature
 				id="today"
+				images={[starPointsFalse, starPointsTrue]}
 				heading="Today"
 				top={tops[4]}
 			>
@@ -48,6 +54,7 @@ export default function Features(props) {
 			</Feature>
 			<Feature
 				id="log"
+				images={[starPointsFalse, starPointsTrue]}
 				heading="Log"
 				top={tops[3]}
 			>
@@ -55,29 +62,16 @@ export default function Features(props) {
 			</Feature>
 			<Feature
 				id="notes"
+				images={[starPointsFalse, starPointsTrue]}
 				heading="Notes"
 				top={tops[2]}
 			>
 				Add as much extra information as you like to any todo as Markdown.
 			</Feature>
-			{/* <section className="relative h-screen">
-				<div
-					className={`content absolute left-0 right-0 top-[${props.top}] mx-auto my-2 max-w-prose p-4 transition-all`}
-				>
-					<h1 className="supernova text-5xl font-black uppercase text-white">
-						More coming soon!
-					</h1>
-					<div className="glass mt-4 rounded-2xl p-4">
-						<p className="text-justify text-white">
-							Stay up-to-date using one of the options below and we&apos;ll let
-							you know as new feature previews are released.
-						</p>
-					</div>
-				</div>
-			</section> */}
 			<Feature
-				id="star-points"
 				heading="Star Points"
+				id="star-points"
+				images={[starPointsFalse, starPointsTrue]}
 				top={tops[1]}
 			>
 				Add star points to your todos to distinguish between small chores and

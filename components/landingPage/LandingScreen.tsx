@@ -1,9 +1,8 @@
 import Image from 'next/image'
-import AppDemo from './AppDemo'
 import HeroMessage from './HeroMessage'
 import appScreenshot from '../../public/the app - goals.png'
 
-export default function LandingScreen(props) {
+export default function LandingScreen() {
 	return (
 		<section
 			id="landing-screen"

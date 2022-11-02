@@ -1,7 +1,23 @@
+import { getImageSize } from 'next/dist/server/image-optimizer'
+import Image, { StaticImageData } from 'next/image'
 import Link from 'next/link'
-import { useEffect } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 
-export default function Feature(props) {
+export default function Feature(props: {
+	children: ReactNode
+	heading: string
+	id: string
+	images: StaticImageData[]
+	top: number
+}) {
+	const [imageIndex, setImageIndex] = useState<number>(0)
+	useEffect(() => {
+		setTimeout(
+			() => setImageIndex((imageIndex + 1) % props.images.length),
+			2000
+		)
+	})
+
 	useEffect(() => {
 		setupAnimations(props.id)
 	}, [props.id])
@@ -17,13 +33,28 @@ export default function Feature(props) {
 				<h1 className="supernova text-4xl font-black uppercase text-white md:text-5xl">
 					{props.heading}
 				</h1>
-				<div className="glass mt-4 rounded-2xl p-4">
+				<div className="glass my-4 rounded-2xl p-4">
 					<p className="text-justify text-white">{props.children}</p>
 					<div className="text-right">
 						<Link href={'/docs/' + props.id}>
 							<a className="text-blue-400">Learn more</a>
 						</Link>
 					</div>
+				</div>
+				<div className="relative my-4">
+					{props.images.map((image, index) => (
+						<div
+							className={`absolute top-0 transition-opacity duration-1000 ${
+								index === imageIndex ? 'opacity-100' : 'opacity-0'
+							}`}
+							key={index}
+						>
+							<Image
+								src={image}
+								alt="A todo with 0 star points"
+							/>
+						</div>
+					))}
 				</div>
 			</div>
 		</section>
