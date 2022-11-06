@@ -3,6 +3,8 @@ import completedFalse from '../../../public/completed=false.png'
 import completedTrue from '../../../public/completed=true.png'
 import notesReading from '../../../public/expanded=true, edit=false.png'
 import notesEditing from '../../../public/expanded=true, edit=true.png'
+import rolesNoFilter from '../../../public/roles - no filter.png'
+import rolesSoftwareEngineerFilter from '../../../public/roles - software engineer filter.png'
 import starPointsFalse from '../../../public/star points=false.png'
 import starPointsTrue from '../../../public/star points=true.png'
 import todayThirtyMinutes from '../../../public/today - 30m.png'
@@ -37,7 +39,7 @@ export default function Features(props) {
 			</Feature>
 			<Feature
 				id="roles"
-				images={[starPointsFalse, starPointsTrue]}
+				images={[rolesNoFilter, rolesSoftwareEngineerFilter]}
 				heading="Roles"
 				top={tops[6]}
 			>
