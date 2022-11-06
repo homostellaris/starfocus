@@ -7,7 +7,7 @@ export default function Roles(props) {
 			<Feature
 				id="roles"
 				heading="Roles"
-				images={[]}
+				previews={[]}
 				top={0}
 			>
 				What are your goals in life? To answer this question you can think about

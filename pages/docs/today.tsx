@@ -7,7 +7,7 @@ export default function Today(props) {
 			<Feature
 				id="today"
 				heading="Today"
-				images={[]}
+				previews={[]}
 				top={0}
 			>
 				If you choose to integrate Starfocus with your calendar then the today

@@ -1,18 +1,19 @@
 import { useMemo } from 'react'
-import completedFalse from '../../../public/completed=false.png'
-import completedTrue from '../../../public/completed=true.png'
-import constellationNoRoles from '../../../public/constellation - no roles.png'
-import constellationEightRoles from '../../../public/constellation - eight roles.png'
-import notesReading from '../../../public/expanded=true, edit=false.png'
-import notesEditing from '../../../public/expanded=true, edit=true.png'
-import rolesNoFilter from '../../../public/roles - no filter.png'
-import rolesSoftwareEngineerFilter from '../../../public/roles - software engineer filter.png'
-import starPointsFalse from '../../../public/star points=false.png'
-import starPointsTrue from '../../../public/star points=true.png'
-import todayThirtyMinutes from '../../../public/today - 30m.png'
-import todayFifteenMinutes from '../../../public/today - 15m.png'
-import upcomingCollapsed from '../../../public/upcoming - collapsed.png'
-import upcomingExpanded from '../../../public/upcoming - expanded.png'
+import logNoTodosCompleted from './log - no todos completed.png'
+import logOneTodoCompleted from './log - one todo completed.png'
+import constellationNoRoles from './constellation - no roles.png'
+import constellationEightRoles from './constellation - eight roles.png'
+import notesHidden from './notes - hidden.png'
+import notesEditing from './notes - editing.png'
+import notesReading from './notes - reading.png'
+import rolesNoFilter from './roles - no filter.png'
+import rolesSoftwareEngineerFilter from './roles - software engineer filter.png'
+import starPointsZero from './star points - zero.png'
+import starPointsFive from './star points - five.png'
+import todayThirtyMinutes from './today - 30m.png'
+import todayFifteenMinutes from './today - 15m.png'
+import upcomingCollapsed from './upcoming - collapsed.png'
+import upcomingExpanded from './upcoming - expanded.png'
 import Feature from './Feature'
 
 export default function Features(props) {
@@ -32,7 +33,16 @@ export default function Features(props) {
 		>
 			<Feature
 				id="constellation"
-				images={[constellationNoRoles, constellationEightRoles]}
+				previews={[
+					{
+						image: constellationNoRoles,
+						caption: 'No roles',
+					},
+					{
+						image: constellationEightRoles,
+						caption: 'Eight roles',
+					},
+				]}
 				heading="Constellation"
 				top={tops[6]}
 			>
@@ -41,7 +51,16 @@ export default function Features(props) {
 			</Feature>
 			<Feature
 				id="roles"
-				images={[rolesNoFilter, rolesSoftwareEngineerFilter]}
+				previews={[
+					{
+						image: rolesNoFilter,
+						caption: 'No filter',
+					},
+					{
+						image: rolesSoftwareEngineerFilter,
+						caption: 'Software engineer filter',
+					},
+				]}
 				heading="Roles"
 				top={tops[6]}
 			>
@@ -50,7 +69,16 @@ export default function Features(props) {
 			</Feature>
 			<Feature
 				id="upcoming"
-				images={[upcomingCollapsed, upcomingExpanded]}
+				previews={[
+					{
+						image: upcomingCollapsed,
+						caption: 'Collapsed',
+					},
+					{
+						image: upcomingExpanded,
+						caption: 'Expanded',
+					},
+				]}
 				heading="Upcoming"
 				top={tops[5]}
 			>
@@ -58,7 +86,16 @@ export default function Features(props) {
 			</Feature>
 			<Feature
 				id="today"
-				images={[todayThirtyMinutes, todayFifteenMinutes]}
+				previews={[
+					{
+						image: todayThirtyMinutes,
+						caption: 'Thirty minutes until next event',
+					},
+					{
+						image: todayFifteenMinutes,
+						caption: 'Fifteen minutes until next event',
+					},
+				]}
 				heading="Today"
 				top={tops[4]}
 			>
@@ -66,7 +103,16 @@ export default function Features(props) {
 			</Feature>
 			<Feature
 				id="log"
-				images={[completedFalse, completedTrue]}
+				previews={[
+					{
+						image: logNoTodosCompleted,
+						caption: 'No todos completed',
+					},
+					{
+						image: logOneTodoCompleted,
+						caption: 'One todo completed',
+					},
+				]}
 				heading="Log"
 				top={tops[3]}
 			>
@@ -74,7 +120,20 @@ export default function Features(props) {
 			</Feature>
 			<Feature
 				id="notes"
-				images={[starPointsTrue, notesEditing, notesReading]}
+				previews={[
+					{
+						image: notesHidden,
+						caption: 'Notes hidden',
+					},
+					{
+						image: notesEditing,
+						caption: 'Editing notes',
+					},
+					{
+						image: notesReading,
+						caption: 'Reading notes',
+					},
+				]}
 				heading="Notes"
 				top={tops[2]}
 			>
@@ -83,7 +142,16 @@ export default function Features(props) {
 			<Feature
 				heading="Star Points"
 				id="star-points"
-				images={[starPointsFalse, starPointsTrue]}
+				previews={[
+					{
+						image: starPointsZero,
+						caption: 'Zero star points',
+					},
+					{
+						image: starPointsFive,
+						caption: 'Five star points',
+					},
+				]}
 				top={tops[1]}
 			>
 				Add star points to your todos to distinguish between small chores and

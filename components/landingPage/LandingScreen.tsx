@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import HeroMessage from './HeroMessage'
-import appScreenshot from '../../public/the app - goals.png'
+import appScreenshot from './app - star mode.png'
 
 export default function LandingScreen() {
 	return (

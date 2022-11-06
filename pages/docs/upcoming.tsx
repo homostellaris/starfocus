@@ -7,7 +7,7 @@ export default function Upcoming(props) {
 			<Feature
 				id="upcoming"
 				heading="Upcoming"
-				images={[]}
+				previews={[]}
 				top={0}
 			>
 				The today view can be expanded at any time to show you everything

@@ -7,7 +7,7 @@ export default function Constellation() {
 			<Feature
 				id="constellation"
 				heading="constellation"
-				images={[]}
+				previews={[]}
 				top={0}
 			>
 				Your journey and purpose in life are completely unique to you and so is

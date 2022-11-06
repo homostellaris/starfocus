@@ -7,13 +7,16 @@ export default function Feature(props: {
 	children: ReactNode
 	heading: string
 	id: string
-	images: StaticImageData[]
+	previews: {
+		image: StaticImageData
+		caption: string
+	}[]
 	top: number
 }) {
 	const [imageIndex, setImageIndex] = useState<number>(0)
 	useEffect(() => {
 		setTimeout(
-			() => setImageIndex((imageIndex + 1) % props.images.length),
+			() => setImageIndex((imageIndex + 1) % props.previews.length),
 			2000
 		)
 	})
@@ -42,13 +45,16 @@ export default function Feature(props: {
 					</div>
 				</div>
 				<div className="relative my-4">
-					{props.images.map((image, index) => (
+					{props.previews.map(({ image, caption }, index) => (
 						<div
 							className={`absolute top-0 transition-opacity duration-1000 ${
 								index === imageIndex ? 'opacity-100' : 'opacity-0'
 							}`}
 							key={index}
 						>
+							<h5 className="m-2 text-sm font-medium text-slate-400">
+								{caption}
+							</h5>
 							<Image
 								src={image}
 								alt="A todo with 0 star points"
