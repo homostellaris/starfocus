@@ -1,6 +1,8 @@
 import { useMemo } from 'react'
 import completedFalse from '../../../public/completed=false.png'
 import completedTrue from '../../../public/completed=true.png'
+import constellationNoRoles from '../../../public/constellation - no roles.png'
+import constellationEightRoles from '../../../public/constellation - eight roles.png'
 import notesReading from '../../../public/expanded=true, edit=false.png'
 import notesEditing from '../../../public/expanded=true, edit=true.png'
 import rolesNoFilter from '../../../public/roles - no filter.png'
@@ -30,7 +32,7 @@ export default function Features(props) {
 		>
 			<Feature
 				id="constellation"
-				images={[starPointsFalse, starPointsTrue]}
+				images={[constellationNoRoles, constellationEightRoles]}
 				heading="Constellation"
 				top={tops[6]}
 			>
