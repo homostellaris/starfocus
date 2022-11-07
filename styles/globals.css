@@ -123,3 +123,8 @@ body::-webkit-scrollbar {
 	transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1)
 		translateZ(-10px) scale(9);
 }
+
+#calls-to-action {
+	backface-visibility: hidden;
+	-webkit-backface-visibility: hidden;
+}

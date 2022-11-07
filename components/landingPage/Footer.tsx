@@ -1,6 +1,6 @@
 import Contact from './Contact'
 
-export default function Footer(props) {
+export default function Footer() {
 	return (
 		/* Currently don't have a way to keep this sticky and have a variable height without pushing the rest of the LandingScreen off the top of the page.
 		 * So we're using flex-wrap with a fixed height so that when the screen width gets too small for the other links they wrap to the next row
