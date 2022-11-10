@@ -19,18 +19,6 @@ module.exports = {
         },
       },
     },
-    fontSize: {
-      'xs': '0.39rem',
-      'sm': '0.62rem',
-      'base': '1rem',
-      'lg': '1.61rem',
-      'xl': '2.59rem',
-      '2xl': '4.17rem',
-      '3xl': '6.71rem',
-      '4xl': '10.82rem',
-      '5xl': '17.42rem',
-      '6xl': '28.04rem',
-    },
     // TODO: Use fluid font sizes
     // fontSize: {
     //   'xs': 'clamp(.5rem, .625vw, .75rem)',

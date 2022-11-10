@@ -6,7 +6,11 @@ type TodoPropType = {
 
 export default function Todo(props: TodoPropType) {
 	return (
-		<div className="mx-4 my-2 flex w-full items-center justify-between rounded-md bg-[#1b1b1b] text-lg font-normal text-white">
+		<div
+			className={`todo m-2 flex items-center justify-between rounded-md bg-[#1b1b1b] text-lg font-normal text-white ${
+				props.todo.completedAt ? 'opacity-70' : ''
+			}`}
+		>
 			<span className="status">
 				<svg
 					viewBox="0 0 100 100"
@@ -27,7 +31,7 @@ export default function Todo(props: TodoPropType) {
 				<span className="description">{props.todo.description}</span>
 				<span className="notes-digest"></span>
 			</span>
-			<span className="role w-24 px-4 text-right text-xs font-black uppercase italic tracking-tight">
+			<span className="role hidden w-24 px-4 text-right text-xs font-black uppercase italic tracking-tight md:inline">
 				{props.todo.role}
 			</span>
 		</div>

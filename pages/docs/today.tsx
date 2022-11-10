@@ -7,6 +7,8 @@ export default function Today(props) {
 			<Feature
 				id="today"
 				heading="Today"
+				previews={[]}
+				top={0}
 			>
 				If you choose to integrate Starfocus with your calendar then the today
 				view will show your next event so that you never miss a meeting.

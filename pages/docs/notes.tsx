@@ -7,6 +7,8 @@ export default function Notes(props) {
 			<Feature
 				id="notes"
 				heading="Notes"
+				previews={[]}
+				top={0}
 			>
 				Notes allow you to add as much extra information as you like to any todo
 				as Markdown.

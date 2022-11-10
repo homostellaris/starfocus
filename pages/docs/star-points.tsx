@@ -7,6 +7,8 @@ export default function StarPoints(props) {
 			<Feature
 				id="star-points"
 				heading={'Star Points'}
+				previews={[]}
+				top={0}
 			>
 				You can see Starfocus as a game in which the objective is to collect as
 				many star points as possible. Star points are earned by completing todos
