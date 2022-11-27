@@ -11,7 +11,9 @@ const Layout = (props: { children?: ReactNode; title?: string }) => {
 			const scroller = document.querySelector('.parallax-container')
 			const starship = document.querySelector('#starship') as HTMLElement
 
-			const scrollerVisibleHeight = scroller.getBoundingClientRect().height
+			const scrollerVisibleHeight = (
+				document.getElementsByClassName('parallax-container')[0] as HTMLElement
+			).offsetHeight
 			const scrollerTotalHeight = scroller.scrollHeight
 
 			const thumbHeight = 100
@@ -21,7 +23,7 @@ const Layout = (props: { children?: ReactNode; title?: string }) => {
 
 			const adjustmentHorizontal =
 				window.innerWidth / 2 - window.innerWidth / 10 / 4
-			const adjustmentVertical = window.innerHeight / 2
+			const adjustmentVertical = scrollerVisibleHeight / 2
 
 			starship.style.transform = `
 				scale(${1 / factor})
