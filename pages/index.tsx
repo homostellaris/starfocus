@@ -13,7 +13,7 @@ export default function IndexPage() {
 
 	return (
 		<Layout title="Starfocus | The todo app for the future">
-			<div className="plane-0 adjust-for-scrollbar h-full">
+			<div className="h-full plane-0 adjust-for-scrollbar">
 				<LandingScreen />
 			</div>
 			<div className="absolute -mx-2">
@@ -33,26 +33,26 @@ function arrowKeyNavigation() {
 	return () => {
 		document.removeEventListener('keydown', arrowKeyListener)
 	}
+}
 
-	function arrowKeyListener(event) {
-		if (!['ArrowUp', 'ArrowDown'].includes(event.code)) return
+function arrowKeyListener(event) {
+	if (!['ArrowUp', 'ArrowDown'].includes(event.code)) return
 
-		event.preventDefault()
-		let scrollIncrement: number
+	event.preventDefault()
+	let scrollIncrement: number
 
-		const scroller = document.querySelector('.parallax-container')
+	const scroller = document.querySelector('.parallax-container')
 
-		if (event.code === 'ArrowUp')
-			scrollIncrement = Math.min(
-				Math.floor(scroller.scrollTop / window.innerHeight) + 1,
-				screensCount
-			)
-		if (event.code === 'ArrowDown')
-			scrollIncrement = Math.max(
-				Math.ceil(scroller.scrollTop / window.innerHeight) - 1,
-				0
-			)
+	if (event.code === 'ArrowUp')
+		scrollIncrement = Math.min(
+			Math.floor(scroller.scrollTop / window.innerHeight) + 1,
+			screensCount
+		)
+	if (event.code === 'ArrowDown')
+		scrollIncrement = Math.max(
+			Math.ceil(scroller.scrollTop / window.innerHeight) - 1,
+			0
+		)
 
-		scroller.scrollTo(0, scrollIncrement * window.innerHeight)
-	}
+	scroller.scrollTo(0, scrollIncrement * window.innerHeight)
 }

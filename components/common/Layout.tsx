@@ -7,7 +7,7 @@ import Tracjectory from '../landingPage/Journey/Trajectory'
 
 const Layout = (props: { children?: ReactNode; title?: string }) => {
 	useLayoutEffect(() => {
-		function updateSize() {
+		function setupStarshipScroller() {
 			const scroller = document.querySelector('.parallax-container')
 			const starship = document.querySelector('#starship') as HTMLElement
 
@@ -33,9 +33,9 @@ const Layout = (props: { children?: ReactNode; title?: string }) => {
 			`
 		}
 
-		window.addEventListener('resize', updateSize)
-		updateSize()
-		return () => window.removeEventListener('resize', updateSize)
+		setupStarshipScroller()
+		window.addEventListener('resize', setupStarshipScroller)
+		return () => window.removeEventListener('resize', setupStarshipScroller)
 	}, [])
 
 	return (
@@ -61,7 +61,7 @@ const Layout = (props: { children?: ReactNode; title?: string }) => {
 				trackOutboundLinks={true}
 			>
 				<main className="h-full">
-					<div className="parallax-container h-full">
+					<div className="h-full parallax-container">
 						<div className="absolute left-[calc(2.5vw-2px)] h-[calc(800vh+5rem)] w-[2px]">
 							<Tracjectory />
 						</div>
@@ -71,7 +71,7 @@ const Layout = (props: { children?: ReactNode; title?: string }) => {
 						>
 							<Starship />
 						</div>
-						<div className="plane-negative-1 absolute -z-10">
+						<div className="absolute plane-negative-1 -z-10">
 							<Planets height="h-[800vh]" />
 						</div>
 						{props.children}
