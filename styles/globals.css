@@ -11,6 +11,7 @@ html,
 body {
 	margin: 0;
 	padding: 0;
+	overflow: hidden;
 }
 
 /* Should just be able to set height 100% on html for the mobile URL bar workaround but for some reason this is required with NextJS */
@@ -52,11 +53,6 @@ body::-webkit-scrollbar {
 	background-clip: text;
 	-webkit-text-fill-color: transparent;
 	background-size: cover;
-}
-
-.off-screen {
-	opacity: 0;
-	transform: translateY(-100vh);
 }
 
 .expanded {

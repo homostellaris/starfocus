@@ -18,7 +18,6 @@ export default function IndexPage() {
 			</div>
 			<div className="absolute -mx-2">
 				<div className="h-[700vh] w-screen"></div>
-				<Footer />
 			</div>
 			<div className="plane-0 adjust-for-scrollbar">
 				<Features count={featuresCount} />

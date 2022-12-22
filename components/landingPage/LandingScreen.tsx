@@ -6,10 +6,10 @@ export default function LandingScreen() {
 	return (
 		<section
 			id="landing-screen"
-			className="flex h-full flex-col"
+			className="flex flex-col h-full"
 		>
 			<HeroMessage />
-			<div className="relative h-full w-full">
+			<div className="relative w-full h-full">
 				<Image
 					src={appScreenshot}
 					className="p-4"

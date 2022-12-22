@@ -1,9 +1,16 @@
-import React, { ReactNode, useLayoutEffect } from 'react'
+import React, {
+	ReactNode,
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from 'react'
 import Head from 'next/head'
 import Planets from '../landingPage/Planets'
 import PlausibleProvider from 'next-plausible'
 import Starship from '../landingPage/Journey/Starship'
 import Tracjectory from '../landingPage/Journey/Trajectory'
+import Footer from '../landingPage/Footer'
 
 const Layout = (props: { children?: ReactNode; title?: string }) => {
 	useLayoutEffect(() => {
@@ -38,6 +45,10 @@ const Layout = (props: { children?: ReactNode; title?: string }) => {
 		return () => window.removeEventListener('resize', setupStarshipScroller)
 	}, [])
 
+	const [lastScrollDirection, setLastScrollDSirection] =
+		useState<ScrollDirection>()
+	const lastScrollTop = useRef(0)
+
 	return (
 		<div>
 			<Head>
@@ -61,7 +72,30 @@ const Layout = (props: { children?: ReactNode; title?: string }) => {
 				trackOutboundLinks={true}
 			>
 				<main className="h-full">
-					<div className="h-full parallax-container">
+					<div
+						className="h-full parallax-container"
+						onScroll={event => {
+							const element = event.target as Element
+
+							if (element.scrollTop > lastScrollTop.current) {
+								document
+									.getElementById('calls-to-action')
+									.classList.remove('translate-y-20')
+								document
+									.getElementById('calls-to-action')
+									.classList.add('translate-y-0')
+							} else {
+								document
+									.getElementById('calls-to-action')
+									.classList.remove('translate-y-0')
+								document
+									.getElementById('calls-to-action')
+									.classList.add('translate-y-20')
+							}
+
+							lastScrollTop.current = element.scrollTop
+						}}
+					>
 						<div className="absolute left-[calc(2.5vw-2px)] h-[calc(800vh+5rem)] w-[2px]">
 							<Tracjectory />
 						</div>
@@ -76,10 +110,16 @@ const Layout = (props: { children?: ReactNode; title?: string }) => {
 						</div>
 						{props.children}
 					</div>
+					<Footer display={lastScrollDirection === ScrollDirection.down} />
 				</main>
 			</PlausibleProvider>
 		</div>
 	)
+}
+
+enum ScrollDirection {
+	up,
+	down,
 }
 
 export default Layout
