@@ -1,4 +1,4 @@
-import Layout from '../../components/common/Layout'
+import Layout from '../../components/landingPage/Layout'
 import Feature from '../../components/landingPage/Features/Feature'
 
 export default function Roles(props) {

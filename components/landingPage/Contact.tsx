@@ -6,7 +6,7 @@ export default function Contact() {
 			<div className="m-auto text-center">
 				<Register />
 			</div>
-			<div className="m-4 flex flex-grow items-center justify-between gap-4 text-center">
+			<div className="flex items-center justify-between flex-grow gap-4 text-center">
 				<Separator />
 				<a
 					href="https://discord.gg/Gdywcwcu"

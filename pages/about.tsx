@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import Layout from '../components/common/Layout'
+import Layout from '../components/landingPage/Layout'
 
 export default function AboutPage() {
 	return (

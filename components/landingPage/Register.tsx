@@ -12,7 +12,7 @@ export default function Register() {
 	return (
 		<>
 			<form
-				className="register m-4 text-center text-white"
+				className="text-center text-white register"
 				onSubmit={async event => {
 					event.preventDefault()
 
@@ -22,7 +22,7 @@ export default function Register() {
 					setIsSubmitted(true)
 				}}
 			>
-				<div className="flex rounded-md border p-2 text-white">
+				<div className="flex p-2 text-white border rounded-md">
 					{isSubmitted ? (
 						<p>Subscribed as {email} ✅</p>
 					) : (
@@ -37,7 +37,7 @@ export default function Register() {
 								onChange={event => setEmail(event.target.value)}
 							></input>
 							<button
-								className="border-l pl-2"
+								className="pl-2 border-l"
 								type="submit"
 							>
 								Submit

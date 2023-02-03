@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
-import Layout from '../components/common/Layout'
+import Layout from '../components/landingPage/Layout'
 import Features from '../components/landingPage/Features'
-import Footer from '../components/landingPage/Footer'
 import LandingScreen from '../components/landingPage/LandingScreen'
 
 const featuresCount = 7
@@ -12,8 +11,11 @@ export default function IndexPage() {
 	useEffect(arrowKeyNavigation, [])
 
 	return (
-		<Layout title="Starfocus | The todo app for the future">
-			<div className="h-full plane-0 adjust-for-scrollbar">
+		<Layout
+			title="Starfocus | The todo app for the future"
+			screensCount={8}
+		>
+			<div className="plane-0 adjust-for-scrollbar h-full">
 				<LandingScreen />
 			</div>
 			<div className="absolute -mx-2">

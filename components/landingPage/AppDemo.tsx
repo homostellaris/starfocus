@@ -14,7 +14,7 @@ export default function AppDemo() {
 	return (
 		<div
 			id="app-demo"
-			className="relative h-full overflow-hidden rounded-md border"
+			className="relative h-full overflow-hidden border rounded-md"
 		>
 			<div className="absolute z-10 w-full">
 				<Events
@@ -30,8 +30,8 @@ export default function AppDemo() {
 				/>
 			</div>
 			{/* Need to have h-full on everything down to this point in order for overflow-auto to work 🤷‍♂️ */}
-			<div className="app-main no-scrollbar flex h-full overflow-auto">
-				<div className="left-column w-1/12 grow pl-2"></div>
+			<div className="flex h-full overflow-auto no-scrollbar">
+				<div className="w-1/12 pl-2 left-column grow"></div>
 				<div className="w-10/12 max-w-[800px] grow">
 					<Todos
 						todos={[

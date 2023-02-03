@@ -104,6 +104,11 @@ body::-webkit-scrollbar {
 		translateZ(-2px);
 }
 
+.plane-0-regular-scroll {
+	transform-origin: center;
+	transform: translateZ(-2px);
+}
+
 .adjust-for-scrollbar {
 	/* https://stackoverflow.com/questions/51202143/gap-created-by-scrollbar-in-css-parallax-scrolling-sites */
 	/* position: relative;
