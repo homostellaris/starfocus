@@ -5,14 +5,14 @@ import settingsIcon from './setting-dynamic-gradient.png'
 import starIcon from './star-front-gradient.png'
 import searchIcon from './zoom-dynamic-gradient.png'
 import Footer from '../common/Footer'
-import { useEffect, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 
-export default function ControlPanel () {
+export default function ControlPanel() {
 	const [displayControlPanel, setDisplayControlPanel] = useState<boolean>(true)
-	useEffect(() => {
+	useLayoutEffect(() => {
 		setTimeout(() => {
 			setDisplayControlPanel(false)
-		}, 2000)
+		}, 3000)
 	}, [])
 
 	return (

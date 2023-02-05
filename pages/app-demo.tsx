@@ -4,6 +4,7 @@ import ControlPanel from '../components/app/ControlPanel'
 import RoleSidebar from '../components/app/RoleSidebar'
 import PerformanceSidebar from '../components/app/PerformanceSidebar'
 import Journey from '../components/app/Journey'
+import { createRef, useLayoutEffect } from 'react'
 
 export default function AppDemo() {
 	// useEffect(setupAnimations, [])
@@ -12,6 +13,16 @@ export default function AppDemo() {
 	// 	const mostImportantTodo = todos[todos.length - 1]
 	// 	mostImportantTodo.scrollIntoView()
 	// }, [])
+
+	const currentTodoRef = createRef<HTMLLIElement>()
+
+	useLayoutEffect(() => {
+		currentTodoRef.current.scrollIntoView()
+		// document
+		// 	.getElementsByClassName('parallax-container')[0]
+		// 	.scroll(0, currentTodoRef.current.offsetTop - window.innerHeight)
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
 
 	return (
 		<div className="relative w-full">
@@ -35,14 +46,14 @@ export default function AppDemo() {
 				<div className="fixed right-0 z-10 hidden w-1/6 p-4 right-column top-24 lg:block">
 					<RoleSidebar />
 				</div>
-				<div className="h-full parallax-container no-scrollbar">
+				<div className="parallax-container no-scrollbar h-full scroll-p-[calc(100vh-10rem)]">
 					<div
 						className={`plane-negative-1 h-[calc(${8 * 100}vh)] absolute
 							-z-10`}
 					>
 						<Planets height="h-[800vh]" />
 					</div>
-					<Journey />
+					<Journey currentTodoRef={currentTodoRef} />
 				</div>
 				<ControlPanel />
 			</main>

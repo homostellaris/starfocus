@@ -1,16 +1,14 @@
 import Todo from './Todo'
 import { Todo as TodoInterface } from './interfaces'
-import { useEffect, useLayoutEffect, useMemo } from 'react'
+import { RefObject, useMemo } from 'react'
 
-export default function Todos({ todos }: { todos: TodoInterface[] }) {
-	useLayoutEffect(() => {
-		setTimeout(() => {
-			console.log(document.querySelector('.todos .todo:last-child'))
-			document.querySelector('.todos li:last-child').scrollIntoView()
-			window.scrollBy(0, -10)
-		}, 2000)
-	}, [])
-
+export default function Todos({
+	currentTodoRef,
+	todos,
+}: {
+	currentTodoRef?: RefObject<HTMLLIElement>
+	todos: TodoInterface[]
+}) {
 	const sortedTodos = useMemo(
 		() => todos.sort((a, b) => Number(b.id) - Number(a.id)),
 		[todos]
@@ -19,8 +17,11 @@ export default function Todos({ todos }: { todos: TodoInterface[] }) {
 	return (
 		// Without overflow-auto there is no margin between the bottom todo and the edge of the list 🤷‍♂️
 		<ol className="pt-2 todos">
-			{sortedTodos.map(todo => (
-				<li key={todo.id}>
+			{sortedTodos.map((todo, index) => (
+				<li
+					key={todo.id}
+					ref={index + 1 === todos.length ? currentTodoRef : undefined}
+				>
 					<Todo todo={todo} />
 				</li>
 			))}

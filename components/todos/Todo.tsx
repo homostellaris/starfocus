@@ -1,14 +1,10 @@
 import { Todo as TodoInterface } from './interfaces'
 
-type TodoPropType = {
-	todo: TodoInterface
-}
-
-export default function Todo(props: TodoPropType) {
+export default function Todo({ todo }: { todo: TodoInterface }) {
 	return (
 		<div
 			className={`todo m-2 flex items-center justify-between rounded-md bg-[#1b1b1b] text-lg font-normal text-white ${
-				props.todo.completedAt ? 'opacity-70' : ''
+				todo.completedAt ? 'opacity-70' : ''
 			}`}
 		>
 			<span className="status">
@@ -28,11 +24,11 @@ export default function Todo(props: TodoPropType) {
 				</svg>
 			</span>
 			<span className="details grow">
-				<span className="description">{props.todo.description}</span>
+				<span className="description">{todo.description}</span>
 				<span className="notes-digest"></span>
 			</span>
-			<span className="role hidden w-24 px-4 text-right text-xs font-black uppercase italic tracking-tight md:inline">
-				{props.todo.role}
+			<span className="hidden w-24 px-4 text-xs italic font-black tracking-tight text-right uppercase role md:inline">
+				{todo.role}
 			</span>
 		</div>
 	)
