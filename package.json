@@ -22,7 +22,8 @@
 		"lint": "next lint",
 		"prettier:fix": "prettier --write components/ interfaces/ pages/ public/ styles/ utils/",
 		"start": "next start",
-		"build": "convex deploy --typecheck=disable && next build"
+		"build": "convex deploy --typecheck=disable && next build",
+		"prepare": "husky install"
 	},
 	"dependencies": {
 		"convex": "^0.5.0",
@@ -39,6 +40,8 @@
 		"autoprefixer": "^10.4.7",
 		"eslint": "8.23.1",
 		"eslint-config-next": "12.3.0",
+		"gitmoji-cli": "^7.1.0",
+		"husky": "^8.0.0",
 		"postcss": "^8.4.14",
 		"prettier": "2.7.1",
 		"prettier-plugin-tailwindcss": "^0.1.13",
