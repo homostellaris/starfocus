@@ -1,10 +1,13 @@
-import { createRef, RefObject, useLayoutEffect, useState } from 'react'
+import { RefObject, useLayoutEffect, useState } from 'react'
 import Starship from '../../landingPage/Journey/Starship'
 import Todos from '../../todos'
-import Log from '../../todos/Log'
 import todosFixture from '../../todos/todos.json'
 
-export default function Journey({currentTodoRef}: {currentTodoRef: RefObject<HTMLLIElement>}) {
+export default function Journey({
+	currentTodoRef,
+}: {
+	currentTodoRef: RefObject<HTMLDivElement>
+}) {
 	const [starshipY, setStarshipY] = useState<number>(0)
 
 	useLayoutEffect(() => {
@@ -16,7 +19,7 @@ export default function Journey({currentTodoRef}: {currentTodoRef: RefObject<HTM
 	}, [currentTodoRef])
 
 	return (
-		<div className="relative w-4/6 p-20 m-auto">
+		<div className="relative m-auto w-4/6 p-20">
 			<div
 				id="starship"
 				className={`absolute left-0 m-auto h-[10vmin] w-[10vmin] transition-transform`}
@@ -26,29 +29,12 @@ export default function Journey({currentTodoRef}: {currentTodoRef: RefObject<HTM
 			</div>
 			<Todos
 				currentTodoRef={currentTodoRef}
-				todos={todosFixture}
-			/>
-			<Log
-				todos={[
-					{
-						id: '1',
-						completedAt: new Date('2020-01-01'),
-						description: 'Complete Typescript course',
-						role: 'Software Creator',
-					},
-					{
-						id: '2',
-						completedAt: new Date('2020-01-01'),
-						description: 'Complete Typescript course',
-						role: 'Software Creator',
-					},
-					{
-						id: '3',
-						completedAt: new Date('2020-01-01'),
-						description: 'Complete Typescript course',
-						role: 'Software Creator',
-					},
-				]}
+				todos={todosFixture.map(todoFixture => ({
+					...todoFixture,
+					completedAt: todoFixture.completedAt
+						? new Date(todoFixture.completedAt)
+						: undefined,
+				}))}
 			/>
 		</div>
 	)

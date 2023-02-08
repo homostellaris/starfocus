@@ -14,7 +14,7 @@ export default function AppDemo() {
 	// 	mostImportantTodo.scrollIntoView()
 	// }, [])
 
-	const currentTodoRef = createRef<HTMLLIElement>()
+	const currentTodoRef = createRef<HTMLDivElement>()
 
 	useLayoutEffect(() => {
 		currentTodoRef.current.scrollIntoView()

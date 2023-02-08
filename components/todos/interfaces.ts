@@ -1,5 +1,6 @@
 export interface Todo {
 	id: string
+	rank: number
 	description: string
 	notes?: string
 	role?: string
