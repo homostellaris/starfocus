@@ -5,11 +5,11 @@ import settingsIcon from './setting-dynamic-gradient.png'
 import starIcon from './star-front-gradient.png'
 import searchIcon from './zoom-dynamic-gradient.png'
 import Footer from '../common/Footer'
-import { useLayoutEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function ControlPanel() {
 	const [displayControlPanel, setDisplayControlPanel] = useState<boolean>(true)
-	useLayoutEffect(() => {
+	useEffect(() => {
 		setTimeout(() => {
 			setDisplayControlPanel(false)
 		}, 3000)
@@ -17,7 +17,7 @@ export default function ControlPanel() {
 
 	return (
 		<div
-			className="fixed bottom-0 w-full h-20"
+			className="fixed bottom-0 h-20 w-full"
 			onMouseOver={() => {
 				setDisplayControlPanel(true)
 			}}

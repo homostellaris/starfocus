@@ -1,13 +1,18 @@
-import { RefObject, useLayoutEffect, useState } from 'react'
+import { createRef, useLayoutEffect, useState } from 'react'
 import Starship from '../../landingPage/Journey/Starship'
 import Todos from '../../todos'
-import todosFixture from '../../todos/todos.json'
 
-export default function Journey({
-	currentTodoRef,
-}: {
-	currentTodoRef: RefObject<HTMLDivElement>
-}) {
+export default function Journey({ todos }: { todos: object[] }) {
+	const currentTodoRef = createRef<HTMLDivElement>()
+
+	useLayoutEffect(() => {
+		currentTodoRef.current.scrollIntoView()
+		// document
+		// 	.getElementsByClassName('parallax-container')[0]
+		// 	.scroll(0, currentTodoRef.current.offsetTop - window.innerHeight)
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
+
 	const [starshipY, setStarshipY] = useState<number>(0)
 
 	useLayoutEffect(() => {
@@ -19,7 +24,7 @@ export default function Journey({
 	}, [currentTodoRef])
 
 	return (
-		<div className="relative m-auto w-4/6 p-20">
+		<div className="relative w-4/6 p-20 m-auto">
 			<div
 				id="starship"
 				className={`absolute left-0 m-auto h-[10vmin] w-[10vmin] transition-transform`}
@@ -29,10 +34,10 @@ export default function Journey({
 			</div>
 			<Todos
 				currentTodoRef={currentTodoRef}
-				todos={todosFixture.map(todoFixture => ({
-					...todoFixture,
-					completedAt: todoFixture.completedAt
-						? new Date(todoFixture.completedAt)
+				todos={todos.map(todo => ({
+					...todo,
+					completedAt: todo.completedAt
+						? new Date(todo.completedAt)
 						: undefined,
 				}))}
 			/>
