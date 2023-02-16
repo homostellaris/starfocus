@@ -16,7 +16,18 @@ export default function Todo({
 			} ${compact ? '' : 'w-full'}`}
 			ref={reference}
 		>
-			<span className={`${compact ? 'hidden' : 'inline'} destination`}>
+			<span
+				className={`${compact ? 'hidden' : 'inline'} destination`}
+				onClick={() => {
+					const eventType = todo.completedAt
+						? 'todo uncompleted'
+						: 'todo completed'
+					const event = new CustomEvent(eventType, {
+						detail: { id: todo.id },
+					})
+					document.dispatchEvent(event)
+				}}
+			>
 				<svg
 					viewBox="0 0 100 100"
 					xmlns="http://www.w3.org/2000/svg"

@@ -6,11 +6,51 @@ import PerformanceSidebar from '../app/PerformanceSidebar'
 import Journey from '../app/Journey'
 import { useEffect, useState } from 'react'
 import todoFixture from '../todos/todos.json'
+import { Todo } from '../todos/interfaces'
 
 export default function App() {
-	const [todos, setTodos] = useState<object[]>([])
+	const [todos, setTodos] = useState<Todo[]>([])
+
 	useEffect(() => {
-		setTodos(todoFixture)
+		setTodos(
+			todoFixture.map(todo => ({
+				...todo,
+				completedAt: todo.completedAt ? new Date(todo.completedAt) : undefined,
+			}))
+		)
+	}, [])
+
+	useEffect(() => {
+		document.addEventListener('todo completed', completeTodo)
+		document.addEventListener('todo uncompleted', uncompleteTodo)
+
+		function completeTodo(event: CustomEvent) {
+			setTodos(previousTodos =>
+				previousTodos.map(todo => {
+					const newTodo = { ...todo }
+					if (todo.id === event.detail.id) {
+						newTodo.completedAt = new Date()
+					}
+					return newTodo
+				})
+			)
+		}
+		function uncompleteTodo(event: CustomEvent) {
+			setTodos(previousTodos =>
+				previousTodos.map(todo => {
+					const newTodo = { ...todo }
+					if (todo.id === event.detail.id) {
+						newTodo.completedAt = undefined
+					}
+					return newTodo
+				})
+			)
+		}
+
+		return () => {
+			document.removeEventListener('todo completed', completeTodo)
+			document.removeEventListener('todo uncompleted', uncompleteTodo)
+		}
 	}, [])
 
 	return (
@@ -21,6 +61,7 @@ export default function App() {
 						events={[
 							{
 								id: '1',
+								rank: 1,
 								description: 'Meeting with Steve',
 								role: 'Software Creator',
 								start: new Date(),

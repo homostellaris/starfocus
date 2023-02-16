@@ -36,7 +36,7 @@ export default function Todos({
 							? currentTodoRef
 							: undefined
 					}
-					compact={index < sortedTodos.length - 7}
+					compact={index < sortedTodos.length - 7 - 3}
 				/>
 			))}
 		</div>
