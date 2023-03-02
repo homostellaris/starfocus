@@ -11,6 +11,8 @@ import { Todo } from '../todos/interfaces'
 export default function App() {
 	const [todos, setTodos] = useState<Todo[]>([])
 
+	const [eventsExpanded] = useKeyboardShortcuts()
+
 	useEffect(() => {
 		setTodos(
 			todoFixture.map(todo => ({
@@ -56,7 +58,7 @@ export default function App() {
 	return (
 		<div className="relative w-full">
 			<main className="h-full">
-				<header className="fixed top-0 z-10 w-full">
+				<header className="fixed top-0 z-20 w-full">
 					<Events
 						events={[
 							{
@@ -67,7 +69,24 @@ export default function App() {
 								start: new Date(),
 								end: new Date(),
 							},
+							{
+								id: '2',
+								rank: 2,
+								description: 'Meeting with Dave',
+								role: 'Software Creator',
+								start: new Date(),
+								end: new Date(),
+							},
+							{
+								id: '3',
+								rank: 3,
+								description: 'Meeting with Bob',
+								role: 'Software Creator',
+								start: new Date(),
+								end: new Date(),
+							},
 						]}
+						expanded={eventsExpanded}
 					/>
 				</header>
 				<div className="left-column fixed left-0 top-24 z-10 hidden w-1/6 p-4 text-white lg:block">
@@ -89,4 +108,19 @@ export default function App() {
 			</main>
 		</div>
 	)
+}
+
+function useKeyboardShortcuts() {
+	const [eventsExpanded, setEventsExpanded] = useState<boolean>(false)
+
+	useEffect(() => {
+		document.addEventListener('keydown', event => {
+			if (event.key === 'e') {
+				setEventsExpanded(value => !value)
+			}
+		})
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
+
+	return [eventsExpanded]
 }

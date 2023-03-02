@@ -1,10 +1,20 @@
 import Todo from './Todo'
 import { Event } from '../todos/interfaces'
 
-export default function Events(props: { events: Event[] }) {
+export default function Events({
+	events,
+	expanded = false,
+}: {
+	events: Event[]
+	expanded: boolean
+}) {
 	return (
-		<div className="events glass z-10 flex items-center rounded-md">
-			<div className="left-column w-1/6 grow px-4">
+		<div
+			className={`events glass z-10 flex items-end rounded-md ${
+				expanded ? 'translate-y-0' : '-translate-y-[10rem]'
+			} duration-500 ease-out`}
+		>
+			<div className="left-column w-1/6 grow p-4">
 				<p className="hidden text-left text-base font-light uppercase tracking-wide text-slate-400 md:block">
 					Up next
 				</p>
@@ -13,15 +23,20 @@ export default function Events(props: { events: Event[] }) {
 				</p>
 			</div>
 			<div className="relative w-4/6 px-20">
-				{props.events.length ? (
-					<div className="flex">
-						<Todo todo={props.events[0]} />
+				{events.length ? (
+					<div className="flex flex-wrap">
+						{events.map(event => (
+							<Todo
+								key={event.id}
+								todo={event}
+							/>
+						))}
 					</div>
 				) : (
 					'No events here. Sync your calendar to see them.'
 				)}
 			</div>
-			<div className="right-column w-1/6 grow px-4">
+			<div className="right-column w-1/6 grow p-4">
 				<p className="hidden text-right text-base font-light uppercase tracking-wide text-slate-400 md:block">
 					Events
 				</p>
