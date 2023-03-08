@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
+import Log from '../../pages/docs/log'
 import Todos from '../todos'
 import Events from '../todos/Events'
-import Log from '../todos/Log'
 
 export default function AppDemo() {
 	// useEffect(setupAnimations, [])
@@ -21,6 +21,7 @@ export default function AppDemo() {
 					events={[
 						{
 							id: '1',
+							rank: 1,
 							description: 'Meeting with Steve',
 							role: 'Software Creator',
 							start: new Date(),
@@ -37,56 +38,67 @@ export default function AppDemo() {
 						todos={[
 							{
 								id: '2',
+								rank: 2,
 								description: 'Teach Thomas how to cook pasta',
 								role: 'Father',
 							},
 							{
 								id: '3',
+								rank: 3,
 								description: 'Write bestman speech',
 								role: 'Friend',
 							},
 							{
 								id: '4',
+								rank: 4,
 								description: 'Take the bins out',
 								role: 'Family Member',
 							},
 							{
 								id: '5',
+								rank: 5,
 								description: 'Reply to Sandra',
 								role: 'Software Creator',
 							},
 							{
 								id: '6',
+								rank: 6,
 								description: 'Do some laundry',
 								role: 'Family Member',
 							},
 							{
 								id: '7',
+								rank: 7,
 								description: 'Arrange dentist appointment',
 								role: 'Individual',
 							},
 							{
 								id: '8',
+								rank: 8,
 								description: 'Pay parking fine',
 								role: 'Family Member',
 							},
 							{
 								id: '9',
+								rank: 9,
 								description: 'Take the dog out',
 								role: 'Family Member',
 							},
 							{
 								id: '10',
+								rank: 10,
 								description: 'Call Mum',
 								role: 'Family Member',
 							},
 							{
 								id: '11',
+								rank: 11,
 								description: 'Watch the bouldering world cup',
 								role: 'Climber',
 							},
 							{
 								id: '12',
+								rank: 12,
 								description: 'Read Anthropocosmos',
 								role: 'Space Explorer',
 							},
