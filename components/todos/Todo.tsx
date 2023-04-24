@@ -43,7 +43,7 @@ export default function Todo({
 					/>
 				</svg>
 			</span>
-			<span className="details grow p-2">
+			<span className="p-2 details grow">
 				<span className="description">{todo.description}</span>
 				<span className="notes-digest"></span>
 			</span>

@@ -1,59 +1,15 @@
-import Events from '../todos/Events'
-import Planets from '../common/Planets'
-import ControlPanel from '../app/ControlPanel'
-import RoleSidebar from '../app/RoleSidebar'
-import PerformanceSidebar from '../app/PerformanceSidebar'
-import Journey from '../app/Journey'
 import { useEffect, useState } from 'react'
-import todoFixture from '../todos/todos.json'
-import { Todo } from '../todos/interfaces'
+import ControlPanel from '../app/ControlPanel'
+import Journey from '../app/Journey'
+import PerformanceSidebar from '../app/PerformanceSidebar'
+import RoleSidebar from '../app/RoleSidebar'
+import Planets from '../common/Planets'
+import Events from '../todos/Events'
+import useTodos from '../todos/useTodos'
 
 export default function App() {
-	const [todos, setTodos] = useState<Todo[]>([])
-
+	const [todos, _] = useTodos()
 	const [eventsExpanded] = useKeyboardShortcuts()
-
-	useEffect(() => {
-		setTodos(
-			todoFixture.map(todo => ({
-				...todo,
-				completedAt: todo.completedAt ? new Date(todo.completedAt) : undefined,
-			}))
-		)
-	}, [])
-
-	useEffect(() => {
-		document.addEventListener('todo completed', completeTodo)
-		document.addEventListener('todo uncompleted', uncompleteTodo)
-
-		function completeTodo(event: CustomEvent) {
-			setTodos(previousTodos =>
-				previousTodos.map(todo => {
-					const newTodo = { ...todo }
-					if (todo.id === event.detail.id) {
-						newTodo.completedAt = new Date()
-					}
-					return newTodo
-				})
-			)
-		}
-		function uncompleteTodo(event: CustomEvent) {
-			setTodos(previousTodos =>
-				previousTodos.map(todo => {
-					const newTodo = { ...todo }
-					if (todo.id === event.detail.id) {
-						newTodo.completedAt = undefined
-					}
-					return newTodo
-				})
-			)
-		}
-
-		return () => {
-			document.removeEventListener('todo completed', completeTodo)
-			document.removeEventListener('todo uncompleted', uncompleteTodo)
-		}
-	}, [])
 
 	return (
 		<div className="relative w-full">
@@ -95,7 +51,7 @@ export default function App() {
 				<div className="right-column fixed right-0 top-24 z-10 hidden w-1/6 p-4 lg:block">
 					<RoleSidebar />
 				</div>
-				<div className="parallax-container no-scrollbar h-full scroll-p-[calc(100vh-10rem)]">
+				<div className="parallax-container h-full scroll-p-[calc(100vh-10rem)]">
 					<div
 						className={`plane-negative-1 h-[calc(${8 * 100}vh)] absolute
 							-z-10`}

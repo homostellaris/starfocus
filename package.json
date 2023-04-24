@@ -27,6 +27,7 @@
 	},
 	"dependencies": {
 		"convex": "^0.5.0",
+		"debounce": "^1.2.1",
 		"next": "latest",
 		"next-plausible": "^3.6.2",
 		"plausible-tracker": "^0.3.8",

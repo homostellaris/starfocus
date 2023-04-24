@@ -6,7 +6,7 @@ export default function Events({
 	expanded = false,
 }: {
 	events: Event[]
-	expanded: boolean
+	expanded?: boolean
 }) {
 	return (
 		<div
@@ -14,11 +14,11 @@ export default function Events({
 				expanded ? 'translate-y-0' : '-translate-y-[10rem]'
 			} duration-500 ease-out`}
 		>
-			<div className="left-column w-1/6 grow p-4">
-				<p className="hidden text-left text-base font-light uppercase tracking-wide text-slate-400 md:block">
+			<div className="w-1/6 p-4 left-column grow">
+				<p className="hidden text-base font-light tracking-wide text-left uppercase text-slate-400 md:block">
 					Up next
 				</p>
-				<p className="text-left text-xs font-light tracking-wide text-slate-200 md:text-base">
+				<p className="text-xs font-light tracking-wide text-left text-slate-200 md:text-base">
 					30m
 				</p>
 			</div>
@@ -36,11 +36,11 @@ export default function Events({
 					'No events here. Sync your calendar to see them.'
 				)}
 			</div>
-			<div className="right-column w-1/6 grow p-4">
-				<p className="hidden text-right text-base font-light uppercase tracking-wide text-slate-400 md:block">
+			<div className="w-1/6 p-4 right-column grow">
+				<p className="hidden text-base font-light tracking-wide text-right uppercase text-slate-400 md:block">
 					Events
 				</p>
-				<p className="text-right text-xs font-light tracking-wide text-slate-200 md:text-base">
+				<p className="text-xs font-light tracking-wide text-right text-slate-200 md:text-base">
 					3/5
 				</p>
 			</div>

@@ -4,9 +4,11 @@ import { RefObject, useMemo } from 'react'
 
 export default function Todos({
 	currentTodoRef,
+	listRef,
 	todos,
 }: {
 	currentTodoRef?: RefObject<HTMLDivElement>
+	listRef?: RefObject<HTMLDivElement>
 	todos: TodoInterface[]
 }) {
 	const sortedTodos = useMemo(
@@ -26,7 +28,10 @@ export default function Todos({
 
 	return (
 		// Without overflow-auto there is no margin between the bottom todo and the edge of the list 🤷‍♂️
-		<div className="todos flex flex-wrap pt-2">
+		<div
+			className="todos flex flex-wrap pt-2"
+			ref={listRef}
+		>
 			{sortedTodos.map((todo, index) => (
 				<Todo
 					todo={todo}
@@ -36,7 +41,7 @@ export default function Todos({
 							? currentTodoRef
 							: undefined
 					}
-					compact={index < sortedTodos.length - 7 - 3}
+					compact={index < sortedTodos.length - 7 - completedCount}
 				/>
 			))}
 		</div>
