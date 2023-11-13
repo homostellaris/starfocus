@@ -6,10 +6,6 @@ export default function Document() {
 			<Head>
 				<meta charSet="utf-8" />
 				<meta
-					name="viewport"
-					content="initial-scale=1.0, width=device-width"
-				/>
-				<meta
 					name="description"
 					content="For humanity to realise its full potential, you must realise yours.
 					Starfocus will help you discover your purpose and create a unique
