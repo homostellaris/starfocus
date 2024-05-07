@@ -15,21 +15,21 @@ export default function Todos({
 		() =>
 			todos.sort((a, b) => {
 				if (a.completedAt || b.completedAt) {
-					return a.completedAt?.getTime() || 0 - b.completedAt?.getTime() || 0
+					return a.completedAt!.getTime() || 0 - b.completedAt!.getTime() || 0
 				}
 				return Number(b.rank) - Number(a.rank)
 			}),
-		[todos]
+		[todos],
 	)
 	const completedCount = useMemo(
 		() => todos.filter(todo => todo.completedAt).length,
-		[todos]
+		[todos],
 	)
 
 	return (
 		// Without overflow-auto there is no margin between the bottom todo and the edge of the list 🤷‍♂️
 		<div
-			className="todos flex flex-wrap pt-2"
+			className="flex flex-wrap pt-2 todos"
 			ref={listRef}
 		>
 			{sortedTodos.map((todo, index) => (

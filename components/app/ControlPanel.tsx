@@ -17,7 +17,7 @@ export default function ControlPanel() {
 
 	return (
 		<div
-			className="fixed bottom-0 h-20 w-full"
+			className="fixed bottom-0 w-full h-20"
 			onMouseOver={() => {
 				setDisplayControlPanel(true)
 			}}
@@ -29,32 +29,32 @@ export default function ControlPanel() {
 				<Image
 					src={statsIcon}
 					alt="star icon"
-					width="50px"
-					height="50px"
+					width="50"
+					height="50"
 				></Image>
 				<Image
 					src={searchIcon}
 					alt="star icon"
-					width="50px"
-					height="50px"
+					width="50"
+					height="50"
 				></Image>
 				<Image
 					src={starIcon}
 					alt="star icon"
-					width="50px"
-					height="50px"
+					width="50"
+					height="50"
 				></Image>
 				<Image
 					src={roleIcon}
 					alt="star icon"
-					width="50px"
-					height="50px"
+					width="50"
+					height="50"
 				></Image>
 				<Image
 					src={settingsIcon}
 					alt="star icon"
-					width="50px"
-					height="50px"
+					width="50"
+					height="50"
 				></Image>
 			</Footer>
 		</div>

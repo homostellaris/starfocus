@@ -16,7 +16,7 @@ export default function AboutPage() {
 				goal-setting, brain-dumping, and space exploration!
 			</p>
 			<p>
-				<Link href="/">
+				<Link href="/" legacyBehavior>
 					<a>Go home</a>
 				</Link>
 			</p>

@@ -1,9 +1,10 @@
+import { useMutation } from 'convex/react'
+import { api } from '../../convex/_generated/api'
 import { usePlausible } from 'next-plausible'
 import { useState } from 'react'
-import { useMutation } from '../../convex/_generated/react'
 
 export default function Register() {
-	const registerEmail = useMutation('registerEmail')
+	const registerEmail = useMutation(api.registerEmail.default)
 	const [email, setEmail] = useState<string>()
 	const [isSubmitted, setIsSubmitted] = useState<boolean>()
 
@@ -18,7 +19,7 @@ export default function Register() {
 
 					plausible('Subscribe to email updates')
 
-					await registerEmail(email)
+					await registerEmail({ email })
 					setIsSubmitted(true)
 				}}
 			>

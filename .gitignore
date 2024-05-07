@@ -37,3 +37,5 @@ yarn-error.log*
 *.tsbuildinfo
 
 convex/_generated/
+
+.gradle/

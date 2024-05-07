@@ -3,7 +3,7 @@ import Features from '../components/landingPage/Features'
 
 export default function ReverseScrollDemo() {
 	useLayoutEffect(() => {
-		const scroller = document.querySelector('.scroller')
+		const scroller = document.querySelector('.scroller')!
 		const thumb = document.querySelector('.left-column') as HTMLElement
 
 		const scrollerVisibleHeight = scroller.getBoundingClientRect().height
@@ -116,7 +116,7 @@ export default function ReverseScrollDemo() {
 			<style>{style}</style>
 			<div className="scroller">
 				{/* <div className="crosshairs"></div> */}
-				<div className="spacer bg-planets bg-contain"></div>
+				<div className="bg-contain spacer bg-planets"></div>
 				<div className="left-column">
 					<div className="starship"></div>
 				</div>

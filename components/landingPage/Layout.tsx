@@ -20,7 +20,7 @@ const Layout = ({
 }) => {
 	useLayoutEffect(() => {
 		function setupStarshipScroller() {
-			const scroller = document.querySelector('.parallax-container')
+			const scroller = document.querySelector('.parallax-container')!
 			const starship = document.querySelector('#starship') as HTMLElement
 
 			const scrollerVisibleHeight = (
@@ -51,7 +51,7 @@ const Layout = ({
 	}, [])
 
 	const [lastScrollDirection] = useState<ScrollDirection>(
-		footerInitialDisplay ? ScrollDirection.down : ScrollDirection.up
+		footerInitialDisplay ? ScrollDirection.down : ScrollDirection.up,
 	)
 	const lastScrollTop = useRef(0)
 
@@ -69,17 +69,17 @@ const Layout = ({
 
 						if (element.scrollTop > lastScrollTop.current) {
 							document
-								.getElementById('calls-to-action')
+								.getElementById('calls-to-action')!
 								.classList.remove('translate-y-20')
 							document
-								.getElementById('calls-to-action')
+								.getElementById('calls-to-action')!
 								.classList.add('translate-y-0')
 						} else {
 							document
-								.getElementById('calls-to-action')
+								.getElementById('calls-to-action')!
 								.classList.remove('translate-y-0')
 							document
-								.getElementById('calls-to-action')
+								.getElementById('calls-to-action')!
 								.classList.add('translate-y-20')
 						}
 

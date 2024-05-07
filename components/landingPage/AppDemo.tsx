@@ -140,11 +140,11 @@ export default function AppDemo() {
 }
 
 function setupAnimations() {
-	const whatIsStarfocus = document.getElementById('what-is-starfocus')
+	const whatIsStarfocus = document.getElementById('what-is-starfocus')!
 
 	let observer = new IntersectionObserver(
 		entries => {
-			const appDemo = document.getElementById('app-demo')
+			const appDemo = document.getElementById('app-demo')!
 			if (entries[0].isIntersecting) {
 				appDemo.classList.add('expanded')
 			} else {
@@ -153,7 +153,7 @@ function setupAnimations() {
 		},
 		{
 			threshold: 0,
-		}
+		},
 	)
 
 	observer.observe(whatIsStarfocus)
