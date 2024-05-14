@@ -234,7 +234,23 @@ const Home = () => {
 
 export default Home
 
-export const MiscMenu = () => {}
+export const MiscMenu = () => {
+	return (
+		<IonMenu
+			type="push"
+			contentId="main-content"
+		>
+			<IonHeader>
+				<IonToolbar>
+					<IonTitle>Menu Content</IonTitle>
+				</IonToolbar>
+			</IonHeader>
+			<IonContent className="ion-padding">
+				<p>Menu items coming soon...</p>
+			</IonContent>
+		</IonMenu>
+	)
+}
 
 export const FilterMenu = () => {
 	return (
