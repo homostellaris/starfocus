@@ -27,7 +27,7 @@ import {
 import { filterSharp } from 'ionicons/icons'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-component-lib/interfaces'
-import { db } from '../db'
+import { Todo, db } from '../db'
 import { useLiveQuery } from 'dexie-react-hooks'
 
 const Home = () => {
@@ -44,46 +44,32 @@ const Home = () => {
 	// 	{ id: 10, title: 'Panama City' },
 	// ]
 	// const [important, setTodos] = useState(data)
+	const [query, setQuery] = useState<string>('')
 	const important = useLiveQuery(
 		async () => {
 			const list = await db.lists.get('important')
 			if (list) {
-				return Promise.all(list.order.map(id => db.todos.get(id)))
+				const todos = await Promise.all(list.order.map(id => db.todos.get(id)))
+				if (query) {
+					return todos.filter(todo => todo?.title.toLowerCase().includes(query))
+				}
+				return todos
 			}
 			return []
 		},
-		[],
+		[query],
 		[],
 	)
-
-	async function handleReorder(event: CustomEvent<ItemReorderEventDetail>) {
-		// We don't use this to reorder for us because it results in a flash of 'unordered' content.
-		// Instead we re-order right away, calculate the new order ourselves, and update the DB.
-		event.detail.complete()
-
-		const todoIds = [...important.map(i => i.id)]
-		const reorderedTodoIds = moveItemInArray(
-			todoIds,
-			event.detail.from,
-			event.detail.to,
-		)
-		await db.lists.put({
-			type: 'important',
-			order: reorderedTodoIds,
-		})
-		// setTodos(event.detail.complete(important))
-	}
 
 	const openCreateTodoModal = useCallback(() => {
 		modal.current?.present()
 		if (fab.current) fab.current.activated = true
 	}, [])
 	const handleInput = (event: Event) => {
-		let query = ''
 		const target = event.target as HTMLIonSearchbarElement
-		if (target) query = target.value!.toLowerCase()
-
-		// setTodos(data.filter(d => d.toLowerCase().indexOf(query) > -1))
+		let query = ''
+		if (target?.value) query = target.value.toLowerCase()
+		setQuery(query)
 	}
 	const modal = useRef<HTMLIonModalElement>(null)
 	const fab = useRef<HTMLIonFabElement>(null)
@@ -120,8 +106,6 @@ const Home = () => {
 	}, [createTodo, openCreateTodoModal])
 
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
-	const miscMenuRef = useRef<HTMLIonMenuElement>(null)
-	const filterMenuRef = useRef<HTMLIonMenuElement>(null)
 	async function toggleStartMenu() {
 		await menuController.toggle('start')
 	}
@@ -152,35 +136,8 @@ const Home = () => {
 
 	return (
 		<>
-			<IonMenu
-				ref={miscMenuRef}
-				type="push"
-				contentId="main-content"
-			>
-				<IonHeader>
-					<IonToolbar>
-						<IonTitle>Menu Content</IonTitle>
-					</IonToolbar>
-				</IonHeader>
-				<IonContent className="ion-padding">
-					<p>Menu items coming soon...</p>
-				</IonContent>
-			</IonMenu>
-			<IonMenu
-				ref={filterMenuRef}
-				type="push"
-				side="end"
-				contentId="main-content"
-			>
-				<IonHeader>
-					<IonToolbar>
-						<IonTitle>Menu Content</IonTitle>
-					</IonToolbar>
-				</IonHeader>
-				<IonContent className="ion-padding">
-					<p>Filters coming soon...</p>
-				</IonContent>
-			</IonMenu>
+			<MiscMenu />
+			<FilterMenu />
 			<IonPage>
 				<IonHeader>
 					<IonToolbar>
@@ -192,24 +149,7 @@ const Home = () => {
 					id="main-content"
 				>
 					{important.length ? (
-						<IonList
-							style={{
-								maxWidth: '900px',
-								margin: '0 auto',
-							}}
-						>
-							<IonReorderGroup
-								disabled={false}
-								onIonItemReorder={handleReorder}
-							>
-								{important.map(item => (
-									<IonItem key={item.id}>
-										<IonLabel>{item?.title}</IonLabel>
-										<IonReorder slot="end"></IonReorder>
-									</IonItem>
-								))}
-							</IonReorderGroup>
-						</IonList>
+						<Important todos={important} />
 					) : (
 						<div className="flex flex-col items-center justify-center h-full gap-5">
 							<IonIcon
@@ -293,6 +233,68 @@ const Home = () => {
 }
 
 export default Home
+
+export const MiscMenu = () => {}
+
+export const FilterMenu = () => {
+	return (
+		<IonMenu
+			type="push"
+			side="end"
+			contentId="main-content"
+		>
+			<IonHeader>
+				<IonToolbar>
+					<IonTitle>Menu Content</IonTitle>
+				</IonToolbar>
+			</IonHeader>
+			<IonContent className="ion-padding">
+				<p>Filters coming soon...</p>
+			</IonContent>
+		</IonMenu>
+	)
+}
+
+export const Important = ({ todos }: { todos: any[] }) => {
+	async function handleReorder(event: CustomEvent<ItemReorderEventDetail>) {
+		// We don't use this to reorder for us because it results in a flash of 'unordered' content.
+		// Instead we re-order right away, calculate the new order ourselves, and update the DB.
+		event.detail.complete()
+
+		const todoIds = [...todos.map(i => i.id)]
+		const reorderedTodoIds = moveItemInArray(
+			todoIds,
+			event.detail.from,
+			event.detail.to,
+		)
+		await db.lists.put({
+			type: 'important',
+			order: reorderedTodoIds,
+		})
+		// setTodos(event.detail.complete(important))
+	}
+
+	return (
+		<IonList
+			style={{
+				maxWidth: '900px',
+				margin: '0 auto',
+			}}
+		>
+			<IonReorderGroup
+				disabled={false}
+				onIonItemReorder={handleReorder}
+			>
+				{todos.map(item => (
+					<IonItem key={item.id}>
+						<IonLabel>{item?.title}</IonLabel>
+						<IonReorder slot="end"></IonReorder>
+					</IonItem>
+				))}
+			</IonReorderGroup>
+		</IonList>
+	)
+}
 
 function moveItemInArray<T>(
 	array: T[],

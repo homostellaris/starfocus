@@ -1,6 +1,6 @@
 import Dexie, { Table } from 'dexie'
 
-interface Todo {
+export interface Todo {
 	title: string
 	completedAt?: Date
 }
