@@ -17,7 +17,7 @@ export class DexieStarfocus extends Dexie {
 	constructor() {
 		super('starfocus')
 		this.version(1).stores({
-			todos: '++id, title',
+			todos: '++id, completedAt, title',
 			lists: 'type', // Is this unique?
 		})
 	}

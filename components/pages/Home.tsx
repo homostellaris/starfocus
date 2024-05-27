@@ -1,31 +1,49 @@
-import { add, rocketSharp } from 'ionicons/icons'
+import { add, checkmarkDoneCircleSharp, rocketSharp } from 'ionicons/icons'
 import { menuController } from '@ionic/core/components'
 import {
+	ActionSheetButton,
+	IonActionSheet,
 	IonButton,
 	IonButtons,
+	IonCard,
+	IonCardContent,
+	IonCardHeader,
+	IonCardTitle,
+	IonCheckbox,
+	IonCol,
 	IonContent,
 	IonFab,
 	IonFabButton,
 	IonFooter,
+	IonGrid,
 	IonHeader,
 	IonIcon,
 	IonInput,
 	IonItem,
 	IonLabel,
 	IonList,
+	IonListHeader,
 	IonMenu,
 	IonMenuButton,
 	IonModal,
 	IonPage,
 	IonReorder,
 	IonReorderGroup,
+	IonRow,
 	IonSearchbar,
 	IonTitle,
 	IonToolbar,
 	ItemReorderEventDetail,
 } from '@ionic/react'
 import { filterSharp } from 'ionicons/icons'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+	PropsWithChildren,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react'
 import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-component-lib/interfaces'
 import { Todo, db } from '../db'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -43,9 +61,16 @@ const Home = () => {
 	// 	{ id: 9, title: 'New York' },
 	// 	{ id: 10, title: 'Panama City' },
 	// ]
-	// const [important, setTodos] = useState(data)
+	// const [iceboxTodos, setIceboxTodos] = useState(data)
+
+	// Should we just query all todos and split them up? How would this work with pagination?
 	const [query, setQuery] = useState<string>('')
-	const important = useLiveQuery(
+	const logTodos = useLiveQuery(
+		async () => db.todos.filter(todo => !!todo.completedAt).toArray(),
+		[],
+		[],
+	)
+	const importantTodos = useLiveQuery(
 		async () => {
 			const list = await db.lists.get('important')
 			if (list) {
@@ -58,6 +83,18 @@ const Home = () => {
 			return []
 		},
 		[query],
+		[],
+	)
+	const iceboxTodos = useLiveQuery(
+		async () => {
+			const list = await db.lists.get('important')
+			return db.todos
+				.where('id')
+				.noneOf(list?.order || [])
+				.filter(todo => todo.completedAt === undefined)
+				.toArray()
+		},
+		[],
 		[],
 	)
 
@@ -81,10 +118,10 @@ const Home = () => {
 			})
 			await db.lists.put({
 				type: 'important',
-				order: [...important.map(i => i?.id), newTodoId],
+				order: [...importantTodos.map(i => i?.id), newTodoId],
 			})
 		},
-		[important],
+		[importantTodos],
 	)
 	function onWillDismiss(ev: CustomEvent<OverlayEventDetail>) {
 		if (ev.detail.role === 'confirm') {
@@ -148,17 +185,9 @@ const Home = () => {
 					className="ion-padding"
 					id="main-content"
 				>
-					{important.length ? (
-						<Important todos={important} />
-					) : (
-						<div className="flex flex-col items-center justify-center h-full gap-5">
-							<IonIcon
-								icon={rocketSharp}
-								size="large"
-							/>
-							<p>Create some todos to get started</p>
-						</div>
-					)}
+					<Log todos={logTodos} />
+					<Important todos={importantTodos} />
+					<Icebox todos={iceboxTodos} />
 					<IonFab
 						ref={fab}
 						slot="fixed"
@@ -271,6 +300,60 @@ export const FilterMenu = () => {
 	)
 }
 
+export const Log = ({ todos }: { todos: any[] }) => {
+	return (
+		<>
+			<h1>Log</h1>
+			{todos.length ? (
+				<IonList inset>
+					{todos
+						.sort(byDate)
+						.reverse()
+						.map(todo => (
+							<IonItem key={todo.id}>
+								<IonCheckbox
+									slot="start"
+									onIonChange={async event => {
+										const list = await db.lists.get('important')
+										await Promise.all([
+											db.lists.update('important', {
+												order: [todo.id, ...list!.order],
+											}),
+											db.todos.update(todo.id, {
+												completedAt: event.detail.checked
+													? new Date()
+													: undefined,
+											}),
+										])
+									}}
+									checked={!!todo.completedAt}
+								/>
+								<TodoItem
+									actionButtons={[
+										{
+											text: 'Nothing',
+										},
+									]}
+									todo={todo}
+								>
+									<IonLabel>{todo?.title}</IonLabel>
+								</TodoItem>
+							</IonItem>
+						))}
+				</IonList>
+			) : (
+				<div className="flex flex-col items-center justify-center gap-5 h-fit">
+					<IonIcon
+						icon={checkmarkDoneCircleSharp}
+						size="large"
+					/>
+					<p>Your completed todos will appear here</p>
+				</div>
+			)}
+		</>
+	)
+}
+
 export const Important = ({ todos }: { todos: any[] }) => {
 	async function handleReorder(event: CustomEvent<ItemReorderEventDetail>) {
 		// We don't use this to reorder for us because it results in a flash of 'unordered' content.
@@ -291,24 +374,167 @@ export const Important = ({ todos }: { todos: any[] }) => {
 	}
 
 	return (
-		<IonList
-			style={{
-				maxWidth: '900px',
-				margin: '0 auto',
+		<>
+			<h1>Important</h1>
+			{todos.length ? (
+				<IonList inset>
+					<IonReorderGroup
+						disabled={false}
+						onIonItemReorder={handleReorder}
+					>
+						{todos.map(todo => (
+							<IonItem
+								button
+								key={todo.id}
+							>
+								<IonCheckbox
+									slot="start"
+									onIonChange={async event => {
+										const todoIds = [...todos.map(i => i.id)]
+										const orderWithoutItem = removeItemFromArray(
+											todoIds,
+											todoIds.indexOf(todo.id),
+										)
+										await Promise.all([
+											db.lists.put({
+												type: 'important',
+												order: orderWithoutItem,
+											}),
+											db.todos.update(todo.id, {
+												completedAt: event.detail.checked
+													? new Date()
+													: undefined,
+											}),
+										])
+									}}
+								/>
+								{/* For some reason we need an input rather than a label to prevent the whole item updating the checkbox */}
+								{/* <IonInput
+									aria-label="Task name"
+									value={item?.title}
+									readonly
+								></IonInput> */}
+								<TodoItem
+									actionButtons={[
+										{
+											text: 'Move to icebox',
+											data: {
+												action: 'icebox',
+											},
+											handler: async () => {
+												const list = await db.lists.get('important')
+												await db.lists.update('important', {
+													order: removeItemFromArray(
+														list!.order,
+														list!.order.indexOf(todo.id),
+													),
+												})
+											},
+										},
+									]}
+									todo={todo}
+								>
+									<IonLabel>{todo?.title}</IonLabel>
+								</TodoItem>
+								<IonReorder slot="end"></IonReorder>
+							</IonItem>
+						))}
+					</IonReorderGroup>
+				</IonList>
+			) : (
+				<div className="flex flex-col items-center justify-center gap-5 h-fit">
+					<IonIcon
+						icon={rocketSharp}
+						size="large"
+					/>
+					<p>Create some todos to get started</p>
+				</div>
+			)}
+		</>
+	)
+}
+
+export const Icebox = ({ todos }: { todos: any[] }) => {
+	return (
+		<>
+			<IonGrid>
+				<h1>Icebox</h1>
+				<IonRow>
+					{todos.map(todo => (
+						<IceboxItem
+							key={todo.id}
+							todo={todo}
+						/>
+					))}
+				</IonRow>
+			</IonGrid>
+		</>
+	)
+}
+
+export const IceboxItem = ({
+	todo,
+}: {
+	todo: {
+		id: string
+		title: string
+	}
+}) => {
+	return (
+		<IonCard className="cursor-pointer">
+			<TodoItem
+				actionButtons={[
+					{
+						text: 'Move to ranked',
+						data: {
+							action: 'ranked',
+						},
+						handler: async () => {
+							const list = await db.lists.get('important')
+							db.lists.update('important', {
+								order: [...list!.order, todo.id],
+							})
+						},
+					},
+				]}
+				todo={todo}
+			>
+				<IonCardHeader>
+					<IonCardTitle className="text-sm">{todo.title}</IonCardTitle>
+				</IonCardHeader>
+			</TodoItem>
+		</IonCard>
+	)
+}
+
+export const TodoItem = ({
+	actionButtons,
+	children,
+	todo,
+}: PropsWithChildren<{
+	actionButtons: ActionSheetButton[]
+	todo: {
+		id: string
+		title: string
+	}
+}>) => {
+	const [isOpen, setIsOpen] = useState(false)
+
+	return (
+		<div
+			className="w-full"
+			onClick={() => {
+				setIsOpen(true)
 			}}
 		>
-			<IonReorderGroup
-				disabled={false}
-				onIonItemReorder={handleReorder}
-			>
-				{todos.map(item => (
-					<IonItem key={item.id}>
-						<IonLabel>{item?.title}</IonLabel>
-						<IonReorder slot="end"></IonReorder>
-					</IonItem>
-				))}
-			</IonReorderGroup>
-		</IonList>
+			{children}
+			<IonActionSheet
+				buttons={actionButtons}
+				header={todo.title}
+				isOpen={isOpen}
+				onDidDismiss={() => setIsOpen(false)}
+			></IonActionSheet>
+		</div>
 	)
 }
 
@@ -321,4 +547,16 @@ function moveItemInArray<T>(
 	const item = newArray.splice(fromIndex, 1)[0]
 	newArray.splice(toIndex, 0, item)
 	return newArray
+}
+
+const removeItemFromArray = (array: any[], index: number): any[] => {
+	const newArray = [...array]
+	newArray.splice(index, 1)
+	return newArray
+}
+
+const byDate = (a: any, b: any) => {
+	const dateA = new Date(a.createdAt)
+	const dateB = new Date(b.createdAt)
+	return dateB.getTime() - dateA.getTime()
 }
