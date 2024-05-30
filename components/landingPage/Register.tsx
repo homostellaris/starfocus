@@ -4,7 +4,7 @@ import { usePlausible } from 'next-plausible'
 import { useState } from 'react'
 
 export default function Register() {
-	const registerEmail = useMutation(api.registerEmail.default)
+	const registerEmail = useMutation(api.mutations.registerEmail)
 	const [email, setEmail] = useState<string>()
 	const [isSubmitted, setIsSubmitted] = useState<boolean>()
 
@@ -17,9 +17,11 @@ export default function Register() {
 				onSubmit={async event => {
 					event.preventDefault()
 
+					if (!email) return
+
 					plausible('Subscribe to email updates')
 
-					await registerEmail({ email })
+					await registerEmail({email})
 					setIsSubmitted(true)
 				}}
 			>

@@ -4,7 +4,7 @@ import type { AppProps } from 'next/app'
 import Head from 'next/head'
 import '../styles/globals.css'
 
-const convex = new ConvexReactClient('https://unlucky-rabbit-377.convex.cloud')
+const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
 
 function MyApp({ Component, pageProps }: AppProps) {
 	return (
