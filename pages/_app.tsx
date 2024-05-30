@@ -2,10 +2,9 @@ import { ConvexProvider, ConvexReactClient } from 'convex/react'
 import PlausibleProvider from 'next-plausible'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
-import clientConfig from '../convex/_generated/clientConfig'
 import '../styles/globals.css'
 
-const convex = new ConvexReactClient(clientConfig)
+const convex = new ConvexReactClient('https://unlucky-rabbit-377.convex.cloud')
 
 function MyApp({ Component, pageProps }: AppProps) {
 	return (

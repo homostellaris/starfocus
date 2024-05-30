@@ -12,7 +12,7 @@ export default function Journey({ todos }: { todos: Todo[] }) {
 	const [starshipY, _] = useStarshipYPosition(currentTodoRef)
 
 	return (
-		<div className="relative m-auto w-4/6 p-20">
+		<div className="relative w-4/6 p-20 m-auto">
 			<div
 				id="starship"
 				className={`absolute left-0 m-auto h-[10vmin] w-[10vmin] transition-transform`}
@@ -37,11 +37,10 @@ function useMaintainScrollOffset(currentTodoRef, todosRef) {
 
 		if (previousTodosHeight.current) {
 			const delta = currentTodoHeight - previousTodosHeight.current
-
 			const currentScroll = document.querySelector(
-				'.parallax-container'
-			).scrollTop
-			document.querySelector('.parallax-container').scrollTo({
+				'.parallax-container',
+			)!.scrollTop
+			document.querySelector('.parallax-container')!.scrollTo({
 				behavior: 'instant' as ScrollBehavior,
 				top: currentScroll + delta,
 			})
@@ -60,7 +59,7 @@ function useStarshipYPosition(currentTodoRef) {
 		const elementPadding = 80
 		const starshipImagePadding = 10
 		setStarshipY(
-			currentTodoRef.current.offsetTop - elementPadding - starshipImagePadding
+			currentTodoRef.current.offsetTop - elementPadding - starshipImagePadding,
 		)
 	}, [currentTodoRef, size, setStarshipY])
 

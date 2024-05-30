@@ -17,7 +17,7 @@ export default function Feature(props: {
 	useEffect(() => {
 		setTimeout(
 			() => setImageIndex((imageIndex + 1) % props.previews.length),
-			2000
+			2000,
 		)
 	})
 
@@ -31,15 +31,18 @@ export default function Feature(props: {
 			className="relative h-screen"
 		>
 			<div
-				className={`content absolute left-0 right-0 top-[${props.top}] mx-auto my-2 max-w-prose p-4 transition-all`}
+				className={`content absolute left-0 right-0 top-[${props.top}%] mx-auto my-2 max-w-prose p-4 transition-all`}
 			>
-				<h1 className="supernova text-4xl font-black uppercase text-white md:text-5xl">
+				<h1 className="text-4xl font-black text-white uppercase supernova md:text-5xl">
 					{props.heading}
 				</h1>
-				<div className="glass my-4 rounded-2xl p-4">
+				<div className="p-4 my-4 glass rounded-2xl">
 					<p className="text-justify text-white">{props.children}</p>
 					<div className="text-right">
-						<Link href={'/docs/' + props.id}>
+						<Link
+							href={'/docs/' + props.id}
+							legacyBehavior
+						>
 							<a className="text-blue-400">Learn more</a>
 						</Link>
 					</div>
@@ -68,7 +71,7 @@ export default function Feature(props: {
 }
 
 function setupAnimations(id) {
-	const element = document.getElementById(id)
+	const element = document.getElementById(id)!
 	const content = document.querySelector(`#${id} .content`)
 	;(content as HTMLElement).style.opacity = '0.5'
 
@@ -81,7 +84,7 @@ function setupAnimations(id) {
 		{
 			threshold: 0.9,
 			// root: document.getElementById('starship'),
-		}
+		},
 	)
 
 	observer.observe(element)

@@ -40,19 +40,19 @@ function arrowKeyListener(event) {
 	if (!['ArrowUp', 'ArrowDown'].includes(event.code)) return
 
 	event.preventDefault()
-	let scrollIncrement: number
+	let scrollIncrement: number = 0
 
-	const scroller = document.querySelector('.parallax-container')
+	const scroller = document.querySelector('.parallax-container')!
 
 	if (event.code === 'ArrowUp')
 		scrollIncrement = Math.min(
 			Math.floor(scroller.scrollTop / window.innerHeight) + 1,
-			screensCount
+			screensCount,
 		)
 	if (event.code === 'ArrowDown')
 		scrollIncrement = Math.max(
 			Math.ceil(scroller.scrollTop / window.innerHeight) - 1,
-			0
+			0,
 		)
 
 	scroller.scrollTo(0, scrollIncrement * window.innerHeight)
