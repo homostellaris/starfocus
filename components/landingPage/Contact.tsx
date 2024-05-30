@@ -19,7 +19,7 @@ export default function Contact() {
 				</a>
 				<Separator />
 				<a
-					href="https://github.com/productivityguru/starfocus/discussions"
+					href="https://github.com/astrochoric/starfocus/discussions"
 					className="w[10ch] text-white"
 					title="Create a GitHub account and join our discussions where you can vote on feature ideas and provide more detailed feedback 💡"
 					target="_blank"
