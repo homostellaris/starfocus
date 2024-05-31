@@ -66,12 +66,16 @@ const Home = () => {
 	// Should we just query all todos and split them up? How would this work with pagination?
 	const [query, setQuery] = useState<string>('')
 	const logTodos = useLiveQuery(
-		async () => db.todos.filter(todo => !!todo.completedAt).toArray(),
+		async () => {
+			console.log('re-running log query')
+			return db.todos.filter(todo => !!todo.completedAt).toArray()
+		},
 		[],
 		[],
 	)
 	const importantTodos = useLiveQuery(
 		async () => {
+			console.log('re-running important query')
 			const list = await db.lists.get('important')
 			if (list) {
 				const todos = await Promise.all(list.order.map(id => db.todos.get(id)))
@@ -87,6 +91,7 @@ const Home = () => {
 	)
 	const iceboxTodos = useLiveQuery(
 		async () => {
+			console.log('re-running icebox query')
 			const list = await db.lists.get('important')
 			return db.todos
 				.where('id')
@@ -202,8 +207,8 @@ const Home = () => {
 						ref={modal}
 						trigger="open-modal"
 						onDidPresent={() => input.current?.setFocus()}
-						onWillDismiss={ev => {
-							onWillDismiss(ev)
+						onWillDismiss={event => {
+							onWillDismiss(event)
 							if (fab.current) fab.current.activated = false
 						}}
 					>
@@ -216,7 +221,15 @@ const Home = () => {
 									</IonButton>
 								</IonButtons>
 								<IonButtons slot="primary">
-									<IonButton strong={true}>Confirm</IonButton>
+									<IonButton
+										onClick={() => {
+											createTodo(input.current?.value)
+											modal.current?.dismiss()
+										}}
+										strong={true}
+									>
+										Confirm
+									</IonButton>
 								</IonButtons>
 							</IonToolbar>
 						</IonHeader>
@@ -306,40 +319,37 @@ export const Log = ({ todos }: { todos: any[] }) => {
 			<h1>Log</h1>
 			{todos.length ? (
 				<IonList inset>
-					{todos
-						.sort(byDate)
-						.reverse()
-						.map(todo => (
-							<IonItem key={todo.id}>
-								<IonCheckbox
-									slot="start"
-									onIonChange={async event => {
-										const list = await db.lists.get('important')
-										await Promise.all([
-											db.lists.update('important', {
-												order: [todo.id, ...list!.order],
-											}),
-											db.todos.update(todo.id, {
-												completedAt: event.detail.checked
-													? new Date()
-													: undefined,
-											}),
-										])
-									}}
-									checked={!!todo.completedAt}
-								/>
-								<TodoItem
-									actionButtons={[
-										{
-											text: 'Nothing',
-										},
-									]}
-									todo={todo}
-								>
-									<IonLabel>{todo?.title}</IonLabel>
-								</TodoItem>
-							</IonItem>
-						))}
+					{todos.sort(byDate).map(todo => (
+						<IonItem key={todo.id}>
+							<IonCheckbox
+								slot="start"
+								onIonChange={async event => {
+									const list = await db.lists.get('important')
+									await Promise.all([
+										db.lists.update('important', {
+											order: [todo.id, ...list!.order],
+										}),
+										db.todos.update(todo.id, {
+											completedAt: event.detail.checked
+												? new Date()
+												: undefined,
+										}),
+									])
+								}}
+								checked={!!todo.completedAt}
+							/>
+							<TodoItem
+								actionButtons={[
+									{
+										text: 'Nothing',
+									},
+								]}
+								todo={todo}
+							>
+								<IonLabel>{todo?.title}</IonLabel>
+							</TodoItem>
+						</IonItem>
+					))}
 				</IonList>
 			) : (
 				<div className="flex flex-col items-center justify-center gap-5 h-fit">
@@ -556,7 +566,7 @@ const removeItemFromArray = (array: any[], index: number): any[] => {
 }
 
 const byDate = (a: any, b: any) => {
-	const dateA = new Date(a.createdAt)
-	const dateB = new Date(b.createdAt)
-	return dateB.getTime() - dateA.getTime()
+	const dateA = new Date(a.completedAt)
+	const dateB = new Date(b.completedAt)
+	return dateA.getTime() - dateB.getTime()
 }
