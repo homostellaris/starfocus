@@ -1,4 +1,10 @@
-import React, { ReactNode, useLayoutEffect, useRef, useState } from 'react'
+import React, {
+	ReactNode,
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from 'react'
 import Head from 'next/head'
 import PlausibleProvider from 'next-plausible'
 import Starship from './Journey/Starship'
@@ -9,12 +15,10 @@ import Planets from '../common/Planets'
 
 const Layout = ({
 	children,
-	footerInitialDisplay,
 	screensCount = 1,
 	title,
 }: {
 	children: ReactNode
-	footerInitialDisplay?: boolean
 	screensCount?: number
 	title?: string
 }) => {
@@ -50,10 +54,15 @@ const Layout = ({
 		return () => window.removeEventListener('resize', setupStarshipScroller)
 	}, [])
 
-	const [lastScrollDirection] = useState<ScrollDirection>(
-		footerInitialDisplay ? ScrollDirection.down : ScrollDirection.up,
-	)
+	const [lastScrollDirection, setLastScrollDirection] =
+		useState<ScrollDirection | null>(null)
 	const lastScrollTop = useRef(0)
+	const [displayControlPanel, setDisplayControlPanel] = useState<boolean>(false)
+	useEffect(() => {
+		setTimeout(() => {
+			setDisplayControlPanel(true)
+		}, 2000)
+	}, [])
 
 	return (
 		<div>
@@ -63,24 +72,13 @@ const Layout = ({
 			<main className="h-full">
 				<div
 					className="h-full parallax-container"
-					// TODO: Extract function
 					onScroll={event => {
 						const element = event.target as Element
 
 						if (element.scrollTop > lastScrollTop.current) {
-							document
-								.getElementById('calls-to-action')!
-								.classList.remove('translate-y-20')
-							document
-								.getElementById('calls-to-action')!
-								.classList.add('translate-y-0')
+							setLastScrollDirection(ScrollDirection.down)
 						} else {
-							document
-								.getElementById('calls-to-action')!
-								.classList.remove('translate-y-0')
-							document
-								.getElementById('calls-to-action')!
-								.classList.add('translate-y-20')
+							setLastScrollDirection(ScrollDirection.up)
 						}
 
 						lastScrollTop.current = element.scrollTop
@@ -109,7 +107,11 @@ const Layout = ({
 					</div>
 					{children}
 				</div>
-				<Footer display={lastScrollDirection === ScrollDirection.down}>
+				<Footer
+					display={
+						lastScrollDirection === ScrollDirection.down || displayControlPanel
+					}
+				>
 					<Contact />
 				</Footer>
 			</main>
@@ -123,3 +125,6 @@ enum ScrollDirection {
 }
 
 export default Layout
+function setDisplayControlPanel(arg0: boolean) {
+	throw new Error('Function not implemented.')
+}
