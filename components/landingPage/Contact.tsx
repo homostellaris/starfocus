@@ -9,12 +9,12 @@ export default function Contact() {
 			</div>
 			<div className="flex items-center gap-4">
 				<Separator character="⋆" />
-				<Link
+				<a
 					href="/home"
 					className="font-bold text-white underline"
 				>
 					Try it!
-				</Link>
+				</a>
 				<Separator character="⋆" />
 			</div>
 			<div className="flex items-center justify-center flex-grow gap-4 text-center">

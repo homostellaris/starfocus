@@ -39,3 +39,6 @@ yarn-error.log*
 convex/_generated/
 
 .gradle/
+
+# For setting JAVA_HOME
+.envrc

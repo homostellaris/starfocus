@@ -1,4 +1,4 @@
-package com.example.app;
+package app.starfocus;
 
 import com.getcapacitor.BridgeActivity;
 

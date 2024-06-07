@@ -1,8 +1,7 @@
 {
-	"appId": "com.example.app",
-	"appName": "nextjs-tailwind-capacitor",
+	"appId": "app.starfocus",
+	"appName": "Starfocus",
 	"bundledWebRuntime": false,
-	"npmClient": "npm",
 	"webDir": "out",
 	"plugins": {
 		"SplashScreen": {
