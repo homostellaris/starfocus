@@ -48,6 +48,7 @@ import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-com
 import { Todo, db } from '../db'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router-dom'
+import { log } from 'console'
 
 const Home = () => {
 	// const data = [
@@ -69,9 +70,11 @@ const Home = () => {
 	const logTodos = useLiveQuery(
 		async () => {
 			console.log('re-running log query')
-			return db.todos.filter(todo => !!todo.completedAt).toArray()
+			return db.todos
+				.filter(todo => !!todo.completedAt && matchesQuery(query, todo))
+				.toArray()
 		},
-		[],
+		[query],
 		[],
 	)
 	const importantTodos = useLiveQuery(
@@ -80,10 +83,7 @@ const Home = () => {
 			const list = await db.lists.get('important')
 			if (list) {
 				const todos = await Promise.all(list.order.map(id => db.todos.get(id)))
-				if (query) {
-					return todos.filter(todo => todo?.title.toLowerCase().includes(query))
-				}
-				return todos
+				return todos.filter(todo => matchesQuery(query, todo))
 			}
 			return []
 		},
@@ -97,12 +97,15 @@ const Home = () => {
 			return db.todos
 				.where('id')
 				.noneOf(list?.order || [])
-				.filter(todo => todo.completedAt === undefined)
+				.filter(
+					todo => todo.completedAt === undefined && matchesQuery(query, todo),
+				)
 				.toArray()
 		},
-		[],
+		[query],
 		[],
 	)
+	console.debug({ logTodos, importantTodos, iceboxTodos })
 
 	const openCreateTodoModal = useCallback(() => {
 		modal.current?.present()
@@ -568,4 +571,10 @@ const byDate = (a: any, b: any) => {
 	const dateA = new Date(a.completedAt)
 	const dateB = new Date(b.completedAt)
 	return dateA.getTime() - dateB.getTime()
+}
+
+function matchesQuery(query, todo) {
+	if (!query) return true
+	console.log({ query, todo })
+	return todo?.title.toLowerCase().includes(query)
 }
