@@ -16,6 +16,7 @@
 		"future"
 	],
 	"scripts": {
+		"android:dev": "next build && cap sync && mv out/home.html out/index.html && cap run android",
 		"build": "convex codegen --typecheck=disable && next build",
 		"convex:dev": "convex dev --typecheck=disable",
 		"convex:deploy": "convex deploy --typecheck=disable",
@@ -27,10 +28,13 @@
 		"type-check": "tsc"
 	},
 	"dependencies": {
-		"@capacitor/android": "5.7.2",
-		"@capacitor/core": "5.7.2",
-		"@capacitor/ios": "5.7.2",
-		"@capacitor/status-bar": "5.0.7",
+		"@capacitor/android": "^6.0.0",
+		"@capacitor/app": "^6.0.0",
+		"@capacitor/core": "^6.0.0",
+		"@capacitor/haptics": "^6.0.0",
+		"@capacitor/ios": "^6.0.0",
+		"@capacitor/keyboard": "^6.0.0",
+		"@capacitor/status-bar": "^6.0.0",
 		"@ionic/react": "7.7.4",
 		"@ionic/react-router": "7.7.4",
 		"classnames": "2.5.1",
@@ -49,7 +53,7 @@
 		"react-virtuoso": "4.7.1"
 	},
 	"devDependencies": {
-		"@capacitor/cli": "5.7.2",
+		"@capacitor/cli": "^6.0.0",
 		"@types/jest": "29.5.12",
 		"@types/node": "20.11.25",
 		"@types/react": "18.2.64",

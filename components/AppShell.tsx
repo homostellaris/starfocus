@@ -4,6 +4,7 @@ import { StatusBar, Style } from '@capacitor/status-bar'
 import { IonReactRouter } from '@ionic/react-router'
 import { Route } from 'react-router-dom'
 import Home from './pages/Home'
+import Constellation from './pages/Constellation'
 
 setupIonicReact({})
 
@@ -23,7 +24,11 @@ const AppShell = () => {
 			<IonReactRouter>
 				<IonRouterOutlet id="main">
 					<Route
-						path="/"
+						path="/constellation"
+						render={() => <Constellation />}
+					/>
+					<Route
+						path="/home"
 						render={() => <Home />}
 					/>
 				</IonRouterOutlet>
