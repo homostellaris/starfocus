@@ -47,6 +47,7 @@ import {
 import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-component-lib/interfaces'
 import { Todo, db } from '../db'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Link } from 'react-router-dom'
 
 const Home = () => {
 	// const data = [
@@ -180,16 +181,13 @@ const Home = () => {
 		<>
 			<MiscMenu />
 			<FilterMenu />
-			<IonPage>
+			<IonPage id="main-content">
 				<IonHeader>
 					<IonToolbar>
 						<IonTitle>Today & upcoming</IonTitle>
 					</IonToolbar>
 				</IonHeader>
-				<IonContent
-					className="ion-padding"
-					id="main-content"
-				>
+				<IonContent className="ion-padding">
 					<Log todos={logTodos} />
 					<Important todos={importantTodos} />
 					<Icebox todos={iceboxTodos} />
@@ -284,7 +282,7 @@ export const MiscMenu = () => {
 		>
 			<IonHeader>
 				<IonToolbar>
-					<IonTitle>Menu Content</IonTitle>
+					<IonTitle>Misc</IonTitle>
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="ion-padding">
@@ -303,10 +301,11 @@ export const FilterMenu = () => {
 		>
 			<IonHeader>
 				<IonToolbar>
-					<IonTitle>Menu Content</IonTitle>
+					<IonTitle>Views</IonTitle>
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="ion-padding">
+				<Link to="/constellation">Constellation</Link>
 				<p>Filters coming soon...</p>
 			</IonContent>
 		</IonMenu>

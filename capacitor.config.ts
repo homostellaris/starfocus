@@ -4,13 +4,13 @@ const config: CapacitorConfig = {
 	appId: 'app.starfocus',
 	appName: 'Starfocus',
 	bundledWebRuntime: false,
-	webDir: 'out',
+	cordova: {},
 	plugins: {
 		SplashScreen: {
 			launchShowDuration: 0,
 		},
 	},
-	cordova: {},
+	webDir: 'out',
 }
 
 export default config
