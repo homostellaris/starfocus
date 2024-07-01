@@ -2,6 +2,7 @@ import Dexie, { Table } from 'dexie'
 
 export interface Todo {
 	title: string
+	createdAt: Date
 	completedAt?: Date
 }
 
@@ -17,7 +18,7 @@ export class DexieStarfocus extends Dexie {
 	constructor() {
 		super('starfocus')
 		this.version(1).stores({
-			todos: '++id, completedAt, title',
+			todos: '++id, createdAt, completedAt, title',
 			lists: 'type', // Is this unique?
 		})
 	}

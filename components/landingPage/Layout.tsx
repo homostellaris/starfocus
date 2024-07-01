@@ -1,17 +1,11 @@
-import React, {
-	ReactNode,
-	useEffect,
-	useLayoutEffect,
-	useRef,
-	useState,
-} from 'react'
 import Head from 'next/head'
-import PlausibleProvider from 'next-plausible'
+import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import Footer from '../common/Footer'
+import Planets from '../common/Planets'
+import { ScrollDirection } from '../common/scroll'
+import Contact from './Contact'
 import Starship from './Journey/Starship'
 import Tracjectory from './Journey/Trajectory'
-import Footer from '../common/Footer'
-import Contact from './Contact'
-import Planets from '../common/Planets'
 
 const Layout = ({
 	children,
@@ -117,11 +111,6 @@ const Layout = ({
 			</main>
 		</div>
 	)
-}
-
-enum ScrollDirection {
-	up,
-	down,
 }
 
 export default Layout

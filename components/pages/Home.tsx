@@ -1,4 +1,3 @@
-import { add, checkmarkDoneCircleSharp, rocketSharp } from 'ionicons/icons'
 import { menuController } from '@ionic/core/components'
 import {
 	ActionSheetButton,
@@ -6,11 +5,9 @@ import {
 	IonButton,
 	IonButtons,
 	IonCard,
-	IonCardContent,
 	IonCardHeader,
 	IonCardTitle,
 	IonCheckbox,
-	IonCol,
 	IonContent,
 	IonFab,
 	IonFabButton,
@@ -18,11 +15,12 @@ import {
 	IonGrid,
 	IonHeader,
 	IonIcon,
+	IonInfiniteScroll,
+	IonInfiniteScrollContent,
 	IonInput,
 	IonItem,
 	IonLabel,
 	IonList,
-	IonListHeader,
 	IonMenu,
 	IonMenuButton,
 	IonModal,
@@ -35,20 +33,23 @@ import {
 	IonToolbar,
 	ItemReorderEventDetail,
 } from '@ionic/react'
-import { filterSharp } from 'ionicons/icons'
+import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-component-lib/interfaces'
+import { useLiveQuery } from 'dexie-react-hooks'
+import {
+	add,
+	checkmarkDoneCircleSharp,
+	filterSharp,
+	rocketSharp,
+} from 'ionicons/icons'
 import {
 	PropsWithChildren,
 	useCallback,
 	useEffect,
-	useMemo,
 	useRef,
 	useState,
 } from 'react'
-import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-component-lib/interfaces'
-import { Todo, db } from '../db'
-import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router-dom'
-import { log } from 'console'
+import { db } from '../db'
 
 const Home = () => {
 	// const data = [
@@ -65,16 +66,21 @@ const Home = () => {
 	// ]
 	// const [iceboxTodos, setIceboxTodos] = useState(data)
 
+	const [iceboxLimit, setIceboxLimit] = useState(30)
+	const [logLimit, setLogLimit] = useState(7)
 	// Should we just query all todos and split them up? How would this work with pagination?
 	const [query, setQuery] = useState<string>('')
 	const logTodos = useLiveQuery(
 		async () => {
 			console.log('re-running log query')
 			return db.todos
+				.orderBy('completedAt')
+				.reverse()
 				.filter(todo => !!todo.completedAt && matchesQuery(query, todo))
+				.limit(logLimit)
 				.toArray()
 		},
-		[query],
+		[query, logLimit],
 		[],
 	)
 	const importantTodos = useLiveQuery(
@@ -100,9 +106,11 @@ const Home = () => {
 				.filter(
 					todo => todo.completedAt === undefined && matchesQuery(query, todo),
 				)
+				.reverse()
+				.limit(iceboxLimit)
 				.toArray()
 		},
-		[query],
+		[iceboxLimit, query],
 		[],
 	)
 	console.debug({ logTodos, importantTodos, iceboxTodos })
@@ -122,12 +130,9 @@ const Home = () => {
 	const input = useRef<HTMLIonInputElement>(null)
 	const createTodo = useCallback(
 		async title => {
-			const newTodoId = await db.todos.add({
+			await db.todos.add({
+				createdAt: new Date(),
 				title,
-			})
-			await db.lists.put({
-				type: 'important',
-				order: [...importantTodos.map(i => i?.id), newTodoId],
 			})
 		},
 		[importantTodos],
@@ -152,6 +157,7 @@ const Home = () => {
 	}, [createTodo, openCreateTodoModal])
 
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
+	const contentRef = useRef<HTMLIonContentElement>(null)
 	async function toggleStartMenu() {
 		await menuController.toggle('start')
 	}
@@ -172,6 +178,9 @@ const Home = () => {
 			} else if (event.key === 'c') {
 				event.preventDefault()
 				openCreateTodoModal()
+			} else if (event.key === 's') {
+				event.preventDefault()
+				contentRef.current?.scrollToBottom(500)
 			}
 		}
 		document.addEventListener('keydown', handleKeyDown)
@@ -179,6 +188,18 @@ const Home = () => {
 			document.removeEventListener('keydown', handleKeyDown)
 		}
 	}, [openCreateTodoModal])
+
+	const [enablePagination, setEnablePagination] = useState(false)
+
+	useEffect(() => {
+		setTimeout(() => {
+			console.log('scrolling to bottom', contentRef.current)
+			contentRef.current?.scrollToBottom(500)
+			setTimeout(() => {
+				setEnablePagination(true)
+			}, 500)
+		}, 200)
+	}, [])
 
 	return (
 		<>
@@ -190,10 +211,39 @@ const Home = () => {
 						<IonTitle>Today & upcoming</IonTitle>
 					</IonToolbar>
 				</IonHeader>
-				<IonContent className="ion-padding">
+				<IonContent
+					className="ion-padding"
+					fullscreen
+					ref={contentRef}
+				>
+					<IonInfiniteScroll
+						className="h-1"
+						disabled={!enablePagination}
+						position="top"
+						threshold="0px"
+						onIonInfinite={event => {
+							setLogLimit(limit => limit + 10)
+							setTimeout(() => event.target.complete(), 500)
+						}}
+					>
+						<IonInfiniteScrollContent></IonInfiniteScrollContent>
+					</IonInfiniteScroll>
 					<Log todos={logTodos} />
 					<Important todos={importantTodos} />
 					<Icebox todos={iceboxTodos} />
+					<IonInfiniteScroll
+						disabled={!enablePagination}
+						position="bottom"
+						threshold="0px"
+						onIonInfinite={event => {
+							console.log('HELLLOO')
+							console.log({ ev: event })
+							setIceboxLimit(limit => limit + 10)
+							setTimeout(() => event.target.complete(), 500)
+						}}
+					>
+						<IonInfiniteScrollContent></IonInfiniteScrollContent>
+					</IonInfiniteScroll>
 					<IonFab
 						ref={fab}
 						slot="fixed"
@@ -213,7 +263,7 @@ const Home = () => {
 							if (fab.current) fab.current.activated = false
 						}}
 					>
-						<IonHeader>
+						<IonHeader translucent>
 							<IonToolbar>
 								<IonTitle>Create todo</IonTitle>
 								<IonButtons slot="secondary">
@@ -508,6 +558,16 @@ export const IceboxItem = ({
 							})
 						},
 					},
+					{
+						text: 'Delete',
+						role: 'destructive',
+						data: {
+							action: 'delete',
+						},
+						handler: async () => {
+							await db.todos.delete(todo.id)
+						},
+					},
 				]}
 				todo={todo}
 			>
@@ -577,4 +637,8 @@ function matchesQuery(query, todo) {
 	if (!query) return true
 	console.log({ query, todo })
 	return todo?.title.toLowerCase().includes(query)
+}
+
+interface InfiniteScrollCustomEvent extends CustomEvent {
+	target: HTMLIonInfiniteScrollElement
 }
