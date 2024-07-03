@@ -39,6 +39,7 @@ import {
 	add,
 	checkmarkDoneCircleSharp,
 	filterSharp,
+	personCircle,
 	rocketSharp,
 } from 'ionicons/icons'
 import {
@@ -209,6 +210,20 @@ const Home = () => {
 				<IonHeader>
 					<IonToolbar>
 						<IonTitle>Today & upcoming</IonTitle>
+						<IonButtons slot="secondary">
+							<IonButton
+								fill="solid"
+								onClick={() => {
+									db.cloud.login()
+								}}
+							>
+								<IonIcon
+									icon={personCircle}
+									slot="start"
+								></IonIcon>
+								Login
+							</IonButton>
+						</IonButtons>
 					</IonToolbar>
 				</IonHeader>
 				<IonContent
