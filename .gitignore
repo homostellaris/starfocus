@@ -42,3 +42,6 @@ convex/_generated/
 
 # For setting JAVA_HOME
 .envrc
+
+# Dexie Cloud
+dexie-cloud*
