@@ -34,13 +34,15 @@ import {
 	ItemReorderEventDetail,
 } from '@ionic/react'
 import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-component-lib/interfaces'
-import { useLiveQuery } from 'dexie-react-hooks'
+import { useLiveQuery, useObservable } from 'dexie-react-hooks'
 import {
 	add,
 	checkmarkDoneCircleSharp,
 	filterSharp,
-	personCircle,
 	rocketSharp,
+	cloudOfflineSharp,
+	cloudDoneSharp,
+	logOutSharp,
 } from 'ionicons/icons'
 import {
 	PropsWithChildren,
@@ -209,25 +211,7 @@ const Home = () => {
 			<MiscMenu />
 			<FilterMenu />
 			<IonPage id="main-content">
-				<IonHeader>
-					<IonToolbar>
-						<IonTitle>Today & upcoming</IonTitle>
-						<IonButtons slot="secondary">
-							<IonButton
-								fill="solid"
-								onClick={() => {
-									db.cloud.login()
-								}}
-							>
-								<IonIcon
-									icon={personCircle}
-									slot="start"
-								></IonIcon>
-								Login
-							</IonButton>
-						</IonButtons>
-					</IonToolbar>
-				</IonHeader>
+				<Header />
 				<IonContent
 					className="ion-padding"
 					fullscreen
@@ -359,6 +343,70 @@ export const MiscMenu = () => {
 				<p>Menu items coming soon...</p>
 			</IonContent>
 		</IonMenu>
+	)
+}
+
+export const Header = () => {
+	const user = useObservable(db.cloud.currentUser)
+	const syncState = useObservable(db.cloud.syncState)
+	const isLoggedIn = user?.isLoggedIn
+
+	return (
+		<IonHeader>
+			<IonToolbar>
+				<IonTitle>Today & upcoming</IonTitle>
+				{isLoggedIn ? (
+					<>
+						<div
+							className="mx-2 space-x-2"
+							slot="secondary"
+						>
+							<span>license: {syncState?.license}</span>
+							<span>status: {syncState?.status}</span>
+							<span>phase: {syncState?.phase}</span>
+							<span>{syncState?.progress}</span>
+							<span>{syncState?.error?.message}</span>
+						</div>
+						<IonButtons slot="secondary">
+							<IonButton fill="solid">
+								<IonIcon
+									icon={cloudDoneSharp}
+									slot="start"
+								></IonIcon>
+								<span>Sync</span>
+							</IonButton>
+							<IonButton
+								onClick={() => {
+									db.cloud.logout()
+								}}
+							>
+								<IonIcon
+									icon={logOutSharp}
+									slot="start"
+								></IonIcon>
+							</IonButton>
+						</IonButtons>
+					</>
+				) : (
+					<>
+						<IonButtons slot="secondary">
+							<IonButton
+								fill="solid"
+								onClick={() => {
+									db.cloud.login()
+								}}
+							>
+								<IonIcon
+									icon={cloudOfflineSharp}
+									slot="start"
+								></IonIcon>
+								<span>Sync</span>
+							</IonButton>
+						</IonButtons>
+					</>
+				)}
+			</IonToolbar>
+		</IonHeader>
 	)
 }
 
