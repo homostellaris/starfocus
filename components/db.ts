@@ -28,6 +28,14 @@ export class DexieStarfocus extends Dexie {
 			databaseUrl: 'https://zy0myinc2.dexie.cloud',
 			requireAuth: false,
 		})
+		this.on.populate.subscribe(() => {
+			this.on.ready.subscribe((db: DexieStarfocus) => {
+				db.lists.put({
+					type: 'important',
+					order: [],
+				})
+			}, false)
+		})
 	}
 }
 
