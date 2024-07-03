@@ -167,6 +167,8 @@ const Home = () => {
 	}
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.target !== document.body) return
+
 			if (event.key === '/') {
 				event.preventDefault()
 				searchbarRef.current?.setFocus()
