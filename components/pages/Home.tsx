@@ -358,9 +358,10 @@ export const Header = () => {
 				{isLoggedIn ? (
 					<>
 						<div
-							className="mx-2 space-x-2"
+							className="hidden mx-2 space-x-2 lg:block"
 							slot="secondary"
 						>
+							<span>email: {user.email}</span>
 							<span>license: {syncState?.license}</span>
 							<span>status: {syncState?.status}</span>
 							<span>phase: {syncState?.phase}</span>
