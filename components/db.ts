@@ -9,7 +9,7 @@ export interface Todo {
 
 interface List {
 	order: string[]
-	type: 'important'
+	type: '#important'
 }
 
 export class DexieStarfocus extends Dexie {
@@ -22,7 +22,7 @@ export class DexieStarfocus extends Dexie {
 		})
 		this.version(1).stores({
 			todos: '@id, createdAt, completedAt, title',
-			lists: 'type', // Is this unique?
+			lists: 'type',
 		})
 		this.cloud.configure({
 			databaseUrl: 'https://zy0myinc2.dexie.cloud',
@@ -31,7 +31,7 @@ export class DexieStarfocus extends Dexie {
 		this.on.populate.subscribe(() => {
 			this.on.ready.subscribe((db: DexieStarfocus) => {
 				db.lists.put({
-					type: 'important',
+					type: '#important',
 					order: [],
 				})
 			}, false)

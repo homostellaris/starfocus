@@ -89,7 +89,7 @@ const Home = () => {
 	const importantTodos = useLiveQuery(
 		async () => {
 			console.log('re-running important query')
-			const list = await db.lists.get('important')
+			const list = await db.lists.get('#important')
 			if (list) {
 				const todos = await Promise.all(list.order.map(id => db.todos.get(id)))
 				return todos.filter(todo => matchesQuery(query, todo))
@@ -102,7 +102,7 @@ const Home = () => {
 	const iceboxTodos = useLiveQuery(
 		async () => {
 			console.log('re-running icebox query')
-			const list = await db.lists.get('important')
+			const list = await db.lists.get('#important')
 			return db.todos
 				.where('id')
 				.noneOf(list?.order || [])
@@ -441,9 +441,9 @@ export const Log = ({ todos }: { todos: any[] }) => {
 							<IonCheckbox
 								slot="start"
 								onIonChange={async event => {
-									const list = await db.lists.get('important')
+									const list = await db.lists.get('#important')
 									await Promise.all([
-										db.lists.update('important', {
+										db.lists.update('#important', {
 											order: [todo.id, ...list!.order],
 										}),
 										db.todos.update(todo.id, {
@@ -494,7 +494,7 @@ export const Important = ({ todos }: { todos: any[] }) => {
 			event.detail.to,
 		)
 		await db.lists.put({
-			type: 'important',
+			type: '#important',
 			order: reorderedTodoIds,
 		})
 		// setTodos(event.detail.complete(important))
@@ -524,7 +524,7 @@ export const Important = ({ todos }: { todos: any[] }) => {
 										)
 										await Promise.all([
 											db.lists.put({
-												type: 'important',
+												type: '#important',
 												order: orderWithoutItem,
 											}),
 											db.todos.update(todo.id, {
@@ -549,8 +549,8 @@ export const Important = ({ todos }: { todos: any[] }) => {
 												action: 'icebox',
 											},
 											handler: async () => {
-												const list = await db.lists.get('important')
-												await db.lists.update('important', {
+												const list = await db.lists.get('#important')
+												await db.lists.update('#important', {
 													order: removeItemFromArray(
 														list!.order,
 														list!.order.indexOf(todo.id),
@@ -617,8 +617,8 @@ export const IceboxItem = ({
 							action: 'ranked',
 						},
 						handler: async () => {
-							const list = await db.lists.get('important')
-							db.lists.update('important', {
+							const list = await db.lists.get('#important')
+							db.lists.update('#important', {
 								order: [...list!.order, todo.id],
 							})
 						},
