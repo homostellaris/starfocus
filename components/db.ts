@@ -2,13 +2,16 @@ import Dexie, { Table } from 'dexie'
 import dexieCloud from 'dexie-cloud-addon'
 
 export interface Todo {
-	title: string
 	createdAt: Date
 	completedAt?: Date
+	note?: string // URL
+	role?: string
+	starPoints?: string
+	title: string
 }
 
 interface List {
-	order: string[]
+	order: string[] // Todo IDs
 	type: '#important'
 }
 
