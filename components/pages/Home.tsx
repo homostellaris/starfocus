@@ -195,11 +195,24 @@ const Home = () => {
 			document.removeEventListener('keydown', handleKeyDown)
 		}
 	}, [openCreateTodoModal])
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') {
+				event.preventDefault()
+				searchbarRef.current?.getElementsByTagName('input')[0].blur()
+			}
+		}
+		searchbarRef.current?.addEventListener('keydown', handleKeyDown)
+		return () => {
+			searchbarRef.current?.removeEventListener('keydown', handleKeyDown)
+		}
+	})
 
 	const [enablePagination, setEnablePagination] = useState(false)
 
 	useEffect(() => {
 		setTimeout(() => {
+			// TODO: See if ionViewDidEnter works better than setTimeout
 			console.log('scrolling to bottom', contentRef.current)
 			contentRef.current?.scrollToBottom(500)
 			setTimeout(() => {
