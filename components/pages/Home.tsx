@@ -239,8 +239,6 @@ const Home = () => {
 						position="bottom"
 						threshold="0px"
 						onIonInfinite={event => {
-							console.log('HELLLOO')
-							console.log({ ev: event })
 							setIceboxLimit(limit => limit + 10)
 							setTimeout(() => event.target.complete(), 500)
 						}}
