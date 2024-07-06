@@ -169,8 +169,6 @@ const Home = () => {
 	}
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.target !== document.body) return
-
 			if (event.key === '/') {
 				event.preventDefault()
 				searchbarRef.current?.setFocus()
@@ -180,7 +178,11 @@ const Home = () => {
 			} else if (event.key === ']') {
 				event.preventDefault()
 				toggleEndMenu()
-			} else if (event.key === 'c') {
+			}
+
+			if (event.target !== document.body) return
+
+			if (event.key === 'c') {
 				event.preventDefault()
 				openCreateTodoModal()
 			} else if (event.key === 's') {
