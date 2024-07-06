@@ -24,7 +24,7 @@
 		"lint": "next lint",
 		"prepare": "husky install",
 		"prettier:fix": "prettier --write components/ interfaces/ pages/ public/ styles/ utils/",
-		"start": "next start",
+		"start": "serve -p 6603 out",
 		"type-check": "tsc"
 	},
 	"dependencies": {
@@ -73,6 +73,7 @@
 		"prettier-plugin-tailwindcss": "^0.1.13",
 		"pullstate": "1.25",
 		"reselect": "5.1.0",
+		"serve": "^14.2.3",
 		"tailwindcss": "3.4.1",
 		"typescript": "5.4.5"
 	},
