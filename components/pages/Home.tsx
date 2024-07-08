@@ -1,4 +1,5 @@
 import { menuController } from '@ionic/core/components'
+import _ from 'lodash'
 import {
 	ActionSheetButton,
 	IonActionSheet,
@@ -29,7 +30,11 @@ import {
 	IonReorderGroup,
 	IonRow,
 	IonSearchbar,
+	IonSelect,
+	IonSelectOption,
+	IonTextarea,
 	IonTitle,
+	IonToast,
 	IonToolbar,
 	ItemReorderEventDetail,
 } from '@ionic/react'
@@ -43,6 +48,7 @@ import {
 	cloudOfflineSharp,
 	cloudDoneSharp,
 	logOutSharp,
+	documentText,
 } from 'ionicons/icons'
 import {
 	PropsWithChildren,
@@ -53,6 +59,9 @@ import {
 } from 'react'
 import { Link } from 'react-router-dom'
 import { db } from '../db'
+import NoteProviders from '../notes/providers'
+import useSettings from '../settings/useSettings'
+import useNoteProvider from '../notes/useNoteProvider'
 
 const Home = () => {
 	// const data = [
@@ -75,7 +84,7 @@ const Home = () => {
 	const [query, setQuery] = useState<string>('')
 	const logTodos = useLiveQuery(
 		async () => {
-			console.log('re-running log query')
+			console.debug('re-running log query')
 			return db.todos
 				.orderBy('completedAt')
 				.reverse()
@@ -88,7 +97,7 @@ const Home = () => {
 	)
 	const importantTodos = useLiveQuery(
 		async () => {
-			console.log('re-running important query')
+			console.debug('re-running important query')
 			const list = await db.lists.get('#important')
 			if (list) {
 				const todos = await Promise.all(list.order.map(id => db.todos.get(id)))
@@ -101,7 +110,7 @@ const Home = () => {
 	)
 	const iceboxTodos = useLiveQuery(
 		async () => {
-			console.log('re-running icebox query')
+			console.debug('re-running icebox query')
 			const list = await db.lists.get('#important')
 			return db.todos
 				.where('id')
@@ -118,6 +127,8 @@ const Home = () => {
 	)
 	console.debug({ logTodos, importantTodos, iceboxTodos })
 
+	const noteProvider = useNoteProvider()
+
 	const openCreateTodoModal = useCallback(() => {
 		modal.current?.present()
 		if (fab.current) fab.current.activated = true
@@ -131,26 +142,34 @@ const Home = () => {
 	const modal = useRef<HTMLIonModalElement>(null)
 	const fab = useRef<HTMLIonFabElement>(null)
 	const input = useRef<HTMLIonInputElement>(null)
+	const noteInput = useRef<HTMLIonTextareaElement>(null)
 	const createTodo = useCallback(
-		async title => {
+		async ({ note, title }: { note?: any; title: any }) => {
+			let uri
+			if (note && noteProvider) {
+				uri = await noteProvider.create({ content: note })
+			}
 			await db.todos.add({
 				createdAt: new Date(),
 				title,
+				note: { uri } || undefined,
 			})
 		},
-		[importantTodos],
+		[],
 	)
-	function onWillDismiss(ev: CustomEvent<OverlayEventDetail>) {
-		if (ev.detail.role === 'confirm') {
-			createTodo(input.current?.value)
+	function onWillDismiss(event: CustomEvent<OverlayEventDetail>) {
+		if (event.detail.role === 'confirm') {
+			createTodo({
+				title: input.current?.value,
+				note: noteInput.current?.value,
+			})
 		}
 	}
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (event.key === 'Enter') {
 				event.preventDefault()
-				createTodo(input.current?.value)
-				modal.current?.dismiss()
+				modal.current?.dismiss({}, 'confirm')
 			}
 		}
 		modal.current?.addEventListener('keydown', handleKeyDown)
@@ -213,13 +232,15 @@ const Home = () => {
 	useEffect(() => {
 		setTimeout(() => {
 			// TODO: See if ionViewDidEnter works better than setTimeout
-			console.log('scrolling to bottom', contentRef.current)
+			console.debug('scrolling to bottom', contentRef.current)
 			contentRef.current?.scrollToBottom(500)
 			setTimeout(() => {
 				setEnablePagination(true)
 			}, 500)
 		}, 200)
 	}, [])
+
+	console.log({ noteProvider })
 
 	return (
 		<>
@@ -281,15 +302,17 @@ const Home = () => {
 							<IonToolbar>
 								<IonTitle>Create todo</IonTitle>
 								<IonButtons slot="secondary">
-									<IonButton onClick={() => modal.current?.dismiss()}>
+									<IonButton
+										role="cancel"
+										onClick={() => modal.current?.dismiss({}, 'cancel')}
+									>
 										Cancel
 									</IonButton>
 								</IonButtons>
 								<IonButtons slot="primary">
 									<IonButton
 										onClick={() => {
-											createTodo(input.current?.value)
-											modal.current?.dismiss()
+											modal.current?.dismiss({}, 'confirm')
 										}}
 										strong={true}
 									>
@@ -298,13 +321,27 @@ const Home = () => {
 								</IonButtons>
 							</IonToolbar>
 						</IonHeader>
-						<IonContent className="ion-padding">
-							<IonItem>
-								<IonInput
-									ref={input}
-									type="text"
-								/>
-							</IonItem>
+						<IonContent className="space-y-4 ion-padding">
+							<IonInput
+								fill="outline"
+								ref={input}
+								type="text"
+								label="Title"
+								labelPlacement="floating"
+							/>
+							{!noteProvider && (
+								<p>Set a note provider in settings to enable this feature.</p>
+							)}
+							<IonTextarea
+								className="h-48"
+								disabled={!noteProvider}
+								helperText="A note with this initial content will be created with your note provider and linked to this todo."
+								fill="outline"
+								label="Note"
+								labelPlacement="floating"
+								placeholder="Write markdown here..."
+								ref={noteInput}
+							/>
 						</IonContent>
 					</IonModal>
 				</IonContent>
@@ -342,6 +379,18 @@ const Home = () => {
 export default Home
 
 export const MiscMenu = () => {
+	const settings = useSettings()
+	const [noteProvider, setNoteProvider] = useState<{
+		type?: string
+		apiKey?: string
+	}>({})
+	// Gross hack required because settings is initially undefined until the query resolves which doesn't re-trigger the state
+	useEffect(() => {
+		if (settings['#noteProvider']) {
+			setNoteProvider(settings['#noteProvider'])
+		}
+	}, [settings['#noteProvider']])
+
 	return (
 		<IonMenu
 			type="push"
@@ -352,9 +401,84 @@ export const MiscMenu = () => {
 					<IonTitle>Misc</IonTitle>
 				</IonToolbar>
 			</IonHeader>
-			<IonContent className="ion-padding">
-				<p>Menu items coming soon...</p>
+			<IonContent className="space-y-4 ion-padding">
+				<form
+					id="settings"
+					onSubmit={async event => {
+						event.preventDefault()
+						if (noteProvider.type === null) {
+							setNoteProvider({})
+							return db.settings.delete('#noteProvider')
+						}
+						if (!noteProvider.type || !noteProvider.apiKey) {
+							throw new TypeError('Note provider but no API key!')
+						}
+						await db.settings.put({
+							key: '#noteProvider',
+							value: {
+								type: noteProvider?.type,
+								apiKey: noteProvider?.apiKey,
+							},
+						})
+					}}
+				>
+					<fieldset className="space-y-2">
+						<IonSelect
+							fill="outline"
+							label="Note provider"
+							labelPlacement="floating"
+							onIonChange={event => {
+								setNoteProvider(noteProvider => ({
+									...noteProvider,
+									type: event.detail.value,
+								}))
+							}}
+							value={noteProvider.type || null} // defaultValue doesn't seem to work so have to make this a controlled component
+						>
+							<IonSelectOption value={null}>None</IonSelectOption>
+							<IonSelectOption value="stashpad">Stashpad</IonSelectOption>
+						</IonSelect>
+						{noteProvider.type === NoteProviders.Stashpad && (
+							<IonInput
+								fill="outline"
+								helperText="Notes are created with public permissions. API key is stored unencrypted in your database which is synced to our servers if you enable it."
+								label="API key"
+								labelPlacement="floating"
+								onIonChange={event => {
+									setNoteProvider(noteProvider => ({
+										...noteProvider,
+										apiKey: event.detail.value?.toString(),
+									}))
+								}}
+								placeholder="Enter text"
+								required
+								value={noteProvider?.apiKey}
+							></IonInput>
+						)}
+					</fieldset>
+				</form>
 			</IonContent>
+			<IonFooter>
+				<IonToolbar>
+					<IonButtons slot="primary">
+						<IonButton
+							form="settings"
+							id="save-settings"
+							type="submit"
+						>
+							Save
+						</IonButton>
+					</IonButtons>
+					<IonButtons slot="secondary">
+						<IonButton>Cancel</IonButton>
+					</IonButtons>
+				</IonToolbar>
+				<IonToast
+					trigger="save-settings"
+					message="Settings saved"
+					duration={2000}
+				></IonToast>
+			</IonFooter>
 		</IonMenu>
 	)
 }
@@ -577,6 +701,14 @@ export const Important = ({ todos }: { todos: any[] }) => {
 								>
 									<IonLabel>{todo?.title}</IonLabel>
 								</TodoItem>
+								{todo.note && (
+									<a
+										href={todo.note.uri}
+										target="_blank"
+									>
+										<IonIcon icon={documentText}></IonIcon>
+									</a>
+								)}
 								<IonReorder slot="end"></IonReorder>
 							</IonItem>
 						))}
@@ -714,7 +846,6 @@ const byDate = (a: any, b: any) => {
 
 function matchesQuery(query, todo) {
 	if (!query) return true
-	console.log({ query, todo })
 	return todo?.title.toLowerCase().includes(query)
 }
 

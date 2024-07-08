@@ -4,28 +4,43 @@ import dexieCloud from 'dexie-cloud-addon'
 export interface Todo {
 	createdAt: Date
 	completedAt?: Date
-	note?: string // URL
-	role?: string
+	note?: Note // URL
+	role?: Role
 	starPoints?: string
 	title: string
 }
 
-interface List {
+export interface Note {
+	uri: string
+}
+
+export interface Role {
+	title: string
+}
+
+export interface List {
 	order: string[] // Todo IDs
 	type: '#important'
 }
 
+export interface Setting {
+	key: string
+	value: any
+}
+
 export class DexieStarfocus extends Dexie {
-	todos!: Table<Todo>
 	lists!: Table<List>
+	settings!: Table<Setting>
+	todos!: Table<Todo>
 
 	constructor() {
 		super('starfocus', {
 			addons: [dexieCloud],
 		})
-		this.version(1).stores({
+		this.version(2).stores({
 			todos: '@id, createdAt, completedAt, title',
 			lists: 'type',
+			settings: '&key',
 		})
 		this.cloud.configure({
 			databaseUrl: 'https://zy0myinc2.dexie.cloud',
