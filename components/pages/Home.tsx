@@ -152,10 +152,10 @@ const Home = () => {
 			await db.todos.add({
 				createdAt: new Date(),
 				title,
-				note: { uri } || undefined,
+				...(uri && { note: { uri } }),
 			})
 		},
-		[],
+		[noteProvider],
 	)
 	function onWillDismiss(event: CustomEvent<OverlayEventDetail>) {
 		if (event.detail.role === 'confirm') {
@@ -239,8 +239,6 @@ const Home = () => {
 			}, 500)
 		}, 200)
 	}, [])
-
-	console.log({ noteProvider })
 
 	return (
 		<>
