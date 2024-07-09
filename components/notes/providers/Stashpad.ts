@@ -22,6 +22,13 @@ export default class Stashpad extends NoteProvider {
 			}),
 		})
 			.then(response => response.json())
-			.then(({ uri }) => uri)
+			.then(responseBody => {
+				if (!responseBody.uri) {
+					throw new Error(
+						`Failed to create note: ${JSON.stringify(responseBody, null, 2)}`,
+					)
+				}
+				return responseBody.uri
+			})
 	}
 }
