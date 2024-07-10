@@ -2,12 +2,16 @@ import Dexie, { Table } from 'dexie'
 import dexieCloud from 'dexie-cloud-addon'
 
 export interface Todo {
-	createdAt: Date
-	completedAt?: Date
-	note?: Note // URL
+	note?: Note
 	role?: Role
 	starPoints?: string
 	title: string
+}
+
+export interface CreatedTodo extends Todo {
+	createdAt: Date
+	completedAt?: Date
+	id?: string
 }
 
 export interface Note {
@@ -31,7 +35,7 @@ export interface Setting {
 export class DexieStarfocus extends Dexie {
 	lists!: Table<List>
 	settings!: Table<Setting>
-	todos!: Table<Todo>
+	todos!: Table<CreatedTodo>
 
 	constructor() {
 		super('starfocus', {

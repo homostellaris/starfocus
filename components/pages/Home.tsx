@@ -50,19 +50,16 @@ import {
 	logOutSharp,
 	documentText,
 } from 'ionicons/icons'
-import {
-	PropsWithChildren,
-	useCallback,
-	useEffect,
-	useRef,
-	useState,
-} from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { db } from '../db'
+import { CreatedTodo, db, Todo } from '../db'
 import NoteProviders from '../notes/providers'
 import useSettings from '../settings/useSettings'
 import useNoteProvider from '../notes/useNoteProvider'
-import { todo } from 'node:test'
+import {
+	TodoActionSheetProvider,
+	useTodoActionSheet,
+} from '../todos/TodoActionSheet'
 
 const Home = () => {
 	// const data = [
@@ -264,9 +261,11 @@ const Home = () => {
 					>
 						<IonInfiniteScrollContent></IonInfiniteScrollContent>
 					</IonInfiniteScroll>
-					<Log todos={logTodos} />
-					<Important todos={importantTodos} />
-					<Icebox todos={iceboxTodos} />
+					<TodoActionSheetProvider>
+						<Log todos={logTodos} />
+						<Important todos={importantTodos} />
+						<Icebox todos={iceboxTodos} />
+					</TodoActionSheetProvider>
 					<IonInfiniteScroll
 						disabled={!enablePagination}
 						position="bottom"
@@ -587,15 +586,27 @@ export const FilterMenu = () => {
 }
 
 export const Log = ({ todos }: { todos: any[] }) => {
+	const todoActionSheet = useTodoActionSheet()
+
 	return (
 		<>
 			<h1>Log</h1>
 			{todos.length ? (
 				<IonList inset>
 					{todos.sort(byDate).map(todo => (
-						<IonItem key={todo.id}>
+						<IonItem
+							button
+							key={todo.id}
+							onClick={_event => {
+								todoActionSheet.open(todo)
+							}}
+						>
 							<IonCheckbox
 								slot="start"
+								onClick={event => {
+									// Prevents the IonItem onClick from firing when completing a todo
+									event.stopPropagation()
+								}}
 								onIonChange={async event => {
 									const list = await db.lists.get('#important')
 									await Promise.all([
@@ -611,16 +622,7 @@ export const Log = ({ todos }: { todos: any[] }) => {
 								}}
 								checked={!!todo.completedAt}
 							/>
-							<TodoItem
-								actionButtons={[
-									{
-										text: 'Nothing',
-									},
-								]}
-								todo={todo}
-							>
-								<IonLabel>{todo?.title}</IonLabel>
-							</TodoItem>
+							<IonLabel>{todo?.title}</IonLabel>
 						</IonItem>
 					))}
 				</IonList>
@@ -653,8 +655,8 @@ export const Important = ({ todos }: { todos: any[] }) => {
 			type: '#important',
 			order: reorderedTodoIds,
 		})
-		// setTodos(event.detail.complete(important))
 	}
+	const todoActionSheet = useTodoActionSheet()
 
 	return (
 		<>
@@ -668,10 +670,33 @@ export const Important = ({ todos }: { todos: any[] }) => {
 						{todos.map(todo => (
 							<IonItem
 								button
+								onClick={_event => {
+									todoActionSheet.open(todo, [
+										{
+											text: 'Move to icebox',
+											data: {
+												action: 'icebox',
+											},
+											handler: async () => {
+												const list = await db.lists.get('#important')
+												await db.lists.update('#important', {
+													order: removeItemFromArray(
+														list!.order,
+														list!.order.indexOf(todo.id),
+													),
+												})
+											},
+										},
+									])
+								}}
 								key={todo.id}
 							>
 								<IonCheckbox
 									slot="start"
+									onClick={event => {
+										// Prevents the IonItem onClick from firing when completing a todo
+										event.stopPropagation()
+									}}
 									onIonChange={async event => {
 										const todoIds = [...todos.map(i => i.id)]
 										const orderWithoutItem = removeItemFromArray(
@@ -697,28 +722,7 @@ export const Important = ({ todos }: { todos: any[] }) => {
 									value={item?.title}
 									readonly
 								></IonInput> */}
-								<TodoItem
-									actionButtons={[
-										{
-											text: 'Move to icebox',
-											data: {
-												action: 'icebox',
-											},
-											handler: async () => {
-												const list = await db.lists.get('#important')
-												await db.lists.update('#important', {
-													order: removeItemFromArray(
-														list!.order,
-														list!.order.indexOf(todo.id),
-													),
-												})
-											},
-										},
-									]}
-									todo={todo}
-								>
-									<IonLabel>{todo?.title}</IonLabel>
-								</TodoItem>
+								<IonLabel>{todo?.title}</IonLabel>
 								{todo.note && (
 									<a
 										href={todo.note.uri}
@@ -771,10 +775,13 @@ export const IceboxItem = ({
 		title: string
 	}
 }) => {
+	const todoActionSheet = useTodoActionSheet()
+
 	return (
-		<IonCard className="cursor-pointer">
-			<TodoItem
-				actionButtons={[
+		<IonCard
+			className="cursor-pointer"
+			onClick={() => {
+				todoActionSheet.open(todo as CreatedTodo, [
 					{
 						text: 'Move to ranked',
 						data: {
@@ -787,55 +794,13 @@ export const IceboxItem = ({
 							})
 						},
 					},
-					{
-						text: 'Delete',
-						role: 'destructive',
-						data: {
-							action: 'delete',
-						},
-						handler: async () => {
-							await db.todos.delete(todo.id)
-						},
-					},
-				]}
-				todo={todo}
-			>
-				<IonCardHeader>
-					<IonCardTitle className="text-sm">{todo.title}</IonCardTitle>
-				</IonCardHeader>
-			</TodoItem>
-		</IonCard>
-	)
-}
-
-export const TodoItem = ({
-	actionButtons,
-	children,
-	todo,
-}: PropsWithChildren<{
-	actionButtons: ActionSheetButton[]
-	todo: {
-		id: string
-		title: string
-	}
-}>) => {
-	const [isOpen, setIsOpen] = useState(false)
-
-	return (
-		<div
-			className="w-full"
-			onClick={() => {
-				setIsOpen(true)
+				])
 			}}
 		>
-			{children}
-			<IonActionSheet
-				buttons={actionButtons}
-				header={todo.title}
-				isOpen={isOpen}
-				onDidDismiss={() => setIsOpen(false)}
-			></IonActionSheet>
-		</div>
+			<IonCardHeader>
+				<IonCardTitle className="text-sm">{todo.title}</IonCardTitle>
+			</IonCardHeader>
+		</IonCard>
 	)
 }
 
