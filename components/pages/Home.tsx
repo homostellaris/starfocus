@@ -50,7 +50,7 @@ import {
 	logOutSharp,
 	documentText,
 } from 'ionicons/icons'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { RefObject, useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CreatedTodo, db, Todo } from '../db'
 import NoteProviders from '../notes/providers'
@@ -62,24 +62,21 @@ import {
 } from '../todos/TodoActionSheet'
 
 const Home = () => {
-	// const data = [
-	// 	{ id: 1, title: 'Amsterdam' },
-	// 	{ id: 2, title: 'Buenos Aires' },
-	// 	{ id: 3, title: 'Cairo' },
-	// 	{ id: 4, title: 'Geneva' },
-	// 	{ id: 5, title: 'Hong Kong' },
-	// 	{ id: 6, title: 'Istanbul' },
-	// 	{ id: 7, title: 'London' },
-	// 	{ id: 8, title: 'Madrid' },
-	// 	{ id: 9, title: 'New York' },
-	// 	{ id: 10, title: 'Panama City' },
-	// ]
-	// const [iceboxTodos, setIceboxTodos] = useState(data)
+	// Search stuff
+	const handleInput = (event: Event) => {
+		const target = event.target as HTMLIonSearchbarElement
+		let query = ''
+		if (target?.value) query = target.value.toLowerCase()
+		setQuery(query)
+	}
+	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
+	const [query, setQuery] = useState<string>('')
 
+	// Pagination stuff
 	const [iceboxLimit, setIceboxLimit] = useState(30)
 	const [logLimit, setLogLimit] = useState(7)
-	// Should we just query all todos and split them up? How would this work with pagination?
-	const [query, setQuery] = useState<string>('')
+
+	// Todo lists
 	const logTodos = useLiveQuery(
 		async () => {
 			console.debug('re-running log query')
@@ -125,105 +122,18 @@ const Home = () => {
 	)
 	console.debug({ logTodos, importantTodos, iceboxTodos })
 
-	const noteProvider = useNoteProvider()
-
-	const openCreateTodoModal = useCallback(() => {
-		modal.current?.present()
-		if (fab.current) fab.current.activated = true
-	}, [])
-	const handleInput = (event: Event) => {
-		const target = event.target as HTMLIonSearchbarElement
-		let query = ''
-		if (target?.value) query = target.value.toLowerCase()
-		setQuery(query)
-	}
-	const modal = useRef<HTMLIonModalElement>(null)
+	// Creating todo stuff
 	const fab = useRef<HTMLIonFabElement>(null)
-	const input = useRef<HTMLIonInputElement>(null)
-	const noteInput = useRef<HTMLIonTextareaElement>(null)
-	const createTodo = useCallback(
-		async ({ note, title }: { note?: any; title: any }) => {
-			let uri
-			if (note && noteProvider) {
-				uri = await noteProvider.create({ content: note })
-			}
-			await db.todos.add({
-				createdAt: new Date(),
-				title,
-				...(uri && { note: { uri } }),
-			})
-		},
-		[noteProvider],
-	)
-	function onWillDismiss(event: CustomEvent<OverlayEventDetail>) {
-		if (event.detail.role === 'confirm') {
-			createTodo({
-				title: input.current?.value,
-				note: noteInput.current?.value,
-			})
-		}
-	}
-	useEffect(() => {
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === 'Enter') {
-				event.preventDefault()
-				modal.current?.dismiss({}, 'confirm')
-			}
-		}
-		modal.current?.addEventListener('keydown', handleKeyDown)
-		return () => {
-			modal.current?.removeEventListener('keydown', handleKeyDown)
-		}
-	}, [createTodo, openCreateTodoModal])
+	const openCreateTodoModal = useCallback(() => {
+		setCreateTodoModalOpen(true)
+		if (fab.current) fab.current.activated = true
+	}, [fab])
+	const [createTodoModalOpen, setCreateTodoModalOpen] = useState(false)
 
-	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
 	const contentRef = useRef<HTMLIonContentElement>(null)
-	async function toggleStartMenu() {
-		await menuController.toggle('start')
-	}
-	async function toggleEndMenu() {
-		await menuController.toggle('end')
-	}
-	useEffect(() => {
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === '/') {
-				event.preventDefault()
-				searchbarRef.current?.setFocus()
-			} else if (event.key === '[') {
-				event.preventDefault()
-				toggleStartMenu()
-			} else if (event.key === ']') {
-				event.preventDefault()
-				toggleEndMenu()
-			}
 
-			if (event.target !== document.body) return
-
-			if (event.key === 'c') {
-				event.preventDefault()
-				openCreateTodoModal()
-			} else if (event.key === 's') {
-				event.preventDefault()
-				contentRef.current?.scrollToBottom(500)
-			}
-		}
-		document.addEventListener('keydown', handleKeyDown)
-		return () => {
-			document.removeEventListener('keydown', handleKeyDown)
-		}
-	}, [openCreateTodoModal])
-	useEffect(() => {
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === 'Escape') {
-				event.preventDefault()
-				searchbarRef.current?.getElementsByTagName('input')[0].blur()
-			}
-		}
-		searchbarRef.current?.addEventListener('keydown', handleKeyDown)
-		return () => {
-			searchbarRef.current?.removeEventListener('keydown', handleKeyDown)
-		}
-	})
+	useGlobalKeyboardShortcuts(contentRef, searchbarRef, openCreateTodoModal)
+	useSearchKeyboardShortcuts(searchbarRef)
 
 	const [enablePagination, setEnablePagination] = useState(false)
 
@@ -287,66 +197,19 @@ const Home = () => {
 							<IonIcon icon={add}></IonIcon>
 						</IonFabButton>
 					</IonFab>
-					<IonModal
-						ref={modal}
-						trigger="open-modal"
-						onDidPresent={() => input.current?.setFocus()}
-						onWillDismiss={event => {
-							onWillDismiss(event)
-							if (fab.current) fab.current.activated = false
-						}}
-					>
-						<IonHeader translucent>
-							<IonToolbar>
-								<IonTitle>Create todo</IonTitle>
-								<IonButtons slot="secondary">
-									<IonButton
-										role="cancel"
-										onClick={() => modal.current?.dismiss({}, 'cancel')}
-									>
-										Cancel
-									</IonButton>
-								</IonButtons>
-								<IonButtons slot="primary">
-									<IonButton
-										onClick={() => {
-											modal.current?.dismiss({}, 'confirm')
-										}}
-										strong={true}
-									>
-										Confirm
-									</IonButton>
-								</IonButtons>
-							</IonToolbar>
-						</IonHeader>
-						<IonContent className="space-y-4 ion-padding">
-							<IonInput
-								fill="outline"
-								ref={input}
-								type="text"
-								label="Title"
-								labelPlacement="floating"
-							/>
-							{!noteProvider && (
-								<p>Set a note provider in settings to enable this feature.</p>
-							)}
-							<IonTextarea
-								className="h-48"
-								disabled={!noteProvider}
-								helperText="A note with this initial content will be created with your note provider and linked to this todo."
-								fill="outline"
-								label="Note"
-								labelPlacement="floating"
-								placeholder="Write markdown here..."
-								ref={noteInput}
-							/>
-						</IonContent>
-					</IonModal>
+					<CreateTodoModal
+						fab={fab}
+						open={createTodoModalOpen}
+					/>
 				</IonContent>
 				<IonFooter>
 					<IonToolbar>
 						<IonButtons slot="primary">
-							<IonButton onClick={toggleEndMenu}>
+							<IonButton
+								onClick={() => {
+									menuController.toggle('end')
+								}}
+							>
 								<IonIcon
 									icon={filterSharp}
 									slot="icon-only"
@@ -375,6 +238,71 @@ const Home = () => {
 }
 
 export default Home
+
+export const Header = () => {
+	const user = useObservable(db.cloud.currentUser)
+	const syncState = useObservable(db.cloud.syncState)
+	const isLoggedIn = user?.isLoggedIn
+
+	return (
+		<IonHeader>
+			<IonToolbar>
+				<IonTitle>Today & upcoming</IonTitle>
+				{isLoggedIn ? (
+					<>
+						<div
+							className="hidden mx-2 space-x-2 lg:block"
+							slot="secondary"
+						>
+							<span>email: {user.email}</span>
+							<span>license: {syncState?.license}</span>
+							<span>status: {syncState?.status}</span>
+							<span>phase: {syncState?.phase}</span>
+							<span>{syncState?.progress}</span>
+							<span>{syncState?.error?.message}</span>
+						</div>
+						<IonButtons slot="secondary">
+							<IonButton fill="solid">
+								<IonIcon
+									icon={cloudDoneSharp}
+									slot="start"
+								></IonIcon>
+								<span>Sync</span>
+							</IonButton>
+							<IonButton
+								onClick={() => {
+									db.cloud.logout()
+								}}
+							>
+								<IonIcon
+									icon={logOutSharp}
+									slot="start"
+								></IonIcon>
+							</IonButton>
+						</IonButtons>
+					</>
+				) : (
+					<>
+						<IonButtons slot="secondary">
+							<IonButton
+								fill="solid"
+								onClick={() => {
+									db.cloud.login()
+								}}
+							>
+								<IonIcon
+									icon={cloudOfflineSharp}
+									slot="start"
+								></IonIcon>
+								<span>Sync</span>
+							</IonButton>
+						</IonButtons>
+					</>
+				)}
+			</IonToolbar>
+		</IonHeader>
+	)
+}
 
 export const MiscMenu = () => {
 	const settings = useSettings()
@@ -497,71 +425,6 @@ export const MiscMenu = () => {
 				></IonToast>
 			</IonFooter>
 		</IonMenu>
-	)
-}
-
-export const Header = () => {
-	const user = useObservable(db.cloud.currentUser)
-	const syncState = useObservable(db.cloud.syncState)
-	const isLoggedIn = user?.isLoggedIn
-
-	return (
-		<IonHeader>
-			<IonToolbar>
-				<IonTitle>Today & upcoming</IonTitle>
-				{isLoggedIn ? (
-					<>
-						<div
-							className="hidden mx-2 space-x-2 lg:block"
-							slot="secondary"
-						>
-							<span>email: {user.email}</span>
-							<span>license: {syncState?.license}</span>
-							<span>status: {syncState?.status}</span>
-							<span>phase: {syncState?.phase}</span>
-							<span>{syncState?.progress}</span>
-							<span>{syncState?.error?.message}</span>
-						</div>
-						<IonButtons slot="secondary">
-							<IonButton fill="solid">
-								<IonIcon
-									icon={cloudDoneSharp}
-									slot="start"
-								></IonIcon>
-								<span>Sync</span>
-							</IonButton>
-							<IonButton
-								onClick={() => {
-									db.cloud.logout()
-								}}
-							>
-								<IonIcon
-									icon={logOutSharp}
-									slot="start"
-								></IonIcon>
-							</IonButton>
-						</IonButtons>
-					</>
-				) : (
-					<>
-						<IonButtons slot="secondary">
-							<IonButton
-								fill="solid"
-								onClick={() => {
-									db.cloud.login()
-								}}
-							>
-								<IonIcon
-									icon={cloudOfflineSharp}
-									slot="start"
-								></IonIcon>
-								<span>Sync</span>
-							</IonButton>
-						</IonButtons>
-					</>
-				)}
-			</IonToolbar>
-		</IonHeader>
 	)
 }
 
@@ -722,12 +585,6 @@ export const Important = ({ todos }: { todos: any[] }) => {
 										})
 									}}
 								/>
-								{/* For some reason we need an input rather than a label to prevent the whole item updating the checkbox */}
-								{/* <IonInput
-									aria-label="Task name"
-									value={item?.title}
-									readonly
-								></IonInput> */}
 								<IonLabel>{todo?.title}</IonLabel>
 								{todo.note && (
 									<a
@@ -812,6 +669,115 @@ export const IceboxItem = ({
 	)
 }
 
+export const CreateTodoModal = ({
+	fab,
+	open,
+}: {
+	fab: RefObject<HTMLIonFabElement>
+	open: boolean
+}) => {
+	const modal = useRef<HTMLIonModalElement>(null)
+
+	const input = useRef<HTMLIonInputElement>(null)
+	const noteInput = useRef<HTMLIonTextareaElement>(null)
+	const noteProvider = useNoteProvider()
+
+	const createTodo = useCallback(
+		async ({ note, title }: { note?: any; title: any }) => {
+			let uri
+			if (note && noteProvider) {
+				uri = await noteProvider.create({ content: note })
+			}
+			await db.todos.add({
+				createdAt: new Date(),
+				title,
+				...(uri && { note: { uri } }),
+			})
+		},
+		[noteProvider],
+	)
+	function onWillDismiss(event: CustomEvent<OverlayEventDetail>) {
+		if (event.detail.role === 'confirm') {
+			createTodo({
+				title: input.current?.value,
+				note: noteInput.current?.value,
+			})
+		}
+	}
+
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === 'Enter') {
+				event.preventDefault()
+				modal.current?.dismiss({}, 'confirm')
+			}
+		}
+		modal.current?.addEventListener('keydown', handleKeyDown)
+		return () => {
+			modal.current?.removeEventListener('keydown', handleKeyDown)
+		}
+	}, [createTodo])
+
+	return (
+		<IonModal
+			isOpen={open}
+			ref={modal}
+			trigger="open-modal"
+			onDidPresent={() => input.current?.setFocus()}
+			onWillDismiss={event => {
+				onWillDismiss(event)
+				if (fab.current) fab.current.activated = false
+			}}
+		>
+			<IonHeader translucent>
+				<IonToolbar>
+					<IonTitle>Create todo</IonTitle>
+					<IonButtons slot="secondary">
+						<IonButton
+							role="cancel"
+							onClick={() => modal.current?.dismiss({}, 'cancel')}
+						>
+							Cancel
+						</IonButton>
+					</IonButtons>
+					<IonButtons slot="primary">
+						<IonButton
+							onClick={() => {
+								modal.current?.dismiss({}, 'confirm')
+							}}
+							strong={true}
+						>
+							Confirm
+						</IonButton>
+					</IonButtons>
+				</IonToolbar>
+			</IonHeader>
+			<IonContent className="space-y-4 ion-padding">
+				<IonInput
+					fill="outline"
+					ref={input}
+					type="text"
+					label="Title"
+					labelPlacement="floating"
+				/>
+				{!noteProvider && (
+					<p>Set a note provider in settings to enable this feature.</p>
+				)}
+				<IonTextarea
+					className="h-48"
+					disabled={!noteProvider}
+					helperText="A note with this initial content will be created with your note provider and linked to this todo."
+					fill="outline"
+					label="Note"
+					labelPlacement="floating"
+					placeholder="Write markdown here..."
+					ref={noteInput}
+				/>
+			</IonContent>
+		</IonModal>
+	)
+}
+
 function moveItemInArray<T>(
 	array: T[],
 	fromIndex: number,
@@ -840,6 +806,54 @@ function matchesQuery(query, todo) {
 	return todo?.title.toLowerCase().includes(query)
 }
 
-interface InfiniteScrollCustomEvent extends CustomEvent {
-	target: HTMLIonInfiniteScrollElement
+function useGlobalKeyboardShortcuts(
+	contentRef: RefObject<HTMLIonContentElement>,
+	searchbarRef: RefObject<HTMLIonSearchbarElement>,
+	openCreateTodoModal: any,
+) {
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === '/') {
+				event.preventDefault()
+				searchbarRef.current?.setFocus()
+			} else if (event.key === '[') {
+				event.preventDefault()
+				menuController.toggle('start')
+			} else if (event.key === ']') {
+				event.preventDefault()
+				menuController.toggle('end')
+			}
+
+			if (event.target !== document.body) return
+
+			if (event.key === 'c') {
+				event.preventDefault()
+				openCreateTodoModal()
+			} else if (event.key === 's') {
+				event.preventDefault()
+				contentRef.current?.scrollToBottom(500)
+			}
+		}
+		document.addEventListener('keydown', handleKeyDown)
+		return () => {
+			document.removeEventListener('keydown', handleKeyDown)
+		}
+	}, [openCreateTodoModal])
+}
+
+function useSearchKeyboardShortcuts(
+	searchbarRef: RefObject<HTMLIonSearchbarElement>,
+) {
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') {
+				event.preventDefault()
+				searchbarRef.current?.getElementsByTagName('input')[0].blur()
+			}
+		}
+		searchbarRef.current?.addEventListener('keydown', handleKeyDown)
+		return () => {
+			searchbarRef.current?.removeEventListener('keydown', handleKeyDown)
+		}
+	})
 }
