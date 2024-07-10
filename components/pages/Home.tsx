@@ -62,6 +62,7 @@ import { db } from '../db'
 import NoteProviders from '../notes/providers'
 import useSettings from '../settings/useSettings'
 import useNoteProvider from '../notes/useNoteProvider'
+import { todo } from 'node:test'
 
 const Home = () => {
 	// const data = [
@@ -455,6 +456,25 @@ export const MiscMenu = () => {
 						)}
 					</fieldset>
 				</form>
+				<IonButton
+					id="clean-database"
+					onClick={async () => {
+						await db.todos.toCollection().modify(todo => {
+							delete todo['uri']
+							if (todo.note && !todo.note.uri) {
+								delete todo.note
+							}
+						})
+						await db.todos.where('title').equals('').delete()
+					}}
+				>
+					Clean database
+				</IonButton>
+				<IonToast
+					trigger="clean-database"
+					message="Database cleaned"
+					duration={2000}
+				></IonToast>
 			</IonContent>
 			<IonFooter>
 				<IonToolbar>
