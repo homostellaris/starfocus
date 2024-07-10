@@ -21,6 +21,8 @@ import '@ionic/react/css/display.css'
 import '../styles/capacitor-starter/global.css'
 import '../styles/capacitor-starter/variables.css'
 
+import '@ionic/react/css/palettes/dark.class.css'
+
 export const metadata: Metadata = {
 	title: 'Starfocus',
 	description: 'The todo list for our future',
@@ -38,7 +40,10 @@ export default function RootLayout({
 	children: React.ReactNode
 }>) {
 	return (
-		<html lang="en">
+		<html
+			// className="dark"
+			lang="en"
+		>
 			<body>{children}</body>
 			<Script
 				type="module"

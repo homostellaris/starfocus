@@ -400,8 +400,9 @@ export const MiscMenu = () => {
 					<IonTitle>Misc</IonTitle>
 				</IonToolbar>
 			</IonHeader>
-			<IonContent className="space-y-4 ion-padding">
+			<IonContent class="ion-padding space-y-4">
 				<form
+					className="space-y-4"
 					id="settings"
 					onSubmit={async event => {
 						event.preventDefault()
@@ -421,6 +422,17 @@ export const MiscMenu = () => {
 						})
 					}}
 				>
+					<fieldset>
+						<IonSelect
+							fill="outline"
+							label="Theme"
+							labelPlacement="floating"
+						>
+							<IonSelectOption value="light">Light</IonSelectOption>
+							<IonSelectOption value="dark">Dark</IonSelectOption>
+							<IonSelectOption value="system">System</IonSelectOption>
+						</IonSelect>
+					</fieldset>
 					<fieldset className="space-y-2">
 						<IonSelect
 							fill="outline"
