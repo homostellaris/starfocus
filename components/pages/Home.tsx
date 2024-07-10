@@ -608,17 +608,19 @@ export const Log = ({ todos }: { todos: any[] }) => {
 									event.stopPropagation()
 								}}
 								onIonChange={async event => {
-									const list = await db.lists.get('#important')
-									await Promise.all([
-										db.lists.update('#important', {
-											order: [todo.id, ...list!.order],
-										}),
-										db.todos.update(todo.id, {
-											completedAt: event.detail.checked
-												? new Date()
-												: undefined,
-										}),
-									])
+									db.transaction('rw', db.todos, db.lists, async () => {
+										const list = await db.lists.get('#important')
+										await Promise.all([
+											db.lists.update('#important', {
+												order: [todo.id, ...list!.order],
+											}),
+											db.todos.update(todo.id, {
+												completedAt: event.detail.checked
+													? new Date()
+													: undefined,
+											}),
+										])
+									})
 								}}
 								checked={!!todo.completedAt}
 							/>
@@ -678,12 +680,14 @@ export const Important = ({ todos }: { todos: any[] }) => {
 												action: 'icebox',
 											},
 											handler: async () => {
-												const list = await db.lists.get('#important')
-												await db.lists.update('#important', {
-													order: removeItemFromArray(
-														list!.order,
-														list!.order.indexOf(todo.id),
-													),
+												db.transaction('rw', db.lists, async () => {
+													const list = await db.lists.get('#important')
+													await db.lists.update('#important', {
+														order: removeItemFromArray(
+															list!.order,
+															list!.order.indexOf(todo.id),
+														),
+													})
 												})
 											},
 										},
@@ -703,17 +707,19 @@ export const Important = ({ todos }: { todos: any[] }) => {
 											todoIds,
 											todoIds.indexOf(todo.id),
 										)
-										await Promise.all([
-											db.lists.put({
-												type: '#important',
-												order: orderWithoutItem,
-											}),
-											db.todos.update(todo.id, {
-												completedAt: event.detail.checked
-													? new Date()
-													: undefined,
-											}),
-										])
+										db.transaction('rw', db.lists, db.todos, async () => {
+											await Promise.all([
+												db.lists.put({
+													type: '#important',
+													order: orderWithoutItem,
+												}),
+												db.todos.update(todo.id, {
+													completedAt: event.detail.checked
+														? new Date()
+														: undefined,
+												}),
+											])
+										})
 									}}
 								/>
 								{/* For some reason we need an input rather than a label to prevent the whole item updating the checkbox */}
@@ -788,9 +794,11 @@ export const IceboxItem = ({
 							action: 'ranked',
 						},
 						handler: async () => {
-							const list = await db.lists.get('#important')
-							db.lists.update('#important', {
-								order: [...list!.order, todo.id],
+							db.transaction('rw', db.lists, async () => {
+								const list = await db.lists.get('#important')
+								db.lists.update('#important', {
+									order: [...list!.order, todo.id],
+								})
 							})
 						},
 					},
