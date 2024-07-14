@@ -43,7 +43,15 @@ export function TodoActionSheetProvider({ children }: PropsWithChildren) {
 							action: 'delete',
 						},
 						handler: async () => {
-							await db.todos.delete(todo?.id)
+							db.transaction('rw', db.todos, async () => {
+								await db.todos.delete(todo!.id)
+								const important = await db.lists.get('#important')
+								if (important!.order.includes(todo!.id!)) {
+									await db.lists.update('#important', list => {
+										list.order = list.order.filter(id => id !== todo!.id)
+									})
+								}
+							})
 						},
 					},
 				]}

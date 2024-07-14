@@ -1,4 +1,5 @@
 import Dexie, { Table } from 'dexie'
+
 import dexieCloud from 'dexie-cloud-addon'
 
 export interface Todo {
@@ -62,3 +63,12 @@ export class DexieStarfocus extends Dexie {
 }
 
 export const db = new DexieStarfocus()
+
+// Helpful for inspecting the database to debug errors in production
+declare global {
+	interface Window {
+		db: DexieStarfocus
+	}
+}
+
+window.db = db

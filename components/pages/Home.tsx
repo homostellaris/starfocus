@@ -386,13 +386,26 @@ export const MiscMenu = () => {
 				<IonButton
 					id="clean-database"
 					onClick={async () => {
+						// Remove invalid notes from todos
 						await db.todos.toCollection().modify(todo => {
 							delete todo['uri']
 							if (todo.note && !todo.note.uri) {
 								delete todo.note
 							}
 						})
+
+						// Remove empty todos
 						await db.todos.where('title').equals('').delete()
+
+						// Remove todos from important list that don't exist
+						const important = await db.lists.get('#important')
+						const todos = await db.todos.bulkGet(important?.order || [])
+						const cleanedImportantOrder = _.zip(important!.order, todos)
+							.filter(([_id, todo]) => todo !== undefined)
+							.map(([id, _todo]) => id) as string[]
+						await db.lists.update('#important', {
+							order: cleanedImportantOrder,
+						})
 					}}
 				>
 					Clean database
