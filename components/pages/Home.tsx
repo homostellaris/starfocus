@@ -1,8 +1,5 @@
 import { menuController } from '@ionic/core/components'
-import _ from 'lodash'
 import {
-	ActionSheetButton,
-	IonActionSheet,
 	IonButton,
 	IonButtons,
 	IonCard,
@@ -43,12 +40,12 @@ import { useLiveQuery, useObservable } from 'dexie-react-hooks'
 import {
 	add,
 	checkmarkDoneCircleSharp,
-	filterSharp,
-	rocketSharp,
-	cloudOfflineSharp,
 	cloudDoneSharp,
-	logOutSharp,
+	cloudOfflineSharp,
 	documentText,
+	filterSharp,
+	logOutSharp,
+	rocketSharp,
 } from 'ionicons/icons'
 import {
 	ComponentProps,
@@ -59,14 +56,12 @@ import {
 	useState,
 } from 'react'
 import { Link } from 'react-router-dom'
-import { CreatedTodo, db, Todo } from '../db'
+import { CreatedTodo, db } from '../db'
 import NoteProviders from '../notes/providers'
-import useSettings from '../settings/useSettings'
 import useNoteProvider from '../notes/useNoteProvider'
-import {
-	TodoActionSheetProvider,
-	useTodoActionSheet,
-} from '../todos/TodoActionSheet'
+import useSettings from '../settings/useSettings'
+import { SelectedTodoProvider } from '../todos/SelectedTodo'
+import { useTodoActionSheet } from '../todos/TodoActionSheet'
 
 const Home = () => {
 	// Search stuff
@@ -178,11 +173,11 @@ const Home = () => {
 					>
 						<IonInfiniteScrollContent></IonInfiniteScrollContent>
 					</IonInfiniteScroll>
-					<TodoActionSheetProvider>
+					<SelectedTodoProvider>
 						<Log todos={logTodos} />
 						<Important todos={importantTodos} />
 						<Icebox todos={iceboxTodos} />
-					</TodoActionSheetProvider>
+					</SelectedTodoProvider>
 					<IonInfiniteScroll
 						disabled={!enablePagination}
 						position="bottom"
@@ -472,7 +467,7 @@ export const FilterMenu = () => {
 }
 
 export const Log = ({ todos }: { todos: any[] }) => {
-	const todoActionSheet = useTodoActionSheet()
+	const [present] = useTodoActionSheet()
 
 	return (
 		<>
@@ -484,7 +479,7 @@ export const Log = ({ todos }: { todos: any[] }) => {
 							button
 							key={todo.id}
 							onClick={_event => {
-								todoActionSheet.open(todo)
+								present(todo)
 							}}
 						>
 							<IonCheckbox
@@ -544,7 +539,7 @@ export const Important = ({ todos }: { todos: any[] }) => {
 			order: reorderedTodoIds,
 		})
 	}
-	const todoActionSheet = useTodoActionSheet()
+	const [present] = useTodoActionSheet()
 
 	return (
 		<>
@@ -559,25 +554,27 @@ export const Important = ({ todos }: { todos: any[] }) => {
 							<IonItem
 								button
 								onClick={_event => {
-									todoActionSheet.open(todo, [
-										{
-											text: 'Move to icebox',
-											data: {
-												action: 'icebox',
-											},
-											handler: async () => {
-												db.transaction('rw', db.lists, async () => {
-													const list = await db.lists.get('#important')
-													await db.lists.update('#important', {
-														order: removeItemFromArray(
-															list!.order,
-															list!.order.indexOf(todo.id),
-														),
+									present(todo, {
+										buttons: [
+											{
+												text: 'Move to icebox',
+												data: {
+													action: 'icebox',
+												},
+												handler: async () => {
+													db.transaction('rw', db.lists, async () => {
+														const list = await db.lists.get('#important')
+														await db.lists.update('#important', {
+															order: removeItemFromArray(
+																list!.order,
+																list!.order.indexOf(todo.id),
+															),
+														})
 													})
-												})
+												},
 											},
-										},
-									])
+										],
+									})
 								}}
 								key={todo.id}
 							>
@@ -661,28 +658,30 @@ export const IceboxItem = ({
 		title: string
 	}
 }) => {
-	const todoActionSheet = useTodoActionSheet()
+	const [present] = useTodoActionSheet()
 
 	return (
 		<IonCard
 			className="cursor-pointer"
 			onClick={() => {
-				todoActionSheet.open(todo as CreatedTodo, [
-					{
-						text: 'Move to ranked',
-						data: {
-							action: 'ranked',
-						},
-						handler: async () => {
-							db.transaction('rw', db.lists, async () => {
-								const list = await db.lists.get('#important')
-								db.lists.update('#important', {
-									order: [...list!.order, todo.id],
+				present(todo as CreatedTodo, {
+					buttons: [
+						{
+							text: 'Move to ranked',
+							data: {
+								action: 'ranked',
+							},
+							handler: async () => {
+								db.transaction('rw', db.lists, async () => {
+									const list = await db.lists.get('#important')
+									db.lists.update('#important', {
+										order: [...list!.order, todo.id],
+									})
 								})
-							})
+							},
 						},
-					},
-				])
+					],
+				})
 			}}
 		>
 			<IonCardHeader>
