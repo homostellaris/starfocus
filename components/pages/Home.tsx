@@ -50,7 +50,14 @@ import {
 	logOutSharp,
 	documentText,
 } from 'ionicons/icons'
-import { RefObject, useCallback, useEffect, useRef, useState } from 'react'
+import {
+	ComponentProps,
+	RefObject,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from 'react'
 import { Link } from 'react-router-dom'
 import { CreatedTodo, db, Todo } from '../db'
 import NoteProviders from '../notes/providers'
@@ -124,11 +131,11 @@ const Home = () => {
 
 	// Creating todo stuff
 	const fab = useRef<HTMLIonFabElement>(null)
+	const [createTodoModalOpen, setCreateTodoModalOpen] = useState(false)
 	const openCreateTodoModal = useCallback(() => {
 		setCreateTodoModalOpen(true)
 		if (fab.current) fab.current.activated = true
 	}, [fab])
-	const [createTodoModalOpen, setCreateTodoModalOpen] = useState(false)
 
 	const contentRef = useRef<HTMLIonContentElement>(null)
 
@@ -200,6 +207,9 @@ const Home = () => {
 					<CreateTodoModal
 						fab={fab}
 						open={createTodoModalOpen}
+						onWillDismiss={() => {
+							setCreateTodoModalOpen(false)
+						}}
 					/>
 				</IonContent>
 				<IonFooter>
@@ -685,9 +695,11 @@ export const IceboxItem = ({
 export const CreateTodoModal = ({
 	fab,
 	open,
+	onWillDismiss,
 }: {
 	fab: RefObject<HTMLIonFabElement>
 	open: boolean
+	onWillDismiss: ComponentProps<typeof IonModal>['onWillDismiss']
 }) => {
 	const modal = useRef<HTMLIonModalElement>(null)
 
@@ -709,14 +721,6 @@ export const CreateTodoModal = ({
 		},
 		[noteProvider],
 	)
-	function onWillDismiss(event: CustomEvent<OverlayEventDetail>) {
-		if (event.detail.role === 'confirm') {
-			createTodo({
-				title: input.current?.value,
-				note: noteInput.current?.value,
-			})
-		}
-	}
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -738,7 +742,13 @@ export const CreateTodoModal = ({
 			trigger="open-modal"
 			onDidPresent={() => input.current?.setFocus()}
 			onWillDismiss={event => {
-				onWillDismiss(event)
+				onWillDismiss?.(event)
+				if (event.detail.role === 'confirm') {
+					createTodo({
+						title: input.current?.value,
+						note: noteInput.current?.value,
+					})
+				}
 				if (fab.current) fab.current.activated = false
 			}}
 		>
