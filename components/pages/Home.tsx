@@ -36,7 +36,6 @@ import {
 	IonToolbar,
 	ItemReorderEventDetail,
 } from '@ionic/react'
-import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-component-lib/interfaces'
 import { useLiveQuery, useObservable } from 'dexie-react-hooks'
 import {
 	add,
@@ -48,6 +47,7 @@ import {
 	logOutSharp,
 	rocketSharp,
 } from 'ionicons/icons'
+import _ from 'lodash'
 import {
 	ComponentProps,
 	RefObject,
@@ -558,7 +558,10 @@ export const Important = ({ todos }: { todos: any[] }) => {
 						{todos.map(todo => (
 							<IonItem
 								button
-								onClick={_event => {
+								onClick={event => {
+									// Prevent the action sheet from opening when reordering
+									if (event.target['localName'] === 'ion-item') return
+
 									present(todo, {
 										buttons: [
 											{
