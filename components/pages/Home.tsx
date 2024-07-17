@@ -29,6 +29,7 @@ import {
 	IonSearchbar,
 	IonSelect,
 	IonSelectOption,
+	IonSpinner,
 	IonTextarea,
 	IonTitle,
 	IonToast,
@@ -79,49 +80,37 @@ const Home = () => {
 	const [logLimit, setLogLimit] = useState(7)
 
 	// Todo lists
-	const logTodos = useLiveQuery(
-		async () => {
-			console.debug('re-running log query')
-			return db.todos
-				.orderBy('completedAt')
-				.reverse()
-				.filter(todo => !!todo.completedAt && matchesQuery(query, todo))
-				.limit(logLimit)
-				.toArray()
-		},
-		[query, logLimit],
-		[],
-	)
-	const importantTodos = useLiveQuery(
-		async () => {
-			console.debug('re-running important query')
-			const list = await db.lists.get('#important')
-			if (list) {
-				const todos = await Promise.all(list.order.map(id => db.todos.get(id)))
-				return todos.filter(todo => matchesQuery(query, todo))
-			}
-			return []
-		},
-		[query],
-		[],
-	)
-	const iceboxTodos = useLiveQuery(
-		async () => {
-			console.debug('re-running icebox query')
-			const list = await db.lists.get('#important')
-			return db.todos
-				.where('id')
-				.noneOf(list?.order || [])
-				.filter(
-					todo => todo.completedAt === undefined && matchesQuery(query, todo),
-				)
-				.reverse()
-				.limit(iceboxLimit)
-				.toArray()
-		},
-		[iceboxLimit, query],
-		[],
-	)
+	const logTodos = useLiveQuery(async () => {
+		console.debug('re-running log query')
+		return db.todos
+			.orderBy('completedAt')
+			.reverse()
+			.filter(todo => !!todo.completedAt && matchesQuery(query, todo))
+			.limit(logLimit)
+			.toArray()
+	}, [query, logLimit])
+	const importantTodos = useLiveQuery(async () => {
+		console.debug('re-running important query')
+		const list = await db.lists.get('#important')
+		if (list) {
+			const todos = await Promise.all(list.order.map(id => db.todos.get(id)))
+			return todos.filter(todo => matchesQuery(query, todo))
+		}
+		return []
+	}, [query])
+	const iceboxTodos = useLiveQuery(async () => {
+		console.debug('re-running icebox query')
+		const list = await db.lists.get('#important')
+		return db.todos
+			.where('id')
+			.noneOf(list?.order || [])
+			.filter(
+				todo => todo.completedAt === undefined && matchesQuery(query, todo),
+			)
+			.reverse()
+			.limit(iceboxLimit)
+			.toArray()
+	}, [iceboxLimit, query])
 	console.debug({ logTodos, importantTodos, iceboxTodos })
 
 	// Creating todo stuff
@@ -150,6 +139,11 @@ const Home = () => {
 		}, 200)
 	}, [])
 
+	const isLoading =
+		logTodos === undefined ||
+		importantTodos === undefined ||
+		iceboxTodos === undefined
+
 	return (
 		<>
 			<MiscMenu />
@@ -161,51 +155,62 @@ const Home = () => {
 					fullscreen
 					ref={contentRef}
 				>
-					<IonInfiniteScroll
-						className="h-1"
-						disabled={!enablePagination}
-						position="top"
-						threshold="0px"
-						onIonInfinite={event => {
-							setLogLimit(limit => limit + 10)
-							setTimeout(() => event.target.complete(), 500)
-						}}
-					>
-						<IonInfiniteScrollContent></IonInfiniteScrollContent>
-					</IonInfiniteScroll>
-					<SelectedTodoProvider>
-						<Log todos={logTodos} />
-						<Important todos={importantTodos} />
-						<Icebox todos={iceboxTodos} />
-					</SelectedTodoProvider>
-					<IonInfiniteScroll
-						disabled={!enablePagination}
-						position="bottom"
-						threshold="0px"
-						onIonInfinite={event => {
-							setIceboxLimit(limit => limit + 10)
-							setTimeout(() => event.target.complete(), 500)
-						}}
-					>
-						<IonInfiniteScrollContent></IonInfiniteScrollContent>
-					</IonInfiniteScroll>
-					<IonFab
-						ref={fab}
-						slot="fixed"
-						vertical="bottom"
-						horizontal="end"
-					>
-						<IonFabButton onClick={openCreateTodoModal}>
-							<IonIcon icon={add}></IonIcon>
-						</IonFabButton>
-					</IonFab>
-					<CreateTodoModal
-						fab={fab}
-						open={createTodoModalOpen}
-						onWillDismiss={() => {
-							setCreateTodoModalOpen(false)
-						}}
-					/>
+					{isLoading ? (
+						<div className="flex items-center justify-center h-full">
+							<IonSpinner
+								className="w-20 h-20"
+								name="dots"
+							/>
+						</div>
+					) : (
+						<>
+							<IonInfiniteScroll
+								className="h-1"
+								disabled={!enablePagination}
+								position="top"
+								threshold="0px"
+								onIonInfinite={event => {
+									setLogLimit(limit => limit + 10)
+									setTimeout(() => event.target.complete(), 500)
+								}}
+							>
+								<IonInfiniteScrollContent></IonInfiniteScrollContent>
+							</IonInfiniteScroll>
+							<SelectedTodoProvider>
+								<Log todos={logTodos!} />
+								<Important todos={importantTodos!} />
+								<Icebox todos={iceboxTodos!} />
+							</SelectedTodoProvider>
+							<IonInfiniteScroll
+								disabled={!enablePagination}
+								position="bottom"
+								threshold="0px"
+								onIonInfinite={event => {
+									setIceboxLimit(limit => limit + 10)
+									setTimeout(() => event.target.complete(), 500)
+								}}
+							>
+								<IonInfiniteScrollContent></IonInfiniteScrollContent>
+							</IonInfiniteScroll>
+							<IonFab
+								ref={fab}
+								slot="fixed"
+								vertical="bottom"
+								horizontal="end"
+							>
+								<IonFabButton onClick={openCreateTodoModal}>
+									<IonIcon icon={add}></IonIcon>
+								</IonFabButton>
+							</IonFab>
+							<CreateTodoModal
+								fab={fab}
+								open={createTodoModalOpen}
+								onWillDismiss={() => {
+									setCreateTodoModalOpen(false)
+								}}
+							/>
+						</>
+					)}
 				</IonContent>
 				<IonFooter>
 					<IonToolbar>
