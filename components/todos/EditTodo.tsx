@@ -12,9 +12,9 @@ import {
 	useIonModal,
 } from '@ionic/react'
 import { openOutline } from 'ionicons/icons'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import useNoteProvider from '../notes/useNoteProvider'
+import { useCallback, useEffect, useRef } from 'react'
 import { CreatedTodo, db } from '../db'
+import useNoteProvider from '../notes/useNoteProvider'
 import useSelectedTodo from './SelectedTodo'
 
 export function EditTodoModal({
@@ -34,27 +34,23 @@ export function EditTodoModal({
 
 	const noteProvider = useNoteProvider()
 
-	useEffect(() => {
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === 'Enter') {
-				event.preventDefault()
-				dismiss(
-					{
-						title: input.current?.value,
-						note: noteInput.current?.value,
-					},
-					'confirm',
-				)
-			}
-		}
-		page.current?.addEventListener('keydown', handleKeyDown)
-		return () => {
-			page.current?.removeEventListener('keydown', handleKeyDown)
-		}
-	}, [dismiss])
-
 	return (
-		<IonPage ref={page}>
+		<IonPage
+			ref={page}
+			onKeyDown={event => {
+				if (event.key === 'Enter') {
+					event.preventDefault()
+					dismiss(
+						{
+							...todo,
+							title: input.current?.value,
+							note: noteInput.current?.value,
+						},
+						'confirm',
+					)
+				}
+			}}
+		>
 			<IonHeader>
 				<IonToolbar>
 					<IonTitle>Edit todo</IonTitle>

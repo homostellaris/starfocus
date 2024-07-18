@@ -124,7 +124,6 @@ const Home = () => {
 	const contentRef = useRef<HTMLIonContentElement>(null)
 
 	useGlobalKeyboardShortcuts(contentRef, searchbarRef, openCreateTodoModal)
-	useSearchKeyboardShortcuts(searchbarRef)
 
 	const [enablePagination, setEnablePagination] = useState(false)
 
@@ -237,6 +236,12 @@ const Home = () => {
 						</IonButtons>
 						<IonSearchbar
 							ref={searchbarRef}
+							onKeyDown={event => {
+								if (event.key === 'Escape') {
+									event.preventDefault()
+									searchbarRef.current?.getElementsByTagName('input')[0].blur()
+								}
+							}}
 							debounce={100}
 							onIonInput={ev => handleInput(ev)}
 						></IonSearchbar>
@@ -320,12 +325,13 @@ export const MiscMenu = () => {
 		type?: string
 		apiKey?: string
 	}>({})
+	const noteProviderSettings = settings['#noteProvider']
 	// Gross hack required because settings is initially undefined until the query resolves which doesn't re-trigger the state
 	useEffect(() => {
-		if (settings['#noteProvider']) {
-			setNoteProvider(settings['#noteProvider'])
+		if (noteProviderSettings) {
+			setNoteProvider(noteProviderSettings)
 		}
-	}, [settings['#noteProvider']])
+	}, [noteProviderSettings])
 
 	return (
 		<IonMenu
@@ -729,25 +735,17 @@ export const CreateTodoModal = ({
 		[noteProvider],
 	)
 
-	useEffect(() => {
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === 'Enter') {
-				event.preventDefault()
-				modal.current?.dismiss({}, 'confirm')
-			}
-		}
-		modal.current?.addEventListener('keydown', handleKeyDown)
-		return () => {
-			modal.current?.removeEventListener('keydown', handleKeyDown)
-		}
-	}, [createTodo])
-
 	return (
 		<IonModal
 			isOpen={open}
 			ref={modal}
-			trigger="open-modal"
 			onDidPresent={() => input.current?.setFocus()}
+			onKeyDown={event => {
+				if (event.key === 'Enter') {
+					event.preventDefault()
+					modal.current?.dismiss({}, 'confirm')
+				}
+			}}
 			onWillDismiss={event => {
 				onWillDismiss?.(event)
 				if (event.detail.role === 'confirm') {
@@ -868,22 +866,5 @@ function useGlobalKeyboardShortcuts(
 		return () => {
 			document.removeEventListener('keydown', handleKeyDown)
 		}
-	}, [openCreateTodoModal])
-}
-
-function useSearchKeyboardShortcuts(
-	searchbarRef: RefObject<HTMLIonSearchbarElement>,
-) {
-	useEffect(() => {
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === 'Escape') {
-				event.preventDefault()
-				searchbarRef.current?.getElementsByTagName('input')[0].blur()
-			}
-		}
-		searchbarRef.current?.addEventListener('keydown', handleKeyDown)
-		return () => {
-			searchbarRef.current?.removeEventListener('keydown', handleKeyDown)
-		}
-	})
+	}, [contentRef, openCreateTodoModal, searchbarRef])
 }
