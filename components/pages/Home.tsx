@@ -666,6 +666,17 @@ export const Icebox = ({ todos }: { todos: any[] }) => {
 							})
 						},
 					},
+					{
+						text: 'Complete',
+						data: {
+							action: 'complete',
+						},
+						handler: async () => {
+							await db.todos.update(todo.id, {
+								completedAt: new Date(),
+							})
+						},
+					},
 					...(todo.note
 						? [
 								{
