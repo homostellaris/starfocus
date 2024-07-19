@@ -647,6 +647,44 @@ export const Important = ({ todos }: { todos: any[] }) => {
 }
 
 export const Icebox = ({ todos }: { todos: any[] }) => {
+	const [present] = useTodoActionSheet()
+	const onClick = useCallback(
+		todo => {
+			present(todo as CreatedTodo, {
+				buttons: [
+					{
+						text: 'Move to ranked',
+						data: {
+							action: 'ranked',
+						},
+						handler: async () => {
+							db.transaction('rw', db.lists, async () => {
+								const list = await db.lists.get('#important')
+								db.lists.update('#important', {
+									order: [...list!.order, todo.id],
+								})
+							})
+						},
+					},
+					...(todo.note
+						? [
+								{
+									text: 'Open note',
+									data: {
+										action: 'open-note',
+									},
+									handler: () => {
+										window.open(todo.note.uri)
+									},
+								},
+							]
+						: []),
+				],
+			})
+		},
+		[present],
+	)
+
 	return (
 		<>
 			<IonGrid>
@@ -655,6 +693,7 @@ export const Icebox = ({ todos }: { todos: any[] }) => {
 					{todos.map(todo => (
 						<IceboxItem
 							key={todo.id}
+							onClick={onClick}
 							todo={todo}
 						/>
 					))}
@@ -665,37 +704,17 @@ export const Icebox = ({ todos }: { todos: any[] }) => {
 }
 
 export const IceboxItem = ({
+	onClick,
 	todo,
 }: {
-	todo: {
-		id: string
-		title: string
-	}
+	onClick: (todo: CreatedTodo) => void
+	todo: CreatedTodo
 }) => {
-	const [present] = useTodoActionSheet()
-
 	return (
 		<IonCard
 			className="cursor-pointer"
-			onClick={() => {
-				present(todo as CreatedTodo, {
-					buttons: [
-						{
-							text: 'Move to ranked',
-							data: {
-								action: 'ranked',
-							},
-							handler: async () => {
-								db.transaction('rw', db.lists, async () => {
-									const list = await db.lists.get('#important')
-									db.lists.update('#important', {
-										order: [...list!.order, todo.id],
-									})
-								})
-							},
-						},
-					],
-				})
+			onClick={_event => {
+				onClick(todo)
 			}}
 		>
 			<IonCardHeader>
