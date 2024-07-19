@@ -63,6 +63,7 @@ import useNoteProvider from '../notes/useNoteProvider'
 import useSettings from '../settings/useSettings'
 import { SelectedTodoProvider } from '../todos/SelectedTodo'
 import { useTodoActionSheet } from '../todos/TodoActionSheet'
+import { useCreateTodoModal } from '../todos/CreateTodo'
 
 const Home = () => {
 	// Search stuff
@@ -115,11 +116,14 @@ const Home = () => {
 
 	// Creating todo stuff
 	const fab = useRef<HTMLIonFabElement>(null)
-	const [createTodoModalOpen, setCreateTodoModalOpen] = useState(false)
+	const [presentCreateTodoModal, dismiss] = useCreateTodoModal()
 	const openCreateTodoModal = useCallback(() => {
-		setCreateTodoModalOpen(true)
-		if (fab.current) fab.current.activated = true
-	}, [fab])
+		presentCreateTodoModal({
+			onWillDismiss: () => {
+				if (fab.current) fab.current.activated = false
+			},
+		})
+	}, [fab, presentCreateTodoModal])
 
 	const contentRef = useRef<HTMLIonContentElement>(null)
 
@@ -201,13 +205,6 @@ const Home = () => {
 									<IonIcon icon={add}></IonIcon>
 								</IonFabButton>
 							</IonFab>
-							<CreateTodoModal
-								fab={fab}
-								open={createTodoModalOpen}
-								onWillDismiss={() => {
-									setCreateTodoModalOpen(false)
-								}}
-							/>
 						</>
 					)}
 				</IonContent>
@@ -732,107 +729,6 @@ export const IceboxItem = ({
 				<IonCardTitle className="text-sm">{todo.title}</IonCardTitle>
 			</IonCardHeader>
 		</IonCard>
-	)
-}
-
-export const CreateTodoModal = ({
-	fab,
-	open,
-	onWillDismiss,
-}: {
-	fab: RefObject<HTMLIonFabElement>
-	open: boolean
-	onWillDismiss: ComponentProps<typeof IonModal>['onWillDismiss']
-}) => {
-	const modal = useRef<HTMLIonModalElement>(null)
-
-	const input = useRef<HTMLIonInputElement>(null)
-	const noteInput = useRef<HTMLIonTextareaElement>(null)
-	const noteProvider = useNoteProvider()
-
-	const createTodo = useCallback(
-		async ({ note, title }: { note?: any; title: any }) => {
-			let uri
-			if (note && noteProvider) {
-				uri = await noteProvider.create({ content: note })
-			}
-			await db.todos.add({
-				createdAt: new Date(),
-				title,
-				...(uri && { note: { uri } }),
-			})
-		},
-		[noteProvider],
-	)
-
-	return (
-		<IonModal
-			isOpen={open}
-			ref={modal}
-			onDidPresent={() => input.current?.setFocus()}
-			onKeyDown={event => {
-				if (event.key === 'Enter') {
-					event.preventDefault()
-					modal.current?.dismiss({}, 'confirm')
-				}
-			}}
-			onWillDismiss={event => {
-				onWillDismiss?.(event)
-				if (event.detail.role === 'confirm') {
-					createTodo({
-						title: input.current?.value,
-						note: noteInput.current?.value,
-					})
-				}
-				if (fab.current) fab.current.activated = false
-			}}
-		>
-			<IonHeader translucent>
-				<IonToolbar>
-					<IonTitle>Create todo</IonTitle>
-					<IonButtons slot="secondary">
-						<IonButton
-							role="cancel"
-							onClick={() => modal.current?.dismiss({}, 'cancel')}
-						>
-							Cancel
-						</IonButton>
-					</IonButtons>
-					<IonButtons slot="primary">
-						<IonButton
-							onClick={() => {
-								modal.current?.dismiss({}, 'confirm')
-							}}
-							strong={true}
-						>
-							Confirm
-						</IonButton>
-					</IonButtons>
-				</IonToolbar>
-			</IonHeader>
-			<IonContent className="space-y-4 ion-padding">
-				<IonInput
-					fill="outline"
-					ref={input}
-					type="text"
-					label="Title"
-					labelPlacement="floating"
-				/>
-				{!noteProvider && (
-					<p>Set a note provider in settings to enable this feature.</p>
-				)}
-				<IonTextarea
-					className="h-48"
-					disabled={!noteProvider}
-					helperText="A note with this initial content will be created with your note provider and linked to this todo."
-					fill="outline"
-					label="Note"
-					labelPlacement="floating"
-					placeholder="Write markdown here..."
-					ref={noteInput}
-				/>
-			</IonContent>
-		</IonModal>
 	)
 }
 
