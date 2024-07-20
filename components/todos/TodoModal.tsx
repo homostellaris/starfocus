@@ -2,6 +2,7 @@ import {
 	IonButton,
 	IonButtons,
 	IonContent,
+	IonFooter,
 	IonHeader,
 	IonIcon,
 	IonInput,
@@ -60,32 +61,6 @@ export default function TodoModal({
 			<IonHeader>
 				<IonToolbar>
 					<IonTitle slot="start">{title}</IonTitle>
-					<IonButtons slot="secondary">
-						<IonButton
-							role="cancel"
-							onClick={() => dismiss(null, 'cancel')}
-						>
-							Cancel
-						</IonButton>
-					</IonButtons>
-					<IonButtons slot="primary">
-						<IonButton
-							onClick={() => {
-								dismiss(
-									{
-										...todo,
-										title: input.current?.value,
-										note: noteInput.current?.value,
-									},
-									'confirm',
-								)
-							}}
-							strong={true}
-						>
-							Confirm
-						</IonButton>
-					</IonButtons>
-					{toolbarSlot}
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
@@ -125,6 +100,36 @@ export default function TodoModal({
 					/>
 				)}
 			</IonContent>
+			<IonFooter>
+				<IonToolbar>
+					<IonButtons slot="secondary">
+						<IonButton
+							role="cancel"
+							onClick={() => dismiss(null, 'cancel')}
+						>
+							Cancel
+						</IonButton>
+					</IonButtons>
+					<IonButtons slot="primary">
+						<IonButton
+							onClick={() => {
+								dismiss(
+									{
+										...todo,
+										title: input.current?.value,
+										note: noteInput.current?.value,
+									},
+									'confirm',
+								)
+							}}
+							strong={true}
+						>
+							Confirm
+						</IonButton>
+					</IonButtons>
+					{toolbarSlot}
+				</IonToolbar>
+			</IonFooter>
 		</IonPage>
 	)
 }
