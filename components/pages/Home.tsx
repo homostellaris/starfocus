@@ -484,6 +484,7 @@ export const Log = ({ todos }: { todos: any[] }) => {
 							}}
 						>
 							<IonCheckbox
+								aria-label="Uncomplete todo"
 								slot="start"
 								onClick={event => {
 									// Prevents the IonItem onClick from firing when completing a todo
@@ -583,6 +584,7 @@ export const Important = ({ todos }: { todos: any[] }) => {
 								key={todo.id}
 							>
 								<IonCheckbox
+									aria-label="Uncomplete todo"
 									slot="start"
 									onClick={event => {
 										// Prevents the IonItem onClick from firing when completing a todo
