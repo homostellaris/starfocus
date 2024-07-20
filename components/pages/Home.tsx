@@ -48,14 +48,7 @@ import {
 	rocketSharp,
 } from 'ionicons/icons'
 import _ from 'lodash'
-import {
-	ComponentProps,
-	RefObject,
-	useCallback,
-	useEffect,
-	useRef,
-	useState,
-} from 'react'
+import { RefObject, useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CreatedTodo, db } from '../db'
 import NoteProviders from '../notes/providers'

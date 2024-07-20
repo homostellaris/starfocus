@@ -31,7 +31,7 @@ export function useTodoActionSheet() {
 							action: 'delete',
 						},
 						handler: async () => {
-							db.transaction('rw', db.todos, async () => {
+							db.transaction('rw', db.lists, db.todos, async () => {
 								await db.todos.delete(todo!.id)
 								const important = await db.lists.get('#important')
 								if (important!.order.includes(todo!.id!)) {

@@ -1,5 +1,3 @@
-import { useEffect, useRef } from 'react'
-import useNoteProvider from '../notes/useNoteProvider'
 import {
 	IonButton,
 	IonButtons,
@@ -13,17 +11,22 @@ import {
 	IonToolbar,
 } from '@ionic/react'
 import { openOutline } from 'ionicons/icons'
+import { ComponentProps, ReactNode, useEffect, useRef } from 'react'
 import { Todo } from '../db'
+import useNoteProvider from '../notes/useNoteProvider'
 
 export default function TodoModal({
 	dismiss,
 	title,
 	todo = {},
+	toolbarSlot,
+	...props
 }: {
 	dismiss: (data?: any, role?: string) => void
 	title: string
 	todo?: Partial<Todo>
-}) {
+	toolbarSlot?: ReactNode
+} & ComponentProps<typeof IonPage>) {
 	const page = useRef<HTMLIonModalElement>(null)
 	const input = useRef<HTMLIonInputElement>(null)
 	const noteInput = useRef<HTMLIonTextareaElement>(null)
@@ -37,6 +40,7 @@ export default function TodoModal({
 
 	return (
 		<IonPage
+			{...props}
 			ref={page}
 			onKeyDown={event => {
 				if (event.key === 'Enter') {
@@ -50,11 +54,12 @@ export default function TodoModal({
 						'confirm',
 					)
 				}
+				props.onKeyDown?.(event)
 			}}
 		>
 			<IonHeader>
 				<IonToolbar>
-					<IonTitle>{title}</IonTitle>
+					<IonTitle slot="start">{title}</IonTitle>
 					<IonButtons slot="secondary">
 						<IonButton
 							role="cancel"
@@ -80,6 +85,7 @@ export default function TodoModal({
 							Confirm
 						</IonButton>
 					</IonButtons>
+					{toolbarSlot}
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">

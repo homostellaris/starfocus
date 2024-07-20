@@ -28,6 +28,11 @@ export interface List {
 	type: '#important'
 }
 
+export enum ListType {
+	important,
+	icebox,
+}
+
 export interface Setting {
 	key: string
 	value: any
