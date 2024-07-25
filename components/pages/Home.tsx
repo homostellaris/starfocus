@@ -13,6 +13,7 @@ import {
 	IonGrid,
 	IonHeader,
 	IonIcon,
+	IonImg,
 	IonInfiniteScroll,
 	IonInfiniteScrollContent,
 	IonInput,
@@ -21,7 +22,6 @@ import {
 	IonList,
 	IonMenu,
 	IonMenuButton,
-	IonModal,
 	IonPage,
 	IonReorder,
 	IonReorderGroup,
@@ -30,9 +30,9 @@ import {
 	IonSelect,
 	IonSelectOption,
 	IonSpinner,
-	IonTextarea,
 	IonTitle,
 	IonToast,
+	IonToggle,
 	IonToolbar,
 	ItemReorderEventDetail,
 } from '@ionic/react'
@@ -45,67 +45,29 @@ import {
 	documentText,
 	filterSharp,
 	logOutSharp,
+	power,
 	rocketSharp,
 } from 'ionicons/icons'
 import _ from 'lodash'
-import { RefObject, useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { CreatedTodo, db } from '../db'
+import {
+	forwardRef,
+	RefObject,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from 'react'
+import { Todo, db } from '../db'
 import NoteProviders from '../notes/providers'
-import useNoteProvider from '../notes/useNoteProvider'
 import useSettings from '../settings/useSettings'
 import { SelectedTodoProvider } from '../todos/SelectedTodo'
 import { useTodoActionSheet } from '../todos/TodoActionSheet'
-import { useCreateTodoModal } from '../todos/CreateTodo'
+import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
+import useView, { ViewProvider } from '../view'
 
 const Home = () => {
-	// Search stuff
-	const handleInput = (event: Event) => {
-		const target = event.target as HTMLIonSearchbarElement
-		let query = ''
-		if (target?.value) query = target.value.toLowerCase()
-		setQuery(query)
-	}
-	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
-	const [query, setQuery] = useState<string>('')
-
-	// Pagination stuff
-	const [iceboxLimit, setIceboxLimit] = useState(30)
 	const [logLimit, setLogLimit] = useState(7)
-
-	// Todo lists
-	const logTodos = useLiveQuery(async () => {
-		console.debug('re-running log query')
-		return db.todos
-			.orderBy('completedAt')
-			.reverse()
-			.filter(todo => !!todo.completedAt && matchesQuery(query, todo))
-			.limit(logLimit)
-			.toArray()
-	}, [query, logLimit])
-	const importantTodos = useLiveQuery(async () => {
-		console.debug('re-running important query')
-		const list = await db.lists.get('#important')
-		if (list) {
-			const todos = await Promise.all(list.order.map(id => db.todos.get(id)))
-			return todos.filter(todo => matchesQuery(query, todo))
-		}
-		return []
-	}, [query])
-	const iceboxTodos = useLiveQuery(async () => {
-		console.debug('re-running icebox query')
-		const list = await db.lists.get('#important')
-		return db.todos
-			.where('id')
-			.noneOf(list?.order || [])
-			.filter(
-				todo => todo.completedAt === undefined && matchesQuery(query, todo),
-			)
-			.reverse()
-			.limit(iceboxLimit)
-			.toArray()
-	}, [iceboxLimit, query])
-	console.debug({ logTodos, importantTodos, iceboxTodos })
+	const [iceboxLimit, setIceboxLimit] = useState(30)
 
 	// Creating todo stuff
 	const fab = useRef<HTMLIonFabElement>(null)
@@ -119,6 +81,7 @@ const Home = () => {
 	}, [fab, presentCreateTodoModal])
 
 	const contentRef = useRef<HTMLIonContentElement>(null)
+	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
 
 	useGlobalKeyboardShortcuts(contentRef, searchbarRef, openCreateTodoModal)
 
@@ -135,109 +98,83 @@ const Home = () => {
 		}, 200)
 	}, [])
 
-	const isLoading =
-		logTodos === undefined ||
-		importantTodos === undefined ||
-		iceboxTodos === undefined
-
 	return (
 		<>
-			<MiscMenu />
-			<FilterMenu />
-			<IonPage id="main-content">
-				<Header />
-				<IonContent
-					className="ion-padding"
-					fullscreen
-					ref={contentRef}
-				>
-					{isLoading ? (
-						<div className="flex items-center justify-center h-full">
-							<IonSpinner
-								className="w-20 h-20"
-								name="dots"
-							/>
-						</div>
-					) : (
-						<>
-							<IonInfiniteScroll
-								className="h-1"
-								disabled={!enablePagination}
-								position="top"
-								threshold="0px"
-								onIonInfinite={event => {
-									setLogLimit(limit => limit + 10)
-									setTimeout(() => event.target.complete(), 500)
-								}}
-							>
-								<IonInfiniteScrollContent></IonInfiniteScrollContent>
-							</IonInfiniteScroll>
-							<SelectedTodoProvider>
-								<Log todos={logTodos!} />
-								<Important todos={importantTodos!} />
-								<Icebox todos={iceboxTodos!} />
-							</SelectedTodoProvider>
-							<IonInfiniteScroll
-								disabled={!enablePagination}
-								position="bottom"
-								threshold="0px"
-								onIonInfinite={event => {
-									setIceboxLimit(limit => limit + 10)
-									setTimeout(() => event.target.complete(), 500)
-								}}
-							>
-								<IonInfiniteScrollContent></IonInfiniteScrollContent>
-							</IonInfiniteScroll>
-							<IonFab
-								ref={fab}
-								slot="fixed"
-								vertical="bottom"
-								horizontal="end"
-							>
-								<IonFabButton onClick={openCreateTodoModal}>
-									<IonIcon icon={add}></IonIcon>
-								</IonFabButton>
-							</IonFab>
-						</>
-					)}
-				</IonContent>
-				<IonFooter>
-					<IonToolbar>
-						<IonButtons slot="primary">
-							<IonButton
-								onClick={() => {
-									menuController.toggle('end')
-								}}
-							>
-								<IonIcon
-									icon={filterSharp}
-									slot="icon-only"
-								/>
-							</IonButton>
-							{/* <IonButton>
-								<IonIcon
-									icon={searchSharp}
-									slot="icon-only"
-								/>
-							</IonButton> */}
-						</IonButtons>
-						<IonButtons slot="start">
-							<IonMenuButton></IonMenuButton>
-						</IonButtons>
-						<IonSearchbar
-							ref={searchbarRef}
-							onKeyDown={event => {
-								if (event.key === 'Escape') {
-									event.preventDefault()
-									searchbarRef.current?.getElementsByTagName('input')[0].blur()
-								}
-							}}
-							debounce={100}
-							onIonInput={ev => handleInput(ev)}
-						></IonSearchbar>
-					</IonToolbar>
-				</IonFooter>
-			</IonPage>
+			<ViewProvider>
+				<MiscMenu />
+				<ViewMenu />
+				<IonPage id="main-content">
+					<Header />
+					<IonContent
+						className="ion-padding"
+						fullscreen
+						ref={contentRef}
+					>
+						{
+							<>
+								<IonInfiniteScroll
+									className="h-1"
+									disabled={!enablePagination}
+									position="top"
+									threshold="0px"
+									onIonInfinite={event => {
+										setLogLimit(limit => limit + 10)
+										setTimeout(() => event.target.complete(), 500)
+									}}
+								>
+									<IonInfiniteScrollContent></IonInfiniteScrollContent>
+								</IonInfiniteScroll>
+								<SelectedTodoProvider>
+									<Log limit={logLimit} />
+									<Important />
+									<Icebox limit={iceboxLimit} />
+								</SelectedTodoProvider>
+								<IonInfiniteScroll
+									disabled={!enablePagination}
+									position="bottom"
+									threshold="0px"
+									onIonInfinite={event => {
+										setIceboxLimit(limit => limit + 10)
+										setTimeout(() => event.target.complete(), 500)
+									}}
+								>
+									<IonInfiniteScrollContent></IonInfiniteScrollContent>
+								</IonInfiniteScroll>
+								<IonFab
+									ref={fab}
+									slot="fixed"
+									vertical="bottom"
+									horizontal="end"
+								>
+									<IonFabButton onClick={openCreateTodoModal}>
+										<IonIcon icon={add}></IonIcon>
+									</IonFabButton>
+								</IonFab>
+							</>
+						}
+					</IonContent>
+					<IonFooter>
+						<IonToolbar>
+							<IonButtons slot="primary">
+								<IonButton
+									onClick={() => {
+										menuController.toggle('end')
+									}}
+								>
+									<IonIcon
+										icon={filterSharp}
+										slot="icon-only"
+									/>
+								</IonButton>
+							</IonButtons>
+							<IonButtons slot="start">
+								<IonMenuButton></IonMenuButton>
+							</IonButtons>
+							<Searchbar ref={searchbarRef} />
+						</IonToolbar>
+					</IonFooter>
+				</IonPage>
+			</ViewProvider>
 		</>
 	)
 }
@@ -252,7 +189,12 @@ export const Header = () => {
 	return (
 		<IonHeader>
 			<IonToolbar>
-				<IonTitle>Today & upcoming</IonTitle>
+				<IonImg
+					src="/logo.png"
+					slot="start"
+					className="w-10 h-10 ml-4"
+				/>
+				<IonTitle>Starfocus</IonTitle>
 				{isLoggedIn ? (
 					<>
 						<div
@@ -447,7 +389,17 @@ export const MiscMenu = () => {
 	)
 }
 
-export const FilterMenu = () => {
+export const ViewMenu = () => {
+	const starRoles = useLiveQuery(() => db.starRoles.toArray())
+	const isLoading = starRoles === undefined
+	const {
+		activateStarRole,
+		activeStarRoles,
+		allStarRolesActive,
+		deactivateStarRole,
+		setActiveStarRoles,
+	} = useView()
+
 	return (
 		<IonMenu
 			type="push"
@@ -459,21 +411,100 @@ export const FilterMenu = () => {
 					<IonTitle>Views</IonTitle>
 				</IonToolbar>
 			</IonHeader>
-			<IonContent className="ion-padding">
-				<Link to="/constellation">Constellation</Link>
-				<p>Filters coming soon...</p>
+			<IonContent className="space-y-4 ion-padding">
+				<IonButton href="/constellation">Edit roles</IonButton>
+				{isLoading ? (
+					<IonSpinner
+						className="w-20 h-20"
+						name="dots"
+					/>
+				) : (
+					<div className="space-y-2">
+						<IonList>
+							<IonItem>
+								<IonToggle
+									checked={starRoles.length === activeStarRoles.length}
+									color="success"
+									className="font-bold"
+									onIonChange={event => {
+										if (event.detail.checked) {
+											setActiveStarRoles(starRoles.map(({ id }) => id))
+										} else {
+											setActiveStarRoles([])
+										}
+									}}
+								>
+									All
+								</IonToggle>
+							</IonItem>
+							{starRoles.map(starRole => (
+								<IonItem key={starRole.id}>
+									<IonIcon
+										aria-hidden="true"
+										icon={power}
+										color={
+											activeStarRoles.includes(starRole.id)
+												? 'success'
+												: undefined
+										}
+										slot="start"
+									></IonIcon>
+									<IonToggle
+										checked={
+											allStarRolesActive
+												? false
+												: activeStarRoles.includes(starRole.id)
+										}
+										color="success"
+										onIonChange={event => {
+											console.log(event.detail.checked, allStarRolesActive)
+											event.detail.checked
+												? allStarRolesActive
+													? setActiveStarRoles([starRole.id])
+													: activateStarRole(starRole.id)
+												: deactivateStarRole(starRole.id)
+										}}
+									>
+										{starRole?.title}
+									</IonToggle>
+								</IonItem>
+							))}
+						</IonList>
+					</div>
+				)}
 			</IonContent>
 		</IonMenu>
 	)
 }
 
-export const Log = ({ todos }: { todos: any[] }) => {
+export const Log = ({ limit }: { limit: number }) => {
+	const { inActiveStarRoles, query } = useView()
+	const todos = useLiveQuery(async () => {
+		console.debug('re-running log query')
+		return db.todos
+			.orderBy('completedAt')
+			.reverse()
+			.filter(
+				todo =>
+					!!todo.completedAt &&
+					matchesQuery(query, todo) &&
+					inActiveStarRoles(todo),
+			)
+			.limit(limit)
+			.toArray()
+	}, [inActiveStarRoles, limit, query])
+
 	const [present] = useTodoActionSheet()
 
 	return (
 		<>
 			<h1>Log</h1>
-			{todos.length ? (
+			{todos === undefined ? (
+				<IonSpinner
+					className="w-7 h-7"
+					name="dots"
+				/>
+			) : todos.length ? (
 				<IonList inset>
 					{todos.sort(byDate).map(todo => (
 						<IonItem
@@ -524,33 +555,48 @@ export const Log = ({ todos }: { todos: any[] }) => {
 	)
 }
 
-export const Important = ({ todos }: { todos: any[] }) => {
-	async function handleReorder(event: CustomEvent<ItemReorderEventDetail>) {
-		// We don't use this to reorder for us because it results in a flash of 'unordered' content.
-		// Instead we re-order right away, calculate the new order ourselves, and update the DB.
-		event.detail.complete()
+export const Important = () => {
+	const { inActiveStarRoles, query } = useView()
+	const todos = useLiveQuery(async () => {
+		console.debug('re-running important query')
+		const importantList = await db.lists.get('#important')
+		return db.todos
+			.where('id')
+			.anyOf(importantList!.order)
+			.and(todo => matchesQuery(query, todo) && inActiveStarRoles(todo))
+			.toArray()
+	}, [inActiveStarRoles, query])
 
-		const todoIds = [...todos.map(i => i.id)]
-		const reorderedTodoIds = moveItemInArray(
-			todoIds,
-			event.detail.from,
-			event.detail.to,
-		)
-		await db.lists.put({
-			type: '#important',
-			order: reorderedTodoIds,
-		})
-	}
 	const [present] = useTodoActionSheet()
 
 	return (
 		<>
 			<h1>Important</h1>
-			{todos.length ? (
+			{todos === undefined ? (
+				<IonSpinner
+					className="w-20 h-20"
+					name="dots"
+				/>
+			) : todos.length ? (
 				<IonList inset>
 					<IonReorderGroup
 						disabled={false}
-						onIonItemReorder={handleReorder}
+						onIonItemReorder={async event => {
+							// We don't use this to reorder for us because it results in a flash of 'unordered' content.
+							// Instead we re-order right away, calculate the new order ourselves, and update the DB.
+							event.detail.complete()
+
+							const todoIds = [...todos.map(i => i.id)]
+							const reorderedTodoIds = moveItemInArray(
+								todoIds,
+								event.detail.from,
+								event.detail.to,
+							)
+							await db.lists.put({
+								type: '#important',
+								order: reorderedTodoIds,
+							})
+						}}
 					>
 						{todos.map(todo => (
 							<IonItem
@@ -638,11 +684,29 @@ export const Important = ({ todos }: { todos: any[] }) => {
 	)
 }
 
-export const Icebox = ({ todos }: { todos: any[] }) => {
+export const Icebox = ({ limit }: { limit: number }) => {
+	const { inActiveStarRoles, query } = useView()
+	const todos = useLiveQuery(async () => {
+		console.debug('re-running icebox query')
+		const importantList = await db.lists.get('#important')
+		return db.todos
+			.where('id')
+			.noneOf(importantList!.order)
+			.and(
+				todo =>
+					todo.completedAt === undefined &&
+					matchesQuery(query, todo) &&
+					inActiveStarRoles(todo),
+			)
+			.reverse()
+			.limit(limit)
+			.toArray()
+	}, [limit, inActiveStarRoles, query])
+
 	const [present] = useTodoActionSheet()
 	const onClick = useCallback(
 		todo => {
-			present(todo as CreatedTodo, {
+			present(todo as Todo, {
 				buttons: [
 					{
 						text: 'Move to ranked',
@@ -693,13 +757,20 @@ export const Icebox = ({ todos }: { todos: any[] }) => {
 			<IonGrid>
 				<h1>Icebox</h1>
 				<IonRow>
-					{todos.map(todo => (
-						<IceboxItem
-							key={todo.id}
-							onClick={onClick}
-							todo={todo}
+					{todos === undefined ? (
+						<IonSpinner
+							className="w-20 h-20"
+							name="dots"
 						/>
-					))}
+					) : (
+						todos.map(todo => (
+							<IceboxItem
+								key={todo.id}
+								onClick={onClick}
+								todo={todo}
+							/>
+						))
+					)}
 				</IonRow>
 			</IonGrid>
 		</>
@@ -710,8 +781,8 @@ export const IceboxItem = ({
 	onClick,
 	todo,
 }: {
-	onClick: (todo: CreatedTodo) => void
-	todo: CreatedTodo
+	onClick: (todo: Todo) => void
+	todo: Todo
 }) => {
 	return (
 		<IonCard
@@ -726,6 +797,32 @@ export const IceboxItem = ({
 		</IonCard>
 	)
 }
+
+export const Searchbar = forwardRef<HTMLIonSearchbarElement>(
+	function Searchbar(_props, searchbarRef) {
+		const { setQuery } = useView()
+
+		return (
+			<IonSearchbar
+				ref={searchbarRef}
+				onKeyDown={event => {
+					if (event.key === 'Escape') {
+						event.preventDefault()
+						const target = event.target as HTMLIonSearchbarElement
+						target.getElementsByTagName('input')[0].blur()
+					}
+				}}
+				debounce={100}
+				onIonInput={event => {
+					const target = event.target as HTMLIonSearchbarElement
+					let query = ''
+					if (target?.value) query = target.value.toLowerCase()
+					setQuery(query)
+				}}
+			></IonSearchbar>
+		)
+	},
+)
 
 function moveItemInArray<T>(
 	array: T[],
@@ -750,8 +847,9 @@ const byDate = (a: any, b: any) => {
 	return dateA.getTime() - dateB.getTime()
 }
 
-function matchesQuery(query, todo) {
+function matchesQuery(query: string, todo: Todo) {
 	if (!query) return true
+	console.log({ todo })
 	return todo?.title.toLowerCase().includes(query)
 }
 

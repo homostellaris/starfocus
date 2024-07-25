@@ -1,7 +1,7 @@
 import { ActionSheetOptions, useIonActionSheet } from '@ionic/react'
 import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
-import { CreatedTodo, db } from '../db'
-import { useEditTodoModal } from './EditTodo'
+import { Todo, db } from '../db'
+import { useEditTodoModal } from './edit/useEditTodoModal'
 
 // TODO: Make this so that todo is never null, action sheet doesn't make sense to be open if its null
 export function useTodoActionSheet() {
@@ -11,7 +11,7 @@ export function useTodoActionSheet() {
 	const [presentEditTodoModal] = useEditTodoModal()
 
 	return [
-		(todo: CreatedTodo, options?: ActionSheetOptions & HookOverlayOptions) => {
+		(todo: Todo, options?: ActionSheetOptions & HookOverlayOptions) => {
 			presentActionSheet({
 				buttons: [
 					...(options?.buttons || []),
@@ -32,11 +32,11 @@ export function useTodoActionSheet() {
 						},
 						handler: async () => {
 							db.transaction('rw', db.lists, db.todos, async () => {
-								await db.todos.delete(todo!.id)
+								await db.todos.delete(todo.id)
 								const important = await db.lists.get('#important')
-								if (important!.order.includes(todo!.id!)) {
+								if (important!.order.includes(todo.id)) {
 									await db.lists.update('#important', list => {
-										list.order = list.order.filter(id => id !== todo!.id)
+										list.order = list.order.filter(id => id !== todo.id)
 									})
 								}
 							})

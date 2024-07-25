@@ -5,13 +5,10 @@ import {
 	useContext,
 	useState,
 } from 'react'
-import { CreatedTodo } from '../db'
+import { Todo } from '../db'
 
 export const SelecteTodoContext = createContext<
-	[
-		todo: CreatedTodo | null,
-		setTodo: Dispatch<SetStateAction<CreatedTodo | null>>,
-	]
+	[todo: Todo | null, setTodo: Dispatch<SetStateAction<Todo | null>>]
 >([null, () => null])
 
 export function SelectedTodoProvider({
@@ -19,7 +16,7 @@ export function SelectedTodoProvider({
 }: {
 	children: React.ReactNode
 }) {
-	const [todo, setTodo] = useState<CreatedTodo | null>(null)
+	const [todo, setTodo] = useState<Todo | null>(null)
 
 	return (
 		<SelecteTodoContext.Provider value={[todo, setTodo]}>

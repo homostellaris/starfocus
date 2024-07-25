@@ -7,14 +7,23 @@ import {
 	IonIcon,
 	IonInput,
 	IonPage,
+	IonSelect,
+	IonSelectOption,
 	IonTextarea,
 	IonTitle,
 	IonToolbar,
 } from '@ionic/react'
 import { openOutline } from 'ionicons/icons'
-import { ComponentProps, ReactNode, useEffect, useRef } from 'react'
-import { Todo } from '../db'
+import {
+	ComponentProps,
+	ReactNode,
+	useCallback,
+	useEffect,
+	useRef,
+} from 'react'
+import { db, Todo } from '../db'
 import useNoteProvider from '../notes/useNoteProvider'
+import { useLiveQuery } from 'dexie-react-hooks'
 
 export default function TodoModal({
 	dismiss,
@@ -28,32 +37,37 @@ export default function TodoModal({
 	todo?: Partial<Todo>
 	toolbarSlot?: ReactNode
 } & ComponentProps<typeof IonPage>) {
-	const page = useRef<HTMLIonModalElement>(null)
-	const input = useRef<HTMLIonInputElement>(null)
 	const noteInput = useRef<HTMLIonTextareaElement>(null)
+	const starRoleInput = useRef<HTMLIonSelectElement>(null)
+	const titleInput = useRef<HTMLIonInputElement>(null)
+
+	const starRoles = useLiveQuery(() => db.starRoles.toArray(), [], [])
 
 	// Might cause problems that this runs on every render but seems fine atm...
 	useEffect(() => {
-		input.current?.setFocus()
+		titleInput.current?.setFocus()
 	})
 
 	const noteProvider = useNoteProvider()
+	const emitTodo = useCallback(() => {
+		dismiss(
+			{
+				...todo,
+				note: noteInput.current?.value,
+				starRole: starRoleInput.current?.value ?? undefined,
+				title: titleInput.current?.value,
+			},
+			'confirm',
+		)
+	}, [dismiss, todo])
 
 	return (
 		<IonPage
 			{...props}
-			ref={page}
 			onKeyDown={event => {
 				if (event.key === 'Enter') {
 					event.preventDefault()
-					dismiss(
-						{
-							...todo,
-							title: input.current?.value,
-							note: noteInput.current?.value,
-						},
-						'confirm',
-					)
+					emitTodo()
 				}
 				props.onKeyDown?.(event)
 			}}
@@ -66,12 +80,29 @@ export default function TodoModal({
 			<IonContent className="space-y-4 ion-padding">
 				<IonInput
 					fill="outline"
-					ref={input}
+					ref={titleInput}
 					type="text"
 					label="Title"
 					labelPlacement="floating"
 					value={todo?.title}
 				/>
+				<IonSelect
+					fill="outline"
+					label="Star role"
+					labelPlacement="floating"
+					ref={starRoleInput}
+					value={todo?.starRole}
+				>
+					<IonSelectOption value={null}>None</IonSelectOption>
+					{starRoles.map(starRole => (
+						<IonSelectOption
+							key={starRole.id}
+							value={starRole.id}
+						>
+							{starRole.title}
+						</IonSelectOption>
+					))}
+				</IonSelect>
 				{!noteProvider && (
 					<p>Set a note provider in settings to enable this feature.</p>
 				)}
@@ -113,14 +144,7 @@ export default function TodoModal({
 					<IonButtons slot="primary">
 						<IonButton
 							onClick={() => {
-								dismiss(
-									{
-										...todo,
-										title: input.current?.value,
-										note: noteInput.current?.value,
-									},
-									'confirm',
-								)
+								emitTodo()
 							}}
 							strong={true}
 						>

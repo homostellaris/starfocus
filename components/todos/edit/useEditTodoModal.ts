@@ -1,30 +1,12 @@
 import { useIonModal } from '@ionic/react'
 import { useCallback } from 'react'
-import { CreatedTodo, db } from '../db'
-import useNoteProvider from '../notes/useNoteProvider'
-import useSelectedTodo from './SelectedTodo'
-import TodoModal from './TodoModal'
-
-export function EditTodoModal({
-	dismiss,
-	title,
-	todo,
-}: {
-	dismiss: (data?: any, role?: string) => void
-	title: string
-	todo: CreatedTodo
-}) {
-	return (
-		<TodoModal
-			title={title}
-			todo={todo}
-			dismiss={dismiss}
-		/>
-	)
-}
+import { Todo, db } from '../../db'
+import useNoteProvider from '../../notes/useNoteProvider'
+import useSelectedTodo from '../SelectedTodo'
+import { EditTodoModal } from './modal'
 
 export function useEditTodoModal(): [
-	(todo: CreatedTodo) => void,
+	(todo: Todo) => void,
 	(data?: any, role?: string) => void,
 ] {
 	const [todo, setTodo] = useSelectedTodo()
@@ -35,13 +17,16 @@ export function useEditTodoModal(): [
 	})
 	const noteProvider = useNoteProvider()
 	const editTodo = useCallback(
-		async (updatedTodo: CreatedTodo) => {
+		async (updatedTodo: Todo) => {
+			if (!updatedTodo.title) throw new TypeError('Title is required')
+
 			let uri
 			if (updatedTodo.note && noteProvider) {
 				uri = await noteProvider.create({ content: updatedTodo.note })
 			}
 			await db.todos.update(updatedTodo.id, {
 				createdAt: new Date(),
+				starRole: updatedTodo.starRole,
 				title: updatedTodo.title,
 				...(uri && { note: { uri } }),
 			})
@@ -50,7 +35,7 @@ export function useEditTodoModal(): [
 	)
 
 	return [
-		(todo: CreatedTodo) => {
+		(todo: Todo) => {
 			present({
 				onWillPresent: () => {
 					setTodo(todo)
