@@ -558,11 +558,9 @@ export const Important = () => {
 	const todos = useLiveQuery(async () => {
 		console.debug('re-running important query')
 		const importantList = await db.lists.get('#important')
-		return db.todos
-			.where('id')
-			.anyOf(importantList!.order)
-			.and(todo => matchesQuery(query, todo) && inActiveStarRoles(todo))
-			.toArray()
+		return (await db.todos.bulkGet(importantList?.order || [])).filter(
+			todo => matchesQuery(query, todo!) && inActiveStarRoles(todo!),
+		)
 	}, [inActiveStarRoles, query])
 
 	const [present] = useTodoActionSheet()
