@@ -41,7 +41,7 @@ export function ViewProvider({ children }: { children: React.ReactNode }) {
 		if (!starRoles) return
 		/* In the rare event that a star role is added or removed we're happy to reset the state because
 		   it's not clear whether the user would want the new star role to be active or not. */
-		setActiveStarRoles(starRoles.map(({ id }) => id))
+		setActiveStarRoles([...starRoles.map(({ id }) => id), ''])
 	}, [starRoles])
 	const allStarRolesActive = activeStarRoles.length === (starRoles?.length || 0)
 	const inActiveStarRoles = useCallback(

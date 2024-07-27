@@ -560,7 +560,7 @@ export const Important = () => {
 		const importantList = await db.lists.get('#important')
 		return (await db.todos.bulkGet(importantList?.order || [])).filter(
 			todo => matchesQuery(query, todo!) && inActiveStarRoles(todo!),
-		)
+		) as Todo[]
 	}, [inActiveStarRoles, query])
 
 	const [present] = useTodoActionSheet()
