@@ -423,12 +423,12 @@ export const ViewMenu = () => {
 						<IonList>
 							<IonItem>
 								<IonToggle
-									checked={starRoles.length === activeStarRoles.length}
+									checked={starRoles.length + 1 === activeStarRoles.length}
 									color="success"
 									className="font-bold"
 									onIonChange={event => {
 										if (event.detail.checked) {
-											setActiveStarRoles(starRoles.map(({ id }) => id))
+											setActiveStarRoles([...starRoles.map(({ id }) => id), ''])
 										} else {
 											setActiveStarRoles([])
 										}
@@ -437,31 +437,29 @@ export const ViewMenu = () => {
 									All
 								</IonToggle>
 							</IonItem>
+							<IonItem>
+								<IonToggle
+									checked={activeStarRoles.includes('')}
+									color="success"
+									onIonChange={event => {
+										if (event.detail.checked) {
+											activateStarRole('')
+										} else {
+											deactivateStarRole('')
+										}
+									}}
+								>
+									None
+								</IonToggle>
+							</IonItem>
 							{starRoles.map(starRole => (
 								<IonItem key={starRole.id}>
-									<IonIcon
-										aria-hidden="true"
-										icon={power}
-										color={
-											activeStarRoles.includes(starRole.id)
-												? 'success'
-												: undefined
-										}
-										slot="start"
-									></IonIcon>
 									<IonToggle
-										checked={
-											allStarRolesActive
-												? false
-												: activeStarRoles.includes(starRole.id)
-										}
+										checked={activeStarRoles.includes(starRole.id)}
 										color="success"
 										onIonChange={event => {
-											console.log(event.detail.checked, allStarRolesActive)
 											event.detail.checked
-												? allStarRolesActive
-													? setActiveStarRoles([starRole.id])
-													: activateStarRole(starRole.id)
+												? activateStarRole(starRole.id)
 												: deactivateStarRole(starRole.id)
 										}}
 									>

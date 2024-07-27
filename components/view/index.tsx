@@ -47,6 +47,7 @@ export function ViewProvider({ children }: { children: React.ReactNode }) {
 	const inActiveStarRoles = useCallback(
 		(todo: Todo) => {
 			if (allStarRolesActive) return true
+			if (!todo.starRole && activeStarRoles.includes('')) return true
 			if (!todo.starRole) return false
 			return activeStarRoles.includes(todo.starRole)
 		},
