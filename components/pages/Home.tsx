@@ -34,7 +34,6 @@ import {
 	IonToast,
 	IonToggle,
 	IonToolbar,
-	ItemReorderEventDetail,
 } from '@ionic/react'
 import { useLiveQuery, useObservable } from 'dexie-react-hooks'
 import {
@@ -45,7 +44,6 @@ import {
 	documentText,
 	filterSharp,
 	logOutSharp,
-	power,
 	rocketSharp,
 } from 'ionicons/icons'
 import _ from 'lodash'
@@ -57,7 +55,7 @@ import {
 	useRef,
 	useState,
 } from 'react'
-import { Todo, db } from '../db'
+import { db, Todo } from '../db'
 import NoteProviders from '../notes/providers'
 import useSettings from '../settings/useSettings'
 import { SelectedTodoProvider } from '../todos/SelectedTodo'
@@ -555,20 +553,21 @@ export const Log = ({ limit }: { limit: number }) => {
 
 export const Important = () => {
 	const { inActiveStarRoles, query } = useView()
+	const importantList = useLiveQuery(() => db.lists.get('#important'))
 	const todos = useLiveQuery(async () => {
 		console.debug('re-running important query')
-		const importantList = await db.lists.get('#important')
-		return (await db.todos.bulkGet(importantList?.order || [])).filter(
+		if (importantList === undefined) return
+		return (await db.todos.bulkGet(importantList!.order)).filter(
 			todo => matchesQuery(query, todo!) && inActiveStarRoles(todo!),
 		) as Todo[]
-	}, [inActiveStarRoles, query])
+	}, [importantList, inActiveStarRoles, query])
 
 	const [present] = useTodoActionSheet()
 
 	return (
 		<>
 			<h1>Important</h1>
-			{todos === undefined ? (
+			{importantList === undefined || todos === undefined ? (
 				<IonSpinner
 					className="w-20 h-20"
 					name="dots"
@@ -582,11 +581,16 @@ export const Important = () => {
 							// Instead we re-order right away, calculate the new order ourselves, and update the DB.
 							event.detail.complete()
 
-							const todoIds = [...todos.map(i => i.id)]
+							const fromIndex = importantList.order.indexOf(
+								todos[event.detail.from].id,
+							)
+							const toIndex = importantList.order.indexOf(
+								todos[event.detail.to].id,
+							)
 							const reorderedTodoIds = moveItemInArray(
-								todoIds,
-								event.detail.from,
-								event.detail.to,
+								importantList.order,
+								fromIndex,
+								toIndex,
 							)
 							await db.lists.put({
 								type: '#important',
@@ -845,7 +849,6 @@ const byDate = (a: any, b: any) => {
 
 function matchesQuery(query: string, todo: Todo) {
 	if (!query) return true
-	console.log({ todo })
 	return todo?.title.toLowerCase().includes(query)
 }
 
