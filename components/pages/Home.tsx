@@ -1,3 +1,4 @@
+import { SyncStatePhase } from 'dexie-cloud-addon'
 import { menuController } from '@ionic/core/components'
 import {
 	IonButton,
@@ -23,6 +24,7 @@ import {
 	IonMenu,
 	IonMenuButton,
 	IonPage,
+	IonPopover,
 	IonReorder,
 	IonReorderGroup,
 	IonRow,
@@ -40,11 +42,14 @@ import {
 	add,
 	checkmarkDoneCircleSharp,
 	cloudDoneSharp,
+	cloudDownloadSharp,
 	cloudOfflineSharp,
+	cloudUploadSharp,
 	documentText,
 	filterSharp,
 	logOutSharp,
 	rocketSharp,
+	thunderstormSharp,
 } from 'ionicons/icons'
 import _ from 'lodash'
 import {
@@ -193,61 +198,126 @@ export const Header = () => {
 					className="w-10 h-10 ml-4"
 				/>
 				<IonTitle>Starfocus</IonTitle>
-				{isLoggedIn ? (
-					<>
-						<div
-							className="hidden mx-2 space-x-2 lg:block"
-							slot="secondary"
-						>
-							<span>email: {user.email}</span>
-							<span>license: {syncState?.license}</span>
-							<span>status: {syncState?.status}</span>
-							<span>phase: {syncState?.phase}</span>
-							<span>{syncState?.progress}</span>
-							<span>{syncState?.error?.message}</span>
-						</div>
-						<IonButtons slot="secondary">
-							<IonButton fill="solid">
+				<IonButtons
+					className="mx-2"
+					slot="secondary"
+				>
+					{isLoggedIn ? (
+						<>
+							<IonButton id="sync-status">
 								<IonIcon
-									icon={cloudDoneSharp}
-									slot="start"
+									icon={
+										syncState?.error
+											? thunderstormSharp
+											: syncState?.phase === 'pushing'
+												? cloudUploadSharp
+												: syncState?.phase === 'pulling'
+													? cloudDownloadSharp
+													: cloudDoneSharp
+									}
+									color={syncState?.error ? 'danger' : 'default'}
+									slot="icon-only"
 								></IonIcon>
-								<span>Sync</span>
+								<IonPopover
+									trigger="sync-status"
+									triggerAction="click"
+								>
+									<IonContent className="text-xs">
+										{syncState?.error ? (
+											<p>Sync error: ${syncState.error.message}</p>
+										) : (
+											<IonList>
+												<IonItem>
+													<IonInput
+														label="Email"
+														labelPlacement="floating"
+														readonly
+														value={user.email}
+													></IonInput>
+												</IonItem>
+
+												<IonItem>
+													<IonInput
+														label="License"
+														labelPlacement="floating"
+														readonly
+														value={syncState?.license}
+													></IonInput>
+												</IonItem>
+
+												<IonItem>
+													<IonInput
+														label="Status"
+														labelPlacement="floating"
+														readonly
+														value={syncState?.status}
+													></IonInput>
+												</IonItem>
+
+												<IonItem>
+													<IonInput
+														label="Phase"
+														labelPlacement="floating"
+														readonly
+														value={syncState?.phase}
+													></IonInput>
+												</IonItem>
+
+												<IonItem>
+													<IonInput
+														label="Progress"
+														labelPlacement="floating"
+														readonly
+														value={syncState?.progress || '-'}
+													></IonInput>
+												</IonItem>
+											</IonList>
+										)}
+									</IonContent>
+								</IonPopover>
 							</IonButton>
 							<IonButton
+								fill="solid"
 								onClick={() => {
 									db.cloud.logout()
 								}}
 							>
-								<IonIcon
-									icon={logOutSharp}
-									slot="start"
-								></IonIcon>
+								Unsync
 							</IonButton>
-						</IonButtons>
-					</>
-				) : (
-					<>
-						<IonButtons slot="secondary">
+						</>
+					) : (
+						<>
+							<IonButton id="sync-status">
+								<IonIcon
+									icon={cloudOfflineSharp}
+									slot="icon-only"
+								></IonIcon>
+								<IonPopover
+									trigger="sync-status"
+									triggerAction="click"
+								>
+									<IonContent class="ion-padding">
+										Not synced. Your data is stored locally only.
+									</IonContent>
+								</IonPopover>
+							</IonButton>
 							<IonButton
 								fill="solid"
 								onClick={() => {
 									db.cloud.login()
 								}}
 							>
-								<IonIcon
-									icon={cloudOfflineSharp}
-									slot="start"
-								></IonIcon>
-								<span>Sync</span>
+								Sync
 							</IonButton>
-						</IonButtons>
-					</>
-				)}
+						</>
+					)}
+				</IonButtons>
 			</IonToolbar>
 		</IonHeader>
 	)
 }
+
+export const SyncState = () => {}
 
 export const MiscMenu = () => {
 	const settings = useSettings()
