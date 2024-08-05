@@ -1,6 +1,6 @@
 import { useIonModal } from '@ionic/react'
 import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import { db, ListType, Todo } from '../../db'
 import useNoteProvider from '../../notes/useNoteProvider'
 import { CreateTodoModal } from './modal'
@@ -13,9 +13,11 @@ export function useCreateTodoModal(): [
 	}) => void,
 	(data?: any, role?: string) => void,
 ] {
+	const titleInput = useRef<HTMLIonInputElement>(null)
 	const [present, dismiss] = useIonModal(CreateTodoModal, {
 		dismiss: (data: string, role: string) => dismiss(data, role),
 		title: 'Create todo',
+		titleInput,
 	})
 
 	const noteProvider = useNoteProvider()
@@ -48,6 +50,9 @@ export function useCreateTodoModal(): [
 	return [
 		({ onWillDismiss }: HookOverlayOptions) => {
 			present({
+				onDidPresent: _event => {
+					titleInput.current?.setFocus()
+				},
 				onWillDismiss: event => {
 					if (event.detail.role === 'confirm') {
 						const { todo, location } = event.detail.data

@@ -16,6 +16,7 @@ import {
 import { openOutline } from 'ionicons/icons'
 import {
 	ComponentProps,
+	MutableRefObject,
 	ReactNode,
 	useCallback,
 	useEffect,
@@ -28,25 +29,21 @@ import { useLiveQuery } from 'dexie-react-hooks'
 export default function TodoModal({
 	dismiss,
 	title,
+	titleInput,
 	todo = {},
 	toolbarSlot,
 	...props
 }: {
 	dismiss: (data?: any, role?: string) => void
 	title: string
+	titleInput: MutableRefObject<HTMLIonInputElement | null>
 	todo?: Partial<Todo>
 	toolbarSlot?: ReactNode
 } & ComponentProps<typeof IonPage>) {
 	const noteInput = useRef<HTMLIonTextareaElement>(null)
 	const starRoleInput = useRef<HTMLIonSelectElement>(null)
-	const titleInput = useRef<HTMLIonInputElement>(null)
 
 	const starRoles = useLiveQuery(() => db.starRoles.toArray(), [], [])
-
-	// Might cause problems that this runs on every render but seems fine atm...
-	useEffect(() => {
-		titleInput.current?.setFocus()
-	})
 
 	const noteProvider = useNoteProvider()
 	const emitTodo = useCallback(() => {
@@ -59,7 +56,7 @@ export default function TodoModal({
 			},
 			'confirm',
 		)
-	}, [dismiss, todo])
+	}, [dismiss, todo, titleInput])
 
 	return (
 		<IonPage
@@ -79,7 +76,6 @@ export default function TodoModal({
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
 				<IonInput
-					autoFocus
 					fill="outline"
 					ref={titleInput}
 					type="text"

@@ -9,12 +9,13 @@ import {
 	IonTitle,
 	IonToolbar,
 } from '@ionic/react'
-import { ComponentProps, ReactNode, useEffect, useRef } from 'react'
+import { ComponentProps, MutableRefObject, ReactNode } from 'react'
 import { StarRole } from '../db'
 
 export default function StarRoleModal({
 	dismiss,
 	title,
+	titleInput,
 	starRole = {},
 	toolbarSlot,
 	...props
@@ -22,15 +23,9 @@ export default function StarRoleModal({
 	dismiss: (data?: any, role?: string) => void
 	title: string
 	starRole?: Partial<StarRole>
+	titleInput: MutableRefObject<HTMLIonInputElement | null>
 	toolbarSlot?: ReactNode
 } & ComponentProps<typeof IonPage>) {
-	const input = useRef<HTMLIonInputElement>(null)
-
-	// Might cause problems that this runs on every render but seems fine atm...
-	useEffect(() => {
-		input.current?.setFocus()
-	})
-
 	return (
 		<IonPage
 			{...props}
@@ -40,7 +35,7 @@ export default function StarRoleModal({
 					dismiss(
 						{
 							...starRole,
-							title: input.current?.value,
+							title: titleInput.current?.value,
 						},
 						'confirm',
 					)
@@ -56,7 +51,7 @@ export default function StarRoleModal({
 			<IonContent className="space-y-4 ion-padding">
 				<IonInput
 					fill="outline"
-					ref={input}
+					ref={titleInput}
 					type="text"
 					label="Title"
 					labelPlacement="floating"
@@ -79,7 +74,7 @@ export default function StarRoleModal({
 								dismiss(
 									{
 										...starRole,
-										title: input.current?.value,
+										title: titleInput.current?.value,
 									},
 									'confirm',
 								)

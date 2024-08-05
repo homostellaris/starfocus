@@ -1,5 +1,5 @@
 import { useIonModal } from '@ionic/react'
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import { Todo, db } from '../../db'
 import useNoteProvider from '../../notes/useNoteProvider'
 import useSelectedTodo from '../SelectedTodo'
@@ -10,9 +10,11 @@ export function useEditTodoModal(): [
 	(data?: any, role?: string) => void,
 ] {
 	const [todo, setTodo] = useSelectedTodo()
+	const titleInput = useRef<HTMLIonInputElement>(null)
 	const [present, dismiss] = useIonModal(EditTodoModal, {
 		dismiss: (data: string, role: string) => dismiss(data, role),
 		title: 'Edit todo',
+		titleInput,
 		todo,
 	})
 	const noteProvider = useNoteProvider()
@@ -37,6 +39,9 @@ export function useEditTodoModal(): [
 	return [
 		(todo: Todo) => {
 			present({
+				onDidPresent: _event => {
+					titleInput.current?.setFocus()
+				},
 				onWillPresent: () => {
 					setTodo(todo)
 				},

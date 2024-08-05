@@ -1,17 +1,16 @@
 import { IonSelect, IonSelectOption, useIonModal } from '@ionic/react'
 import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
-import { useCallback, useRef } from 'react'
+import { ComponentProps, useCallback, useRef } from 'react'
 import { db, ListType } from '../../db'
 import useNoteProvider from '../../notes/useNoteProvider'
 import TodoModal from '../TodoModal'
 
 export function CreateTodoModal({
 	dismiss,
-	title,
+	...props
 }: {
 	dismiss: (data?: any, role?: string) => void
-	title: string
-}) {
+} & ComponentProps<typeof TodoModal>) {
 	const locationSelect = useRef<HTMLIonSelectElement>(null)
 
 	return (
@@ -35,7 +34,6 @@ export function CreateTodoModal({
 					locationSelect.current!.value = ListType.icebox
 				}
 			}}
-			title={title}
 			toolbarSlot={
 				<IonSelect
 					className="p-2"
@@ -50,6 +48,7 @@ export function CreateTodoModal({
 					</IonSelectOption>
 				</IonSelect>
 			}
+			{...props}
 		/>
 	)
 }

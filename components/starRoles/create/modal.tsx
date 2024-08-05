@@ -1,12 +1,12 @@
-import StarRoleModal from '../RoleModal'
+import { ComponentProps } from 'react'
+import StarRoleModal from '../StarRoleModal'
 
 export function CreateStarRoleModal({
 	dismiss,
-	title,
+	...props
 }: {
 	dismiss: (data?: any, role?: string) => void
-	title: string
-}) {
+} & ComponentProps<typeof StarRoleModal>) {
 	return (
 		<StarRoleModal
 			dismiss={(data?: any, role?: string) => {
@@ -17,7 +17,7 @@ export function CreateStarRoleModal({
 					role,
 				)
 			}}
-			title={title}
+			{...props}
 		/>
 	)
 }
