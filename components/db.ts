@@ -63,6 +63,15 @@ export class DexieStarfocus extends Dexie {
 				})
 			}, false)
 		})
+		this.on.ready.subscribe(async (db: DexieStarfocus) => {
+			const importantList = await db.lists.get('#important')
+			if (!importantList) {
+				db.lists.put({
+					type: '#important',
+					order: [],
+				})
+			}
+		}, false)
 	}
 }
 
