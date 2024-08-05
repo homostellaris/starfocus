@@ -16,7 +16,7 @@ import {
 } from '@ionic/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { add, starOutline } from 'ionicons/icons'
-import { useCallback, useRef } from 'react'
+import { RefObject, useCallback, useEffect, useRef } from 'react'
 import { db } from '../db'
 import { useCreateStarRoleModal } from '../starRoles/create/useCreateStarRoleModal'
 
@@ -25,7 +25,7 @@ export default function Constellation() {
 	const isLoading = starRoles === undefined
 
 	const fab = useRef<HTMLIonFabElement>(null)
-	const [presentCreateStarRoleModal, dismiss] = useCreateStarRoleModal()
+	const [presentCreateStarRoleModal, _dismiss] = useCreateStarRoleModal()
 	const openCreateStarRoleModal = useCallback(() => {
 		presentCreateStarRoleModal({
 			onWillDismiss: () => {
@@ -33,6 +33,8 @@ export default function Constellation() {
 			},
 		})
 	}, [fab, presentCreateStarRoleModal])
+
+	useGlobalKeyboardShortcuts(fab, openCreateStarRoleModal)
 
 	return (
 		<IonPage>
@@ -91,4 +93,25 @@ export default function Constellation() {
 			</IonContent>
 		</IonPage>
 	)
+}
+
+function useGlobalKeyboardShortcuts(
+	fab: RefObject<HTMLIonFabElement>,
+	openCreateStarRoleModal: any,
+) {
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.target !== document.body) return
+
+			if (event.key === 'c') {
+				event.preventDefault()
+				openCreateStarRoleModal()
+				if (fab.current) fab.current.activated = true
+			}
+		}
+		document.addEventListener('keydown', handleKeyDown)
+		return () => {
+			document.removeEventListener('keydown', handleKeyDown)
+		}
+	}, [fab, openCreateStarRoleModal])
 }

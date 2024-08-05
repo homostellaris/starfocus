@@ -79,6 +79,7 @@ export default function TodoModal({
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
 				<IonInput
+					autoFocus
 					fill="outline"
 					ref={titleInput}
 					type="text"

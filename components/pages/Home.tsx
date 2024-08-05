@@ -1,4 +1,3 @@
-import { SyncStatePhase } from 'dexie-cloud-addon'
 import { menuController } from '@ionic/core/components'
 import {
 	IonButton,
@@ -86,7 +85,7 @@ const Home = () => {
 	const contentRef = useRef<HTMLIonContentElement>(null)
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
 
-	useGlobalKeyboardShortcuts(contentRef, searchbarRef, openCreateTodoModal)
+	useGlobalKeyboardShortcuts(contentRef, searchbarRef, fab, openCreateTodoModal)
 
 	const [enablePagination, setEnablePagination] = useState(false)
 
@@ -875,13 +874,6 @@ export const Searchbar = forwardRef<HTMLIonSearchbarElement>(
 		return (
 			<IonSearchbar
 				ref={searchbarRef}
-				onKeyDown={event => {
-					if (event.key === 'Escape') {
-						event.preventDefault()
-						const target = event.target as HTMLIonSearchbarElement
-						target.getElementsByTagName('input')[0].blur()
-					}
-				}}
 				debounce={100}
 				onIonInput={event => {
 					const target = event.target as HTMLIonSearchbarElement
@@ -925,6 +917,7 @@ function matchesQuery(query: string, todo: Todo) {
 function useGlobalKeyboardShortcuts(
 	contentRef: RefObject<HTMLIonContentElement>,
 	searchbarRef: RefObject<HTMLIonSearchbarElement>,
+	fab: RefObject<HTMLIonFabElement>,
 	openCreateTodoModal: any,
 ) {
 	useEffect(() => {
@@ -945,6 +938,7 @@ function useGlobalKeyboardShortcuts(
 			if (event.key === 'c') {
 				event.preventDefault()
 				openCreateTodoModal()
+				if (fab.current) fab.current.activated = true
 			} else if (event.key === 's') {
 				event.preventDefault()
 				contentRef.current?.scrollToBottom(500)
@@ -954,5 +948,5 @@ function useGlobalKeyboardShortcuts(
 		return () => {
 			document.removeEventListener('keydown', handleKeyDown)
 		}
-	}, [contentRef, openCreateTodoModal, searchbarRef])
+	}, [contentRef, fab, openCreateTodoModal, searchbarRef])
 }
