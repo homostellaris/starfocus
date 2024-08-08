@@ -46,7 +46,6 @@ import {
 	cloudUploadSharp,
 	documentText,
 	filterSharp,
-	logOutSharp,
 	rocketSharp,
 	thunderstormSharp,
 } from 'ionicons/icons'
@@ -66,6 +65,7 @@ import { SelectedTodoProvider } from '../todos/SelectedTodo'
 import { useTodoActionSheet } from '../todos/TodoActionSheet'
 import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
 import useView, { ViewProvider } from '../view'
+import { getIonIcon } from '../starRoles/icons'
 
 const Home = () => {
 	const [logLimit, setLogLimit] = useState(7)
@@ -630,6 +630,7 @@ export const Important = () => {
 			todo => matchesQuery(query, todo!) && inActiveStarRoles(todo!),
 		) as Todo[]
 	}, [importantList, inActiveStarRoles, query])
+	const starRoles = useLiveQuery(() => db.starRoles.toArray())
 
 	const [present] = useTodoActionSheet()
 
@@ -727,6 +728,15 @@ export const Important = () => {
 									}}
 								/>
 								<IonLabel>{todo?.title}</IonLabel>
+								{todo.starRole && (
+									<IonIcon
+										icon={getIonIcon(
+											starRoles?.find(starRole => starRole.id === todo.starRole)
+												?.icon?.name,
+										)}
+										slot="end"
+									/>
+								)}
 								{todo.note && (
 									<a
 										href={todo.note.uri}

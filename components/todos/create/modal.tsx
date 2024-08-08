@@ -1,8 +1,6 @@
-import { IonSelect, IonSelectOption, useIonModal } from '@ionic/react'
-import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
-import { ComponentProps, useCallback, useRef } from 'react'
-import { db, ListType } from '../../db'
-import useNoteProvider from '../../notes/useNoteProvider'
+import { IonSelect, IonSelectOption } from '@ionic/react'
+import { ComponentProps, useRef } from 'react'
+import { ListType } from '../../db'
 import TodoModal from '../TodoModal'
 
 export function CreateTodoModal({

@@ -16,11 +16,12 @@ export function useEditStarRoleModal(): [
 		titleInput,
 	})
 
-	const editStarRole = useCallback(async (updatedStarRole: StarRole) => {
-		await db.starRoles.update(updatedStarRole.id, {
-			title: updatedStarRole.title,
-		})
-	}, [])
+	const editStarRole = useCallback(
+		async (starRoleId: string, updatedProperties: StarRole) => {
+			await db.starRoles.update(starRoleId, updatedProperties)
+		},
+		[],
+	)
 
 	return [
 		(starRole: StarRole) => {
@@ -32,8 +33,9 @@ export function useEditStarRoleModal(): [
 					setStarRole(starRole)
 				},
 				onWillDismiss: event => {
-					const starRole = event.detail.data
-					if (event.detail.role === 'confirm') editStarRole(starRole)
+					if (event.detail.role === 'confirm') {
+						editStarRole(starRole.id, event.detail.data)
+					}
 					setStarRole(null)
 				},
 			})

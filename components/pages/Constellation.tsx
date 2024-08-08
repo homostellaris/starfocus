@@ -19,6 +19,8 @@ import { add, starOutline } from 'ionicons/icons'
 import { RefObject, useCallback, useEffect, useRef } from 'react'
 import { db } from '../db'
 import { useCreateStarRoleModal } from '../starRoles/create/useCreateStarRoleModal'
+import { getIonIcon } from '../starRoles/icons'
+import { useStarRoleActionSheet } from '../starRoles/StarRoleActionSheet'
 
 export default function Constellation() {
 	const starRoles = useLiveQuery(() => db.starRoles.toArray())
@@ -33,6 +35,8 @@ export default function Constellation() {
 			},
 		})
 	}, [fab, presentCreateStarRoleModal])
+
+	const [present] = useStarRoleActionSheet()
 
 	useGlobalKeyboardShortcuts(fab, openCreateStarRoleModal)
 
@@ -64,20 +68,29 @@ export default function Constellation() {
 					</div>
 				) : (
 					<IonList inset>
-						<IonReorderGroup
+						{/* <IonReorderGroup
 							disabled={false}
-							// onIonItemReorder={handleReorder}
-						>
-							{starRoles.map(role => (
-								<IonItem
-									button
-									key={role.id}
-								>
-									<IonLabel>{role?.title}</IonLabel>
-									<IonReorder slot="end"></IonReorder>
-								</IonItem>
-							))}
-						</IonReorderGroup>
+							onIonItemReorder={handleReorder}
+						> */}
+						{starRoles.map(starRole => (
+							<IonItem
+								button
+								key={starRole.id}
+								onClick={() => {
+									present(starRole)
+								}}
+							>
+								<IonLabel>{starRole?.title}</IonLabel>
+								{starRole?.icon && (
+									<IonIcon
+										icon={getIonIcon(starRole.icon.name)}
+										slot="end"
+									/>
+								)}
+								<IonReorder slot="end"></IonReorder>
+							</IonItem>
+						))}
+						{/* </IonReorderGroup> */}
 					</IonList>
 				)}
 				<IonFab

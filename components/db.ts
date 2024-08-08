@@ -6,7 +6,7 @@ export interface Todo {
 	completedAt?: Date
 	id: string
 	note?: Note
-	starRole?: StarRole['id']
+	starRole?: StarRole['id'] // TODO: How do we delete this when the star role is deleted? Need to add associative table and compute ID of association from todo ID and starRoleID, then delete entries when star roles gets deleted.
 	starPoints?: string
 	title: string
 }
@@ -17,7 +17,13 @@ export interface Note {
 
 export interface StarRole {
 	id: string
+	icon?: Icon
 	title: string
+}
+
+export interface Icon {
+	type: 'ionicon'
+	name: string
 }
 
 export interface List {

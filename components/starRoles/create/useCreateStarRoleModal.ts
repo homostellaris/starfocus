@@ -1,7 +1,7 @@
 import { useIonModal } from '@ionic/react'
 import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
 import { useCallback, useRef } from 'react'
-import { db } from '../../db'
+import { db, StarRole } from '../../db'
 import { CreateStarRoleModal } from './modal'
 
 export function useCreateStarRoleModal(): [
@@ -18,8 +18,8 @@ export function useCreateStarRoleModal(): [
 		title: 'Create star role',
 		titleInput,
 	})
-	const createStarRole = useCallback(async ({ title }: { title: any }) => {
-		db.starRoles.add({ title })
+	const createStarRole = useCallback(async (properties: StarRole) => {
+		db.starRoles.add(properties)
 	}, [])
 
 	return [
@@ -30,8 +30,7 @@ export function useCreateStarRoleModal(): [
 				},
 				onWillDismiss: event => {
 					if (event.detail.role === 'confirm') {
-						const { starRole } = event.detail.data
-						createStarRole(starRole)
+						createStarRole(event.detail.data)
 					}
 					onWillDismiss?.(event)
 				},
