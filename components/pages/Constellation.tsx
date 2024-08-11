@@ -21,6 +21,7 @@ import { db } from '../db'
 import { useCreateStarRoleModal } from '../starRoles/create/useCreateStarRoleModal'
 import { getIonIcon } from '../starRoles/icons'
 import { useStarRoleActionSheet } from '../starRoles/StarRoleActionSheet'
+import { Header } from '../common/Header'
 
 export default function Constellation() {
 	const starRoles = useLiveQuery(() => db.starRoles.toArray())
@@ -42,11 +43,7 @@ export default function Constellation() {
 
 	return (
 		<IonPage>
-			<IonHeader>
-				<IonToolbar>
-					<IonTitle>Constellation</IonTitle>
-				</IonToolbar>
-			</IonHeader>
+			<Header title="Constellation" />
 			<IonContent fullscreen>
 				{isLoading ? (
 					<div className="flex items-center justify-center h-full">

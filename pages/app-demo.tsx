@@ -1,4 +1,4 @@
-import App from '../components/app'
+import App from 'next/app'
 
 export default function AppDemo() {
 	// useEffect(setupAnimations, [])

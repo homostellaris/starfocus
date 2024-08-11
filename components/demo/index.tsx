@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import ControlPanel from '../app/ControlPanel'
-import Journey from '../app/Journey'
-import PerformanceSidebar from '../app/PerformanceSidebar'
-import RoleSidebar from '../app/RoleSidebar'
+import ControlPanel from './ControlPanel'
+import Journey from './Journey'
+import PerformanceSidebar from './PerformanceSidebar'
+import RoleSidebar from './RoleSidebar'
 import Planets from '../common/Planets'
 import Events from '../todos/Events'
 import useTodos from '../todos/useTodos'
@@ -45,10 +45,10 @@ export default function App() {
 						expanded={eventsExpanded}
 					/>
 				</header>
-				<div className="left-column fixed left-0 top-24 z-10 hidden w-1/6 p-4 text-white lg:block">
+				<div className="fixed left-0 z-10 hidden w-1/6 p-4 text-white left-column top-24 lg:block">
 					<PerformanceSidebar />
 				</div>
-				<div className="right-column fixed right-0 top-24 z-10 hidden w-1/6 p-4 lg:block">
+				<div className="fixed right-0 z-10 hidden w-1/6 p-4 right-column top-24 lg:block">
 					<RoleSidebar />
 				</div>
 				<div className="parallax-container h-full scroll-p-[calc(100vh-10rem)]">

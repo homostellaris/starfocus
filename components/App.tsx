@@ -5,6 +5,7 @@ import { IonReactRouter } from '@ionic/react-router'
 import { Route } from 'react-router-dom'
 import Home from './pages/Home'
 import Constellation from './pages/Constellation'
+import ErrorBoundary from './ErrorBoundary'
 
 setupIonicReact({})
 
@@ -18,23 +19,25 @@ window
 		} catch {}
 	})
 
-const AppShell = () => {
+const App = () => {
 	return (
 		<IonApp>
 			<IonReactRouter>
 				<IonRouterOutlet id="main">
-					<Route
-						path="/constellation"
-						render={() => <Constellation />}
-					/>
-					<Route
-						path="/home"
-						render={() => <Home />}
-					/>
+					<ErrorBoundary>
+						<Route
+							path="/constellation"
+							render={() => <Constellation />}
+						/>
+						<Route
+							path="/home"
+							render={() => <Home />}
+						/>
+					</ErrorBoundary>
 				</IonRouterOutlet>
 			</IonReactRouter>
 		</IonApp>
 	)
 }
 
-export default AppShell
+export default App

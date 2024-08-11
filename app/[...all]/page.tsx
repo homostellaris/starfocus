@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 
 // TODO: Find out if this is necessary to be compatible with Ionic & Capacitor
-const App = dynamic(() => import('../../components/AppShell'), {
+const LazyApp = dynamic(() => import('../../components/App'), {
 	ssr: false,
 })
 
@@ -10,5 +10,5 @@ export async function generateStaticParams() {
 }
 
 export default function Page() {
-	return <App />
+	return <LazyApp />
 }
