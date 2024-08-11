@@ -649,9 +649,9 @@ export const Icebox = ({ limit }: { limit: number }) => {
 			present(todo as Todo, {
 				buttons: [
 					{
-						text: 'Move to ranked',
+						text: 'Move to important',
 						data: {
-							action: 'ranked',
+							action: 'important',
 						},
 						handler: async () => {
 							db.transaction('rw', db.lists, async () => {
