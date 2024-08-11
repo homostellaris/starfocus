@@ -48,9 +48,11 @@ import {
 	RefObject,
 	useCallback,
 	useEffect,
+	useMemo,
 	useRef,
 	useState,
 } from 'react'
+import { Header } from '../common/Header'
 import { db, Todo } from '../db'
 import NoteProviders from '../notes/providers'
 import useSettings from '../settings/useSettings'
@@ -59,9 +61,22 @@ import { SelectedTodoProvider } from '../todos/SelectedTodo'
 import { useTodoActionSheet } from '../todos/TodoActionSheet'
 import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
 import useView, { ViewProvider } from '../view'
-import { Header } from '../common/Header'
 
 const Home = () => {
+	const [ready, setReady] = useState<{
+		log: boolean
+		important: boolean
+		icebox: boolean
+	}>({
+		log: false,
+		important: false,
+		icebox: false,
+	})
+	const isLoading = useMemo(
+		() => Object.values(ready).some(ready => ready === false),
+		[ready],
+	)
+
 	const [logLimit, setLogLimit] = useState(7)
 	const [iceboxLimit, setIceboxLimit] = useState(30)
 
@@ -106,48 +121,64 @@ const Home = () => {
 						fullscreen
 						ref={contentRef}
 					>
-						{
-							<>
-								<IonInfiniteScroll
-									className="h-1"
-									disabled={!enablePagination}
-									position="top"
-									threshold="0px"
-									onIonInfinite={event => {
-										setLogLimit(limit => limit + 10)
-										setTimeout(() => event.target.complete(), 500)
-									}}
-								>
-									<IonInfiniteScrollContent></IonInfiniteScrollContent>
-								</IonInfiniteScroll>
-								<SelectedTodoProvider>
-									<Log limit={logLimit} />
-									<Important />
-									<Icebox limit={iceboxLimit} />
-								</SelectedTodoProvider>
-								<IonInfiniteScroll
-									disabled={!enablePagination}
-									position="bottom"
-									threshold="0px"
-									onIonInfinite={event => {
-										setIceboxLimit(limit => limit + 10)
-										setTimeout(() => event.target.complete(), 500)
-									}}
-								>
-									<IonInfiniteScrollContent></IonInfiniteScrollContent>
-								</IonInfiniteScroll>
-								<IonFab
-									ref={fab}
-									slot="fixed"
-									vertical="bottom"
-									horizontal="end"
-								>
-									<IonFabButton onClick={openCreateTodoModal}>
-										<IonIcon icon={add}></IonIcon>
-									</IonFabButton>
-								</IonFab>
-							</>
-						}
+						{isLoading && (
+							<div className="flex items-center justify-center h-full">
+								<IonSpinner
+									className="w-20 h-20"
+									name="dots"
+								/>
+							</div>
+						)}
+						<>
+							<IonInfiniteScroll
+								className="h-1"
+								disabled={!enablePagination}
+								position="top"
+								threshold="0px"
+								onIonInfinite={event => {
+									setLogLimit(limit => limit + 10)
+									setTimeout(() => event.target.complete(), 500)
+								}}
+							>
+								<IonInfiniteScrollContent></IonInfiniteScrollContent>
+							</IonInfiniteScroll>
+							<SelectedTodoProvider>
+								<Log
+									limit={logLimit}
+									onLoad={() => setReady(state => ({ ...state, log: true }))}
+								/>
+								<Important
+									onLoad={() =>
+										setReady(state => ({ ...state, important: true }))
+									}
+								/>
+								<Icebox
+									limit={iceboxLimit}
+									onLoad={() => setReady(state => ({ ...state, icebox: true }))}
+								/>
+							</SelectedTodoProvider>
+							<IonInfiniteScroll
+								disabled={!enablePagination}
+								position="bottom"
+								threshold="0px"
+								onIonInfinite={event => {
+									setIceboxLimit(limit => limit + 10)
+									setTimeout(() => event.target.complete(), 500)
+								}}
+							>
+								<IonInfiniteScrollContent></IonInfiniteScrollContent>
+							</IonInfiniteScroll>
+							<IonFab
+								ref={fab}
+								slot="fixed"
+								vertical="bottom"
+								horizontal="end"
+							>
+								<IonFabButton onClick={openCreateTodoModal}>
+									<IonIcon icon={add}></IonIcon>
+								</IonFabButton>
+							</IonFab>
+						</>
 					</IonContent>
 					<IonFooter>
 						<IonToolbar>
@@ -403,8 +434,15 @@ export const ViewMenu = () => {
 	)
 }
 
-export const Log = ({ limit }: { limit: number }) => {
+export const Log = ({
+	limit,
+	onLoad,
+}: {
+	limit: number
+	onLoad: () => void
+}) => {
 	const { inActiveStarRoles, query } = useView()
+
 	const todos = useLiveQuery(async () => {
 		console.debug('re-running log query')
 		return db.todos
@@ -420,17 +458,21 @@ export const Log = ({ limit }: { limit: number }) => {
 			.toArray()
 	}, [inActiveStarRoles, limit, query])
 
+	useEffect(() => {
+		if (todos !== undefined) {
+			console.log('READY')
+			onLoad()
+		}
+	}, [todos])
+
 	const [present] = useTodoActionSheet()
+
+	if (todos === undefined) return null
 
 	return (
 		<>
 			<h1>Log</h1>
-			{todos === undefined ? (
-				<IonSpinner
-					className="w-7 h-7"
-					name="dots"
-				/>
-			) : todos.length ? (
+			{todos?.length ? (
 				<IonList inset>
 					{todos.sort(byDate).map(todo => (
 						<IonItem
@@ -481,8 +523,9 @@ export const Log = ({ limit }: { limit: number }) => {
 	)
 }
 
-export const Important = () => {
+export const Important = ({ onLoad }: { onLoad: () => void }) => {
 	const { inActiveStarRoles, query } = useView()
+
 	const importantList = useLiveQuery(() => db.lists.get('#important'))
 	const todos = useLiveQuery(async () => {
 		console.debug('re-running important query')
@@ -491,19 +534,23 @@ export const Important = () => {
 			todo => matchesQuery(query, todo!) && inActiveStarRoles(todo!),
 		) as Todo[]
 	}, [importantList, inActiveStarRoles, query])
+
 	const starRoles = useLiveQuery(() => db.starRoles.toArray())
 
+	useEffect(() => {
+		if (todos !== undefined) {
+			setTimeout(onLoad, 2000)
+		}
+	}, [todos])
+
 	const [present] = useTodoActionSheet()
+
+	if (todos === undefined) return null
 
 	return (
 		<>
 			<h1>Important</h1>
-			{importantList === undefined || todos === undefined ? (
-				<IonSpinner
-					className="w-20 h-20"
-					name="dots"
-				/>
-			) : todos.length ? (
+			{todos?.length && importantList ? (
 				<IonList inset>
 					<IonReorderGroup
 						disabled={false}
@@ -624,8 +671,15 @@ export const Important = () => {
 	)
 }
 
-export const Icebox = ({ limit }: { limit: number }) => {
+export const Icebox = ({
+	limit,
+	onLoad,
+}: {
+	limit: number
+	onLoad: () => void
+}) => {
 	const { inActiveStarRoles, query } = useView()
+
 	const todos = useLiveQuery(async () => {
 		console.debug('re-running icebox query')
 		const importantList = await db.lists.get('#important')
@@ -642,6 +696,10 @@ export const Icebox = ({ limit }: { limit: number }) => {
 			.limit(limit)
 			.toArray()
 	}, [limit, inActiveStarRoles, query])
+
+	useEffect(() => {
+		if (todos !== undefined) onLoad()
+	}, [todos])
 
 	const [present] = useTodoActionSheet()
 	const onClick = useCallback(
@@ -691,6 +749,8 @@ export const Icebox = ({ limit }: { limit: number }) => {
 		},
 		[present],
 	)
+
+	if (todos === undefined) return null
 
 	return (
 		<>

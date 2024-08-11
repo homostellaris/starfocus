@@ -1,4 +1,4 @@
-import App from 'next/app'
+import Demo from '../components/demo'
 
 export default function AppDemo() {
 	// useEffect(setupAnimations, [])
@@ -7,7 +7,7 @@ export default function AppDemo() {
 	// 	const mostImportantTodo = todos[todos.length - 1]
 	// 	mostImportantTodo.scrollIntoView()
 	// }, [])
-	return <App />
+	return <Demo />
 }
 
 function setupAnimations() {

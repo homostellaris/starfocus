@@ -7,7 +7,7 @@ import Planets from '../common/Planets'
 import Events from '../todos/Events'
 import useTodos from '../todos/useTodos'
 
-export default function App() {
+export default function Demo() {
 	const [todos, _] = useTodos()
 	const [eventsExpanded] = useKeyboardShortcuts()
 
