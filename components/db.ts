@@ -61,23 +61,6 @@ export class DexieStarfocus extends Dexie {
 			databaseUrl: 'https://zy0myinc2.dexie.cloud',
 			requireAuth: false,
 		})
-		this.on.populate.subscribe(() => {
-			this.on.ready.subscribe((db: DexieStarfocus) => {
-				db.lists.put({
-					type: '#important',
-					order: [],
-				})
-			}, false)
-		})
-		this.on.ready.subscribe(async (db: DexieStarfocus) => {
-			const importantList = await db.lists.get('#important')
-			if (!importantList) {
-				db.lists.put({
-					type: '#important',
-					order: [],
-				})
-			}
-		}, false)
 	}
 }
 
