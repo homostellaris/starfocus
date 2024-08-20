@@ -25,6 +25,8 @@
 		"prepare": "husky install",
 		"prettier:fix": "prettier --write components/ interfaces/ pages/ public/ styles/ utils/",
 		"start": "serve -p 6603 out",
+		"test": "cypress run",
+		"test:dev": "cypress open",
 		"type-check": "tsc"
 	},
 	"dependencies": {
@@ -61,6 +63,7 @@
 		"@types/react-router": "5.1.20",
 		"@types/react-router-dom": "5.3.3",
 		"autoprefixer": "10.4.18",
+		"cypress": "^13.13.3",
 		"eslint": "8.57.0",
 		"eslint-config-next": "14.2.3",
 		"gitmoji-cli": "^7.1.0",

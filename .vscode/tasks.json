@@ -3,7 +3,11 @@
 	"tasks": [
 		{
 			"label": "dev",
-			"dependsOn": ["convex:dev", "next:dev"]
+			"dependsOn": [
+				"convex:dev",
+				"next:dev",
+				"test:dev"
+			]
 		},
 		{
 			"type": "npm",
@@ -14,6 +18,11 @@
 			"type": "npm",
 			"label": "next:dev",
 			"script": "next:dev"
+		},
+		{
+			"type": "npm",
+			"label": "test:dev",
+			"script": "test:dev",
 		}
 	]
 }

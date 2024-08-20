@@ -184,6 +184,7 @@ const Home = () => {
 						<IonToolbar>
 							<IonButtons slot="primary">
 								<IonButton
+									id="view-menu-button"
 									onClick={() => {
 										menuController.toggle('end')
 									}}
@@ -194,7 +195,10 @@ const Home = () => {
 									/>
 								</IonButton>
 							</IonButtons>
-							<IonButtons slot="start">
+							<IonButtons
+								id="misc-menu-button"
+								slot="start"
+							>
 								<IonMenuButton></IonMenuButton>
 							</IonButtons>
 							<Searchbar ref={searchbarRef} />
@@ -226,8 +230,9 @@ export const MiscMenu = () => {
 
 	return (
 		<IonMenu
-			type="push"
 			contentId="main-content"
+			id="misc-menu"
+			type="push"
 		>
 			<IonHeader>
 				<IonToolbar>
@@ -354,16 +359,16 @@ export const ViewMenu = () => {
 	const {
 		activateStarRole,
 		activeStarRoles,
-		allStarRolesActive,
 		deactivateStarRole,
 		setActiveStarRoles,
 	} = useView()
 
 	return (
 		<IonMenu
-			type="push"
-			side="end"
 			contentId="main-content"
+			id="view-menu"
+			side="end"
+			type="push"
 		>
 			<IonHeader>
 				<IonToolbar>
@@ -470,13 +475,14 @@ export const Log = ({
 	if (todos === undefined) return null
 
 	return (
-		<>
+		<section id="log">
 			<h1>Log</h1>
 			{todos?.length ? (
 				<IonList inset>
 					{todos.sort(byDate).map(todo => (
 						<IonItem
 							button
+							className="todo"
 							key={todo.id}
 							onClick={_event => {
 								present(todo)
@@ -519,7 +525,7 @@ export const Log = ({
 					<p>Your completed todos will appear here</p>
 				</div>
 			)}
-		</>
+		</section>
 	)
 }
 
@@ -548,7 +554,7 @@ export const Important = ({ onLoad }: { onLoad: () => void }) => {
 	if (todos === undefined) return null
 
 	return (
-		<>
+		<section id="important">
 			<h1>Important</h1>
 			{todos?.length && importantList ? (
 				<IonList inset>
@@ -579,6 +585,7 @@ export const Important = ({ onLoad }: { onLoad: () => void }) => {
 						{todos.map(todo => (
 							<IonItem
 								button
+								className="todo"
 								onClick={event => {
 									// Prevent the action sheet from opening when reordering
 									if (event.target['localName'] === 'ion-item') return
@@ -667,7 +674,7 @@ export const Important = ({ onLoad }: { onLoad: () => void }) => {
 					<p>Create some todos to get started</p>
 				</div>
 			)}
-		</>
+		</section>
 	)
 }
 
@@ -753,7 +760,7 @@ export const Icebox = ({
 	if (todos === undefined) return null
 
 	return (
-		<>
+		<section id="icebox">
 			<IonGrid>
 				<h1>Icebox</h1>
 				<IonRow>
@@ -773,7 +780,7 @@ export const Icebox = ({
 					)}
 				</IonRow>
 			</IonGrid>
-		</>
+		</section>
 	)
 }
 
@@ -786,7 +793,7 @@ export const IceboxItem = ({
 }) => {
 	return (
 		<IonCard
-			className="cursor-pointer"
+			className="cursor-pointer todo"
 			onClick={_event => {
 				onClick(todo)
 			}}

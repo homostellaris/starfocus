@@ -4,10 +4,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
       - run: npm ci
-      # TODO: Fix this once we know how to authenticate codegen in CI (or its changed to no longer need that)
-      # - run: npx convex codegen
-      # - run: npm run type-check
       - run: npm run lint
+      - run: npm run build
+        env:
+          CONVEX_DEPLOYMENT: ${{ vars.CONVEX_DEPLOYMENT }}
+          NEXT_PUBLIC_CONVEX_URL: ${{ vars.NEXT_PUBLIC_CONVEX_URL }}
+      - uses: cypress-io/github-action@v6
+        env:
+          NEXT_PUBLIC_CONVEX_URL: ${{ vars.NEXT_PUBLIC_CONVEX_URL }}
+        with:
+          start: npm start

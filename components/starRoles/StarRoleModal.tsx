@@ -107,8 +107,10 @@ export default function StarRoleModal({
 					type="text"
 					value={iconQuery}
 				>
+					{/* Conditionally rendering this  caused React errors, must be due to implemenation */}
 					<IonIcon
 						icon={icon?.value}
+						id="selected-icon"
 						slot="end"
 					/>
 				</IonInput>

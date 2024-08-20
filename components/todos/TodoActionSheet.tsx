@@ -44,6 +44,7 @@ export function useTodoActionSheet() {
 					},
 				],
 				header: todo.title,
+				id: 'todo-action-sheet',
 			})
 		},
 		dismissActionSheet,

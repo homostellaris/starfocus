@@ -51,6 +51,14 @@ export class DexieStarfocus extends Dexie {
 		super('starfocus', {
 			addons: [dexieCloud],
 		})
+		this.on.populate.subscribe(() => {
+			this.on.ready.subscribe((db: DexieStarfocus) => {
+				db.lists.put({
+					type: '#important',
+					order: [],
+				})
+			}, false)
+		})
 		this.version(3).stores({
 			todos: '@id, createdAt, completedAt, starRole, title',
 			lists: 'type',
