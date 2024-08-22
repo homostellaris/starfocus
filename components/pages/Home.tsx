@@ -561,6 +561,7 @@ export const Important = ({ onLoad }: { onLoad: () => void }) => {
 					<IonReorderGroup
 						disabled={false}
 						onIonItemReorder={async event => {
+							console.log({ event })
 							// We don't use this to reorder for us because it results in a flash of 'unordered' content.
 							// Instead we re-order right away, calculate the new order ourselves, and update the DB.
 							event.detail.complete()

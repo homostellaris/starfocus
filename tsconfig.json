@@ -23,7 +23,11 @@
         "name": "next"
       }
     ],
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "types": [
+      "cypress",
+      "@4tw/cypress-drag-drop"
+    ]
   },
   "include": [
     "next-env.d.ts",
@@ -33,5 +37,5 @@
   ],
   "exclude": [
     "node_modules"
-  ]
+  ],
 }
