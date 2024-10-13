@@ -6,7 +6,7 @@ it('works', () => {
 	cy.visit('/home')
 
 	cy.get('#log').contains('Log').should('be.visible')
-	cy.get('#important').contains('Important').should('be.visible')
+	cy.get('#wayfinder').contains('Wayfinder').should('be.visible')
 	cy.get('#icebox').contains('Icebox').should('be.visible')
 
 	cy.get('ion-fab-button').click()
@@ -82,18 +82,18 @@ it('works', () => {
 	)
 
 	cy.get('#icebox').contains('take the bins out').click()
-	cy.get('#todo-action-sheet').contains('Move to important').click()
-	cy.get('#important').contains('take the bins out')
+	cy.get('#todo-action-sheet').contains('Move to wayfinder').click()
+	cy.get('#wayfinder').contains('take the bins out')
 	cy.get('#todo-action-sheet').should('not.exist')
 
 	cy.get('#icebox').contains('be silly together').click()
-	cy.get('#todo-action-sheet').contains('Move to important').click()
-	cy.get('#important').contains('be silly together')
+	cy.get('#todo-action-sheet').contains('Move to wayfinder').click()
+	cy.get('#wayfinder').contains('be silly together')
 	cy.get('#todo-action-sheet').should('not.exist')
 
 	cy.get('#icebox').contains('plan birthday day out').click()
-	cy.get('#todo-action-sheet').contains('Move to important').click()
-	cy.get('#important').contains('plan birthday day out')
+	cy.get('#todo-action-sheet').contains('Move to wayfinder').click()
+	cy.get('#wayfinder').contains('plan birthday day out')
 	cy.get('#todo-action-sheet').should('not.exist')
 
 	assertLists(
@@ -103,14 +103,14 @@ it('works', () => {
 	)
 
 	// reorderImportantTodo(0, 2)
-	// cy.get('#important .todo')
+	// cy.get('#wayfinder .todo')
 	// 	.first()
 	// 	.find('ion-reorder')
 	// 	.shadow()
 	// 	.find('.reorder-icon')
 	// 	.shadow()
 	// 	.find('svg')
-	// 	.drag('#important .todo:nth-child(3)')
+	// 	.drag('#wayfinder .todo:nth-child(3)')
 	// assertLists(
 	// 	[],
 	// 	['be silly together', 'plan birthday day out', 'take the bins out'],
@@ -129,7 +129,7 @@ it('works', () => {
 	// 	[],
 	// )
 
-	cy.get('#important')
+	cy.get('#wayfinder')
 		.contains('.todo', 'take the bins out')
 		.find('ion-checkbox')
 		.click()
@@ -141,17 +141,17 @@ it('works', () => {
 	)
 })
 
-function assertLists(log: string[], important: string[], icebox: string[]) {
+function assertLists(log: string[], wayfinder: string[], icebox: string[]) {
 	cy.get('#log .todo')
 		.should('have.length', log.length)
 		.invoke('toArray')
 		.invoke('map', item => item.textContent)
 		.should('deep.equal', log)
-	cy.get('#important .todo')
-		.should('have.length', important.length)
+	cy.get('#wayfinder .todo')
+		.should('have.length', wayfinder.length)
 		.invoke('toArray')
 		.invoke('map', item => item.textContent)
-		.should('deep.equal', important)
+		.should('deep.equal', wayfinder)
 	cy.get('#icebox .todo')
 		.should('have.length', icebox.length)
 		.invoke('toArray')
@@ -159,8 +159,8 @@ function assertLists(log: string[], important: string[], icebox: string[]) {
 		.should('deep.equal', icebox)
 }
 
-function reorderImportantTodo(todoIndex: number, places: number) {
-	cy.get(`#important .todo`)
+function reorderWayfinderTodo(todoIndex: number, places: number) {
+	cy.get(`#wayfinder .todo`)
 		.eq(todoIndex)
 		.find('ion-reorder')
 		.shadow()

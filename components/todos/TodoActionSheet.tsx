@@ -31,14 +31,11 @@ export function useTodoActionSheet() {
 							action: 'delete',
 						},
 						handler: async () => {
-							db.transaction('rw', db.lists, db.todos, async () => {
-								await db.todos.delete(todo.id)
-								const important = await db.lists.get('#important')
-								if (important!.order.includes(todo.id)) {
-									await db.lists.update('#important', list => {
-										list.order = list.order.filter(id => id !== todo.id)
-									})
-								}
+							db.transaction('rw', db.wayfinderOrder, db.todos, async () => {
+								await Promise.all([
+									db.todos.delete(todo.id),
+									db.wayfinderOrder.delete(todo.id),
+								])
 							})
 						},
 					},

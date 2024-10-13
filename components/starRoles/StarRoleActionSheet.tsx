@@ -39,6 +39,7 @@ export function useStarRoleActionSheet() {
 										list.order = list.order.filter(id => id !== starRole.id)
 									})
 								}
+								// TODO: Set starRole to undefined on todos with this star role
 							})
 						},
 					},

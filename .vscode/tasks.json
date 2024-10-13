@@ -6,7 +6,7 @@
 			"dependsOn": [
 				"convex:dev",
 				"next:dev",
-				"test:dev"
+				// "test:dev"
 			]
 		},
 		{

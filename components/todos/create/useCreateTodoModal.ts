@@ -4,6 +4,7 @@ import { useCallback, useRef } from 'react'
 import { db, ListType, Todo } from '../../db'
 import useNoteProvider from '../../notes/useNoteProvider'
 import { CreateTodoModal } from './modal'
+import order from '../../common/order'
 
 export function useCreateTodoModal(): [
 	({
@@ -29,17 +30,23 @@ export function useCreateTodoModal(): [
 			if (todo.note && noteProvider) {
 				uri = await noteProvider.create({ content: todo.note })
 			}
-			db.transaction('rw', db.todos, db.lists, async () => {
-				const createdTodo = await db.todos.add({
+			await db.transaction('rw', db.todos, db.wayfinderOrder, async () => {
+				const createdTodoId = await db.todos.add({
 					createdAt: new Date(),
 					starRole: todo.starRole,
 					title: todo.title,
 					...(uri && { note: { uri } }),
 				})
-				if (location === ListType.important) {
-					const list = await db.lists.get('#important')
-					await db.lists.update('#important', {
-						order: [createdTodo, ...list!.order],
+
+				if (location === ListType.wayfinder) {
+					const wayfinderOrder = await db.wayfinderOrder.orderBy('order').keys()
+					console.debug({
+						order: order(undefined, wayfinderOrder[0]?.toString()),
+					})
+
+					await db.wayfinderOrder.add({
+						todoId: createdTodoId,
+						order: order(undefined, wayfinderOrder[0]?.toString()),
 					})
 				}
 			})

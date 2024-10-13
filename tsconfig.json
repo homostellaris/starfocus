@@ -26,7 +26,8 @@
     "strictNullChecks": true,
     "types": [
       "cypress",
-      "@4tw/cypress-drag-drop"
+      "@4tw/cypress-drag-drop",
+      "bun"
     ]
   },
   "include": [

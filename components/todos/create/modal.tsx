@@ -24,7 +24,7 @@ export function CreateTodoModal({
 			}}
 			onKeyDown={event => {
 				if (event.metaKey) {
-					locationSelect.current!.value = ListType.important
+					locationSelect.current!.value = ListType.wayfinder
 				}
 			}}
 			onKeyUp={event => {
@@ -41,8 +41,8 @@ export function CreateTodoModal({
 					value={ListType.icebox}
 				>
 					<IonSelectOption value={ListType.icebox}>Icebox</IonSelectOption>
-					<IonSelectOption value={ListType.important}>
-						Important
+					<IonSelectOption value={ListType.wayfinder}>
+						Wayfinder
 					</IonSelectOption>
 				</IonSelect>
 			}

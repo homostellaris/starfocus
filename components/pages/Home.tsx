@@ -61,15 +61,16 @@ import { SelectedTodoProvider } from '../todos/SelectedTodo'
 import { useTodoActionSheet } from '../todos/TodoActionSheet'
 import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
 import useView, { ViewProvider } from '../view'
+import order, { calculateReorderIndices, starMudder } from '../common/order'
 
 const Home = () => {
 	const [ready, setReady] = useState<{
 		log: boolean
-		important: boolean
+		wayfinder: boolean
 		icebox: boolean
 	}>({
 		log: false,
-		important: false,
+		wayfinder: false,
 		icebox: false,
 	})
 	const isLoading = useMemo(
@@ -147,9 +148,9 @@ const Home = () => {
 									limit={logLimit}
 									onLoad={() => setReady(state => ({ ...state, log: true }))}
 								/>
-								<Important
+								<Wayfinder
 									onLoad={() =>
-										setReady(state => ({ ...state, important: true }))
+										setReady(state => ({ ...state, wayfinder: true }))
 									}
 								/>
 								<Icebox
@@ -318,6 +319,20 @@ export const MiscMenu = () => {
 						await db.lists.update('#important', {
 							order: cleanedImportantOrder,
 						})
+
+						// Migrate to new important order
+						const wayfinderOrder = await db.wayfinderOrder
+							.orderBy('order')
+							.keys()
+						if (wayfinderOrder.length === 0) {
+							const oldOrder = await db.lists.get('#important')
+							const orderKeys = starMudder(oldOrder?.order.length)
+							const records = oldOrder?.order.map(todoId => ({
+								todoId,
+								order: orderKeys.shift(),
+							}))
+							db.wayfinderOrder.bulkAdd(records as any)
+						}
 					}}
 				>
 					Clean database
@@ -465,7 +480,6 @@ export const Log = ({
 
 	useEffect(() => {
 		if (todos !== undefined) {
-			console.log('READY')
 			onLoad()
 		}
 	}, [todos])
@@ -496,19 +510,28 @@ export const Log = ({
 									event.stopPropagation()
 								}}
 								onIonChange={async event => {
-									db.transaction('rw', db.todos, db.lists, async () => {
-										const list = await db.lists.get('#important')
-										await Promise.all([
-											db.lists.update('#important', {
-												order: [todo.id, ...list!.order],
-											}),
-											db.todos.update(todo.id, {
-												completedAt: event.detail.checked
-													? new Date()
-													: undefined,
-											}),
-										])
-									})
+									db.transaction(
+										'rw',
+										db.wayfinderOrder,
+										db.todos,
+										async () => {
+											const wayfinderOrder = await db.wayfinderOrder
+												.orderBy('order')
+												.limit(1)
+												.keys()
+											await Promise.all([
+												db.wayfinderOrder.add({
+													todoId: todo.id,
+													order: order(undefined, wayfinderOrder[0].toString()),
+												}),
+												db.todos.update(todo.id, {
+													completedAt: event.detail.checked
+														? new Date()
+														: undefined,
+												}),
+											])
+										},
+									)
 								}}
 								checked={!!todo.completedAt}
 							/>
@@ -529,17 +552,18 @@ export const Log = ({
 	)
 }
 
-export const Important = ({ onLoad }: { onLoad: () => void }) => {
+export const Wayfinder = ({ onLoad }: { onLoad: () => void }) => {
 	const { inActiveStarRoles, query } = useView()
 
-	const importantList = useLiveQuery(() => db.lists.get('#important'))
 	const todos = useLiveQuery(async () => {
-		console.debug('re-running important query')
-		if (importantList === undefined) return
-		return (await db.todos.bulkGet(importantList!.order)).filter(
-			todo => matchesQuery(query, todo!) && inActiveStarRoles(todo!),
-		) as Todo[]
-	}, [importantList, inActiveStarRoles, query])
+		const todoOrderItems = await db.wayfinderOrder.orderBy('order').toArray()
+		const todoIds = todoOrderItems.map(({ todoId }) => todoId)
+		return (await db.todos.bulkGet(todoIds))
+			.map((todo, index) => ({ ...todo!, order: todoOrderItems[index].order }))
+			.filter(
+				todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
+			) as (Todo & { order: string })[]
+	}, [inActiveStarRoles, query])
 
 	const starRoles = useLiveQuery(() => db.starRoles.toArray())
 
@@ -549,37 +573,66 @@ export const Important = ({ onLoad }: { onLoad: () => void }) => {
 		}
 	}, [todos])
 
+	const [debug, setDebug] = useState('')
+	useEffect(() => {
+		const params = new URLSearchParams(window.location.search)
+		const searchQuery = params.get('debug')
+		if (searchQuery) {
+			setDebug(searchQuery)
+		}
+	}, [])
+	console.debug({ debug })
+
 	const [present] = useTodoActionSheet()
 
 	if (todos === undefined) return null
 
 	return (
-		<section id="important">
-			<h1>Important</h1>
-			{todos?.length && importantList ? (
+		<section id="wayfinder">
+			<h1>Wayfinder</h1>
+			{todos?.length ? (
 				<IonList inset>
 					<IonReorderGroup
 						disabled={false}
 						onIonItemReorder={async event => {
-							console.log({ event })
 							// We don't use this to reorder for us because it results in a flash of 'unordered' content.
 							// Instead we re-order right away, calculate the new order ourselves, and update the DB.
 							event.detail.complete()
 
-							const fromIndex = importantList.order.indexOf(
-								todos[event.detail.from].id,
+							const wayfinderTodos = await db.wayfinderOrder
+								.orderBy('order')
+								.toArray()
+							/* If the todo moves down then all the todos after its target location must be nudged up
+							 * If the todo moves up then all the todos
+							 */
+							// TODO: Could make this easier with IDs in the DOM
+							const fromTodo = todos[event.detail.from]
+							const toTodo = todos[event.detail.to]
+							const unfilteredFromIndex = wayfinderTodos.findIndex(
+								({ todoId }) => todoId === fromTodo.id,
 							)
-							const toIndex = importantList.order.indexOf(
-								todos[event.detail.to].id,
+							const unfilteredToIndex = wayfinderTodos.findIndex(
+								({ todoId }) => todoId === toTodo.id,
 							)
-							const reorderedTodoIds = moveItemInArray(
-								importantList.order,
-								fromIndex,
-								toIndex,
+
+							const [startIndex, endIndex] = calculateReorderIndices(
+								unfilteredFromIndex,
+								unfilteredToIndex,
 							)
-							await db.lists.put({
-								type: '#important',
-								order: reorderedTodoIds,
+							const start = wayfinderTodos[startIndex]?.order
+							const end = wayfinderTodos[endIndex]?.order
+							const newOrder = order(start, end)
+
+							console.debug({
+								unfilteredFromIndex,
+								unfilteredToIndex,
+								start,
+								end,
+								newOrder,
+							})
+
+							await db.wayfinderOrder.update(fromTodo.id, {
+								order: newOrder,
 							})
 						}}
 					>
@@ -599,14 +652,8 @@ export const Important = ({ onLoad }: { onLoad: () => void }) => {
 													action: 'icebox',
 												},
 												handler: async () => {
-													db.transaction('rw', db.lists, async () => {
-														const list = await db.lists.get('#important')
-														await db.lists.update('#important', {
-															order: removeItemFromArray(
-																list!.order,
-																list!.order.indexOf(todo.id),
-															),
-														})
+													db.transaction('rw', db.wayfinderOrder, async () => {
+														await db.wayfinderOrder.delete(todo.id)
 													})
 												},
 											},
@@ -616,34 +663,32 @@ export const Important = ({ onLoad }: { onLoad: () => void }) => {
 								key={todo.id}
 							>
 								<IonCheckbox
-									aria-label="Uncomplete todo"
+									aria-label="Complete todo"
 									slot="start"
 									onClick={event => {
 										// Prevents the IonItem onClick from firing when completing a todo
 										event.stopPropagation()
 									}}
 									onIonChange={async event => {
-										const todoIds = [...todos.map(i => i.id)]
-										const orderWithoutItem = removeItemFromArray(
-											todoIds,
-											todoIds.indexOf(todo.id),
+										db.transaction(
+											'rw',
+											db.wayfinderOrder,
+											db.todos,
+											async () => {
+												await Promise.all([
+													db.wayfinderOrder.delete(todo.id),
+													db.todos.update(todo.id, {
+														completedAt: event.detail.checked
+															? new Date()
+															: undefined,
+													}),
+												])
+											},
 										)
-										db.transaction('rw', db.lists, db.todos, async () => {
-											await Promise.all([
-												db.lists.put({
-													type: '#important',
-													order: orderWithoutItem,
-												}),
-												db.todos.update(todo.id, {
-													completedAt: event.detail.checked
-														? new Date()
-														: undefined,
-												}),
-											])
-										})
 									}}
 								/>
 								<IonLabel>{todo?.title}</IonLabel>
+								{debug && <data className="text-gray-500">{todo.order}</data>}
 								{todo.starRole && (
 									<IonIcon
 										icon={getIonIcon(
@@ -690,10 +735,10 @@ export const Icebox = ({
 
 	const todos = useLiveQuery(async () => {
 		console.debug('re-running icebox query')
-		const importantList = await db.lists.get('#important')
+		const todoOrderItems = await db.wayfinderOrder.orderBy('order').toArray()
 		return db.todos
 			.where('id')
-			.noneOf(importantList!.order)
+			.noneOf(todoOrderItems.map(({ todoId }) => todoId))
 			.and(
 				todo =>
 					todo.completedAt === undefined &&
@@ -715,15 +760,19 @@ export const Icebox = ({
 			present(todo as Todo, {
 				buttons: [
 					{
-						text: 'Move to important',
+						text: 'Move to wayfinder',
 						data: {
-							action: 'important',
+							action: 'wayfinder',
 						},
 						handler: async () => {
-							db.transaction('rw', db.lists, async () => {
-								const list = await db.lists.get('#important')
-								db.lists.update('#important', {
-									order: [...list!.order, todo.id],
+							db.transaction('rw', db.wayfinderOrder, async () => {
+								const wayfinderOrder = await db.wayfinderOrder
+									.orderBy('order')
+									.limit(1)
+									.keys()
+								await db.wayfinderOrder.add({
+									todoId: todo.id,
+									order: order(undefined, wayfinderOrder[0].toString()),
 								})
 							})
 						},
@@ -824,17 +873,6 @@ export const Searchbar = forwardRef<HTMLIonSearchbarElement>(
 		)
 	},
 )
-
-function moveItemInArray<T>(
-	array: T[],
-	fromIndex: number,
-	toIndex: number,
-): T[] {
-	const newArray = [...array]
-	const item = newArray.splice(fromIndex, 1)[0]
-	newArray.splice(toIndex, 0, item)
-	return newArray
-}
 
 const removeItemFromArray = (array: any[], index: number): any[] => {
 	const newArray = [...array]
