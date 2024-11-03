@@ -59,12 +59,12 @@ export function ViewProvider({ children }: { children: React.ReactNode }) {
 			value={{
 				activeStarRoles,
 				activateStarRole: id => {
-					console.debug('activating')
+					console.debug('Activating')
 					setActiveStarRoles(prev => [...prev, id])
 				},
 				allStarRolesActive,
 				deactivateStarRole: id => {
-					console.debug('deactivating')
+					console.debug('Deactivating')
 					setActiveStarRoles(prev => prev?.filter(activeId => activeId !== id))
 				},
 				inActiveStarRoles,

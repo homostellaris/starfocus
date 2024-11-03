@@ -102,7 +102,7 @@ const Home = () => {
 	useEffect(() => {
 		setTimeout(() => {
 			// TODO: See if ionViewDidEnter works better than setTimeout
-			console.debug('scrolling to bottom', contentRef.current)
+			console.debug('Scrolling to bottom', contentRef.current)
 			contentRef.current?.scrollToBottom(500)
 			setTimeout(() => {
 				setEnablePagination(true)
@@ -464,7 +464,7 @@ export const Log = ({
 	const { inActiveStarRoles, query } = useView()
 
 	const todos = useLiveQuery(async () => {
-		console.debug('re-running log query')
+		console.debug('Re-running log query')
 		return db.todos
 			.orderBy('completedAt')
 			.reverse()
@@ -581,7 +581,6 @@ export const Wayfinder = ({ onLoad }: { onLoad: () => void }) => {
 			setDebug(searchQuery)
 		}
 	}, [])
-	console.debug({ debug })
 
 	const [present] = useTodoActionSheet()
 
@@ -623,7 +622,7 @@ export const Wayfinder = ({ onLoad }: { onLoad: () => void }) => {
 							const end = wayfinderTodos[endIndex]?.order
 							const newOrder = order(start, end)
 
-							console.debug({
+							console.debug('Re-ordering', {
 								unfilteredFromIndex,
 								unfilteredToIndex,
 								start,
@@ -734,7 +733,7 @@ export const Icebox = ({
 	const { inActiveStarRoles, query } = useView()
 
 	const todos = useLiveQuery(async () => {
-		console.debug('re-running icebox query')
+		console.debug('Re-running icebox query')
 		const todoOrderItems = await db.wayfinderOrder.orderBy('order').toArray()
 		return db.todos
 			.where('id')

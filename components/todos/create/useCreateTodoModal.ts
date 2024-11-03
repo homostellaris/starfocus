@@ -40,9 +40,6 @@ export function useCreateTodoModal(): [
 
 				if (location === ListType.wayfinder) {
 					const wayfinderOrder = await db.wayfinderOrder.orderBy('order').keys()
-					console.debug({
-						order: order(undefined, wayfinderOrder[0]?.toString()),
-					})
 
 					await db.wayfinderOrder.add({
 						todoId: createdTodoId,
