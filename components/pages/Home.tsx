@@ -391,7 +391,7 @@ export const ViewMenu = () => {
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
-				<IonButton href="/constellation">Edit roles</IonButton>
+				<IonButton routerLink="/constellation">Edit roles</IonButton>
 				{isLoading ? (
 					<IonSpinner
 						className="w-20 h-20"
