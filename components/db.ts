@@ -81,7 +81,7 @@ export class DexieStarfocus extends Dexie {
 			todos: '@id, createdAt, completedAt, starRole, title',
 		})
 		this.cloud.configure({
-			databaseUrl: 'https://z0vnq74nz.dexie.cloud',
+			databaseUrl: process.env.NEXT_PUBLIC_DATABASE_URL!,
 			requireAuth: false,
 		})
 	}
