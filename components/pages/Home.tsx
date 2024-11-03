@@ -40,6 +40,7 @@ import {
 	checkmarkDoneCircleSharp,
 	documentText,
 	filterSharp,
+	locateOutline,
 	rocketSharp,
 } from 'ionicons/icons'
 import _ from 'lodash'
@@ -372,6 +373,7 @@ export const ViewMenu = () => {
 	const starRoles = useLiveQuery(() => db.starRoles.toArray())
 	const isLoading = starRoles === undefined
 	const {
+		activateAllStarRoles,
 		activateStarRole,
 		activeStarRoles,
 		deactivateStarRole,
@@ -401,9 +403,10 @@ export const ViewMenu = () => {
 					<div className="space-y-2">
 						<IonList>
 							<IonItem>
+								All
 								<IonToggle
 									checked={starRoles.length + 1 === activeStarRoles.length}
-									color="success"
+									color="secondary"
 									className="font-bold"
 									onIonChange={event => {
 										if (event.detail.checked) {
@@ -412,14 +415,28 @@ export const ViewMenu = () => {
 											setActiveStarRoles([])
 										}
 									}}
-								>
-									All
-								</IonToggle>
+									slot="end"
+								></IonToggle>
 							</IonItem>
 							<IonItem>
+								None
+								<IonButton
+									fill="clear"
+									onClick={() => {
+										setActiveStarRoles([''])
+									}}
+									shape="round"
+									slot="end"
+									size="small"
+								>
+									<IonIcon
+										icon={locateOutline}
+										slot="icon-only"
+									></IonIcon>
+								</IonButton>
 								<IonToggle
 									checked={activeStarRoles.includes('')}
-									color="success"
+									color="secondary"
 									onIonChange={event => {
 										if (event.detail.checked) {
 											activateStarRole('')
@@ -427,23 +444,36 @@ export const ViewMenu = () => {
 											deactivateStarRole('')
 										}
 									}}
-								>
-									None
-								</IonToggle>
+									slot="end"
+								></IonToggle>
 							</IonItem>
 							{starRoles.map(starRole => (
 								<IonItem key={starRole.id}>
+									{starRole?.title}
+									<IonButton
+										fill="clear"
+										onClick={() => {
+											setActiveStarRoles([starRole.id])
+										}}
+										shape="round"
+										slot="end"
+										size="small"
+									>
+										<IonIcon
+											icon={locateOutline}
+											slot="icon-only"
+										></IonIcon>
+									</IonButton>
 									<IonToggle
 										checked={activeStarRoles.includes(starRole.id)}
-										color="success"
+										color="secondary"
 										onIonChange={event => {
 											event.detail.checked
 												? activateStarRole(starRole.id)
 												: deactivateStarRole(starRole.id)
 										}}
-									>
-										{starRole?.title}
-									</IonToggle>
+										slot="end"
+									></IonToggle>
 								</IonItem>
 							))}
 						</IonList>

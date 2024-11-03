@@ -4,15 +4,18 @@ import {
 	useCallback,
 	useContext,
 	useEffect,
+	useMemo,
 	useState,
 } from 'react'
 import { db, StarRole, Todo } from '../db'
 
 interface View {
 	activeStarRoles: string[]
+	activateAllStarRoles: () => void
 	activateStarRole: (id: StarRole['id']) => void
 	allStarRolesActive: boolean
 	deactivateStarRole: (id: StarRole['id']) => void
+	focusedStarRole: null | StarRole['id']
 	inActiveStarRoles: (todo: Todo) => boolean
 	setActiveStarRoles: (ids: string[]) => void
 	starRolesCount: number
@@ -22,9 +25,11 @@ interface View {
 
 export const ViewContext = createContext<View>({
 	activeStarRoles: [],
+	activateAllStarRoles: () => null,
 	activateStarRole: () => null,
 	allStarRolesActive: true,
 	deactivateStarRole: () => null,
+	focusedStarRole: null,
 	inActiveStarRoles: () => true,
 	setActiveStarRoles: () => null,
 	starRolesCount: 0,
@@ -53,11 +58,19 @@ export function ViewProvider({ children }: { children: React.ReactNode }) {
 		},
 		[activeStarRoles, allStarRolesActive],
 	)
+	const activateAllStarRoles = useCallback(() => {
+		setActiveStarRoles([...starRoles!.map(({ id }) => id), ''])
+	}, [setActiveStarRoles, starRoles])
+	const focusedStarRole = useMemo(
+		() => (activeStarRoles.length === 1 && activeStarRoles[0]) || null,
+		[activeStarRoles],
+	)
 
 	return (
 		<ViewContext.Provider
 			value={{
 				activeStarRoles,
+				activateAllStarRoles,
 				activateStarRole: id => {
 					console.debug('Activating')
 					setActiveStarRoles(prev => [...prev, id])
@@ -67,6 +80,7 @@ export function ViewProvider({ children }: { children: React.ReactNode }) {
 					console.debug('Deactivating')
 					setActiveStarRoles(prev => prev?.filter(activeId => activeId !== id))
 				},
+				focusedStarRole,
 				inActiveStarRoles,
 				setActiveStarRoles,
 				starRolesCount: starRoles?.length || 0,
