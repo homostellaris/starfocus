@@ -687,7 +687,12 @@ export const Wayfinder = ({ onLoad }: { onLoad: () => void }) => {
 									}}
 								/>
 								<IonLabel>{todo?.title}</IonLabel>
-								{debug && <data className="text-gray-500">{todo.order}</data>}
+								{debug && (
+									<span className="space-x-2">
+										<data className="text-gray-500">{todo.id}</data>
+										<data className="text-gray-500">{todo.order}</data>
+									</span>
+								)}
 								{todo.starRole && (
 									<IonIcon
 										icon={getIonIcon(
