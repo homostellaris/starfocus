@@ -1,5 +1,5 @@
 before(() => {
-	indexedDB.deleteDatabase('starfocus-zy0myinc2')
+	indexedDB.deleteDatabase('starfocus-z0vnq74nz')
 })
 
 it('works', () => {
