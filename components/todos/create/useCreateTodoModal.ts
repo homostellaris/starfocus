@@ -5,20 +5,25 @@ import { db, ListType, Todo } from '../../db'
 import useNoteProvider from '../../notes/useNoteProvider'
 import { CreateTodoModal } from './modal'
 import order from '../../common/order'
+import useSelectedTodo from '../SelectedTodo'
 
 export function useCreateTodoModal(): [
 	({
 		onWillDismiss,
+		todo,
 	}: {
 		onWillDismiss: HookOverlayOptions['onWillDismiss']
+		todo: any
 	}) => void,
 	(data?: any, role?: string) => void,
 ] {
+	const [todo, setTodo] = useSelectedTodo()
 	const titleInput = useRef<HTMLIonInputElement>(null)
 	const [present, dismiss] = useIonModal(CreateTodoModal, {
 		dismiss: (data: string, role: string) => dismiss(data, role),
 		title: 'Create todo',
 		titleInput,
+		todo,
 	})
 
 	const noteProvider = useNoteProvider()
@@ -52,10 +57,13 @@ export function useCreateTodoModal(): [
 	)
 
 	return [
-		({ onWillDismiss }: HookOverlayOptions) => {
+		({ onWillDismiss, todo }: HookOverlayOptions & { todo: Todo }) => {
 			present({
 				onDidPresent: _event => {
 					titleInput.current?.setFocus()
+				},
+				onWillPresent: () => {
+					setTodo(todo)
 				},
 				onWillDismiss: event => {
 					if (event.detail.role === 'confirm') {

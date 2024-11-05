@@ -65,6 +65,67 @@ import useView, { ViewProvider } from '../view'
 import order, { calculateReorderIndices, starMudder } from '../common/order'
 
 const Home = () => {
+	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
+	useGlobalKeyboardShortcuts(searchbarRef)
+
+	return (
+		<>
+			<ViewProvider>
+				<SelectedTodoProvider>
+					<MiscMenu />
+					<ViewMenu />
+					<IonPage id="main-content">
+						<Header title="Home" />
+						<TodoLists />
+						<IonFooter>
+							<IonToolbar>
+								<IonButtons slot="primary">
+									<IonButton
+										id="view-menu-button"
+										onClick={() => {
+											menuController.toggle('end')
+										}}
+									>
+										<IonIcon
+											icon={filterSharp}
+											slot="icon-only"
+										/>
+									</IonButton>
+								</IonButtons>
+								<IonButtons
+									id="misc-menu-button"
+									slot="start"
+								>
+									<IonMenuButton></IonMenuButton>
+								</IonButtons>
+								<Searchbar ref={searchbarRef} />
+							</IonToolbar>
+						</IonFooter>
+					</IonPage>
+				</SelectedTodoProvider>
+			</ViewProvider>
+		</>
+	)
+}
+
+export default Home
+
+export const TodoLists = ({}: {}) => {
+	// Initial loading & scrolling stuff
+	const contentRef = useRef<HTMLIonContentElement>(null)
+	const [enablePagination, setEnablePagination] = useState(false)
+	useEffect(() => {
+		setTimeout(() => {
+			// TODO: See if ionViewDidEnter works better than setTimeout
+			console.debug('Scrolling to bottom', contentRef.current)
+			contentRef.current?.scrollToBottom(500)
+			setTimeout(() => {
+				setEnablePagination(true)
+			}, 500)
+		}, 200)
+	}, [])
+
+	// Loading spinner stuff
 	const [ready, setReady] = useState<{
 		log: boolean
 		wayfinder: boolean
@@ -79,142 +140,108 @@ const Home = () => {
 		[ready],
 	)
 
+	// Query stuff
 	const [logLimit, setLogLimit] = useState(7)
 	const [iceboxLimit, setIceboxLimit] = useState(30)
 
 	// Creating todo stuff
 	const fab = useRef<HTMLIonFabElement>(null)
-	const [presentCreateTodoModal, dismiss] = useCreateTodoModal()
+	const { focusedStarRole } = useView()
+	const [presentCreateTodoModal, _dismiss] = useCreateTodoModal()
 	const openCreateTodoModal = useCallback(() => {
 		presentCreateTodoModal({
 			onWillDismiss: () => {
 				if (fab.current) fab.current.activated = false
 			},
+			todo: {
+				starRole: focusedStarRole,
+			},
 		})
-	}, [fab, presentCreateTodoModal])
+	}, [fab, focusedStarRole, presentCreateTodoModal])
 
-	const contentRef = useRef<HTMLIonContentElement>(null)
-	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
-
-	useGlobalKeyboardShortcuts(contentRef, searchbarRef, fab, openCreateTodoModal)
-
-	const [enablePagination, setEnablePagination] = useState(false)
-
+	// Keyboard shortcut stuff
 	useEffect(() => {
-		setTimeout(() => {
-			// TODO: See if ionViewDidEnter works better than setTimeout
-			console.debug('Scrolling to bottom', contentRef.current)
-			contentRef.current?.scrollToBottom(500)
-			setTimeout(() => {
-				setEnablePagination(true)
-			}, 500)
-		}, 200)
-	}, [])
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.target !== document.body) return
+
+			if (event.key === 'c') {
+				event.preventDefault()
+				openCreateTodoModal()
+				if (fab.current) fab.current.activated = true
+			} else if (event.key === 's') {
+				event.preventDefault()
+				contentRef.current?.scrollToBottom(500)
+			}
+		}
+		document.addEventListener('keydown', handleKeyDown)
+		return () => {
+			document.removeEventListener('keydown', handleKeyDown)
+		}
+	}, [contentRef, fab, openCreateTodoModal])
 
 	return (
-		<>
-			<ViewProvider>
-				<MiscMenu />
-				<ViewMenu />
-				<IonPage id="main-content">
-					<Header title="Home" />
-					<IonContent
-						className="ion-padding"
-						fullscreen
-						ref={contentRef}
-					>
-						{isLoading && (
-							<div className="flex items-center justify-center h-full">
-								<IonSpinner
-									className="w-20 h-20"
-									name="dots"
-								/>
-							</div>
-						)}
-						<>
-							<IonInfiniteScroll
-								className="h-1"
-								disabled={!enablePagination}
-								position="top"
-								threshold="0px"
-								onIonInfinite={event => {
-									setLogLimit(limit => limit + 10)
-									setTimeout(() => event.target.complete(), 500)
-								}}
-							>
-								<IonInfiniteScrollContent></IonInfiniteScrollContent>
-							</IonInfiniteScroll>
-							<SelectedTodoProvider>
-								<Log
-									limit={logLimit}
-									onLoad={() => setReady(state => ({ ...state, log: true }))}
-								/>
-								<Wayfinder
-									onLoad={() =>
-										setReady(state => ({ ...state, wayfinder: true }))
-									}
-								/>
-								<Icebox
-									limit={iceboxLimit}
-									onLoad={() => setReady(state => ({ ...state, icebox: true }))}
-								/>
-							</SelectedTodoProvider>
-							<IonInfiniteScroll
-								disabled={!enablePagination}
-								position="bottom"
-								threshold="0px"
-								onIonInfinite={event => {
-									setIceboxLimit(limit => limit + 10)
-									setTimeout(() => event.target.complete(), 500)
-								}}
-							>
-								<IonInfiniteScrollContent></IonInfiniteScrollContent>
-							</IonInfiniteScroll>
-							<IonFab
-								ref={fab}
-								slot="fixed"
-								vertical="bottom"
-								horizontal="end"
-							>
-								<IonFabButton onClick={openCreateTodoModal}>
-									<IonIcon icon={add}></IonIcon>
-								</IonFabButton>
-							</IonFab>
-						</>
-					</IonContent>
-					<IonFooter>
-						<IonToolbar>
-							<IonButtons slot="primary">
-								<IonButton
-									id="view-menu-button"
-									onClick={() => {
-										menuController.toggle('end')
-									}}
-								>
-									<IonIcon
-										icon={filterSharp}
-										slot="icon-only"
-									/>
-								</IonButton>
-							</IonButtons>
-							<IonButtons
-								id="misc-menu-button"
-								slot="start"
-							>
-								<IonMenuButton></IonMenuButton>
-							</IonButtons>
-							<Searchbar ref={searchbarRef} />
-						</IonToolbar>
-					</IonFooter>
-				</IonPage>
-			</ViewProvider>
-		</>
+		<IonContent
+			className="ion-padding"
+			fullscreen
+			ref={contentRef}
+		>
+			{isLoading && (
+				<div className="flex items-center justify-center h-full">
+					<IonSpinner
+						className="w-20 h-20"
+						name="dots"
+					/>
+				</div>
+			)}
+			<>
+				<IonInfiniteScroll
+					className="h-1"
+					disabled={!enablePagination}
+					position="top"
+					threshold="0px"
+					onIonInfinite={event => {
+						setLogLimit(limit => limit + 10)
+						setTimeout(() => event.target.complete(), 500)
+					}}
+				>
+					<IonInfiniteScrollContent></IonInfiniteScrollContent>
+				</IonInfiniteScroll>
+				<Log
+					limit={logLimit}
+					onLoad={() => setReady(state => ({ ...state, log: true }))}
+				/>
+				<Wayfinder
+					onLoad={() => setReady(state => ({ ...state, wayfinder: true }))}
+				/>
+				<Icebox
+					limit={iceboxLimit}
+					onLoad={() => setReady(state => ({ ...state, icebox: true }))}
+				/>
+				<IonInfiniteScroll
+					disabled={!enablePagination}
+					position="bottom"
+					threshold="0px"
+					onIonInfinite={event => {
+						setIceboxLimit(limit => limit + 10)
+						setTimeout(() => event.target.complete(), 500)
+					}}
+				>
+					<IonInfiniteScrollContent></IonInfiniteScrollContent>
+				</IonInfiniteScroll>
+				<IonFab
+					ref={fab}
+					slot="fixed"
+					vertical="bottom"
+					horizontal="end"
+				>
+					<IonFabButton onClick={openCreateTodoModal}>
+						<IonIcon icon={add}></IonIcon>
+					</IonFabButton>
+				</IonFab>
+			</>
+		</IonContent>
 	)
 }
-
-export default Home
-
-export const SyncState = () => {}
 
 export const MiscMenu = () => {
 	const settings = useSettings()
@@ -373,7 +400,6 @@ export const ViewMenu = () => {
 	const starRoles = useLiveQuery(() => db.starRoles.toArray())
 	const isLoading = starRoles === undefined
 	const {
-		activateAllStarRoles,
 		activateStarRole,
 		activeStarRoles,
 		deactivateStarRole,
@@ -926,10 +952,7 @@ function matchesQuery(query: string, todo: Todo) {
 }
 
 function useGlobalKeyboardShortcuts(
-	contentRef: RefObject<HTMLIonContentElement>,
 	searchbarRef: RefObject<HTMLIonSearchbarElement>,
-	fab: RefObject<HTMLIonFabElement>,
-	openCreateTodoModal: any,
 ) {
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -943,21 +966,10 @@ function useGlobalKeyboardShortcuts(
 				event.preventDefault()
 				menuController.toggle('end')
 			}
-
-			if (event.target !== document.body) return
-
-			if (event.key === 'c') {
-				event.preventDefault()
-				openCreateTodoModal()
-				if (fab.current) fab.current.activated = true
-			} else if (event.key === 's') {
-				event.preventDefault()
-				contentRef.current?.scrollToBottom(500)
-			}
 		}
 		document.addEventListener('keydown', handleKeyDown)
 		return () => {
 			document.removeEventListener('keydown', handleKeyDown)
 		}
-	}, [contentRef, fab, openCreateTodoModal, searchbarRef])
+	}, [searchbarRef])
 }
