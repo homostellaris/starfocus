@@ -10,17 +10,17 @@
 			]
 		},
 		{
-			"type": "npm",
+			"type": "bun",
 			"label": "convex:dev",
 			"script": "convex:dev"
 		},
 		{
-			"type": "npm",
+			"type": "bun",
 			"label": "next:dev",
 			"script": "next:dev"
 		},
 		{
-			"type": "npm",
+			"type": "bun",
 			"label": "test:dev",
 			"script": "test:dev",
 		}

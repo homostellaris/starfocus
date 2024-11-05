@@ -17,8 +17,8 @@
 	],
 	"scripts": {
 		"android:dev": "next build && cap sync && mv out/home.html out/index.html && cap run android",
-		"build": "npm run convex:codegen && next build",
-		"check": "bun test && npm run type-check && npm run lint && npm run test",
+		"build": "bun run convex:codegen && next build",
+		"check": "bun test && bun run type-check && bun run lint && bun run test",
 		"convex:codegen": "convex codegen --typecheck=disable",
 		"convex:dev": "convex dev --typecheck=disable",
 		"convex:deploy": "convex deploy --typecheck=disable",
