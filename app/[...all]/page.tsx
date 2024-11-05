@@ -6,7 +6,14 @@ const LazyApp = dynamic(() => import('../../components/App'), {
 })
 
 export async function generateStaticParams() {
-	return [{ all: ['home'] }, { all: ['constellation'] }, { all: ['settings'] }]
+	return [
+		{ all: ['home'] },
+		{ all: ['constellation'] },
+		{ all: ['settings'] },
+		{
+			all: ['/icon.png'],
+		},
+	]
 }
 
 export default function Page() {

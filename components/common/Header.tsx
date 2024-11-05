@@ -31,7 +31,7 @@ export const Header = ({ title }: { title: string }) => {
 		<IonHeader>
 			<IonToolbar>
 				<IonImg
-					src="/logo.png"
+					src="/icon.png"
 					slot="start"
 					className="w-10 h-10 ml-4"
 				/>
