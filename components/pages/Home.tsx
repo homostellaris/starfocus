@@ -831,7 +831,7 @@ export const Icebox = ({
 									.keys()
 								await db.wayfinderOrder.add({
 									todoId: todo.id,
-									order: order(undefined, wayfinderOrder[0].toString()),
+									order: order(undefined, wayfinderOrder[0]?.toString()),
 								})
 							})
 						},
