@@ -98,7 +98,7 @@ it('works', () => {
 
 	assertLists(
 		[],
-		['take the bins out', 'be silly together', 'plan birthday day out'],
+		['plan birthday day out', 'be silly together', 'take the bins out'],
 		[],
 	)
 
@@ -136,7 +136,7 @@ it('works', () => {
 
 	assertLists(
 		['take the bins out'],
-		['be silly together', 'plan birthday day out'],
+		['plan birthday day out', 'be silly together'],
 		[],
 	)
 })
