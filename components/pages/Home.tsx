@@ -65,8 +65,7 @@ import useView, { ViewProvider } from '../view'
 import order, { calculateReorderIndices, starMudder } from '../common/order'
 
 const Home = () => {
-	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
-	useGlobalKeyboardShortcuts(searchbarRef)
+	useGlobalKeyboardShortcuts()
 
 	return (
 		<>
@@ -98,7 +97,7 @@ const Home = () => {
 								>
 									<IonMenuButton></IonMenuButton>
 								</IonButtons>
-								<Searchbar ref={searchbarRef} />
+								<Searchbar />
 							</IonToolbar>
 						</IonFooter>
 					</IonPage>
@@ -915,24 +914,45 @@ export const IceboxItem = ({
 	)
 }
 
-export const Searchbar = forwardRef<HTMLIonSearchbarElement>(
-	function Searchbar(_props, searchbarRef) {
-		const { setQuery } = useView()
+export const Searchbar = () => {
+	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
 
-		return (
-			<IonSearchbar
-				ref={searchbarRef}
-				debounce={100}
-				onIonInput={event => {
-					const target = event.target as HTMLIonSearchbarElement
-					let query = ''
-					if (target?.value) query = target.value.toLowerCase()
-					setQuery(query)
-				}}
-			></IonSearchbar>
-		)
-	},
-)
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === '/') {
+				event.preventDefault()
+				searchbarRef.current?.setFocus()
+			}
+		}
+		document.addEventListener('keydown', handleKeyDown)
+		return () => {
+			document.removeEventListener('keydown', handleKeyDown)
+		}
+	})
+	const { setQuery } = useView()
+
+	return (
+		<IonSearchbar
+			ref={searchbarRef}
+			debounce={100}
+			/* Binding to the capture phase allows the searchbar to complete its native behaviour of clearing the input.
+			 * Without this the input would blur but the input would still have a value and the todos would still be filtered. */
+			onKeyDownCapture={event => {
+				if (event.key === 'Escape') {
+					// TS complains unless we narrow the type
+					if (document.activeElement instanceof HTMLElement)
+						document.activeElement.blur()
+				}
+			}}
+			onIonInput={event => {
+				const target = event.target as HTMLIonSearchbarElement
+				let query = ''
+				if (target?.value) query = target.value.toLowerCase()
+				setQuery(query)
+			}}
+		></IonSearchbar>
+	)
+}
 
 const removeItemFromArray = (array: any[], index: number): any[] => {
 	const newArray = [...array]
@@ -951,15 +971,10 @@ function matchesQuery(query: string, todo: Todo) {
 	return todo?.title.toLowerCase().includes(query)
 }
 
-function useGlobalKeyboardShortcuts(
-	searchbarRef: RefObject<HTMLIonSearchbarElement>,
-) {
+function useGlobalKeyboardShortcuts() {
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === '/') {
-				event.preventDefault()
-				searchbarRef.current?.setFocus()
-			} else if (event.key === '[') {
+			if (event.key === '[') {
 				event.preventDefault()
 				menuController.toggle('start')
 			} else if (event.key === ']') {
@@ -971,5 +986,5 @@ function useGlobalKeyboardShortcuts(
 		return () => {
 			document.removeEventListener('keydown', handleKeyDown)
 		}
-	}, [searchbarRef])
+	}, [])
 }
