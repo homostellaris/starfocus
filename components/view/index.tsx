@@ -37,20 +37,41 @@ export const ViewContext = createContext<View>({
 	setQuery: () => null,
 })
 
+const noStarRole = ''
+
 export function ViewProvider({ children }: { children: React.ReactNode }) {
 	const [query, setQuery] = useState<string>('')
 
 	const starRoles = useLiveQuery(() => db.starRoles.toArray())
+	const starRolesIncludingNoStarRole = useMemo(
+		() => [...(starRoles || []).map(({ id }) => id), noStarRole],
+		[starRoles],
+	)
+
 	const [activeStarRoles, setActiveStarRoles] = useState<string[]>([])
 	useEffect(() => {
-		if (!starRoles) return
+		if (!starRolesIncludingNoStarRole) return
 		/* In the rare event that a star role is added or removed we're happy to reset the state because
 		   it's not clear whether the user would want the new star role to be active or not. */
-		setActiveStarRoles([...starRoles.map(({ id }) => id), ''])
-	}, [starRoles])
-	const allStarRolesActive = activeStarRoles.length === (starRoles?.length || 0)
+		setActiveStarRoles(starRolesIncludingNoStarRole)
+	}, [starRolesIncludingNoStarRole])
+
+	const focusedStarRole = useMemo(
+		() => (activeStarRoles.length === 1 && activeStarRoles[0]) || null,
+		[activeStarRoles],
+	)
+	const allStarRolesActive =
+		activeStarRoles.length === starRolesIncludingNoStarRole.length
+
 	const inActiveStarRoles = useCallback(
 		(todo: Todo) => {
+			if (todo.starRole === 'str0PBouoSd4NWkh6Em771Nj0Ojcom') {
+				console.log('in active star role', {
+					todo,
+					allStarRolesActive,
+					activeStarRoles,
+				})
+			}
 			if (allStarRolesActive) return true
 			if (!todo.starRole && activeStarRoles.includes('')) return true
 			if (!todo.starRole) return false
@@ -61,10 +82,6 @@ export function ViewProvider({ children }: { children: React.ReactNode }) {
 	const activateAllStarRoles = useCallback(() => {
 		setActiveStarRoles([...starRoles!.map(({ id }) => id), ''])
 	}, [setActiveStarRoles, starRoles])
-	const focusedStarRole = useMemo(
-		() => (activeStarRoles.length === 1 && activeStarRoles[0]) || null,
-		[activeStarRoles],
-	)
 
 	return (
 		<ViewContext.Provider
