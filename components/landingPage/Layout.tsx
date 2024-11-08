@@ -4,7 +4,7 @@ import Footer from '../common/Footer'
 import Planets from '../common/Planets'
 import { ScrollDirection } from '../common/scroll'
 import Contact from './Contact'
-import Starship from './Journey/Starship'
+import Starship from '../common/Starship'
 import Tracjectory from './Journey/Trajectory'
 
 const Layout = ({

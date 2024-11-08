@@ -33,7 +33,7 @@ export const Header = ({ title }: { title: string }) => {
 				<IonImg
 					src="/icon.png"
 					slot="start"
-					className="w-10 h-10 ml-4"
+					className="w-10 h-10 ml-2" // Needs to align with starship and trajectory
 				/>
 				<IonTitle>{title}</IonTitle>
 				<IonButtons

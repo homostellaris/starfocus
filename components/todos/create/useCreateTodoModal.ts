@@ -5,7 +5,7 @@ import { db, ListType, Todo } from '../../db'
 import useNoteProvider from '../../notes/useNoteProvider'
 import { CreateTodoModal } from './modal'
 import order from '../../common/order'
-import useSelectedTodo from '../SelectedTodo'
+import useTodoContext from '../TodoContext'
 
 export function useCreateTodoModal(): [
 	({
@@ -17,7 +17,9 @@ export function useCreateTodoModal(): [
 	}) => void,
 	(data?: any, role?: string) => void,
 ] {
-	const [todo, setTodo] = useSelectedTodo()
+	const {
+		selectedTodo: [todo, setTodo],
+	} = useTodoContext()
 	const titleInput = useRef<HTMLIonInputElement>(null)
 	const [present, dismiss] = useIonModal(CreateTodoModal, {
 		dismiss: (data: string, role: string) => dismiss(data, role),

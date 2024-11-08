@@ -6,6 +6,7 @@ import {
 	IonCardHeader,
 	IonCardTitle,
 	IonCheckbox,
+	IonCol,
 	IonContent,
 	IonFab,
 	IonFabButton,
@@ -33,11 +34,14 @@ import {
 	IonToast,
 	IonToggle,
 	IonToolbar,
+	useIonViewDidEnter,
+	useIonViewDidLeave,
+	useIonViewWillEnter,
+	useIonViewWillLeave,
 } from '@ionic/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
 	add,
-	checkmarkDoneCircleSharp,
 	documentText,
 	filterSharp,
 	locateOutline,
@@ -45,10 +49,10 @@ import {
 } from 'ionicons/icons'
 import _ from 'lodash'
 import {
-	forwardRef,
 	RefObject,
 	useCallback,
 	useEffect,
+	useLayoutEffect,
 	useMemo,
 	useRef,
 	useState,
@@ -58,11 +62,14 @@ import { db, Todo } from '../db'
 import NoteProviders from '../notes/providers'
 import useSettings from '../settings/useSettings'
 import { getIonIcon } from '../starRoles/icons'
-import { SelectedTodoProvider } from '../todos/SelectedTodo'
+import useTodoContext, { TodoContextProvider } from '../todos/TodoContext'
 import { useTodoActionSheet } from '../todos/TodoActionSheet'
 import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
 import useView, { ViewProvider } from '../view'
 import order, { calculateReorderIndices, starMudder } from '../common/order'
+import Tracjectory from '../landingPage/Journey/Trajectory'
+import Starship from '../common/Starship'
+import { useStarshipYPosition } from '../demo/Journey'
 
 const Home = () => {
 	useGlobalKeyboardShortcuts()
@@ -70,7 +77,7 @@ const Home = () => {
 	return (
 		<>
 			<ViewProvider>
-				<SelectedTodoProvider>
+				<TodoContextProvider>
 					<MiscMenu />
 					<ViewMenu />
 					<IonPage id="main-content">
@@ -101,7 +108,7 @@ const Home = () => {
 							</IonToolbar>
 						</IonFooter>
 					</IonPage>
-				</SelectedTodoProvider>
+				</TodoContextProvider>
 			</ViewProvider>
 		</>
 	)
@@ -113,31 +120,16 @@ export const TodoLists = ({}: {}) => {
 	// Initial loading & scrolling stuff
 	const contentRef = useRef<HTMLIonContentElement>(null)
 	const [enablePagination, setEnablePagination] = useState(false)
-	useEffect(() => {
-		setTimeout(() => {
-			// TODO: See if ionViewDidEnter works better than setTimeout
-			console.debug('Scrolling to bottom', contentRef.current)
-			contentRef.current?.scrollToBottom(500)
-			setTimeout(() => {
-				setEnablePagination(true)
-			}, 500)
-		}, 200)
-	}, [])
-
-	// Loading spinner stuff
-	const [ready, setReady] = useState<{
-		log: boolean
-		wayfinder: boolean
-		icebox: boolean
-	}>({
-		log: false,
-		wayfinder: false,
-		icebox: false,
-	})
-	const isLoading = useMemo(
-		() => Object.values(ready).some(ready => ready === false),
-		[ready],
-	)
+	// useEffect(() => {
+	// 	setTimeout(() => {
+	// 		// TODO: See if ionViewDidEnter works better than setTimeout
+	// 		console.debug('Scrolling to bottom', contentRef.current)
+	// 		contentRef.current?.scrollToBottom(500)
+	// 		setTimeout(() => {
+	// 			setEnablePagination(true)
+	// 		}, 500)
+	// 	}, 200)
+	// }, [])
 
 	// Query stuff
 	const [logLimit, setLogLimit] = useState(7)
@@ -178,66 +170,373 @@ export const TodoLists = ({}: {}) => {
 		}
 	}, [contentRef, fab, openCreateTodoModal])
 
+	const { inActiveStarRoles, query } = useView()
+
+	const todos = useLiveQuery(async () => {
+		const logTodosPromise = db.todos
+			.orderBy('completedAt')
+			.reverse()
+			.filter(
+				todo =>
+					!!todo.completedAt &&
+					matchesQuery(query, todo) &&
+					inActiveStarRoles(todo),
+			)
+			.limit(logLimit)
+			.toArray()
+
+		const todoOrderItems = await db.wayfinderOrder.orderBy('order').toArray()
+		const todoIds = todoOrderItems.map(({ todoId }) => todoId)
+		const wayfinderTodosPromise = db.todos.bulkGet(todoIds).then(todoIds => {
+			return todoIds
+				.map((todo, index) => ({
+					...todo!,
+					order: todoOrderItems[index].order,
+				}))
+				.filter(
+					todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
+				) as (Todo & { order: string })[]
+		})
+
+		const iceboxTodosPromise = db.todos
+			.where('id')
+			.noneOf(todoOrderItems.map(({ todoId }) => todoId))
+			.and(
+				todo =>
+					todo.completedAt === undefined &&
+					matchesQuery(query, todo) &&
+					inActiveStarRoles(todo),
+			)
+			.reverse()
+			.limit(iceboxLimit)
+			.toArray()
+
+		return Promise.all([
+			logTodosPromise,
+			wayfinderTodosPromise,
+			iceboxTodosPromise,
+		])
+	}, [inActiveStarRoles, iceboxLimit, logLimit, query])
+
+	const loading = todos === undefined
+
+	const starRoles = useLiveQuery(() => db.starRoles.toArray())
+
+	const [debug, setDebug] = useState('')
+	useEffect(() => {
+		const params = new URLSearchParams(window.location.search)
+		const searchQuery = params.get('debug')
+		if (searchQuery) {
+			setDebug(searchQuery)
+		}
+	}, [])
+	const todosCount = useMemo(
+		() => todos?.reduce((acc, todos) => acc + todos.length, 0),
+		[todos],
+	)
+
+	// Its possible for ref not to change when todo is completed because one other than 'next' is completed in which case starship doesn't move
+	// Consider using a callback ref instead: https://stackoverflow.com/questions/60881446/receive-dimensions-of-element-via-getboundingclientrect-in-react
+	const nextTodoRef = useRef<HTMLIonItemElement>(null)
+	const {
+		nextTodo: {
+			position: [_, setNextTodoPosition],
+		},
+	} = useTodoContext()
+	// TODO: When dev tools aren't open the todo has zero height
+	// useLayoutEffect doesn't work
+	// setTimeout 0 doesn't work
+	// callbackRef doesn't work
+	// This person thinks its an Ionic bug but I'm not sure: https://stackoverflow.com/questions/60881446/receive-dimensions-of-element-via-getboundingclientrect-in-react
+	useEffect(() => {
+		setTimeout(() => {
+			if (nextTodoRef.current) {
+				console.debug(
+					'Setting next todo with ID',
+					nextTodoRef.current.dataset.id,
+				)
+				setNextTodoPosition(nextTodoRef.current.getBoundingClientRect()) // Send this rather than the current ref as if unchanged then is will be memoised and nothing will happen.
+			} else {
+				console.debug('No next todo ref')
+				setNextTodoPosition(null) // Send this rather than the current ref as if unchanged then is will be memoised and nothing will happen.
+			}
+		}, 1)
+	}, [nextTodoRef, setNextTodoPosition, todos]) // The todos dep is used as an imperfect proxy for one the position of the next todo changes
+
+	const [present] = useTodoActionSheet()
+
 	return (
 		<IonContent
-			className="ion-padding"
 			fullscreen
 			ref={contentRef}
 		>
-			{isLoading && (
-				<div className="flex items-center justify-center h-full">
-					<IonSpinner
-						className="w-20 h-20"
-						name="dots"
-					/>
-				</div>
-			)}
-			<>
-				<IonInfiniteScroll
-					className="h-1"
-					disabled={!enablePagination}
-					position="top"
-					threshold="0px"
-					onIonInfinite={event => {
-						setLogLimit(limit => limit + 10)
-						setTimeout(() => event.target.complete(), 500)
-					}}
-				>
-					<IonInfiniteScrollContent></IonInfiniteScrollContent>
-				</IonInfiniteScroll>
-				<Log
-					limit={logLimit}
-					onLoad={() => setReady(state => ({ ...state, log: true }))}
-				/>
-				<Wayfinder
-					onLoad={() => setReady(state => ({ ...state, wayfinder: true }))}
-				/>
-				<Icebox
-					limit={iceboxLimit}
-					onLoad={() => setReady(state => ({ ...state, icebox: true }))}
-				/>
-				<IonInfiniteScroll
-					disabled={!enablePagination}
-					position="bottom"
-					threshold="0px"
-					onIonInfinite={event => {
-						setIceboxLimit(limit => limit + 10)
-						setTimeout(() => event.target.complete(), 500)
-					}}
-				>
-					<IonInfiniteScrollContent></IonInfiniteScrollContent>
-				</IonInfiniteScroll>
-				<IonFab
-					ref={fab}
-					slot="fixed"
-					vertical="bottom"
-					horizontal="end"
-				>
-					<IonFabButton onClick={openCreateTodoModal}>
-						<IonIcon icon={add}></IonIcon>
-					</IonFabButton>
-				</IonFab>
-			</>
+			<IonFab
+				horizontal="end"
+				slot="fixed"
+				vertical="bottom"
+			>
+				<IonFabButton onClick={openCreateTodoModal}>
+					<IonIcon icon={add}></IonIcon>
+				</IonFabButton>
+			</IonFab>
+			<IonGrid className="h-full ion-no-padding">
+				<IonRow className="h-full">
+					<IonCol
+						className="relative"
+						size="auto"
+						sizeLg="2"
+					>
+						<Journey commonAncestor={contentRef} />
+					</IonCol>
+					<IonCol sizeLg="8">
+						{/* TODO: Use suspense instead */}
+						{loading ? (
+							<div className="flex items-center justify-center h-full">
+								<IonSpinner
+									className="w-20 h-20"
+									name="dots"
+								/>
+							</div>
+						) : todosCount === 0 ? (
+							<div className="flex flex-col items-center justify-center gap-5 m-4 h-fit">
+								<IonIcon
+									icon={rocketSharp}
+									size="large"
+								/>
+								<p>Create some todos to get started</p>
+							</div>
+						) : (
+							<>
+								<IonInfiniteScroll
+									className="h-1"
+									disabled={!enablePagination}
+									position="top"
+									threshold="0px"
+									onIonInfinite={event => {
+										setLogLimit(limit => limit + 10)
+										setTimeout(() => event.target.complete(), 500)
+									}}
+								>
+									<IonInfiniteScrollContent></IonInfiniteScrollContent>
+								</IonInfiniteScroll>
+								<IonList
+									className="mr-1"
+									id="log-and-wayfinder"
+								>
+									{todos[0].sort(byDate).map(todo => (
+										<IonItem
+											button
+											className="todo"
+											key={todo.id}
+											onClick={_event => {
+												present(todo)
+											}}
+										>
+											<IonCheckbox
+												aria-label="Uncomplete todo"
+												slot="start"
+												onClick={event => {
+													// Prevents the IonItem onClick from firing when completing a todo
+													event.stopPropagation()
+												}}
+												onIonChange={event => {
+													db.transaction(
+														'rw',
+														db.wayfinderOrder,
+														db.todos,
+														async () => {
+															const wayfinderOrder = await db.wayfinderOrder
+																.orderBy('order')
+																.limit(1)
+																.keys()
+															await Promise.all([
+																db.wayfinderOrder.add({
+																	todoId: todo.id,
+																	order: order(
+																		undefined,
+																		wayfinderOrder[0]?.toString(),
+																	),
+																}),
+																db.todos.update(todo.id, {
+																	completedAt: event.detail.checked
+																		? new Date()
+																		: undefined,
+																}),
+															])
+														},
+													)
+												}}
+												checked={!!todo.completedAt}
+											/>
+											<IonLabel>{todo?.title}</IonLabel>
+										</IonItem>
+									))}
+									<IonReorderGroup
+										disabled={false}
+										onIonItemReorder={async event => {
+											// We don't use this to reorder for us because it results in a flash of 'unordered' content.
+											// Instead we re-order right away, calculate the new order ourselves, and update the DB.
+											event.detail.complete()
+
+											const wayfinderTodos = await db.wayfinderOrder
+												.orderBy('order')
+												.toArray()
+											/* If the todo moves down then all the todos after its target location must be nudged up
+											 * If the todo moves up then all the todos
+											 */
+											// TODO: Could make this easier with IDs in the DOM
+											const fromTodo = todos[1][event.detail.from]
+											const toTodo = todos[1][event.detail.to]
+											const unfilteredFromIndex = wayfinderTodos.findIndex(
+												({ todoId }) => todoId === fromTodo.id,
+											)
+											const unfilteredToIndex = wayfinderTodos.findIndex(
+												({ todoId }) => todoId === toTodo.id,
+											)
+
+											const [startIndex, endIndex] = calculateReorderIndices(
+												unfilteredFromIndex,
+												unfilteredToIndex,
+											)
+											const start = wayfinderTodos[startIndex]?.order
+											const end = wayfinderTodos[endIndex]?.order
+											const newOrder = order(start, end)
+
+											console.debug('Re-ordering', {
+												unfilteredFromIndex,
+												unfilteredToIndex,
+												start,
+												end,
+												newOrder,
+											})
+
+											await db.wayfinderOrder.update(fromTodo.id, {
+												order: newOrder,
+											})
+										}}
+									>
+										{todos[1].map((todo, index) => (
+											<div
+												key={todo.id}
+												data-id={todo.id}
+												data-next-todo={index === 0}
+												ref={index === 0 ? (nextTodoRef as any) : undefined}
+											>
+												<IonItem
+													button
+													className="todo ion-no-"
+													onClick={event => {
+														// Prevent the action sheet from opening when reordering
+														if (event.target['localName'] === 'ion-item') return
+
+														present(todo, {
+															buttons: [
+																{
+																	text: 'Move to icebox',
+																	data: {
+																		action: 'icebox',
+																	},
+																	handler: async () => {
+																		db.transaction(
+																			'rw',
+																			db.wayfinderOrder,
+																			async () => {
+																				await db.wayfinderOrder.delete(todo.id)
+																			},
+																		)
+																	},
+																},
+															],
+														})
+													}}
+												>
+													<IonCheckbox
+														aria-label="Complete todo"
+														slot="start"
+														onClick={event => {
+															// Prevents the IonItem onClick from firing when completing a todo
+															event.stopPropagation()
+														}}
+														onIonChange={async event => {
+															db.transaction(
+																'rw',
+																db.wayfinderOrder,
+																db.todos,
+																async () => {
+																	await Promise.all([
+																		db.wayfinderOrder.delete(todo.id),
+																		db.todos.update(todo.id, {
+																			completedAt: event.detail.checked
+																				? new Date()
+																				: undefined,
+																		}),
+																	])
+																},
+															)
+														}}
+													/>
+													<IonLabel>{todo?.title}</IonLabel>
+													{debug && (
+														<span className="space-x-2">
+															<data className="text-gray-500">{todo.id}</data>
+															<data className="text-gray-500">
+																{todo.order}
+															</data>
+														</span>
+													)}
+													{todo.starRole && (
+														<IonIcon
+															icon={getIonIcon(
+																starRoles?.find(
+																	starRole => starRole.id === todo.starRole,
+																)?.icon?.name,
+															)}
+															slot="end"
+														/>
+													)}
+													{todo.note && (
+														<a
+															href={todo.note.uri}
+															target="_blank"
+														>
+															<IonIcon icon={documentText}></IonIcon>
+														</a>
+													)}
+													<IonReorder slot="end"></IonReorder>
+												</IonItem>
+											</div>
+										))}
+									</IonReorderGroup>
+								</IonList>
+								<Icebox todos={todos[2]} />
+								<IonInfiniteScroll
+									disabled={!enablePagination}
+									position="bottom"
+									threshold="0px"
+									onIonInfinite={event => {
+										setIceboxLimit(limit => limit + 10)
+										setTimeout(() => event.target.complete(), 500)
+									}}
+								>
+									<IonInfiniteScrollContent></IonInfiniteScrollContent>
+								</IonInfiniteScroll>
+								<IonFab
+									ref={fab}
+									slot="fixed"
+									vertical="bottom"
+									horizontal="end"
+								></IonFab>
+							</>
+						)}
+					</IonCol>
+					<IonCol
+						size="0"
+						sizeLg="2"
+					>
+						<div></div>
+					</IonCol>
+				</IonRow>
+			</IonGrid>
 		</IonContent>
 	)
 }
@@ -509,310 +808,41 @@ export const ViewMenu = () => {
 	)
 }
 
-export const Log = ({
-	limit,
-	onLoad,
+export const Journey = ({
+	commonAncestor,
 }: {
-	limit: number
-	onLoad: () => void
+	commonAncestor: RefObject<HTMLElement>
 }) => {
-	const { inActiveStarRoles, query } = useView()
-
-	const todos = useLiveQuery(async () => {
-		console.debug('Re-running log query')
-		return db.todos
-			.orderBy('completedAt')
-			.reverse()
-			.filter(
-				todo =>
-					!!todo.completedAt &&
-					matchesQuery(query, todo) &&
-					inActiveStarRoles(todo),
-			)
-			.limit(limit)
-			.toArray()
-	}, [inActiveStarRoles, limit, query])
-
-	useEffect(() => {
-		if (todos !== undefined) {
-			onLoad()
-		}
-	}, [todos])
-
-	const [present] = useTodoActionSheet()
-
-	if (todos === undefined) return null
+	const {
+		nextTodo: {
+			position: [nextTodoPosition],
+		},
+	} = useTodoContext()
+	const starship = useRef<HTMLImageElement>(null)
+	const [starshipY] = useStarshipYPosition(
+		starship?.current,
+		nextTodoPosition,
+		commonAncestor?.current,
+	)
 
 	return (
-		<section id="log">
-			<h1>Log</h1>
-			{todos?.length ? (
-				<IonList inset>
-					{todos.sort(byDate).map(todo => (
-						<IonItem
-							button
-							className="todo"
-							key={todo.id}
-							onClick={_event => {
-								present(todo)
-							}}
-						>
-							<IonCheckbox
-								aria-label="Uncomplete todo"
-								slot="start"
-								onClick={event => {
-									// Prevents the IonItem onClick from firing when completing a todo
-									event.stopPropagation()
-								}}
-								onIonChange={async event => {
-									db.transaction(
-										'rw',
-										db.wayfinderOrder,
-										db.todos,
-										async () => {
-											const wayfinderOrder = await db.wayfinderOrder
-												.orderBy('order')
-												.limit(1)
-												.keys()
-											await Promise.all([
-												db.wayfinderOrder.add({
-													todoId: todo.id,
-													order: order(undefined, wayfinderOrder[0].toString()),
-												}),
-												db.todos.update(todo.id, {
-													completedAt: event.detail.checked
-														? new Date()
-														: undefined,
-												}),
-											])
-										},
-									)
-								}}
-								checked={!!todo.completedAt}
-							/>
-							<IonLabel>{todo?.title}</IonLabel>
-						</IonItem>
-					))}
-				</IonList>
-			) : (
-				<div className="flex flex-col items-center justify-center gap-5 h-fit">
-					<IonIcon
-						icon={checkmarkDoneCircleSharp}
-						size="large"
-					/>
-					<p>Your completed todos will appear here</p>
-				</div>
-			)}
-		</section>
+		<div className="min-w-[56px]">
+			<Tracjectory className="absolute right-[27px]" />
+			<div
+				id="starship"
+				className="absolute right-0 transition-transform duration-500 ease-in-out w-[56px] h-[56px]"
+				style={{ transform: `translateY(${starshipY}px)` }}
+			>
+				<Starship
+					className="rotate-180"
+					ref={starship}
+				/>
+			</div>
+		</div>
 	)
 }
 
-export const Wayfinder = ({ onLoad }: { onLoad: () => void }) => {
-	const { inActiveStarRoles, query } = useView()
-
-	const todos = useLiveQuery(async () => {
-		const todoOrderItems = await db.wayfinderOrder.orderBy('order').toArray()
-		const todoIds = todoOrderItems.map(({ todoId }) => todoId)
-		return (await db.todos.bulkGet(todoIds))
-			.map((todo, index) => ({ ...todo!, order: todoOrderItems[index].order }))
-			.filter(
-				todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
-			) as (Todo & { order: string })[]
-	}, [inActiveStarRoles, query])
-
-	const starRoles = useLiveQuery(() => db.starRoles.toArray())
-
-	useEffect(() => {
-		if (todos !== undefined) {
-			setTimeout(onLoad, 2000)
-		}
-	}, [todos])
-
-	const [debug, setDebug] = useState('')
-	useEffect(() => {
-		const params = new URLSearchParams(window.location.search)
-		const searchQuery = params.get('debug')
-		if (searchQuery) {
-			setDebug(searchQuery)
-		}
-	}, [])
-
-	const [present] = useTodoActionSheet()
-
-	if (todos === undefined) return null
-
-	return (
-		<section id="wayfinder">
-			<h1>Wayfinder</h1>
-			{todos?.length ? (
-				<IonList inset>
-					<IonReorderGroup
-						disabled={false}
-						onIonItemReorder={async event => {
-							// We don't use this to reorder for us because it results in a flash of 'unordered' content.
-							// Instead we re-order right away, calculate the new order ourselves, and update the DB.
-							event.detail.complete()
-
-							const wayfinderTodos = await db.wayfinderOrder
-								.orderBy('order')
-								.toArray()
-							/* If the todo moves down then all the todos after its target location must be nudged up
-							 * If the todo moves up then all the todos
-							 */
-							// TODO: Could make this easier with IDs in the DOM
-							const fromTodo = todos[event.detail.from]
-							const toTodo = todos[event.detail.to]
-							const unfilteredFromIndex = wayfinderTodos.findIndex(
-								({ todoId }) => todoId === fromTodo.id,
-							)
-							const unfilteredToIndex = wayfinderTodos.findIndex(
-								({ todoId }) => todoId === toTodo.id,
-							)
-
-							const [startIndex, endIndex] = calculateReorderIndices(
-								unfilteredFromIndex,
-								unfilteredToIndex,
-							)
-							const start = wayfinderTodos[startIndex]?.order
-							const end = wayfinderTodos[endIndex]?.order
-							const newOrder = order(start, end)
-
-							console.debug('Re-ordering', {
-								unfilteredFromIndex,
-								unfilteredToIndex,
-								start,
-								end,
-								newOrder,
-							})
-
-							await db.wayfinderOrder.update(fromTodo.id, {
-								order: newOrder,
-							})
-						}}
-					>
-						{todos.map(todo => (
-							<IonItem
-								button
-								className="todo"
-								onClick={event => {
-									// Prevent the action sheet from opening when reordering
-									if (event.target['localName'] === 'ion-item') return
-
-									present(todo, {
-										buttons: [
-											{
-												text: 'Move to icebox',
-												data: {
-													action: 'icebox',
-												},
-												handler: async () => {
-													db.transaction('rw', db.wayfinderOrder, async () => {
-														await db.wayfinderOrder.delete(todo.id)
-													})
-												},
-											},
-										],
-									})
-								}}
-								key={todo.id}
-							>
-								<IonCheckbox
-									aria-label="Complete todo"
-									slot="start"
-									onClick={event => {
-										// Prevents the IonItem onClick from firing when completing a todo
-										event.stopPropagation()
-									}}
-									onIonChange={async event => {
-										db.transaction(
-											'rw',
-											db.wayfinderOrder,
-											db.todos,
-											async () => {
-												await Promise.all([
-													db.wayfinderOrder.delete(todo.id),
-													db.todos.update(todo.id, {
-														completedAt: event.detail.checked
-															? new Date()
-															: undefined,
-													}),
-												])
-											},
-										)
-									}}
-								/>
-								<IonLabel>{todo?.title}</IonLabel>
-								{debug && (
-									<span className="space-x-2">
-										<data className="text-gray-500">{todo.id}</data>
-										<data className="text-gray-500">{todo.order}</data>
-									</span>
-								)}
-								{todo.starRole && (
-									<IonIcon
-										icon={getIonIcon(
-											starRoles?.find(starRole => starRole.id === todo.starRole)
-												?.icon?.name,
-										)}
-										slot="end"
-									/>
-								)}
-								{todo.note && (
-									<a
-										href={todo.note.uri}
-										target="_blank"
-									>
-										<IonIcon icon={documentText}></IonIcon>
-									</a>
-								)}
-								<IonReorder slot="end"></IonReorder>
-							</IonItem>
-						))}
-					</IonReorderGroup>
-				</IonList>
-			) : (
-				<div className="flex flex-col items-center justify-center gap-5 h-fit">
-					<IonIcon
-						icon={rocketSharp}
-						size="large"
-					/>
-					<p>Create some todos to get started</p>
-				</div>
-			)}
-		</section>
-	)
-}
-
-export const Icebox = ({
-	limit,
-	onLoad,
-}: {
-	limit: number
-	onLoad: () => void
-}) => {
-	const { inActiveStarRoles, query } = useView()
-
-	const todos = useLiveQuery(async () => {
-		console.debug('Re-running icebox query')
-		const todoOrderItems = await db.wayfinderOrder.orderBy('order').toArray()
-		return db.todos
-			.where('id')
-			.noneOf(todoOrderItems.map(({ todoId }) => todoId))
-			.and(
-				todo =>
-					todo.completedAt === undefined &&
-					matchesQuery(query, todo) &&
-					inActiveStarRoles(todo),
-			)
-			.reverse()
-			.limit(limit)
-			.toArray()
-	}, [limit, inActiveStarRoles, query])
-
-	useEffect(() => {
-		if (todos !== undefined) onLoad()
-	}, [todos])
-
+export const Icebox = ({ todos }: { todos: Todo[] }) => {
 	const [present] = useTodoActionSheet()
 	const onClick = useCallback(
 		todo => {
@@ -869,48 +899,28 @@ export const Icebox = ({
 	if (todos === undefined) return null
 
 	return (
-		<section id="icebox">
-			<IonGrid>
-				<h1>Icebox</h1>
-				<IonRow>
-					{todos === undefined ? (
-						<IonSpinner
-							className="w-20 h-20"
-							name="dots"
-						/>
-					) : (
-						todos.map(todo => (
-							<IceboxItem
-								key={todo.id}
-								onClick={onClick}
-								todo={todo}
-							/>
-						))
-					)}
+		<section
+			className="mt-2"
+			id="icebox"
+		>
+			<IonGrid className="ion-padding-start">
+				<IonRow className="gap-2">
+					{todos.map(todo => (
+						<IonCard
+							className="cursor-pointer todo ion-no-margin"
+							key={todo.id}
+							onClick={_event => {
+								onClick(todo)
+							}}
+						>
+							<IonCardHeader>
+								<IonCardTitle className="text-sm">{todo.title}</IonCardTitle>
+							</IonCardHeader>
+						</IonCard>
+					))}
 				</IonRow>
 			</IonGrid>
 		</section>
-	)
-}
-
-export const IceboxItem = ({
-	onClick,
-	todo,
-}: {
-	onClick: (todo: Todo) => void
-	todo: Todo
-}) => {
-	return (
-		<IonCard
-			className="cursor-pointer todo"
-			onClick={_event => {
-				onClick(todo)
-			}}
-		>
-			<IonCardHeader>
-				<IonCardTitle className="text-sm">{todo.title}</IonCardTitle>
-			</IonCardHeader>
-		</IonCard>
 	)
 }
 
@@ -952,12 +962,6 @@ export const Searchbar = () => {
 			}}
 		></IonSearchbar>
 	)
-}
-
-const removeItemFromArray = (array: any[], index: number): any[] => {
-	const newArray = [...array]
-	newArray.splice(index, 1)
-	return newArray
 }
 
 const byDate = (a: any, b: any) => {
