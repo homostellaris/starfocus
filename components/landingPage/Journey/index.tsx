@@ -1,4 +1,4 @@
-import Starship from './Starship'
+import Starship from '../../common/Starship'
 import Tracjectory from './Trajectory'
 
 export default function Journey() {

@@ -2,14 +2,16 @@ import { useIonModal } from '@ionic/react'
 import { useCallback, useRef } from 'react'
 import { Todo, db } from '../../db'
 import useNoteProvider from '../../notes/useNoteProvider'
-import useSelectedTodo from '../SelectedTodo'
+import useTodoContext from '../TodoContext'
 import { EditTodoModal } from './modal'
 
 export function useEditTodoModal(): [
 	(todo: Todo) => void,
 	(data?: any, role?: string) => void,
 ] {
-	const [todo, setTodo] = useSelectedTodo()
+	const {
+		selectedTodo: [todo, setTodo],
+	} = useTodoContext()
 	const titleInput = useRef<HTMLIonInputElement>(null)
 	const [present, dismiss] = useIonModal(EditTodoModal, {
 		dismiss: (data: string, role: string) => dismiss(data, role),

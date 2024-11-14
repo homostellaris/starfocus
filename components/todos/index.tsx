@@ -15,7 +15,9 @@ export default function Todos({
 		() =>
 			todos.sort((a, b) => {
 				if (a.completedAt || b.completedAt) {
-					return a.completedAt!.getTime() || 0 - b.completedAt!.getTime() || 0
+					return (
+						(a.completedAt?.getTime() || 0) - (b.completedAt?.getTime() || 0)
+					)
 				}
 				return Number(b.rank) - Number(a.rank)
 			}),
