@@ -217,6 +217,7 @@ export const TodoLists = ({}: {}) => {
 			iceboxTodosPromise,
 		])
 	}, [inActiveStarRoles, iceboxLimit, logLimit, query])
+	console.log(logLimit)
 
 	const loading = todos === undefined
 
@@ -271,15 +272,6 @@ export const TodoLists = ({}: {}) => {
 
 	return (
 		<IonContent ref={contentRef}>
-			<IonFab
-				horizontal="end"
-				slot="fixed"
-				vertical="bottom"
-			>
-				<IonFabButton onClick={openCreateTodoModal}>
-					<IonIcon icon={add}></IonIcon>
-				</IonFabButton>
-			</IonFab>
 			<IonGrid className="h-full ion-no-padding">
 				<IonRow className="h-full">
 					<IonCol
@@ -287,6 +279,14 @@ export const TodoLists = ({}: {}) => {
 						size="auto"
 						sizeLg="2"
 					>
+						<IonFab className="fixed min-[992px]:left-[calc(100vw/12*2-40px-17px)] bottom-16">
+							<IonFabButton
+								onClick={openCreateTodoModal}
+								size="small"
+							>
+								<IonIcon icon={add}></IonIcon>
+							</IonFabButton>
+						</IonFab>
 						<Journey commonAncestor={contentRef} />
 					</IonCol>
 					<IonCol sizeLg="8">
@@ -366,6 +366,7 @@ export const TodoLists = ({}: {}) => {
 															])
 														},
 													)
+													setLogLimit(limit => limit - 1)
 												}}
 												checked={!!todo.completedAt}
 											/>
@@ -425,7 +426,7 @@ export const TodoLists = ({}: {}) => {
 											>
 												<IonItem
 													button
-													className="todo ion-no-"
+													className="todo"
 													onClick={event => {
 														// Prevent the action sheet from opening when reordering
 														if (event.target['localName'] === 'ion-item') return
@@ -474,6 +475,7 @@ export const TodoLists = ({}: {}) => {
 																	])
 																},
 															)
+															setLogLimit(limit => limit + 1)
 														}}
 													/>
 													<IonLabel>{todo?.title}</IonLabel>
@@ -521,12 +523,6 @@ export const TodoLists = ({}: {}) => {
 								>
 									<IonInfiniteScrollContent></IonInfiniteScrollContent>
 								</IonInfiniteScroll>
-								<IonFab
-									ref={fab}
-									slot="fixed"
-									vertical="bottom"
-									horizontal="end"
-								></IonFab>
 							</>
 						)}
 					</IonCol>
