@@ -255,7 +255,11 @@ export const TodoLists = ({}: {}) => {
 					'Setting next todo with ID',
 					nextTodoRef.current.dataset.id,
 				)
-				setNextTodoPosition(nextTodoRef.current.getBoundingClientRect()) // Send this rather than the current ref as if unchanged then is will be memoised and nothing will happen.
+				const domRect = nextTodoRef.current.getBoundingClientRect()
+				setNextTodoPosition({
+					height: domRect.height,
+					top: nextTodoRef.current.offsetTop,
+				}) // Send this rather than the current ref as if unchanged then is will be memoised and nothing will happen.
 			} else {
 				console.debug('No next todo ref')
 				setNextTodoPosition(null) // Send this rather than the current ref as if unchanged then is will be memoised and nothing will happen.
@@ -266,10 +270,7 @@ export const TodoLists = ({}: {}) => {
 	const [present] = useTodoActionSheet()
 
 	return (
-		<IonContent
-			fullscreen
-			ref={contentRef}
-		>
+		<IonContent ref={contentRef}>
 			<IonFab
 				horizontal="end"
 				slot="fixed"
@@ -320,7 +321,7 @@ export const TodoLists = ({}: {}) => {
 									<IonInfiniteScrollContent></IonInfiniteScrollContent>
 								</IonInfiniteScroll>
 								<IonList
-									className="mr-1"
+									className="mr-1 ion-no-padding"
 									id="log-and-wayfinder"
 								>
 									{todos[0].sort(byDate).map(todo => (
@@ -899,11 +900,8 @@ export const Icebox = ({ todos }: { todos: Todo[] }) => {
 	if (todos === undefined) return null
 
 	return (
-		<section
-			className="mt-2"
-			id="icebox"
-		>
-			<IonGrid className="ion-padding-start">
+		<section id="icebox">
+			<IonGrid className="ion-padding-start ion-margin-vertical">
 				<IonRow className="gap-2">
 					{todos.map(todo => (
 						<IonCard

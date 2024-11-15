@@ -3,6 +3,7 @@ import Starship from '../../common/Starship'
 import Todos from '../../todos'
 import { Todo } from '../../todos/interfaces'
 import { useWindowSize } from '../../common/useWindowResize'
+import { TodoPosition } from '../../todos/TodoContext'
 
 export default function Journey({ todos }: { todos: Todo[] }) {
 	const currentTodoRef = createRef<HTMLDivElement>()
@@ -52,7 +53,7 @@ function useMaintainScrollOffset(currentTodoRef, todosRef) {
 
 export function useStarshipYPosition(
 	starship: HTMLElement | null,
-	nextTodoPosition: DOMRect | null,
+	nextTodoPosition: TodoPosition,
 	commonAncestor: HTMLElement | null,
 ) {
 	console.debug('Starship position render')
@@ -65,18 +66,20 @@ export function useStarshipYPosition(
 		if (
 			starship === null ||
 			nextTodoPosition === null ||
-			nextTodoPosition.height === null ||
 			commonAncestor === null
 		)
 			return setStarshipY(0)
 
 		const commonAncestorRect = commonAncestor.getBoundingClientRect()
-		const todoDistanceFromCommonAncestor =
-			nextTodoPosition.y - commonAncestorRect.y
+		const todoDistanceFromCommonAncestor = nextTodoPosition.top
 		const starshipHeightAdjustment =
 			(nextTodoPosition.height - starship?.offsetHeight) / 2
+		const additionalOffset = -5 // Just a visual thing to make the center of the rocket align and ignore the tail
 
-		const y = todoDistanceFromCommonAncestor + starshipHeightAdjustment
+		const y =
+			todoDistanceFromCommonAncestor +
+			starshipHeightAdjustment +
+			additionalOffset
 		console.debug(`Setting startship Y to ${y}`, {
 			commonAncestorRect,
 			nextTodoPosition,

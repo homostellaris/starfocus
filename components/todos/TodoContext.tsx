@@ -9,10 +9,7 @@ import { Todo } from '../db'
 
 export const TodoContext = createContext<{
 	nextTodo: {
-		position: [
-			get: DOMRect | null,
-			set: Dispatch<SetStateAction<DOMRect | null>>,
-		]
+		position: [get: TodoPosition, set: Dispatch<SetStateAction<TodoPosition>>]
 	}
 	selectedTodo: [
 		todo: Todo | null,
@@ -28,7 +25,7 @@ export function TodoContextProvider({
 }: {
 	children: React.ReactNode
 }) {
-	const [nextTodoPosition, setNextTodoPosition] = useState<DOMRect | null>(null)
+	const [nextTodoPosition, setNextTodoPosition] = useState<TodoPosition>(null)
 	const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null)
 
 	return (
@@ -48,3 +45,5 @@ export function TodoContextProvider({
 export default function useTodoContext() {
 	return useContext(TodoContext)
 }
+
+export type TodoPosition = Pick<DOMRect, 'top' | 'height'> | null
