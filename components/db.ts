@@ -17,7 +17,7 @@ export interface Note {
 
 export interface StarRole {
 	id: string
-	icon?: Icon
+	icon: Icon
 	title: string
 }
 

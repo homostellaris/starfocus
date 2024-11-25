@@ -2,9 +2,6 @@ import { menuController } from '@ionic/core/components'
 import {
 	IonButton,
 	IonButtons,
-	IonCard,
-	IonCardHeader,
-	IonCardTitle,
 	IonCheckbox,
 	IonCol,
 	IonContent,
@@ -34,10 +31,6 @@ import {
 	IonToast,
 	IonToggle,
 	IonToolbar,
-	useIonViewDidEnter,
-	useIonViewDidLeave,
-	useIonViewWillEnter,
-	useIonViewWillLeave,
 } from '@ionic/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
@@ -52,24 +45,24 @@ import {
 	RefObject,
 	useCallback,
 	useEffect,
-	useLayoutEffect,
 	useMemo,
 	useRef,
 	useState,
 } from 'react'
 import { Header } from '../common/Header'
+import Starship from '../common/Starship'
+import order, { calculateReorderIndices, starMudder } from '../common/order'
 import { db, Todo } from '../db'
+import { useStarshipYPosition } from '../demo/Journey'
+import Tracjectory from '../landingPage/Journey/Trajectory'
 import NoteProviders from '../notes/providers'
 import useSettings from '../settings/useSettings'
 import { getIonIcon } from '../starRoles/icons'
-import useTodoContext, { TodoContextProvider } from '../todos/TodoContext'
 import { useTodoActionSheet } from '../todos/TodoActionSheet'
+import useTodoContext, { TodoContextProvider } from '../todos/TodoContext'
 import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
 import useView, { ViewProvider } from '../view'
-import order, { calculateReorderIndices, starMudder } from '../common/order'
-import Tracjectory from '../landingPage/Journey/Trajectory'
-import Starship from '../common/Starship'
-import { useStarshipYPosition } from '../demo/Journey'
+import { TodoCard, TodoListItem } from '../todos'
 
 const Home = () => {
 	useGlobalKeyboardShortcuts()
@@ -211,13 +204,17 @@ export const TodoLists = ({}: {}) => {
 			.limit(iceboxLimit)
 			.toArray()
 
-		return Promise.all([
+		const todos = await Promise.all([
 			logTodosPromise,
 			wayfinderTodosPromise,
 			iceboxTodosPromise,
 		])
+		return {
+			log: todos[0],
+			wayfinder: todos[1],
+			icebox: todos[2],
+		}
 	}, [inActiveStarRoles, iceboxLimit, logLimit, query])
-	console.log(logLimit)
 
 	const loading = todos === undefined
 
@@ -232,7 +229,10 @@ export const TodoLists = ({}: {}) => {
 		}
 	}, [])
 	const todosCount = useMemo(
-		() => todos?.reduce((acc, todos) => acc + todos.length, 0),
+		() =>
+			todos === undefined
+				? 0
+				: Object.values(todos).reduce((acc, todos) => acc + todos.length, 0),
 		[todos],
 	)
 
@@ -279,7 +279,7 @@ export const TodoLists = ({}: {}) => {
 						size="auto"
 						sizeLg="2"
 					>
-						<IonFab className="fixed min-[992px]:left-[calc(100vw/12*2-40px-17px)] bottom-16">
+						<IonFab className="fixed min-[992px]:left-[calc(100vw/12*2-40px-18px)] bottom-16">
 							<IonFabButton
 								onClick={openCreateTodoModal}
 								size="small"
@@ -324,54 +324,45 @@ export const TodoLists = ({}: {}) => {
 									className="mr-1 ion-no-padding"
 									id="log-and-wayfinder"
 								>
-									{todos[0].sort(byDate).map(todo => (
-										<IonItem
-											button
-											className="todo"
+									{todos.log.sort(byDate).map(todo => (
+										<TodoListItem
 											key={todo.id}
-											onClick={_event => {
+											onSelect={_event => {
 												present(todo)
 											}}
-										>
-											<IonCheckbox
-												aria-label="Uncomplete todo"
-												slot="start"
-												onClick={event => {
-													// Prevents the IonItem onClick from firing when completing a todo
-													event.stopPropagation()
-												}}
-												onIonChange={event => {
-													db.transaction(
-														'rw',
-														db.wayfinderOrder,
-														db.todos,
-														async () => {
-															const wayfinderOrder = await db.wayfinderOrder
-																.orderBy('order')
-																.limit(1)
-																.keys()
-															await Promise.all([
-																db.wayfinderOrder.add({
-																	todoId: todo.id,
-																	order: order(
-																		undefined,
-																		wayfinderOrder[0]?.toString(),
-																	),
-																}),
-																db.todos.update(todo.id, {
-																	completedAt: event.detail.checked
-																		? new Date()
-																		: undefined,
-																}),
-															])
-														},
-													)
-													setLogLimit(limit => limit - 1)
-												}}
-												checked={!!todo.completedAt}
-											/>
-											<IonLabel>{todo?.title}</IonLabel>
-										</IonItem>
+											onCompletionChange={event => {
+												db.transaction(
+													'rw',
+													db.wayfinderOrder,
+													db.todos,
+													async () => {
+														const wayfinderOrder = await db.wayfinderOrder
+															.orderBy('order')
+															.limit(1)
+															.keys()
+														await Promise.all([
+															db.wayfinderOrder.add({
+																todoId: todo.id,
+																order: order(
+																	undefined,
+																	wayfinderOrder[0]?.toString(),
+																),
+															}),
+															db.todos.update(todo.id, {
+																completedAt: event.detail.checked
+																	? new Date()
+																	: undefined,
+															}),
+														])
+													},
+												)
+												setLogLimit(limit => limit - 1)
+											}}
+											starRole={starRoles?.find(
+												starRole => todo.starRole === starRole.id,
+											)}
+											todo={todo}
+										/>
 									))}
 									<IonReorderGroup
 										disabled={false}
@@ -417,101 +408,65 @@ export const TodoLists = ({}: {}) => {
 											})
 										}}
 									>
-										{todos[1].map((todo, index) => (
-											<div
+										{todos.wayfinder.map((todo, index) => (
+											<TodoListItem
 												key={todo.id}
 												data-id={todo.id}
 												data-next-todo={index === 0}
-												ref={index === 0 ? (nextTodoRef as any) : undefined}
-											>
-												<IonItem
-													button
-													className="todo"
-													onClick={event => {
-														// Prevent the action sheet from opening when reordering
-														if (event.target['localName'] === 'ion-item') return
+												onCompletionChange={async event => {
+													db.transaction(
+														'rw',
+														db.wayfinderOrder,
+														db.todos,
+														async () => {
+															await Promise.all([
+																db.wayfinderOrder.delete(todo.id),
+																db.todos.update(todo.id, {
+																	completedAt: event.detail.checked
+																		? new Date()
+																		: undefined,
+																}),
+															])
+														},
+													)
+													setLogLimit(limit => limit + 1)
+												}}
+												onSelect={event => {
+													// Prevent the action sheet from opening when reordering
+													if (event.target['localName'] === 'ion-item') return
 
-														present(todo, {
-															buttons: [
-																{
-																	text: 'Move to icebox',
-																	data: {
-																		action: 'icebox',
-																	},
-																	handler: async () => {
-																		db.transaction(
-																			'rw',
-																			db.wayfinderOrder,
-																			async () => {
-																				await db.wayfinderOrder.delete(todo.id)
-																			},
-																		)
-																	},
+													present(todo, {
+														buttons: [
+															{
+																text: 'Move to icebox',
+																data: {
+																	action: 'icebox',
 																},
-															],
-														})
-													}}
-												>
-													<IonCheckbox
-														aria-label="Complete todo"
-														slot="start"
-														onClick={event => {
-															// Prevents the IonItem onClick from firing when completing a todo
-															event.stopPropagation()
-														}}
-														onIonChange={async event => {
-															db.transaction(
-																'rw',
-																db.wayfinderOrder,
-																db.todos,
-																async () => {
-																	await Promise.all([
-																		db.wayfinderOrder.delete(todo.id),
-																		db.todos.update(todo.id, {
-																			completedAt: event.detail.checked
-																				? new Date()
-																				: undefined,
-																		}),
-																	])
+																handler: async () => {
+																	db.transaction(
+																		'rw',
+																		db.wayfinderOrder,
+																		async () => {
+																			await db.wayfinderOrder.delete(todo.id)
+																		},
+																	)
 																},
-															)
-															setLogLimit(limit => limit + 1)
-														}}
-													/>
-													<IonLabel>{todo?.title}</IonLabel>
-													{debug && (
-														<span className="space-x-2">
-															<data className="text-gray-500">{todo.id}</data>
-															<data className="text-gray-500">
-																{todo.order}
-															</data>
-														</span>
-													)}
-													{todo.starRole && (
-														<IonIcon
-															icon={getIonIcon(
-																starRoles?.find(
-																	starRole => starRole.id === todo.starRole,
-																)?.icon?.name,
-															)}
-															slot="end"
-														/>
-													)}
-													{todo.note && (
-														<a
-															href={todo.note.uri}
-															target="_blank"
-														>
-															<IonIcon icon={documentText}></IonIcon>
-														</a>
-													)}
-													<IonReorder slot="end"></IonReorder>
-												</IonItem>
-											</div>
+															},
+														],
+													})
+												}}
+												ref={index === 0 ? (nextTodoRef as any) : undefined}
+												starRole={starRoles?.find(
+													starRole => todo.starRole === starRole.id,
+												)}
+												todo={{ ...todo, order: index }}
+											>
+												<IonReorder slot="end"></IonReorder>
+											</TodoListItem>
 										))}
 									</IonReorderGroup>
 								</IonList>
-								<Icebox todos={todos[2]} />
+								<Icebox todos={todos.icebox} />
 								<IonInfiniteScroll
 									disabled={!enablePagination}
 									position="bottom"
@@ -897,20 +852,16 @@ export const Icebox = ({ todos }: { todos: Todo[] }) => {
 
 	return (
 		<section id="icebox">
-			<IonGrid className="ion-padding-start ion-margin-vertical">
+			<IonGrid className="ion-no-padding ion-margin-vertical">
 				<IonRow className="gap-2">
 					{todos.map(todo => (
-						<IonCard
-							className="cursor-pointer todo ion-no-margin"
+						<TodoCard
 							key={todo.id}
 							onClick={_event => {
 								onClick(todo)
 							}}
-						>
-							<IonCardHeader>
-								<IonCardTitle className="text-sm">{todo.title}</IonCardTitle>
-							</IonCardHeader>
-						</IonCard>
+							todo={todo}
+						/>
 					))}
 				</IonRow>
 			</IonGrid>

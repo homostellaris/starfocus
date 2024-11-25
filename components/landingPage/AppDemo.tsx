@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import Log from '../../pages/docs/log'
-import Todos from '../todos'
+import { Todos } from '../todos'
 import Events from '../todos/Events'
 
 export default function AppDemo() {

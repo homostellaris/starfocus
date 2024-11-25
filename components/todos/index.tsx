@@ -1,8 +1,29 @@
+import {
+	CheckboxChangeEventDetail,
+	IonCard,
+	IonCardHeader,
+	IonCardTitle,
+	IonCheckbox,
+	IonIcon,
+	IonItem,
+	IonLabel,
+} from '@ionic/react'
 import Todo from './Todo'
+import type { StarRole, Todo as TodoType } from '../db'
 import { Todo as TodoInterface } from './interfaces'
-import { RefObject, useMemo } from 'react'
+import {
+	ComponentProps,
+	forwardRef,
+	MouseEventHandler,
+	PropsWithChildren,
+	RefObject,
+	useMemo,
+} from 'react'
+import { useDebug } from '../useDebug'
+import { getIonIcon } from '../starRoles/icons'
+import { documentText, rocketSharp } from 'ionicons/icons'
 
-export default function Todos({
+export function Todos({
 	currentTodoRef,
 	listRef,
 	todos,
@@ -47,5 +68,84 @@ export default function Todos({
 				/>
 			))}
 		</div>
+	)
+}
+
+export const TodoListItem = forwardRef<
+	HTMLDivElement,
+	PropsWithChildren<
+		{
+			starRole?: StarRole
+			todo: TodoType & { order?: number }
+			onCompletionChange: ComponentProps<typeof IonCheckbox>['onIonChange']
+			onSelect: MouseEventHandler<HTMLIonItemElement>
+		} & JSX.IntrinsicElements['div']
+	>
+>(function TodoListItem(
+	{ children, starRole, todo, onCompletionChange, onSelect, ...props },
+	ref,
+) {
+	const [debug] = useDebug()
+
+	return (
+		<div
+			key={todo.id}
+			ref={ref}
+			{...props}
+		>
+			<IonItem
+				button
+				className="todo"
+				onClick={onSelect}
+			>
+				<IonCheckbox
+					aria-label="Complete todo"
+					checked={!!todo.completedAt}
+					slot="start"
+					onClick={event => {
+						// Prevents the IonItem onClick from firing when completing a todo
+						event.stopPropagation()
+					}}
+					onIonChange={onCompletionChange}
+				/>
+				<IonLabel>{todo?.title}</IonLabel>
+				{debug && (
+					<span className="space-x-2">
+						<data className="text-gray-500">{todo.id}</data>
+						<data className="text-gray-500">{todo.order}</data>
+					</span>
+				)}
+				<IonIcon
+					className={starRole ? '' : 'invisible'}
+					icon={starRole ? getIonIcon(starRole.icon.name) : rocketSharp}
+					slot="end"
+				/>
+				{todo.note && (
+					<a
+						href={todo.note.uri}
+						target="_blank"
+					>
+						<IonIcon icon={documentText}></IonIcon>
+					</a>
+				)}
+				{children}
+			</IonItem>
+		</div>
+	)
+})
+
+export function TodoCard({
+	todo,
+	...props
+}: { todo: TodoType } & ComponentProps<typeof IonCard>) {
+	return (
+		<IonCard
+			className="cursor-pointer todo ion-no-margin"
+			{...props}
+		>
+			<IonCardHeader>
+				<IonCardTitle className="text-sm">{todo.title}</IonCardTitle>
+			</IonCardHeader>
+		</IonCard>
 	)
 }

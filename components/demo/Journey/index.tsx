@@ -1,6 +1,6 @@
 import { createRef, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Starship from '../../common/Starship'
-import Todos from '../../todos'
+import { Todos } from '../../todos'
 import { Todo } from '../../todos/interfaces'
 import { useWindowSize } from '../../common/useWindowResize'
 import { TodoPosition } from '../../todos/TodoContext'
