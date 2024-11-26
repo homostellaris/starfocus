@@ -2,7 +2,6 @@ import { menuController } from '@ionic/core/components'
 import {
 	IonButton,
 	IonButtons,
-	IonCheckbox,
 	IonCol,
 	IonContent,
 	IonFab,
@@ -11,11 +10,8 @@ import {
 	IonGrid,
 	IonHeader,
 	IonIcon,
-	IonInfiniteScroll,
-	IonInfiniteScrollContent,
 	IonInput,
 	IonItem,
-	IonLabel,
 	IonList,
 	IonMenu,
 	IonMenuButton,
@@ -35,7 +31,10 @@ import {
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
 	add,
-	documentText,
+	chevronDownOutline,
+	chevronUpCircleOutline,
+	chevronUpCircleSharp,
+	chevronUpOutline,
 	filterSharp,
 	locateOutline,
 	rocketSharp,
@@ -57,12 +56,11 @@ import { useStarshipYPosition } from '../demo/Journey'
 import Tracjectory from '../landingPage/Journey/Trajectory'
 import NoteProviders from '../notes/providers'
 import useSettings from '../settings/useSettings'
-import { getIonIcon } from '../starRoles/icons'
+import { TodoCard, TodoListItem } from '../todos'
 import { useTodoActionSheet } from '../todos/TodoActionSheet'
 import useTodoContext, { TodoContextProvider } from '../todos/TodoContext'
 import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
 import useView, { ViewProvider } from '../view'
-import { TodoCard, TodoListItem } from '../todos'
 
 const Home = () => {
 	useGlobalKeyboardShortcuts()
@@ -112,17 +110,6 @@ export default Home
 export const TodoLists = ({}: {}) => {
 	// Initial loading & scrolling stuff
 	const contentRef = useRef<HTMLIonContentElement>(null)
-	const [enablePagination, setEnablePagination] = useState(false)
-	// useEffect(() => {
-	// 	setTimeout(() => {
-	// 		// TODO: See if ionViewDidEnter works better than setTimeout
-	// 		console.debug('Scrolling to bottom', contentRef.current)
-	// 		contentRef.current?.scrollToBottom(500)
-	// 		setTimeout(() => {
-	// 			setEnablePagination(true)
-	// 		}, 500)
-	// 	}, 200)
-	// }, [])
 
 	// Query stuff
 	const [logLimit, setLogLimit] = useState(7)
@@ -142,26 +129,6 @@ export const TodoLists = ({}: {}) => {
 			},
 		})
 	}, [fab, focusedStarRole, presentCreateTodoModal])
-
-	// Keyboard shortcut stuff
-	useEffect(() => {
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.target !== document.body) return
-
-			if (event.key === 'c') {
-				event.preventDefault()
-				openCreateTodoModal()
-				if (fab.current) fab.current.activated = true
-			} else if (event.key === 's') {
-				event.preventDefault()
-				contentRef.current?.scrollToBottom(500)
-			}
-		}
-		document.addEventListener('keydown', handleKeyDown)
-		return () => {
-			document.removeEventListener('keydown', handleKeyDown)
-		}
-	}, [contentRef, fab, openCreateTodoModal])
 
 	const { inActiveStarRoles, query } = useView()
 
@@ -217,17 +184,6 @@ export const TodoLists = ({}: {}) => {
 	}, [inActiveStarRoles, iceboxLimit, logLimit, query])
 
 	const loading = todos === undefined
-
-	const starRoles = useLiveQuery(() => db.starRoles.toArray())
-
-	const [debug, setDebug] = useState('')
-	useEffect(() => {
-		const params = new URLSearchParams(window.location.search)
-		const searchQuery = params.get('debug')
-		if (searchQuery) {
-			setDebug(searchQuery)
-		}
-	}, [])
 	const todosCount = useMemo(
 		() =>
 			todos === undefined
@@ -236,12 +192,14 @@ export const TodoLists = ({}: {}) => {
 		[todos],
 	)
 
+	const starRoles = useLiveQuery(() => db.starRoles.toArray())
+
 	// Its possible for ref not to change when todo is completed because one other than 'next' is completed in which case starship doesn't move
 	// Consider using a callback ref instead: https://stackoverflow.com/questions/60881446/receive-dimensions-of-element-via-getboundingclientrect-in-react
 	const nextTodoRef = useRef<HTMLIonItemElement>(null)
 	const {
 		nextTodo: {
-			position: [_, setNextTodoPosition],
+			position: [nextTodoPosition, setNextTodoPosition],
 		},
 	} = useTodoContext()
 	// TODO: When dev tools aren't open the todo has zero height
@@ -268,10 +226,34 @@ export const TodoLists = ({}: {}) => {
 		}, 1)
 	}, [nextTodoRef, setNextTodoPosition, todos]) // The todos dep is used as an imperfect proxy for one the position of the next todo changes
 
+	// Keyboard shortcut stuff
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.target !== document.body) return
+
+			if (event.key === 'c') {
+				event.preventDefault()
+				openCreateTodoModal()
+				if (fab.current) fab.current.activated = true
+			} else if (event.key === 's') {
+				event.preventDefault()
+				const y = nextTodoPosition ? nextTodoPosition.top + 32 : 0
+				contentRef.current?.scrollToPoint(undefined, y, 500)
+			}
+		}
+		document.addEventListener('keydown', handleKeyDown)
+		return () => {
+			document.removeEventListener('keydown', handleKeyDown)
+		}
+	}, [contentRef, fab, nextTodoPosition, openCreateTodoModal])
+
 	const [present] = useTodoActionSheet()
 
 	return (
-		<IonContent ref={contentRef}>
+		<IonContent
+			className="relative"
+			ref={contentRef}
+		>
 			<IonGrid className="h-full ion-no-padding">
 				<IonRow className="h-full">
 					<IonCol
@@ -308,18 +290,19 @@ export const TodoLists = ({}: {}) => {
 							</div>
 						) : (
 							<>
-								<IonInfiniteScroll
-									className="h-1"
-									disabled={!enablePagination}
-									position="top"
-									threshold="0px"
-									onIonInfinite={event => {
-										setLogLimit(limit => limit + 10)
-										setTimeout(() => event.target.complete(), 500)
-									}}
+								<IonButton
+									aria-label="Load more log todos"
+									color="medium"
+									expand="full"
+									fill="clear"
+									onClick={() => setLogLimit(limit => limit + 10)}
+									size="small"
 								>
-									<IonInfiniteScrollContent></IonInfiniteScrollContent>
-								</IonInfiniteScroll>
+									<IonIcon
+										slot="icon-only"
+										icon={chevronUpOutline}
+									></IonIcon>
+								</IonButton>
 								<IonList
 									className="mr-1 ion-no-padding"
 									id="log-and-wayfinder"
@@ -467,17 +450,19 @@ export const TodoLists = ({}: {}) => {
 									</IonReorderGroup>
 								</IonList>
 								<Icebox todos={todos.icebox} />
-								<IonInfiniteScroll
-									disabled={!enablePagination}
-									position="bottom"
-									threshold="0px"
-									onIonInfinite={event => {
-										setIceboxLimit(limit => limit + 10)
-										setTimeout(() => event.target.complete(), 500)
-									}}
+								<IonButton
+									aria-label="Load more icebox todos"
+									color="medium"
+									expand="full"
+									fill="clear"
+									onClick={() => setIceboxLimit(limit => limit + 10)}
+									size="small"
 								>
-									<IonInfiniteScrollContent></IonInfiniteScrollContent>
-								</IonInfiniteScroll>
+									<IonIcon
+										slot="icon-only"
+										icon={chevronDownOutline}
+									></IonIcon>
+								</IonButton>
 							</>
 						)}
 					</IonCol>
@@ -774,7 +759,7 @@ export const Journey = ({
 	const [starshipY] = useStarshipYPosition(
 		starship?.current,
 		nextTodoPosition,
-		commonAncestor?.current,
+		commonAncestor.current,
 	)
 
 	return (

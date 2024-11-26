@@ -74,7 +74,7 @@ export function useStarshipYPosition(
 		const todoDistanceFromCommonAncestor = nextTodoPosition.top
 		const starshipHeightAdjustment =
 			(nextTodoPosition.height - starship?.offsetHeight) / 2
-		const additionalOffset = 0 // Just a visual thing to make the center of the rocket align and ignore the tail
+		const additionalOffset = 32 // Hack to accommodate the 'load more' buttons, should calculate properly based on common ancestor.
 
 		const y =
 			todoDistanceFromCommonAncestor +
