@@ -6,6 +6,7 @@ import { Route } from 'react-router-dom'
 import Home from './pages/Home'
 import Constellation from './pages/Constellation'
 import ErrorBoundary from './ErrorBoundary'
+import Test from './pages/Test'
 
 setupIonicReact({})
 
@@ -32,6 +33,10 @@ const App = () => {
 						<Route
 							path="/home"
 							render={() => <Home />}
+						/>
+						<Route
+							path="/test"
+							render={() => <Test />}
 						/>
 					</ErrorBoundary>
 				</IonRouterOutlet>

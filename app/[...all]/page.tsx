@@ -10,6 +10,7 @@ export async function generateStaticParams() {
 		{ all: ['home'] },
 		{ all: ['constellation'] },
 		{ all: ['settings'] },
+		{ all: ['test'] },
 		{
 			all: ['/icon.png'],
 		},
