@@ -269,6 +269,20 @@ export const TodoLists = ({}: {}) => {
 								<IonIcon icon={add}></IonIcon>
 							</IonFabButton>
 						</IonFab>
+						<IonButton
+							className="fixed left-[calc(23px-10px)] min-[992px]:left-[calc(100vw/12*2-40px-6px)] bottom-[calc(64px+52px)] z-10"
+							onClick={() => {
+								const y = nextTodoPosition ? nextTodoPosition.top + 32 : 0
+								contentRef.current?.scrollToPoint(undefined, y, 500)
+							}}
+							shape="round"
+							size="small"
+						>
+							<IonIcon
+								slot="icon-only"
+								icon={rocketSharp}
+							></IonIcon>
+						</IonButton>
 						<Journey commonAncestor={contentRef} />
 					</IonCol>
 					<IonCol sizeLg="8">
