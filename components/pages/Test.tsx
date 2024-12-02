@@ -32,7 +32,12 @@ function Example() {
 						<IonTitle>Main View</IonTitle>
 					</IonToolbar>
 				</IonHeader>
-				<IonContent className="ion-padding">Main View Content</IonContent>
+				<IonContent className="ion-padding">
+					<div className="relative bg-green-400">
+						Main View Content
+						<div className="absolute top-0 -left-2">bleh</div>
+					</div>
+				</IonContent>
 			</div>
 
 			<IonMenu

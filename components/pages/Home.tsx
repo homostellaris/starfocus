@@ -12,6 +12,8 @@ import {
 	IonIcon,
 	IonInput,
 	IonItem,
+	IonItemGroup,
+	IonLabel,
 	IonList,
 	IonMenu,
 	IonMenuButton,
@@ -32,8 +34,6 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import {
 	add,
 	chevronDownOutline,
-	chevronUpCircleOutline,
-	chevronUpCircleSharp,
 	chevronUpOutline,
 	filterSharp,
 	locateOutline,
@@ -61,6 +61,7 @@ import { useTodoActionSheet } from '../todos/TodoActionSheet'
 import useTodoContext, { TodoContextProvider } from '../todos/TodoContext'
 import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
 import useView, { ViewProvider } from '../view'
+import { groupTodosByCompletedAt } from '../todos/groupTodosByCompletedAt'
 
 const Home = () => {
 	useGlobalKeyboardShortcuts()
@@ -177,7 +178,7 @@ export const TodoLists = ({}: {}) => {
 			iceboxTodosPromise,
 		])
 		return {
-			log: todos[0],
+			log: todos[0].reverse(),
 			wayfinder: todos[1],
 			icebox: todos[2],
 		}
@@ -202,28 +203,25 @@ export const TodoLists = ({}: {}) => {
 			position: [nextTodoPosition, setNextTodoPosition],
 		},
 	} = useTodoContext()
+	// console.debug({ todos })
+
 	// TODO: When dev tools aren't open the todo has zero height
 	// useLayoutEffect doesn't work
 	// setTimeout 0 doesn't work
 	// callbackRef doesn't work
 	// This person thinks its an Ionic bug but I'm not sure: https://stackoverflow.com/questions/60881446/receive-dimensions-of-element-via-getboundingclientrect-in-react
 	useEffect(() => {
-		setTimeout(() => {
-			if (nextTodoRef.current) {
-				console.debug(
-					'Setting next todo with ID',
-					nextTodoRef.current.dataset.id,
-				)
-				const domRect = nextTodoRef.current.getBoundingClientRect()
-				setNextTodoPosition({
-					height: domRect.height,
-					top: nextTodoRef.current.offsetTop,
-				}) // Send this rather than the current ref as if unchanged then is will be memoised and nothing will happen.
-			} else {
-				console.debug('No next todo ref')
-				setNextTodoPosition(null) // Send this rather than the current ref as if unchanged then is will be memoised and nothing will happen.
-			}
-		}, 1)
+		if (nextTodoRef.current) {
+			console.debug('Setting next todo with ID', nextTodoRef.current.dataset.id)
+			const domRect = nextTodoRef.current.getBoundingClientRect()
+			setNextTodoPosition({
+				height: domRect.height,
+				top: nextTodoRef.current.offsetTop,
+			}) // Send this rather than the current ref as if unchanged then is will be memoised and nothing will happen.
+		} else {
+			console.debug('No next todo ref')
+			setNextTodoPosition(null) // Send this rather than the current ref as if unchanged then is will be memoised and nothing will happen.
+		}
 	}, [nextTodoRef, setNextTodoPosition, todos]) // The todos dep is used as an imperfect proxy for one the position of the next todo changes
 
 	// Keyboard shortcut stuff
@@ -248,6 +246,11 @@ export const TodoLists = ({}: {}) => {
 	}, [contentRef, fab, nextTodoPosition, openCreateTodoModal])
 
 	const [present] = useTodoActionSheet()
+
+	const logGroups = useMemo(
+		() => (todos?.log ? groupTodosByCompletedAt(todos.log) : []),
+		[todos?.log],
+	)
 
 	return (
 		<IonContent
@@ -318,150 +321,165 @@ export const TodoLists = ({}: {}) => {
 									></IonIcon>
 								</IonButton>
 								<IonList
-									className="mr-1 ion-no-padding"
+									className="relative mr-1 [contain:none]"
 									id="log-and-wayfinder"
 								>
-									{todos.log.sort(byDate).map(todo => (
-										<TodoListItem
-											key={todo.id}
-											onSelect={_event => {
-												present(todo)
-											}}
-											onCompletionChange={event => {
-												db.transaction(
-													'rw',
-													db.wayfinderOrder,
-													db.todos,
-													async () => {
-														const wayfinderOrder = await db.wayfinderOrder
-															.orderBy('order')
-															.limit(1)
-															.keys()
-														await Promise.all([
-															db.wayfinderOrder.add({
-																todoId: todo.id,
-																order: order(
-																	undefined,
-																	wayfinderOrder[0]?.toString(),
-																),
-															}),
-															db.todos.update(todo.id, {
-																completedAt: event.detail.checked
-																	? new Date()
-																	: undefined,
-															}),
-														])
-													},
-												)
-												setLogLimit(limit => limit - 1)
-											}}
-											starRole={starRoles?.find(
-												starRole => todo.starRole === starRole.id,
-											)}
-											todo={todo}
-										/>
-									))}
-									<IonReorderGroup
-										disabled={false}
-										onIonItemReorder={async event => {
-											// We don't use this to reorder for us because it results in a flash of 'unordered' content.
-											// Instead we re-order right away, calculate the new order ourselves, and update the DB.
-											event.detail.complete()
-
-											const wayfinderTodos = await db.wayfinderOrder
-												.orderBy('order')
-												.toArray()
-											/* If the todo moves down then all the todos after its target location must be nudged up
-											 * If the todo moves up then all the todos
-											 */
-											// TODO: Could make this easier with IDs in the DOM
-											const fromTodo = todos[1][event.detail.from]
-											const toTodo = todos[1][event.detail.to]
-											const unfilteredFromIndex = wayfinderTodos.findIndex(
-												({ todoId }) => todoId === fromTodo.id,
-											)
-											const unfilteredToIndex = wayfinderTodos.findIndex(
-												({ todoId }) => todoId === toTodo.id,
-											)
-
-											const [startIndex, endIndex] = calculateReorderIndices(
-												unfilteredFromIndex,
-												unfilteredToIndex,
-											)
-											const start = wayfinderTodos[startIndex]?.order
-											const end = wayfinderTodos[endIndex]?.order
-											const newOrder = order(start, end)
-
-											console.debug('Re-ordering', {
-												unfilteredFromIndex,
-												unfilteredToIndex,
-												start,
-												end,
-												newOrder,
-											})
-
-											await db.wayfinderOrder.update(fromTodo.id, {
-												order: newOrder,
-											})
-										}}
-									>
-										{todos.wayfinder.map((todo, index) => (
-											<TodoListItem
-												key={todo.id}
-												data-id={todo.id}
-												data-next-todo={index === 0}
-												onCompletionChange={async event => {
-													db.transaction(
-														'rw',
-														db.wayfinderOrder,
-														db.todos,
-														async () => {
-															await Promise.all([
-																db.wayfinderOrder.delete(todo.id),
-																db.todos.update(todo.id, {
-																	completedAt: event.detail.checked
-																		? new Date()
-																		: undefined,
-																}),
-															])
-														},
-													)
-													setLogLimit(limit => limit + 1)
-												}}
-												onSelect={event => {
-													// Prevent the action sheet from opening when reordering
-													if (event.target['localName'] === 'ion-item') return
-
-													present(todo, {
-														buttons: [
-															{
-																text: 'Move to icebox',
-																data: {
-																	action: 'icebox',
-																},
-																handler: async () => {
-																	db.transaction(
-																		'rw',
-																		db.wayfinderOrder,
-																		async () => {
-																			await db.wayfinderOrder.delete(todo.id)
-																		},
-																	)
-																},
+									{logGroups.map(group => (
+										<IonItemGroup key={group.label}>
+											<TimeInfo
+												datetime={new Date().toISOString().split('T')[0]}
+												label={group.label}
+											/>
+											{group.todos.map(todo => (
+												<TodoListItem
+													key={todo.id}
+													onSelect={_event => {
+														present(todo)
+													}}
+													onCompletionChange={event => {
+														db.transaction(
+															'rw',
+															db.wayfinderOrder,
+															db.todos,
+															async () => {
+																const wayfinderOrder = await db.wayfinderOrder
+																	.orderBy('order')
+																	.limit(1)
+																	.keys()
+																await Promise.all([
+																	db.wayfinderOrder.add({
+																		todoId: todo.id,
+																		order: order(
+																			undefined,
+																			wayfinderOrder[0]?.toString(),
+																		),
+																	}),
+																	db.todos.update(todo.id, {
+																		completedAt: event.detail.checked
+																			? new Date()
+																			: undefined,
+																	}),
+																])
 															},
-														],
-													})
-												}}
-												ref={index === 0 ? (nextTodoRef as any) : undefined}
-												starRole={starRoles?.find(
-													starRole => todo.starRole === starRole.id,
-												)}
-												todo={{ ...todo, order: index }}
-											>
-												<IonReorder slot="end"></IonReorder>
-											</TodoListItem>
-										))}
-									</IonReorderGroup>
+														)
+														setLogLimit(limit => limit - 1)
+													}}
+													starRole={starRoles?.find(
+														starRole => todo.starRole === starRole.id,
+													)}
+													todo={todo}
+												/>
+											))}
+										</IonItemGroup>
+									))}
+									<IonItemGroup>
+										<TimeInfo
+											datetime={new Date().toISOString().split('T')[0]}
+											label="Today"
+											key="today"
+										/>
+										<IonReorderGroup
+											disabled={false}
+											onIonItemReorder={async event => {
+												// We don't use this to reorder for us because it results in a flash of 'unordered' content.
+												// Instead we re-order right away, calculate the new order ourselves, and update the DB.
+												event.detail.complete()
+
+												const wayfinderTodos = await db.wayfinderOrder
+													.orderBy('order')
+													.toArray()
+												/* If the todo moves down then all the todos after its target location must be nudged up
+												 * If the todo moves up then all the todos
+												 */
+												// TODO: Could make this easier with IDs in the DOM
+												const fromTodo = todos.wayfinder[event.detail.from]
+												const toTodo = todos.wayfinder[event.detail.to]
+												const unfilteredFromIndex = wayfinderTodos.findIndex(
+													({ todoId }) => todoId === fromTodo.id,
+												)
+												const unfilteredToIndex = wayfinderTodos.findIndex(
+													({ todoId }) => todoId === toTodo.id,
+												)
+
+												const [startIndex, endIndex] = calculateReorderIndices(
+													unfilteredFromIndex,
+													unfilteredToIndex,
+												)
+												const start = wayfinderTodos[startIndex]?.order
+												const end = wayfinderTodos[endIndex]?.order
+												const newOrder = order(start, end)
+
+												console.debug('Re-ordering', {
+													unfilteredFromIndex,
+													unfilteredToIndex,
+													start,
+													end,
+													newOrder,
+												})
+
+												await db.wayfinderOrder.update(fromTodo.id, {
+													order: newOrder,
+												})
+											}}
+										>
+											{todos.wayfinder.map((todo, index) => (
+												<TodoListItem
+													key={todo.id}
+													data-id={todo.id}
+													data-next-todo={index === 0}
+													onCompletionChange={async event => {
+														db.transaction(
+															'rw',
+															db.wayfinderOrder,
+															db.todos,
+															async () => {
+																await Promise.all([
+																	db.wayfinderOrder.delete(todo.id),
+																	db.todos.update(todo.id, {
+																		completedAt: event.detail.checked
+																			? new Date()
+																			: undefined,
+																	}),
+																])
+															},
+														)
+														setLogLimit(limit => limit + 1)
+													}}
+													onSelect={event => {
+														// Prevent the action sheet from opening when reordering
+														if (event.target['localName'] === 'ion-item') return
+
+														present(todo, {
+															buttons: [
+																{
+																	text: 'Move to icebox',
+																	data: {
+																		action: 'icebox',
+																	},
+																	handler: async () => {
+																		db.transaction(
+																			'rw',
+																			db.wayfinderOrder,
+																			async () => {
+																				await db.wayfinderOrder.delete(todo.id)
+																			},
+																		)
+																	},
+																},
+															],
+														})
+													}}
+													ref={index === 0 ? (nextTodoRef as any) : undefined}
+													starRole={starRoles?.find(
+														starRole => todo.starRole === starRole.id,
+													)}
+													todo={{ ...todo }}
+												>
+													<IonReorder slot="end"></IonReorder>
+												</TodoListItem>
+											))}
+										</IonReorderGroup>
+									</IonItemGroup>
 								</IonList>
 								<Icebox todos={todos.icebox} />
 								<IonButton
@@ -908,10 +926,17 @@ export const Searchbar = () => {
 	)
 }
 
-const byDate = (a: any, b: any) => {
-	const dateA = new Date(a.completedAt)
-	const dateB = new Date(b.completedAt)
-	return dateA.getTime() - dateB.getTime()
+function TimeInfo({ datetime, label }: { datetime: string; label: string }) {
+	return (
+		<IonLabel className="sticky top-0 text-sm text-white">
+			<time
+				dateTime={datetime}
+				className="absolute text-sm text-slate-200 -left-[calc(56px)] -translate-x-full top-4 -translate-y-1/2"
+			>
+				{label}
+			</time>
+		</IonLabel>
+	)
 }
 
 function matchesQuery(query: string, todo: Todo) {

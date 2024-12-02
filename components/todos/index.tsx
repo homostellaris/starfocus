@@ -76,7 +76,7 @@ export const TodoListItem = forwardRef<
 	PropsWithChildren<
 		{
 			starRole?: StarRole
-			todo: TodoType & { order?: number }
+			todo: TodoType & { order?: string }
 			onCompletionChange: ComponentProps<typeof IonCheckbox>['onIonChange']
 			onSelect: MouseEventHandler<HTMLIonItemElement>
 		} & JSX.IntrinsicElements['div']
@@ -111,8 +111,15 @@ export const TodoListItem = forwardRef<
 				<IonLabel>{todo?.title}</IonLabel>
 				{debug && (
 					<span className="space-x-2">
-						<data className="text-gray-500">{todo.id}</data>
-						<data className="text-gray-500">{todo.order}</data>
+						<data className="text-xs text-gray-500">{todo.id}</data>
+						{todo.order ? (
+							<data className="text-xs text-gray-500">{todo.order}</data>
+						) : null}
+						{todo.completedAt ? (
+							<data className="text-xs text-gray-500">
+								{todo.completedAt?.toISOString()}
+							</data>
+						) : null}
 					</span>
 				)}
 				<IonIcon

@@ -45,6 +45,7 @@
 		"classnames": "2.5.1",
 		"clsx": "^2.1.1",
 		"convex": "^1.11.3",
+		"dayjs": "^1.11.13",
 		"debounce": "^1.2.1",
 		"dexie": "^4.0.9",
 		"dexie-cloud-addon": "^4.0.7",
