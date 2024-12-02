@@ -12,6 +12,7 @@ import {
 	IonIcon,
 	IonInput,
 	IonItem,
+	IonItemDivider,
 	IonItemGroup,
 	IonLabel,
 	IonList,
@@ -41,6 +42,8 @@ import {
 } from 'ionicons/icons'
 import _ from 'lodash'
 import {
+	ComponentProps,
+	ComponentType,
 	RefObject,
 	useCallback,
 	useEffect,
@@ -321,164 +324,176 @@ export const TodoLists = ({}: {}) => {
 									></IonIcon>
 								</IonButton>
 								<IonList
-									className="relative mr-1 [contain:none]"
+									className="relative mr-1 [contain:none] ion-no-padding"
 									id="log-and-wayfinder"
 								>
 									{logGroups.map(group => (
 										<IonItemGroup key={group.label}>
-											<TimeInfo
-												datetime={new Date().toISOString().split('T')[0]}
-												label={group.label}
-											/>
-											{group.todos.map(todo => (
-												<TodoListItem
-													key={todo.id}
-													onSelect={_event => {
-														present(todo)
-													}}
-													onCompletionChange={event => {
-														db.transaction(
-															'rw',
-															db.wayfinderOrder,
-															db.todos,
-															async () => {
-																const wayfinderOrder = await db.wayfinderOrder
-																	.orderBy('order')
-																	.limit(1)
-																	.keys()
-																await Promise.all([
-																	db.wayfinderOrder.add({
-																		todoId: todo.id,
-																		order: order(
-																			undefined,
-																			wayfinderOrder[0]?.toString(),
-																		),
-																	}),
-																	db.todos.update(todo.id, {
-																		completedAt: event.detail.checked
-																			? new Date()
-																			: undefined,
-																	}),
-																])
-															},
-														)
-														setLogLimit(limit => limit - 1)
-													}}
-													starRole={starRoles?.find(
-														starRole => todo.starRole === starRole.id,
-													)}
-													todo={todo}
+											<JourneyLabel>
+												<TimeInfo
+													datetime={new Date().toISOString().split('T')[0]}
+													label={group.label}
 												/>
-											))}
+											</JourneyLabel>
+											<div className="-mt-8">
+												{group.todos.map(todo => (
+													<TodoListItem
+														key={todo.id}
+														onSelect={_event => {
+															present(todo)
+														}}
+														onCompletionChange={event => {
+															db.transaction(
+																'rw',
+																db.wayfinderOrder,
+																db.todos,
+																async () => {
+																	const wayfinderOrder = await db.wayfinderOrder
+																		.orderBy('order')
+																		.limit(1)
+																		.keys()
+																	await Promise.all([
+																		db.wayfinderOrder.add({
+																			todoId: todo.id,
+																			order: order(
+																				undefined,
+																				wayfinderOrder[0]?.toString(),
+																			),
+																		}),
+																		db.todos.update(todo.id, {
+																			completedAt: event.detail.checked
+																				? new Date()
+																				: undefined,
+																		}),
+																	])
+																},
+															)
+															setLogLimit(limit => limit - 1)
+														}}
+														starRole={starRoles?.find(
+															starRole => todo.starRole === starRole.id,
+														)}
+														todo={todo}
+													/>
+												))}
+											</div>
 										</IonItemGroup>
 									))}
 									<IonItemGroup>
-										<TimeInfo
-											datetime={new Date().toISOString().split('T')[0]}
-											label="Today"
-											key="today"
-										/>
-										<IonReorderGroup
-											disabled={false}
-											onIonItemReorder={async event => {
-												// We don't use this to reorder for us because it results in a flash of 'unordered' content.
-												// Instead we re-order right away, calculate the new order ourselves, and update the DB.
-												event.detail.complete()
+										<JourneyLabel>
+											<TimeInfo
+												datetime={new Date().toISOString().split('T')[0]}
+												label="Today"
+												key="today"
+											/>
+										</JourneyLabel>
+										<div className="-mt-8">
+											<IonReorderGroup
+												disabled={false}
+												onIonItemReorder={async event => {
+													// We don't use this to reorder for us because it results in a flash of 'unordered' content.
+													// Instead we re-order right away, calculate the new order ourselves, and update the DB.
+													event.detail.complete()
 
-												const wayfinderTodos = await db.wayfinderOrder
-													.orderBy('order')
-													.toArray()
-												/* If the todo moves down then all the todos after its target location must be nudged up
-												 * If the todo moves up then all the todos
-												 */
-												// TODO: Could make this easier with IDs in the DOM
-												const fromTodo = todos.wayfinder[event.detail.from]
-												const toTodo = todos.wayfinder[event.detail.to]
-												const unfilteredFromIndex = wayfinderTodos.findIndex(
-													({ todoId }) => todoId === fromTodo.id,
-												)
-												const unfilteredToIndex = wayfinderTodos.findIndex(
-													({ todoId }) => todoId === toTodo.id,
-												)
+													const wayfinderTodos = await db.wayfinderOrder
+														.orderBy('order')
+														.toArray()
+													/* If the todo moves down then all the todos after its target location must be nudged up
+													 * If the todo moves up then all the todos
+													 */
+													// TODO: Could make this easier with IDs in the DOM
+													const fromTodo = todos.wayfinder[event.detail.from]
+													const toTodo = todos.wayfinder[event.detail.to]
+													const unfilteredFromIndex = wayfinderTodos.findIndex(
+														({ todoId }) => todoId === fromTodo.id,
+													)
+													const unfilteredToIndex = wayfinderTodos.findIndex(
+														({ todoId }) => todoId === toTodo.id,
+													)
 
-												const [startIndex, endIndex] = calculateReorderIndices(
-													unfilteredFromIndex,
-													unfilteredToIndex,
-												)
-												const start = wayfinderTodos[startIndex]?.order
-												const end = wayfinderTodos[endIndex]?.order
-												const newOrder = order(start, end)
-
-												console.debug('Re-ordering', {
-													unfilteredFromIndex,
-													unfilteredToIndex,
-													start,
-													end,
-													newOrder,
-												})
-
-												await db.wayfinderOrder.update(fromTodo.id, {
-													order: newOrder,
-												})
-											}}
-										>
-											{todos.wayfinder.map((todo, index) => (
-												<TodoListItem
-													key={todo.id}
-													data-id={todo.id}
-													data-next-todo={index === 0}
-													onCompletionChange={async event => {
-														db.transaction(
-															'rw',
-															db.wayfinderOrder,
-															db.todos,
-															async () => {
-																await Promise.all([
-																	db.wayfinderOrder.delete(todo.id),
-																	db.todos.update(todo.id, {
-																		completedAt: event.detail.checked
-																			? new Date()
-																			: undefined,
-																	}),
-																])
-															},
+													const [startIndex, endIndex] =
+														calculateReorderIndices(
+															unfilteredFromIndex,
+															unfilteredToIndex,
 														)
-														setLogLimit(limit => limit + 1)
-													}}
-													onSelect={event => {
-														// Prevent the action sheet from opening when reordering
-														if (event.target['localName'] === 'ion-item') return
+													const start = wayfinderTodos[startIndex]?.order
+													const end = wayfinderTodos[endIndex]?.order
+													const newOrder = order(start, end)
 
-														present(todo, {
-															buttons: [
-																{
-																	text: 'Move to icebox',
-																	data: {
-																		action: 'icebox',
-																	},
-																	handler: async () => {
-																		db.transaction(
-																			'rw',
-																			db.wayfinderOrder,
-																			async () => {
-																				await db.wayfinderOrder.delete(todo.id)
-																			},
-																		)
-																	},
+													console.debug('Re-ordering', {
+														unfilteredFromIndex,
+														unfilteredToIndex,
+														start,
+														end,
+														newOrder,
+													})
+
+													await db.wayfinderOrder.update(fromTodo.id, {
+														order: newOrder,
+													})
+												}}
+											>
+												{todos.wayfinder.map((todo, index) => (
+													<TodoListItem
+														key={todo.id}
+														data-id={todo.id}
+														data-next-todo={index === 0}
+														onCompletionChange={async event => {
+															db.transaction(
+																'rw',
+																db.wayfinderOrder,
+																db.todos,
+																async () => {
+																	await Promise.all([
+																		db.wayfinderOrder.delete(todo.id),
+																		db.todos.update(todo.id, {
+																			completedAt: event.detail.checked
+																				? new Date()
+																				: undefined,
+																		}),
+																	])
 																},
-															],
-														})
-													}}
-													ref={index === 0 ? (nextTodoRef as any) : undefined}
-													starRole={starRoles?.find(
-														starRole => todo.starRole === starRole.id,
-													)}
-													todo={{ ...todo }}
-												>
-													<IonReorder slot="end"></IonReorder>
-												</TodoListItem>
-											))}
-										</IonReorderGroup>
+															)
+															setLogLimit(limit => limit + 1)
+														}}
+														onSelect={event => {
+															// Prevent the action sheet from opening when reordering
+															if (event.target['localName'] === 'ion-item')
+																return
+
+															present(todo, {
+																buttons: [
+																	{
+																		text: 'Move to icebox',
+																		data: {
+																			action: 'icebox',
+																		},
+																		handler: async () => {
+																			db.transaction(
+																				'rw',
+																				db.wayfinderOrder,
+																				async () => {
+																					await db.wayfinderOrder.delete(
+																						todo.id,
+																					)
+																				},
+																			)
+																		},
+																	},
+																],
+															})
+														}}
+														ref={index === 0 ? (nextTodoRef as any) : undefined}
+														starRole={starRoles?.find(
+															starRole => todo.starRole === starRole.id,
+														)}
+														todo={{ ...todo }}
+													>
+														<IonReorder slot="end"></IonReorder>
+													</TodoListItem>
+												))}
+											</IonReorderGroup>
+										</div>
 									</IonItemGroup>
 								</IonList>
 								<Icebox todos={todos.icebox} />
@@ -926,12 +941,23 @@ export const Searchbar = () => {
 	)
 }
 
+function JourneyLabel({ children }: ComponentProps<typeof IonItemDivider>) {
+	return (
+		<IonItemDivider
+			className="top-4 h-8 -translate-x-[calc(100%+56px)] -translate-y-1/2 w-fit [--background:none] [--inner-padding-end:none]"
+			sticky
+		>
+			{children}
+		</IonItemDivider>
+	)
+}
+
 function TimeInfo({ datetime, label }: { datetime: string; label: string }) {
 	return (
-		<IonLabel className="sticky top-0 text-sm text-white">
+		<IonLabel>
 			<time
 				dateTime={datetime}
-				className="absolute text-sm text-slate-200 -left-[calc(56px)] -translate-x-full top-4 -translate-y-1/2"
+				className="text-sm text-slate-200"
 			>
 				{label}
 			</time>

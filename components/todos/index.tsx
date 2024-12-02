@@ -1,5 +1,4 @@
 import {
-	CheckboxChangeEventDetail,
 	IonCard,
 	IonCardHeader,
 	IonCardTitle,
