@@ -957,13 +957,8 @@ function JourneyLabel({ children }: ComponentProps<typeof IonItemDivider>) {
 
 function TimeInfo({ datetime, label }: { datetime: string; label: string }) {
 	return (
-		<IonLabel>
-			<time
-				dateTime={datetime}
-				className="text-sm text-slate-200"
-			>
-				{label}
-			</time>
+		<IonLabel color="medium">
+			<time dateTime={datetime}>{label}</time>
 		</IonLabel>
 	)
 }
