@@ -6,7 +6,12 @@ beforeAll(() => {
 })
 
 test('no completed todos', () => {
-	expect(groupTodosByCompletedAt([])).toEqual([])
+	expect(groupTodosByCompletedAt([])).toEqual([
+		{
+			label: 'Today',
+			todos: [],
+		},
+	])
 })
 
 describe('one completed todo', () => {
@@ -53,6 +58,10 @@ describe('one completed todo', () => {
 					},
 				],
 			},
+			{
+				label: 'Today',
+				todos: [],
+			},
 		])
 	})
 
@@ -77,6 +86,10 @@ describe('one completed todo', () => {
 					},
 				],
 			},
+			{
+				label: 'Today',
+				todos: [],
+			},
 		])
 
 		const mondayStart = new Date('2019-12-30T00:00:00.000Z')
@@ -98,6 +111,10 @@ describe('one completed todo', () => {
 						title: 'Buy milk',
 					},
 				],
+			},
+			{
+				label: 'Today',
+				todos: [],
 			},
 		])
 	})
@@ -122,6 +139,10 @@ describe('one completed todo', () => {
 					},
 				],
 			},
+			{
+				label: 'Today',
+				todos: [],
+			},
 		])
 
 		expect(
@@ -142,6 +163,10 @@ describe('one completed todo', () => {
 						title: 'Buy milk',
 					},
 				],
+			},
+			{
+				label: 'Today',
+				todos: [],
 			},
 		])
 	})
@@ -231,6 +256,10 @@ describe('multiple completed todos', () => {
 					},
 				],
 			},
+			{
+				label: 'Today',
+				todos: [],
+			},
 		])
 	})
 
@@ -316,6 +345,10 @@ describe('multiple completed todos', () => {
 						title: 'MOAR MILK DAMMIT',
 					},
 				],
+			},
+			{
+				label: 'Today',
+				todos: [],
 			},
 		])
 	})

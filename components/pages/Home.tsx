@@ -73,7 +73,6 @@ const Home = () => {
 		<>
 			<ViewProvider>
 				<TodoContextProvider>
-					<MiscMenu />
 					<ViewMenu />
 					<IonPage id="main-content">
 						<Header title="Home" />
@@ -83,11 +82,11 @@ const Home = () => {
 							translucent
 						>
 							<IonToolbar>
-								<IonButtons slot="primary">
+								<IonButtons slot="start">
 									<IonButton
 										id="view-menu-button"
 										onClick={() => {
-											menuController.toggle('end')
+											menuController.toggle('start')
 										}}
 									>
 										<IonIcon
@@ -95,12 +94,6 @@ const Home = () => {
 											slot="icon-only"
 										/>
 									</IonButton>
-								</IonButtons>
-								<IonButtons
-									id="misc-menu-button"
-									slot="start"
-								>
-									<IonMenuButton></IonMenuButton>
 								</IonButtons>
 								<Searchbar />
 							</IonToolbar>
@@ -253,10 +246,13 @@ export const TodoLists = ({}: {}) => {
 
 	const [present] = useTodoActionSheet()
 
-	const logGroups = useMemo(
-		() => (todos?.log ? groupTodosByCompletedAt(todos.log) : []),
-		[todos?.log],
-	)
+	const [logGroups, todayCompletedTodos] = useMemo(() => {
+		if (!todos?.log) return [[], []]
+		const groups = groupTodosByCompletedAt(todos.log)
+		const todayGroup = groups[groups.length - 1]
+		const logGroups = groups.slice(0, -1)
+		return [logGroups, todayGroup.todos]
+	}, [todos?.log])
 
 	return (
 		<IonContent
@@ -436,6 +432,46 @@ export const TodoLists = ({}: {}) => {
 													})
 												}}
 											>
+												{todayCompletedTodos.map(todo => (
+													<TodoListItem
+														key={todo.id}
+														onSelect={_event => {
+															present(todo)
+														}}
+														onCompletionChange={event => {
+															db.transaction(
+																'rw',
+																db.wayfinderOrder,
+																db.todos,
+																async () => {
+																	const wayfinderOrder = await db.wayfinderOrder
+																		.orderBy('order')
+																		.limit(1)
+																		.keys()
+																	await Promise.all([
+																		db.wayfinderOrder.add({
+																			todoId: todo.id,
+																			order: order(
+																				undefined,
+																				wayfinderOrder[0]?.toString(),
+																			),
+																		}),
+																		db.todos.update(todo.id, {
+																			completedAt: event.detail.checked
+																				? new Date()
+																				: undefined,
+																		}),
+																	])
+																},
+															)
+															setLogLimit(limit => limit - 1)
+														}}
+														starRole={starRoles?.find(
+															starRole => todo.starRole === starRole.id,
+														)}
+														todo={todo}
+													/>
+												))}
 												{todos.wayfinder.map((todo, index) => (
 													<TodoListItem
 														key={todo.id}
@@ -695,7 +731,7 @@ export const ViewMenu = () => {
 		<IonMenu
 			contentId="main-content"
 			id="view-menu"
-			side="end"
+			side="start"
 			type="push"
 		>
 			<IonHeader>

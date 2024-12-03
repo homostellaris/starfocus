@@ -80,6 +80,6 @@ export function groupTodosByCompletedAt(completedTodos: Todo[]) {
 			const indexB = groupMeta.findIndex(meta => meta.label === b[0])
 			return indexA - indexB
 		})
-		.filter(([, todos]) => todos.length > 0)
+		.filter(([label, todos]) => todos.length > 0 || label === 'Today') // Always include today because want to show the marker even when there are no todos yet completed
 		.map(([label, todos]) => ({ label, todos }))
 }
