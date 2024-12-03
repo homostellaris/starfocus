@@ -78,7 +78,10 @@ const Home = () => {
 					<IonPage id="main-content">
 						<Header title="Home" />
 						<TodoLists />
-						<IonFooter>
+						<IonFooter
+							className="min-[992px]:w-[calc(66.67%+56*2px)] min-[992px]:mx-auto min-[992px]:rounded-t-lg overflow-hidden"
+							translucent
+						>
 							<IonToolbar>
 								<IonButtons slot="primary">
 									<IonButton
