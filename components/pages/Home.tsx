@@ -385,6 +385,46 @@ export const TodoLists = ({}: {}) => {
 											/>
 										</JourneyLabel>
 										<div className="-mt-8">
+											{todayCompletedTodos.map(todo => (
+												<TodoListItem
+													key={todo.id}
+													onSelect={_event => {
+														present(todo)
+													}}
+													onCompletionChange={event => {
+														db.transaction(
+															'rw',
+															db.wayfinderOrder,
+															db.todos,
+															async () => {
+																const wayfinderOrder = await db.wayfinderOrder
+																	.orderBy('order')
+																	.limit(1)
+																	.keys()
+																await Promise.all([
+																	db.wayfinderOrder.add({
+																		todoId: todo.id,
+																		order: order(
+																			undefined,
+																			wayfinderOrder[0]?.toString(),
+																		),
+																	}),
+																	db.todos.update(todo.id, {
+																		completedAt: event.detail.checked
+																			? new Date()
+																			: undefined,
+																	}),
+																])
+															},
+														)
+														setLogLimit(limit => limit - 1)
+													}}
+													starRole={starRoles?.find(
+														starRole => todo.starRole === starRole.id,
+													)}
+													todo={todo}
+												/>
+											))}
 											<IonReorderGroup
 												disabled={false}
 												onIonItemReorder={async event => {
@@ -434,46 +474,6 @@ export const TodoLists = ({}: {}) => {
 													})
 												}}
 											>
-												{todayCompletedTodos.map(todo => (
-													<TodoListItem
-														key={todo.id}
-														onSelect={_event => {
-															present(todo)
-														}}
-														onCompletionChange={event => {
-															db.transaction(
-																'rw',
-																db.wayfinderOrder,
-																db.todos,
-																async () => {
-																	const wayfinderOrder = await db.wayfinderOrder
-																		.orderBy('order')
-																		.limit(1)
-																		.keys()
-																	await Promise.all([
-																		db.wayfinderOrder.add({
-																			todoId: todo.id,
-																			order: order(
-																				undefined,
-																				wayfinderOrder[0]?.toString(),
-																			),
-																		}),
-																		db.todos.update(todo.id, {
-																			completedAt: event.detail.checked
-																				? new Date()
-																				: undefined,
-																		}),
-																	])
-																},
-															)
-															setLogLimit(limit => limit - 1)
-														}}
-														starRole={starRoles?.find(
-															starRole => todo.starRole === starRole.id,
-														)}
-														todo={todo}
-													/>
-												))}
 												{todos.wayfinder.map((todo, index) => (
 													<TodoListItem
 														key={todo.id}
