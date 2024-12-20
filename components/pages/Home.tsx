@@ -17,7 +17,6 @@ import {
 	IonLabel,
 	IonList,
 	IonMenu,
-	IonMenuButton,
 	IonPage,
 	IonReorder,
 	IonReorderGroup,
@@ -43,7 +42,6 @@ import {
 import _ from 'lodash'
 import {
 	ComponentProps,
-	ComponentType,
 	RefObject,
 	useCallback,
 	useEffect,
@@ -63,8 +61,8 @@ import { TodoCard, TodoListItem } from '../todos'
 import { useTodoActionSheet } from '../todos/TodoActionSheet'
 import useTodoContext, { TodoContextProvider } from '../todos/TodoContext'
 import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
-import useView, { ViewProvider } from '../view'
 import { groupTodosByCompletedAt } from '../todos/groupTodosByCompletedAt'
+import useView, { ViewProvider } from '../view'
 
 const Home = () => {
 	useGlobalKeyboardShortcuts()
@@ -390,19 +388,21 @@ export const TodoLists = ({}: {}) => {
 											<IonReorderGroup
 												disabled={false}
 												onIonItemReorder={async event => {
+													console.debug('reorder event', { event })
 													// We don't use this to reorder for us because it results in a flash of 'unordered' content.
 													// Instead we re-order right away, calculate the new order ourselves, and update the DB.
 													event.detail.complete()
 
-													const wayfinderTodos = await db.wayfinderOrder
-														.orderBy('order')
-														.toArray()
 													/* If the todo moves down then all the todos after its target location must be nudged up
 													 * If the todo moves up then all the todos
 													 */
 													// TODO: Could make this easier with IDs in the DOM
 													const fromTodo = todos.wayfinder[event.detail.from]
 													const toTodo = todos.wayfinder[event.detail.to]
+
+													const wayfinderTodos = await db.wayfinderOrder
+														.orderBy('order')
+														.toArray()
 													const unfilteredFromIndex = wayfinderTodos.findIndex(
 														({ todoId }) => todoId === fromTodo.id,
 													)
@@ -420,6 +420,8 @@ export const TodoLists = ({}: {}) => {
 													const newOrder = order(start, end)
 
 													console.debug('Re-ordering', {
+														originalFromIndex: event.detail.from,
+														orignialToIndex: event.detail.to,
 														unfilteredFromIndex,
 														unfilteredToIndex,
 														start,
