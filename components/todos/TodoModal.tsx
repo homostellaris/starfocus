@@ -13,18 +13,17 @@ import {
 	IonTitle,
 	IonToolbar,
 } from '@ionic/react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { openOutline } from 'ionicons/icons'
 import {
 	ComponentProps,
 	MutableRefObject,
 	ReactNode,
 	useCallback,
-	useEffect,
 	useRef,
 } from 'react'
 import { db, Todo } from '../db'
 import useNoteProvider from '../notes/useNoteProvider'
-import { useLiveQuery } from 'dexie-react-hooks'
 
 export default function TodoModal({
 	dismiss,

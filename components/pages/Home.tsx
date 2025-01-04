@@ -33,6 +33,7 @@ import {
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
 	add,
+	calendarSharp,
 	chevronDownOutline,
 	chevronUpOutline,
 	filterSharp,
@@ -42,6 +43,7 @@ import {
 import _ from 'lodash'
 import {
 	ComponentProps,
+	forwardRef,
 	RefObject,
 	useCallback,
 	useEffect,
@@ -62,16 +64,30 @@ import { useTodoActionSheet } from '../todos/TodoActionSheet'
 import useTodoContext, { TodoContextProvider } from '../todos/TodoContext'
 import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
 import { groupTodosByCompletedAt } from '../todos/groupTodosByCompletedAt'
+import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
 import useView, { ViewProvider } from '../view'
 
 const Home = () => {
+	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === '/') {
+				event.preventDefault()
+				searchbarRef.current?.setFocus()
+			}
+		}
+		document.addEventListener('keydown', handleKeyDown)
+		return () => {
+			document.removeEventListener('keydown', handleKeyDown)
+		}
+	})
 	useGlobalKeyboardShortcuts()
 
 	return (
 		<>
 			<ViewProvider>
 				<TodoContextProvider>
-					<ViewMenu />
+					<ViewMenu searchbarRef={searchbarRef} />
 					<IonPage id="main-content">
 						<Header title="Home" />
 						<TodoLists />
@@ -93,7 +109,7 @@ const Home = () => {
 										/>
 									</IonButton>
 								</IonButtons>
-								<Searchbar />
+								<Searchbar ref={searchbarRef} />
 							</IonToolbar>
 						</IonFooter>
 					</IonPage>
@@ -150,10 +166,9 @@ export const TodoLists = ({}: {}) => {
 				.map((todo, index) => ({
 					...todo!,
 					order: todoOrderItems[index].order,
+					snoozedUntil: todoOrderItems[index].snoozedUntil,
 				}))
-				.filter(
-					todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
-				) as (Todo & { order: string })[]
+				.filter(todo => matchesQuery(query, todo) && inActiveStarRoles(todo))
 		})
 
 		const iceboxTodosPromise = db.todos
@@ -243,6 +258,7 @@ export const TodoLists = ({}: {}) => {
 	}, [contentRef, fab, nextTodoPosition, openCreateTodoModal])
 
 	const [present] = useTodoActionSheet()
+	const [presentSnoozeTodoModal] = useSnoozeTodoModal()
 
 	const [logGroups, todayCompletedTodos] = useMemo(() => {
 		if (!todos?.log) return [[], []]
@@ -371,7 +387,14 @@ export const TodoLists = ({}: {}) => {
 															starRole => todo.starRole === starRole.id,
 														)}
 														todo={todo}
-													/>
+													>
+														<IonIcon
+															color="medium"
+															icon={calendarSharp}
+															slot="end"
+															title={`Completed on ${todo.completedAt?.toDateString()}`}
+														></IonIcon>
+													</TodoListItem>
 												))}
 											</div>
 										</IonItemGroup>
@@ -423,7 +446,14 @@ export const TodoLists = ({}: {}) => {
 														starRole => todo.starRole === starRole.id,
 													)}
 													todo={todo}
-												/>
+												>
+													<IonIcon
+														color="medium"
+														icon={calendarSharp}
+														slot="end"
+														title={`Completed on ${todo.completedAt?.toDateString()}`}
+													></IonIcon>
+												</TodoListItem>
 											))}
 											<IonReorderGroup
 												disabled={false}
@@ -521,6 +551,13 @@ export const TodoLists = ({}: {}) => {
 																			)
 																		},
 																	},
+																	{
+																		text: 'Snooze',
+																		data: {
+																			action: 'snooze',
+																		},
+																		handler: () => presentSnoozeTodoModal(todo),
+																	},
 																],
 															})
 														}}
@@ -530,7 +567,10 @@ export const TodoLists = ({}: {}) => {
 														)}
 														todo={{ ...todo }}
 													>
-														<IonReorder slot="end"></IonReorder>
+														<IonReorder
+															slot="end"
+															title={`Rank ${index + 1}`}
+														></IonReorder>
 													</TodoListItem>
 												))}
 											</IonReorderGroup>
@@ -719,7 +759,11 @@ export const MiscMenu = () => {
 	)
 }
 
-export const ViewMenu = () => {
+export const ViewMenu = ({
+	searchbarRef,
+}: {
+	searchbarRef: RefObject<HTMLIonSearchbarElement>
+}) => {
 	const starRoles = useLiveQuery(() => db.starRoles.toArray())
 	const isLoading = starRoles === undefined
 	const {
@@ -727,6 +771,7 @@ export const ViewMenu = () => {
 		activeStarRoles,
 		deactivateStarRole,
 		setActiveStarRoles,
+		setQuery,
 	} = useView()
 
 	return (
@@ -742,6 +787,17 @@ export const ViewMenu = () => {
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
+				<IonButton
+					onClick={() => {
+						if (searchbarRef.current) {
+							searchbarRef.current.value = 'is:snoozed'
+							// Setting the value doesn't trigger ionic searchbar events so need to also set query ourselves
+							setQuery('is:snoozed')
+						}
+					}}
+				>
+					View snoozed
+				</IonButton>
 				<IonButton routerLink="/constellation">Edit roles</IonButton>
 				{isLoading ? (
 					<IonSpinner
@@ -942,45 +998,33 @@ export const Icebox = ({ todos }: { todos: Todo[] }) => {
 	)
 }
 
-export const Searchbar = () => {
-	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
+export const Searchbar = forwardRef<HTMLIonSearchbarElement>(
+	function Searchbar(_props, ref) {
+		const { setQuery } = useView()
 
-	useEffect(() => {
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === '/') {
-				event.preventDefault()
-				searchbarRef.current?.setFocus()
-			}
-		}
-		document.addEventListener('keydown', handleKeyDown)
-		return () => {
-			document.removeEventListener('keydown', handleKeyDown)
-		}
-	})
-	const { setQuery } = useView()
-
-	return (
-		<IonSearchbar
-			ref={searchbarRef}
-			debounce={100}
-			/* Binding to the capture phase allows the searchbar to complete its native behaviour of clearing the input.
-			 * Without this the input would blur but the input would still have a value and the todos would still be filtered. */
-			onKeyDownCapture={event => {
-				if (event.key === 'Escape') {
-					// TS complains unless we narrow the type
-					if (document.activeElement instanceof HTMLElement)
-						document.activeElement.blur()
-				}
-			}}
-			onIonInput={event => {
-				const target = event.target as HTMLIonSearchbarElement
-				let query = ''
-				if (target?.value) query = target.value.toLowerCase()
-				setQuery(query)
-			}}
-		></IonSearchbar>
-	)
-}
+		return (
+			<IonSearchbar
+				ref={ref}
+				debounce={100}
+				/* Binding to the capture phase allows the searchbar to complete its native behaviour of clearing the input.
+				 * Without this the input would blur but the input would still have a value and the todos would still be filtered. */
+				onKeyDownCapture={event => {
+					if (event.key === 'Escape') {
+						// TS complains unless we narrow the type
+						if (document.activeElement instanceof HTMLElement)
+							document.activeElement.blur()
+					}
+				}}
+				onIonInput={event => {
+					const target = event.target as HTMLIonSearchbarElement
+					let query = ''
+					if (target?.value) query = target.value.toLowerCase()
+					setQuery(query)
+				}}
+			></IonSearchbar>
+		)
+	},
+)
 
 function JourneyLabel({ children }: ComponentProps<typeof IonItemDivider>) {
 	return (
@@ -1001,8 +1045,16 @@ function TimeInfo({ datetime, label }: { datetime: string; label: string }) {
 	)
 }
 
-function matchesQuery(query: string, todo: Todo) {
-	if (!query) return true
+function matchesQuery(query: string, todo: Todo & { snoozedUntil?: Date }) {
+	if (!query && todo.snoozedUntil && todo.snoozedUntil > new Date()) {
+		return false
+	}
+	if (!query) {
+		return true
+	}
+	if (todo.snoozedUntil && query === 'is:snoozed') {
+		return true
+	}
 	return todo?.title.toLowerCase().includes(query)
 }
 

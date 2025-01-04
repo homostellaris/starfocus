@@ -7,7 +7,7 @@ import { useEditTodoModal } from './edit/useEditTodoModal'
 export function useTodoActionSheet() {
 	// Using controller action sheet rather than inline because I was re-inventing what it was doing allowing dynamic options to be passed easily
 	const [presentActionSheet, dismissActionSheet] = useIonActionSheet()
-	// Using controller modal than inline because the trigger prop doesn't work with an ID on a controller-based action sheet button
+	// Using controller modal rather than inline because the trigger prop doesn't work with an ID on a controller-based action sheet button
 	const [presentEditTodoModal] = useEditTodoModal()
 
 	return [

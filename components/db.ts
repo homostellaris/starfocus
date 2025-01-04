@@ -11,6 +11,17 @@ export interface Todo {
 	title: string
 }
 
+export interface TodoMeta {
+	order: string
+	snoozedUntil?: Date
+}
+
+export type WayfinderOrder = {
+	todoId: string
+} & TodoMeta
+
+export type EnrichedTodo = Todo & TodoMeta
+
 export interface Note {
 	uri: string
 }
@@ -42,7 +53,7 @@ export interface Setting {
 }
 
 export class DexieStarfocus extends Dexie {
-	wayfinderOrder!: DexieCloudTable<{ todoId: string; order: string }, 'todoId'>
+	wayfinderOrder!: DexieCloudTable<WayfinderOrder, 'todoId'>
 	lists!: Table<List>
 	settings!: DexieCloudTable<Setting, 'key'>
 	starRoles: DexieCloudTable<StarRole, 'id'>
@@ -80,9 +91,17 @@ export class DexieStarfocus extends Dexie {
 			starRolesOrder: '&starRoleId, &order',
 			todos: '@id, createdAt, completedAt, starRole, title',
 		})
-		this.version(4).stores({
+		this.version(5).stores({
 			lists: 'type',
 			wayfinderOrder: '&todoId, order',
+			settings: '&key',
+			starRoles: '@id, title',
+			starRolesOrder: '&starRoleId, order',
+			todos: '@id, createdAt, completedAt, starRole, title',
+		})
+		this.version(6).stores({
+			lists: 'type',
+			wayfinderOrder: '&todoId, order, snoozedUntil',
 			settings: '&key',
 			starRoles: '@id, title',
 			starRolesOrder: '&starRoleId, order',

@@ -7,9 +7,8 @@ import {
 	IonItem,
 	IonLabel,
 } from '@ionic/react'
-import Todo from './Todo'
-import type { StarRole, Todo as TodoType } from '../db'
-import { Todo as TodoInterface } from './interfaces'
+import dayjs from 'dayjs'
+import { documentText, rocketSharp, timeSharp } from 'ionicons/icons'
 import {
 	ComponentProps,
 	forwardRef,
@@ -18,9 +17,11 @@ import {
 	RefObject,
 	useMemo,
 } from 'react'
-import { useDebug } from '../useDebug'
+import type { EnrichedTodo, StarRole, Todo as TodoType } from '../db'
 import { getIonIcon } from '../starRoles/icons'
-import { documentText, rocketSharp } from 'ionicons/icons'
+import { useDebug } from '../useDebug'
+import { Todo as TodoInterface } from './interfaces'
+import Todo from './Todo'
 
 export function Todos({
 	currentTodoRef,
@@ -75,7 +76,7 @@ export const TodoListItem = forwardRef<
 	PropsWithChildren<
 		{
 			starRole?: StarRole
-			todo: TodoType & { order?: string }
+			todo: TodoType & { order?: string; snoozedUntil?: Date }
 			onCompletionChange: ComponentProps<typeof IonCheckbox>['onIonChange']
 			onSelect: MouseEventHandler<HTMLIonItemElement>
 		} & JSX.IntrinsicElements['div']
@@ -121,19 +122,27 @@ export const TodoListItem = forwardRef<
 						) : null}
 					</span>
 				)}
-				<IonIcon
-					className={starRole ? '' : 'invisible'}
-					icon={starRole ? getIonIcon(starRole.icon.name) : rocketSharp}
-					slot="end"
-				/>
-				{todo.note && (
+				{todo.note ? (
 					<a
+						className="ion-hide-sm-down"
 						href={todo.note.uri}
 						target="_blank"
 					>
 						<IonIcon icon={documentText}></IonIcon>
 					</a>
+				) : (
+					<IonIcon
+						className="ion-hide-sm-down"
+						color="light"
+						icon={documentText}
+					></IonIcon>
 				)}
+				<SnoozeIcon todo={todo} />
+				<IonIcon
+					color={starRole ? 'dark' : 'light'}
+					icon={starRole ? getIonIcon(starRole.icon.name) : rocketSharp}
+					slot="end"
+				/>
 				{children}
 			</IonItem>
 		</div>
@@ -153,5 +162,39 @@ export function TodoCard({
 				<IonCardTitle className="text-sm">{todo.title}</IonCardTitle>
 			</IonCardHeader>
 		</IonCard>
+	)
+}
+
+export function SnoozeIcon({
+	todo,
+}: {
+	todo: TodoType & { order?: string; snoozedUntil?: Date }
+}) {
+	let color = 'light'
+	let title = 'Not snoozed'
+
+	if (todo.snoozedUntil) {
+		title = `Snoozed until ${todo.snoozedUntil.toDateString()}`
+
+		const today = dayjs()
+		const snoozedUntil = dayjs(todo.snoozedUntil)
+
+		if (snoozedUntil.isBefore(today, 'day')) {
+			color = 'light'
+		} else if (snoozedUntil.isSame(today, 'day')) {
+			color = 'primary'
+		} else if (snoozedUntil.isAfter(today, 'day')) {
+			color = 'warning'
+		}
+	}
+
+	return (
+		<IonIcon
+			className="ion-hide-sm-down"
+			color={color}
+			icon={timeSharp}
+			slot="end"
+			title={title}
+		/>
 	)
 }
