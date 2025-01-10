@@ -24,12 +24,12 @@ export function CreateTodoModal({
 			}}
 			onKeyDown={event => {
 				if (event.metaKey) {
-					locationSelect.current!.value = ListType.wayfinder
+					locationSelect.current!.value = ListType.icebox
 				}
 			}}
 			onKeyUp={event => {
 				if (!event.metaKey) {
-					locationSelect.current!.value = ListType.icebox
+					locationSelect.current!.value = ListType.wayfinder
 				}
 			}}
 			toolbarSlot={
@@ -38,7 +38,7 @@ export function CreateTodoModal({
 					fill="outline"
 					ref={locationSelect}
 					slot="end"
-					value={ListType.icebox}
+					value={ListType.wayfinder}
 				>
 					<IonSelectOption value={ListType.icebox}>Icebox</IonSelectOption>
 					<IonSelectOption value={ListType.wayfinder}>
