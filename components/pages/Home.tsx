@@ -39,6 +39,7 @@ import {
 	filterSharp,
 	locateOutline,
 	rocketSharp,
+	timeSharp,
 } from 'ionicons/icons'
 import _ from 'lodash'
 import {
@@ -788,6 +789,7 @@ export const ViewMenu = ({
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
 				<IonButton
+					expand="block"
 					onClick={() => {
 						if (searchbarRef.current) {
 							searchbarRef.current.value = 'is:snoozed'
@@ -797,8 +799,21 @@ export const ViewMenu = ({
 					}}
 				>
 					View snoozed
+					<IonIcon
+						slot="end"
+						icon={timeSharp}
+					></IonIcon>
 				</IonButton>
-				<IonButton routerLink="/constellation">Edit roles</IonButton>
+				<IonButton
+					expand="block"
+					routerLink="/constellation"
+				>
+					Edit roles
+					<IonIcon
+						slot="end"
+						icon={rocketSharp}
+					></IonIcon>
+				</IonButton>
 				{isLoading ? (
 					<IonSpinner
 						className="w-20 h-20"
