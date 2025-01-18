@@ -36,9 +36,11 @@ import {
 	calendarSharp,
 	chevronDownOutline,
 	chevronUpOutline,
+	cogSharp,
 	filterSharp,
 	locateOutline,
 	rocketSharp,
+	settingsSharp,
 	timeSharp,
 } from 'ionicons/icons'
 import _ from 'lodash'
@@ -67,6 +69,7 @@ import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
 import { groupTodosByCompletedAt } from '../todos/groupTodosByCompletedAt'
 import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
 import useView, { ViewProvider } from '../view'
+import { StarRoleIcon } from '../common/StarRoleIcon'
 
 const Home = () => {
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
@@ -111,6 +114,19 @@ const Home = () => {
 									</IonButton>
 								</IonButtons>
 								<Searchbar ref={searchbarRef} />
+								<IonButtons slot="end">
+									<IonButton
+										id="view-menu-button"
+										onClick={() => {
+											menuController.toggle('start')
+										}}
+									>
+										<IonIcon
+											icon={settingsSharp}
+											slot="icon-only"
+										/>
+									</IonButton>
+								</IonButtons>
 							</IonToolbar>
 						</IonFooter>
 					</IonPage>
@@ -283,6 +299,7 @@ export const TodoLists = ({}: {}) => {
 					>
 						<IonFab className="fixed min-[992px]:left-[calc(100vw/12*2-40px-18px)] bottom-16">
 							<IonFabButton
+								color="success"
 								onClick={openCreateTodoModal}
 								size="small"
 							>
@@ -789,6 +806,7 @@ export const ViewMenu = ({
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
 				<IonButton
+					color="warning"
 					expand="block"
 					onClick={() => {
 						if (searchbarRef.current) {
@@ -869,6 +887,7 @@ export const ViewMenu = ({
 							</IonItem>
 							{starRoles.map(starRole => (
 								<IonItem key={starRole.id}>
+									<StarRoleIcon starRole={starRole} />
 									{starRole?.title}
 									<IonButton
 										fill="clear"
@@ -1020,6 +1039,7 @@ export const Searchbar = forwardRef<HTMLIonSearchbarElement>(
 		return (
 			<IonSearchbar
 				ref={ref}
+				className="mx-auto [--background:#121212]"
 				debounce={100}
 				/* Binding to the capture phase allows the searchbar to complete its native behaviour of clearing the input.
 				 * Without this the input would blur but the input would still have a value and the todos would still be filtered. */

@@ -1,0 +1,64 @@
+/* Colors */
+:root {
+	--star-1: #ff7878;
+	--star-2: #f77baf;
+	--star-5: #e04573;
+	--star-3: #5fbff7;
+	--star-8: #2068ef;
+	--star-13: #9a7bf7;
+}
+
+/* Ionic Variables and Theming. For more info, please see:
+http://ionicframework.com/docs/theming/ */
+
+/* Use the color generator to chanfge the palette.
+https://ionicframework.com/docs/theming/color-generator */
+
+/** Ionic CSS Variables **/
+:root {
+	--ion-background-color: linear-gradient(to top, #000020, #000000) !important;
+
+	--ion-color-primary: theme(colors.blue.400);
+	--ion-color-primary-rgb: 96, 165, 250;
+	--ion-color-primary-contrast: #000000;
+	--ion-color-primary-contrast-rgb: 0, 0, 0;
+	--ion-color-primary-shade: #5491dc;
+	--ion-color-primary-tint: #70aefb;
+
+	--ion-color-secondary: theme(colors.violet.400);
+	--ion-color-secondary-rgb: 167, 139, 250;
+	--ion-color-secondary-contrast: #000000;
+	--ion-color-secondary-contrast-rgb: 0, 0, 0;
+	--ion-color-secondary-shade: #937adc;
+	--ion-color-secondary-tint: #b097fb;
+
+	--ion-color-tertiary: theme(colors.fuchsia.400);
+	--ion-color-tertiary-rgb: 232, 121, 249;
+	--ion-color-tertiary-contrast: #000000;
+	--ion-color-tertiary-contrast-rgb: 0, 0, 0;
+	--ion-color-tertiary-shade: #cc6adb;
+	--ion-color-tertiary-tint: #ea86fa;
+
+	--ion-color-success: theme(colors.emerald.400);
+	--ion-color-success-rgb: 52, 211, 153;
+	--ion-color-success-contrast: #000000;
+	--ion-color-success-contrast-rgb: 0, 0, 0;
+	--ion-color-success-shade: #2eba87;
+	--ion-color-success-tint: #48d7a3;
+
+	--ion-color-warning: theme(colors.orange.400);
+	--ion-color-warning-rgb: 253, 186, 116;
+	--ion-color-warning-contrast: #000000;
+	--ion-color-warning-contrast-rgb: 0, 0, 0;
+	--ion-color-warning-shade: #dfa466;
+	--ion-color-warning-tint: #fdc182;
+
+	--ion-color-danger: theme(colors.rose.400);
+	--ion-color-danger-rgb: 244, 63, 94;
+	--ion-color-danger-contrast: #000000;
+	--ion-color-danger-contrast-rgb: 0, 0, 0;
+	--ion-color-danger-shade: #d73753;
+	--ion-color-danger-tint: #f5526e;
+
+	/* Don't set dark, light, and medium as the dark always import takes care of that */
+}

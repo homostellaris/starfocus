@@ -96,7 +96,10 @@ export default function Constellation() {
 					vertical="bottom"
 					horizontal="end"
 				>
-					<IonFabButton onClick={openCreateStarRoleModal}>
+					<IonFabButton
+						color="success"
+						onClick={openCreateStarRoleModal}
+					>
 						<IonIcon icon={add}></IonIcon>
 					</IonFabButton>
 				</IonFab>

@@ -1,5 +1,3 @@
-import { useObservable } from 'dexie-react-hooks'
-import { db } from '../db'
 import {
 	IonButton,
 	IonButtons,
@@ -14,6 +12,7 @@ import {
 	IonTitle,
 	IonToolbar,
 } from '@ionic/react'
+import { useObservable } from 'dexie-react-hooks'
 import {
 	cloudDoneSharp,
 	cloudDownloadSharp,
@@ -21,6 +20,7 @@ import {
 	cloudUploadSharp,
 	thunderstormSharp,
 } from 'ionicons/icons'
+import { db } from '../db'
 
 export const Header = ({ title }: { title: string }) => {
 	const user = useObservable(db.cloud.currentUser)
@@ -61,6 +61,22 @@ export const Header = ({ title }: { title: string }) => {
 									triggerAction="click"
 								>
 									<IonContent className="text-xs">
+										<IonHeader>
+											<IonToolbar>
+												<IonTitle>{syncState?.status}</IonTitle>
+												<IonButtons slot="end">
+													<IonButton
+														color="danger"
+														fill="solid"
+														onClick={() => {
+															db.cloud.logout()
+														}}
+													>
+														Unsync
+													</IonButton>
+												</IonButtons>
+											</IonToolbar>
+										</IonHeader>
 										{syncState?.error ? (
 											<p>Sync error: ${syncState.error.message}</p>
 										) : (
@@ -113,14 +129,6 @@ export const Header = ({ title }: { title: string }) => {
 										)}
 									</IonContent>
 								</IonPopover>
-							</IonButton>
-							<IonButton
-								fill="solid"
-								onClick={() => {
-									db.cloud.logout()
-								}}
-							>
-								Unsync
 							</IonButton>
 						</>
 					) : (

@@ -18,8 +18,17 @@ import '@ionic/react/css/text-transformation.css'
 import '@ionic/react/css/flex-utils.css'
 import '@ionic/react/css/display.css'
 
-import '../styles/capacitor-starter/global.css'
-import '../styles/capacitor-starter/variables.css'
+/**
+ * Ionic Dark Palette
+ * -----------------------------------------------------
+ * For more information, please see:
+ * https://ionicframework.com/docs/theming/dark-mode
+ */
+import '@ionic/react/css/palettes/dark.always.css'
+
+/* Theme variables */
+import '../styles/theme.css'
+import '../styles/globals.css'
 
 export const metadata: Metadata = {
 	title: 'Starfocus',
