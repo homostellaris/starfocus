@@ -40,6 +40,7 @@ export function useCreateTodoModal(): [
 			await db.transaction('rw', db.todos, db.wayfinderOrder, async () => {
 				const createdTodoId = await db.todos.add({
 					createdAt: new Date(),
+					starPoints: todo.starPoints,
 					starRole: todo.starRole,
 					title: todo.title,
 					...(uri && { note: { uri } }),

@@ -30,6 +30,7 @@ export function useEditTodoModal(): [
 			}
 			await db.todos.update(updatedTodo.id, {
 				createdAt: new Date(),
+				starPoints: updatedTodo.starPoints,
 				starRole: updatedTodo.starRole,
 				title: updatedTodo.title,
 				...(uri && { note: { uri } }),

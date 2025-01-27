@@ -18,6 +18,7 @@ import {
 	cloudDownloadSharp,
 	cloudOfflineSharp,
 	cloudUploadSharp,
+	starSharp,
 	thunderstormSharp,
 } from 'ionicons/icons'
 import { db } from '../db'
@@ -36,6 +37,25 @@ export const Header = ({ title }: { title: string }) => {
 					className="w-10 h-10 ml-2" // Needs to align with starship and trajectory
 				/>
 				<IonTitle>{title}</IonTitle>
+				{/* <IonButton
+					className="ml-4"
+					fill="clear"
+					id="star-points"
+				>
+					<IonIcon
+						icon={starSharp}
+						slot="icon-only"
+					></IonIcon>
+					<IonPopover
+						trigger="star-points"
+						triggerAction="click"
+					>
+						<IonContent class="ion-padding">
+							Star points this week: 9
+						</IonContent>
+					</IonPopover>
+					<span className="ml-3 font-mono text-xl">9</span>
+				</IonButton> */}
 				<IonButtons
 					className="mx-2"
 					slot="secondary"

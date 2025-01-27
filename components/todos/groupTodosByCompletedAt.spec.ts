@@ -1,12 +1,12 @@
 import { beforeAll, describe, expect, setSystemTime, test } from 'bun:test'
-import { groupTodosByCompletedAt } from './groupTodosByCompletedAt'
+import { groupByCompletedAt } from './groupTodosByCompletedAt'
 
 beforeAll(() => {
 	setSystemTime(new Date('2020-01-01T00:00:00.000Z'))
 })
 
 test('no completed todos', () => {
-	expect(groupTodosByCompletedAt([])).toEqual([
+	expect(groupByCompletedAt([])).toEqual([
 		{
 			label: 'Today',
 			todos: [],
@@ -17,7 +17,7 @@ test('no completed todos', () => {
 describe('one completed todo', () => {
 	test('today', () => {
 		expect(
-			groupTodosByCompletedAt([
+			groupByCompletedAt([
 				{
 					completedAt: new Date('2020-01-01T01:00:00.000Z'),
 					id: '1',
@@ -40,7 +40,7 @@ describe('one completed todo', () => {
 
 	test('yesterday', () => {
 		expect(
-			groupTodosByCompletedAt([
+			groupByCompletedAt([
 				{
 					completedAt: new Date('2019-12-31T00:00:00.000Z'),
 					id: '1',
@@ -68,7 +68,7 @@ describe('one completed todo', () => {
 	test('this week', () => {
 		const mondayEnd = new Date('2019-12-30T23:59:59.999Z')
 		expect(
-			groupTodosByCompletedAt([
+			groupByCompletedAt([
 				{
 					completedAt: mondayEnd,
 					id: '1',
@@ -94,7 +94,7 @@ describe('one completed todo', () => {
 
 		const mondayStart = new Date('2019-12-30T00:00:00.000Z')
 		expect(
-			groupTodosByCompletedAt([
+			groupByCompletedAt([
 				{
 					completedAt: mondayStart,
 					id: '1',
@@ -121,7 +121,7 @@ describe('one completed todo', () => {
 
 	test('this year', () => {
 		expect(
-			groupTodosByCompletedAt([
+			groupByCompletedAt([
 				{
 					completedAt: new Date('2019-12-29T23:59:59.999Z'),
 					id: '1',
@@ -146,7 +146,7 @@ describe('one completed todo', () => {
 		])
 
 		expect(
-			groupTodosByCompletedAt([
+			groupByCompletedAt([
 				{
 					completedAt: new Date('2019-01-01T00:00:00.000Z'),
 					id: '1',
@@ -175,7 +175,7 @@ describe('one completed todo', () => {
 describe('multiple completed todos', () => {
 	test('today', () => {
 		expect(
-			groupTodosByCompletedAt([
+			groupByCompletedAt([
 				{
 					completedAt: new Date('2020-01-01T00:00:00.000Z'),
 					id: '1',
@@ -218,7 +218,7 @@ describe('multiple completed todos', () => {
 
 	test('just this week', () => {
 		expect(
-			groupTodosByCompletedAt([
+			groupByCompletedAt([
 				{
 					completedAt: new Date('2019-12-30T00:00:00.000Z'),
 					id: '1',
@@ -265,7 +265,7 @@ describe('multiple completed todos', () => {
 
 	test('today and yesterday', () => {
 		expect(
-			groupTodosByCompletedAt([
+			groupByCompletedAt([
 				{
 					completedAt: new Date('2019-12-31T23:59:59.999Z'),
 					id: '2',
@@ -303,7 +303,7 @@ describe('multiple completed todos', () => {
 
 	test('just yesterday and this year', () => {
 		expect(
-			groupTodosByCompletedAt([
+			groupByCompletedAt([
 				{
 					completedAt: new Date('2019-12-01T00:00:00.000Z'),
 					id: '1',

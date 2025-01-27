@@ -40,6 +40,7 @@ export default function TodoModal({
 	toolbarSlot?: ReactNode
 } & ComponentProps<typeof IonPage>) {
 	const noteInput = useRef<HTMLIonTextareaElement>(null)
+	const starPointsInput = useRef<HTMLIonSelectElement>(null)
 	const starRoleInput = useRef<HTMLIonSelectElement>(null)
 
 	const starRoles = useLiveQuery(() => db.starRoles.toArray(), [], [])
@@ -50,6 +51,7 @@ export default function TodoModal({
 			{
 				...todo,
 				note: noteInput.current?.value,
+				starPoints: starPointsInput.current?.value,
 				starRole: starRoleInput.current?.value ?? undefined,
 				title: titleInput.current?.value,
 			},
@@ -98,6 +100,22 @@ export default function TodoModal({
 							{starRole.title}
 						</IonSelectOption>
 					))}
+				</IonSelect>
+				<IonSelect
+					fill="outline"
+					label="Star points"
+					labelPlacement="floating"
+					interface="popover"
+					ref={starPointsInput}
+					value={todo?.starPoints}
+				>
+					<IonSelectOption value={0}>0</IonSelectOption>
+					<IonSelectOption value={1}>1</IonSelectOption>
+					<IonSelectOption value={2}>2</IonSelectOption>
+					<IonSelectOption value={3}>3</IonSelectOption>
+					<IonSelectOption value={5}>5</IonSelectOption>
+					<IonSelectOption value={8}>8</IonSelectOption>
+					<IonSelectOption value={13}>13</IonSelectOption>
 				</IonSelect>
 				{!noteProvider && (
 					<p>Set a note provider in settings to enable this feature.</p>

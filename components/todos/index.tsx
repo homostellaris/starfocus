@@ -6,9 +6,10 @@ import {
 	IonIcon,
 	IonItem,
 	IonLabel,
+	IonReorder,
 } from '@ionic/react'
 import dayjs from 'dayjs'
-import { documentText, rocketSharp, timeSharp } from 'ionicons/icons'
+import { calendarSharp, documentText, timeSharp } from 'ionicons/icons'
 import {
 	ComponentProps,
 	forwardRef,
@@ -17,8 +18,10 @@ import {
 	RefObject,
 	useMemo,
 } from 'react'
-import type { EnrichedTodo, StarRole, Todo as TodoType } from '../db'
-import { getIonIcon } from '../starRoles/icons'
+import { cn } from '../common/cn'
+import { StarRoleIcon } from '../common/StarRoleIcon'
+import starScale from '../common/starScale'
+import type { StarRole, Todo as TodoType } from '../db'
 import { useDebug } from '../useDebug'
 import { Todo as TodoInterface } from './interfaces'
 import Todo from './Todo'
@@ -82,7 +85,14 @@ export const TodoListItem = forwardRef<
 		} & JSX.IntrinsicElements['div']
 	>
 >(function TodoListItem(
-	{ children, starRole, todo, onCompletionChange, onSelect, ...props },
+	{
+		children,
+		starRole,
+		todo: { starPoints = 0, ...todo },
+		onCompletionChange,
+		onSelect,
+		...props
+	},
 	ref,
 ) {
 	const [debug] = useDebug()
@@ -95,7 +105,7 @@ export const TodoListItem = forwardRef<
 		>
 			<IonItem
 				button
-				className="todo"
+				className="todo [--inner-padding-top:0.5rem] [--inner-padding-bottom:0.5rem]"
 				onClick={onSelect}
 			>
 				<IonCheckbox
@@ -108,24 +118,37 @@ export const TodoListItem = forwardRef<
 					}}
 					onIonChange={onCompletionChange}
 				/>
-				<IonLabel>{todo?.title}</IonLabel>
-				{debug && (
-					<span className="space-x-2">
-						<data className="text-xs text-gray-500">{todo.id}</data>
-						{todo.order ? (
-							<data className="text-xs text-gray-500">{todo.order}</data>
-						) : null}
-						{todo.completedAt ? (
-							<data className="text-xs text-gray-500">
-								{todo.completedAt?.toISOString()}
-							</data>
-						) : null}
-					</span>
-				)}
+				<span
+					className={cn(
+						'!font-mono grow-0 min-w-[2ch] text-base',
+						starScale[starPoints].textColor,
+					)}
+					slot="start"
+				>
+					{starPoints || 0}
+				</span>
+				<div>
+					<IonLabel>{todo?.title}</IonLabel>
+					{debug && (
+						<span className="space-x-2">
+							<data className="text-xs text-gray-500">{todo.id}</data>
+							{todo.order ? (
+								<data className="text-xs text-gray-500">{todo.order}</data>
+							) : null}
+							{todo.completedAt ? (
+								<data className="text-xs text-gray-500">
+									{todo.completedAt?.toISOString()}
+								</data>
+							) : null}
+						</span>
+					)}
+					{children}
+				</div>
 				{todo.note ? (
 					<a
 						className="ion-hide-sm-down"
 						href={todo.note.uri}
+						slot="end"
 						target="_blank"
 					>
 						<IonIcon icon={documentText}></IonIcon>
@@ -135,15 +158,21 @@ export const TodoListItem = forwardRef<
 						className="ion-hide-sm-down"
 						color="light"
 						icon={documentText}
+						slot="end"
 					></IonIcon>
 				)}
 				<SnoozeIcon todo={todo} />
-				<IonIcon
-					color={starRole ? 'dark' : 'light'}
-					icon={starRole ? getIonIcon(starRole.icon.name) : rocketSharp}
-					slot="end"
-				/>
-				{children}
+				<StarRoleIcon starRole={starRole} />
+				{todo.completedAt ? (
+					<IonIcon
+						color="medium"
+						icon={calendarSharp}
+						slot="end"
+						title={`Completed on ${todo.completedAt?.toDateString()}`}
+					></IonIcon>
+				) : (
+					<IonReorder slot="end"></IonReorder>
+				)}
 			</IonItem>
 		</div>
 	)

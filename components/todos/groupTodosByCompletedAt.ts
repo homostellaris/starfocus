@@ -10,6 +10,8 @@ dayjs.updateLocale('en', {
 	weekStart: 1,
 })
 
+type Loggable = Pick<Todo, 'completedAt'>
+
 /**
  * Groups completed todos into the following date ranges:
  *
@@ -21,7 +23,12 @@ dayjs.updateLocale('en', {
  *
  * @param completedTodos assumed to be in chronological order
  */
-export function groupTodosByCompletedAt(completedTodos: Todo[]) {
+export function groupByCompletedAt(completedTodos: Todo[]) {
+	// Shame we can't rely on the database query order but this is necessary due to mixing in checkins.
+	completedTodos.sort(
+		(a, b) => dayjs(a.completedAt).valueOf() - dayjs(b.completedAt).valueOf(),
+	)
+
 	const today = dayjs()
 	const yesterday = today.subtract(1, 'day')
 	const lastMonday = today.startOf('week')

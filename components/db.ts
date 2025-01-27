@@ -7,7 +7,7 @@ export interface Todo {
 	id: string
 	note?: Note
 	starRole?: StarRole['id'] // TODO: How do we delete this when the star role is deleted? Need to add associative table and compute ID of association from todo ID and starRoleID, then delete entries when star roles gets deleted.
-	starPoints?: string
+	starPoints?: number
 	title: string
 }
 
@@ -52,7 +52,13 @@ export interface Setting {
 	value: any
 }
 
+export interface Checkin {
+	todoId: string
+	date: Date
+}
+
 export class DexieStarfocus extends Dexie {
+	checkins: DexieCloudTable<Checkin, 'todoId'>
 	wayfinderOrder!: DexieCloudTable<WayfinderOrder, 'todoId'>
 	lists!: Table<List>
 	settings!: DexieCloudTable<Setting, 'key'>
@@ -100,6 +106,15 @@ export class DexieStarfocus extends Dexie {
 			todos: '@id, createdAt, completedAt, starRole, title',
 		})
 		this.version(6).stores({
+			lists: 'type',
+			wayfinderOrder: '&todoId, order, snoozedUntil',
+			settings: '&key',
+			starRoles: '@id, title',
+			starRolesOrder: '&starRoleId, order',
+			todos: '@id, createdAt, completedAt, starRole, title',
+		})
+		this.version(7).stores({
+			checkins: '&todoId, date',
 			lists: 'type',
 			wayfinderOrder: '&todoId, order, snoozedUntil',
 			settings: '&key',

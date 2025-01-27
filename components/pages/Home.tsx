@@ -17,6 +17,7 @@ import {
 	IonLabel,
 	IonList,
 	IonMenu,
+	IonNote,
 	IonPage,
 	IonReorder,
 	IonReorderGroup,
@@ -36,7 +37,6 @@ import {
 	calendarSharp,
 	chevronDownOutline,
 	chevronUpOutline,
-	cogSharp,
 	filterSharp,
 	locateOutline,
 	rocketSharp,
@@ -55,6 +55,7 @@ import {
 	useState,
 } from 'react'
 import { Header } from '../common/Header'
+import { StarRoleIcon } from '../common/StarRoleIcon'
 import Starship from '../common/Starship'
 import order, { calculateReorderIndices, starMudder } from '../common/order'
 import { db, Todo } from '../db'
@@ -66,10 +67,13 @@ import { TodoCard, TodoListItem } from '../todos'
 import { useTodoActionSheet } from '../todos/TodoActionSheet'
 import useTodoContext, { TodoContextProvider } from '../todos/TodoContext'
 import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
-import { groupTodosByCompletedAt } from '../todos/groupTodosByCompletedAt'
+import { groupByCompletedAt } from '../todos/groupTodosByCompletedAt'
 import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
+import { useTodoPopover } from '../todos/useTodoPopover'
 import useView, { ViewProvider } from '../view'
-import { StarRoleIcon } from '../common/StarRoleIcon'
+import { cn } from '../common/cn'
+import starScale from '../common/starScale'
+import PulseGraph from '../todos/PulseGraph'
 
 const Home = () => {
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
@@ -93,7 +97,7 @@ const Home = () => {
 				<TodoContextProvider>
 					<ViewMenu searchbarRef={searchbarRef} />
 					<IonPage id="main-content">
-						<Header title="Home" />
+						<Header title="Home"></Header>
 						<TodoLists />
 						<IonFooter
 							className="min-[992px]:w-[calc(66.67%+56*2px)] min-[992px]:mx-auto min-[992px]:rounded-t-lg overflow-hidden"
@@ -176,6 +180,26 @@ export const TodoLists = ({}: {}) => {
 			.limit(logLimit)
 			.toArray()
 
+		const checkinsPromise = db.checkins
+			.orderBy('date')
+			.reverse()
+			.limit(logLimit)
+			.toArray()
+			.then(checkins => {
+				const todoIds = checkins.map(({ todoId }) => todoId)
+				return db.todos.bulkGet(todoIds).then(todos => {
+					return todos
+						.map((todo, index) => ({
+							...todo!,
+							completedAt: checkins[index].date,
+							checkin: true,
+						}))
+						.filter(
+							todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
+						)
+				})
+			})
+
 		const todoOrderItems = await db.wayfinderOrder.orderBy('order').toArray()
 		const todoIds = todoOrderItems.map(({ todoId }) => todoId)
 		const wayfinderTodosPromise = db.todos.bulkGet(todoIds).then(todoIds => {
@@ -203,13 +227,15 @@ export const TodoLists = ({}: {}) => {
 
 		const todos = await Promise.all([
 			logTodosPromise,
+			checkinsPromise,
 			wayfinderTodosPromise,
 			iceboxTodosPromise,
 		])
 		return {
 			log: todos[0].reverse(),
-			wayfinder: todos[1],
-			icebox: todos[2],
+			checkins: todos[1],
+			wayfinder: todos[2],
+			icebox: todos[3],
 		}
 	}, [inActiveStarRoles, iceboxLimit, logLimit, query])
 
@@ -232,7 +258,7 @@ export const TodoLists = ({}: {}) => {
 			position: [nextTodoPosition, setNextTodoPosition],
 		},
 	} = useTodoContext()
-	// console.debug({ todos })
+	console.debug({ todos })
 
 	// TODO: When dev tools aren't open the todo has zero height
 	// useLayoutEffect doesn't work
@@ -274,16 +300,24 @@ export const TodoLists = ({}: {}) => {
 		}
 	}, [contentRef, fab, nextTodoPosition, openCreateTodoModal])
 
-	const [present] = useTodoActionSheet()
+	const [presentTodoActionSheet] = useTodoActionSheet()
 	const [presentSnoozeTodoModal] = useSnoozeTodoModal()
+
+	const checkinsByTodo = useMemo(() => {
+		if (!todos?.checkins) return {}
+		return _.groupBy(todos.checkins, 'id')
+	}, [todos?.checkins])
 
 	const [logGroups, todayCompletedTodos] = useMemo(() => {
 		if (!todos?.log) return [[], []]
-		const groups = groupTodosByCompletedAt(todos.log)
+		const pastTodos = [...todos.log, ...todos.checkins]
+		const groups = groupByCompletedAt(pastTodos)
 		const todayGroup = groups[groups.length - 1]
 		const logGroups = groups.slice(0, -1)
 		return [logGroups, todayGroup.todos]
-	}, [todos?.log])
+	}, [todos?.log, todos?.checkins])
+
+	const [presentCompletionPopover] = useTodoPopover()
 
 	return (
 		<IonContent
@@ -371,9 +405,77 @@ export const TodoLists = ({}: {}) => {
 													<TodoListItem
 														key={todo.id}
 														onSelect={_event => {
-															present(todo)
+															presentTodoActionSheet(todo)
 														}}
 														onCompletionChange={event => {
+															if ((todo as any).checkin) {
+																alert(
+																	'Deletion of checkins not implemented yet',
+																)
+															} else {
+																db.transaction(
+																	'rw',
+																	db.wayfinderOrder,
+																	db.todos,
+																	async () => {
+																		const wayfinderOrder =
+																			await db.wayfinderOrder
+																				.orderBy('order')
+																				.limit(1)
+																				.keys()
+																		await Promise.all([
+																			db.wayfinderOrder.add({
+																				todoId: todo.id,
+																				order: order(
+																					undefined,
+																					wayfinderOrder[0]?.toString(),
+																				),
+																			}),
+																			db.todos.update(todo.id, {
+																				completedAt: event.detail.checked
+																					? new Date()
+																					: undefined,
+																			}),
+																		])
+																	},
+																)
+																setLogLimit(limit => limit - 1)
+															}
+														}}
+														starRole={starRoles?.find(
+															starRole => todo.starRole === starRole.id,
+														)}
+														todo={todo}
+													>
+														{(todo as any).checkin && (
+															<IonNote>
+																Checked in {todo.completedAt?.toDateString()}
+															</IonNote>
+														)}
+													</TodoListItem>
+												))}
+											</div>
+										</IonItemGroup>
+									))}
+									<IonItemGroup>
+										<JourneyLabel>
+											<TimeInfo
+												datetime={new Date().toISOString().split('T')[0]}
+												label="Today"
+												key="today"
+											/>
+										</JourneyLabel>
+										<div className="-mt-8">
+											{todayCompletedTodos.map(todo => (
+												<TodoListItem
+													key={todo.id}
+													onSelect={_event => {
+														presentTodoActionSheet(todo)
+													}}
+													onCompletionChange={event => {
+														if ((todo as any).checkin) {
+															alert('Deletion of checkins not implemented yet')
+														} else {
 															db.transaction(
 																'rw',
 																db.wayfinderOrder,
@@ -400,77 +502,24 @@ export const TodoLists = ({}: {}) => {
 																},
 															)
 															setLogLimit(limit => limit - 1)
-														}}
-														starRole={starRoles?.find(
-															starRole => todo.starRole === starRole.id,
-														)}
-														todo={todo}
-													>
-														<IonIcon
-															color="medium"
-															icon={calendarSharp}
-															slot="end"
-															title={`Completed on ${todo.completedAt?.toDateString()}`}
-														></IonIcon>
-													</TodoListItem>
-												))}
-											</div>
-										</IonItemGroup>
-									))}
-									<IonItemGroup>
-										<JourneyLabel>
-											<TimeInfo
-												datetime={new Date().toISOString().split('T')[0]}
-												label="Today"
-												key="today"
-											/>
-										</JourneyLabel>
-										<div className="-mt-8">
-											{todayCompletedTodos.map(todo => (
-												<TodoListItem
-													key={todo.id}
-													onSelect={_event => {
-														present(todo)
-													}}
-													onCompletionChange={event => {
-														db.transaction(
-															'rw',
-															db.wayfinderOrder,
-															db.todos,
-															async () => {
-																const wayfinderOrder = await db.wayfinderOrder
-																	.orderBy('order')
-																	.limit(1)
-																	.keys()
-																await Promise.all([
-																	db.wayfinderOrder.add({
-																		todoId: todo.id,
-																		order: order(
-																			undefined,
-																			wayfinderOrder[0]?.toString(),
-																		),
-																	}),
-																	db.todos.update(todo.id, {
-																		completedAt: event.detail.checked
-																			? new Date()
-																			: undefined,
-																	}),
-																])
-															},
-														)
-														setLogLimit(limit => limit - 1)
+														}
 													}}
 													starRole={starRoles?.find(
 														starRole => todo.starRole === starRole.id,
 													)}
 													todo={todo}
 												>
-													<IonIcon
-														color="medium"
-														icon={calendarSharp}
-														slot="end"
-														title={`Completed on ${todo.completedAt?.toDateString()}`}
-													></IonIcon>
+													{(todo as any).checkin ? (
+														<IonNote>
+															Checked in {todo.completedAt?.toDateString()}
+														</IonNote>
+													) : todo.starPoints !== undefined &&
+													  todo.starPoints > 0 ? (
+														<PulseGraph
+															checkins={checkinsByTodo[todo.id] || []}
+															starPoints={todo.starPoints}
+														/>
+													) : null}
 												</TodoListItem>
 											))}
 											<IonReorderGroup
@@ -530,27 +579,77 @@ export const TodoLists = ({}: {}) => {
 														onCompletionChange={async event => {
 															db.transaction(
 																'rw',
-																db.wayfinderOrder,
+																db.checkins,
 																db.todos,
+																db.wayfinderOrder,
 																async () => {
-																	await Promise.all([
-																		db.wayfinderOrder.delete(todo.id),
-																		db.todos.update(todo.id, {
-																			completedAt: event.detail.checked
-																				? new Date()
-																				: undefined,
-																		}),
-																	])
+																	if (todo.starPoints) {
+																		presentCompletionPopover(event, todo, {
+																			onDidDismiss: event => {
+																				if (event.detail.role === 'checkin') {
+																					db.transaction(
+																						'rw',
+																						db.checkins,
+																						async () => {
+																							db.checkins.add({
+																								todoId: todo.id,
+																								date: new Date(),
+																							})
+																						},
+																					)
+																				} else if (
+																					event.detail.role === 'snooze'
+																				) {
+																					db.transaction(
+																						'rw',
+																						db.checkins,
+																						async () => {
+																							db.checkins.add({
+																								todoId: todo.id,
+																								date: new Date(),
+																							})
+																						},
+																					)
+																					presentSnoozeTodoModal(todo)
+																				} else if (
+																					event.detail.role === 'complete'
+																				) {
+																					db.transaction(
+																						'rw',
+																						db.todos,
+																						db.wayfinderOrder,
+																						async () => {
+																							db.todos.update(todo.id, {
+																								completedAt: new Date(),
+																							})
+																							db.wayfinderOrder.delete(todo.id)
+																							// TODO: Extract common completion function
+																						},
+																					)
+																					setLogLimit(limit => limit + 1)
+																				}
+																			},
+																		})
+																	} else {
+																		await Promise.all([
+																			db.wayfinderOrder.delete(todo.id),
+																			db.todos.update(todo.id, {
+																				completedAt: event.detail.checked
+																					? new Date()
+																					: undefined,
+																			}),
+																		])
+																		setLogLimit(limit => limit + 1)
+																	}
 																},
 															)
-															setLogLimit(limit => limit + 1)
 														}}
 														onSelect={event => {
 															// Prevent the action sheet from opening when reordering
 															if (event.target['localName'] === 'ion-item')
 																return
 
-															present(todo, {
+															presentTodoActionSheet(todo, {
 																buttons: [
 																	{
 																		text: 'Move to icebox',
@@ -585,10 +684,13 @@ export const TodoLists = ({}: {}) => {
 														)}
 														todo={{ ...todo }}
 													>
-														<IonReorder
-															slot="end"
-															title={`Rank ${index + 1}`}
-														></IonReorder>
+														{todo.starPoints !== undefined &&
+															todo.starPoints > 0 && (
+																<PulseGraph
+																	checkins={checkinsByTodo[todo.id] || []}
+																	starPoints={todo.starPoints}
+																/>
+															)}
 													</TodoListItem>
 												))}
 											</IonReorderGroup>
