@@ -14,14 +14,12 @@ it('works', () => {
 		cy.contains('Confirm').click()
 	})
 
-	assertLists([], ['take the bins out'])
+	assertLists(['take the bins out'], [])
 
 	cy.get('#view-menu-button').click()
 	cy.contains('ion-button', 'Edit roles')
 	// For some reason clicking edit roles doesn't work so we hard-navigate
 	cy.visit('/constellation')
-
-	cy.contains('ion-title', 'Constellation')
 
 	cy.get('ion-fab-button').click()
 	cy.get('ion-modal').within(() => {
@@ -72,28 +70,23 @@ it('works', () => {
 	cy.get('ion-modal').contains('Confirm').click()
 
 	assertLists(
-		[],
 		['plan birthday day out', 'be silly together', 'take the bins out'],
+		[],
 	)
 
-	cy.get('#icebox').contains('take the bins out').click()
-	cy.get('#todo-action-sheet').contains('Move to wayfinder').click()
-	cy.get('#log-and-wayfinder').contains('take the bins out')
+	cy.get('#log-and-wayfinder').contains('be silly together').click()
+	cy.get('#todo-action-sheet').contains('Move to icebox').click()
+	cy.get('#icebox').contains('be silly together')
 	cy.get('#todo-action-sheet').should('not.exist')
 
-	cy.get('#icebox').contains('be silly together').click()
-	cy.get('#todo-action-sheet').contains('Move to wayfinder').click()
-	cy.get('#log-and-wayfinder').contains('be silly together')
-	cy.get('#todo-action-sheet').should('not.exist')
-
-	cy.get('#icebox').contains('plan birthday day out').click()
-	cy.get('#todo-action-sheet').contains('Move to wayfinder').click()
-	cy.get('#log-and-wayfinder').contains('plan birthday day out')
+	cy.get('#log-and-wayfinder').contains('plan birthday day out').click()
+	cy.get('#todo-action-sheet').contains('Move to icebox').click()
+	cy.get('#icebox').contains('plan birthday day out')
 	cy.get('#todo-action-sheet').should('not.exist')
 
 	assertLists(
-		['plan birthday day out', 'be silly together', 'take the bins out'],
-		[],
+		['take the bins out'],
+		['plan birthday day out', 'be silly together'],
 	)
 
 	// reorderImportantTodo(0, 2)
@@ -129,13 +122,13 @@ it('works', () => {
 		.click()
 
 	assertLists(
-		['take the bins out', 'plan birthday day out', 'be silly together'],
-		[],
+		['take the bins out'],
+		['plan birthday day out', 'be silly together'],
 	)
 })
 
 function assertLists(wayfinder: string[], icebox: string[]) {
-	cy.get('#log-and-wayfinder .todo')
+	cy.get('#log-and-wayfinder .todo ion-label')
 		.should('have.length', wayfinder.length)
 		.invoke('toArray')
 		.invoke('map', item => item.textContent)

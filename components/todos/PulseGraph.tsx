@@ -11,7 +11,7 @@ export default function PulseGraph({
 }) {
 	const color = starScale[starPoints].tailwindBgColors
 	const last30Days: { date: Date; magnitude: 0 | 1 | 2 }[] = []
-	for (let i = 0; i < 30; i++) {
+	for (let i = 0; i < 14; i++) {
 		const date = dayjs().subtract(i, 'day')
 		const checkinsOnThisDay = checkins.filter(c =>
 			dayjs(c.completedAt).isSame(date, 'day'),
