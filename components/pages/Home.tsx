@@ -19,7 +19,6 @@ import {
 	IonMenu,
 	IonNote,
 	IonPage,
-	IonReorder,
 	IonReorderGroup,
 	IonRow,
 	IonSearchbar,
@@ -34,10 +33,10 @@ import {
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
 	add,
-	calendarSharp,
 	chevronDownOutline,
 	chevronUpOutline,
 	filterSharp,
+	layersSharp,
 	locateOutline,
 	rocketSharp,
 	settingsSharp,
@@ -58,12 +57,20 @@ import { Header } from '../common/Header'
 import { StarRoleIcon } from '../common/StarRoleIcon'
 import Starship from '../common/Starship'
 import order, { calculateReorderIndices, starMudder } from '../common/order'
-import { db, Todo } from '../db'
+import {
+	db,
+	LogTodoListItem,
+	Todo,
+	TodoListItemBase,
+	WayfinderTodoListItem,
+} from '../db'
 import { useStarshipYPosition } from '../demo/Journey'
 import Tracjectory from '../landingPage/Journey/Trajectory'
 import NoteProviders from '../notes/providers'
 import useSettings from '../settings/useSettings'
+import useGroupedStarRoles from '../starRoleGroups/useStarRoleGroups'
 import { TodoCard, TodoListItem } from '../todos'
+import PulseGraph from '../todos/PulseGraph'
 import { useTodoActionSheet } from '../todos/TodoActionSheet'
 import useTodoContext, { TodoContextProvider } from '../todos/TodoContext'
 import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
@@ -71,9 +78,6 @@ import { groupByCompletedAt } from '../todos/groupTodosByCompletedAt'
 import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
 import { useTodoPopover } from '../todos/useTodoPopover'
 import useView, { ViewProvider } from '../view'
-import { cn } from '../common/cn'
-import starScale from '../common/starScale'
-import PulseGraph from '../todos/PulseGraph'
 
 const Home = () => {
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
@@ -167,7 +171,12 @@ export const TodoLists = ({}: {}) => {
 
 	const { inActiveStarRoles, query } = useView()
 
-	const todos = useLiveQuery(async () => {
+	const data = useLiveQuery<{
+		log: LogTodoListItem[]
+		checkins: LogTodoListItem[]
+		wayfinder: WayfinderTodoListItem[]
+		icebox: Todo[]
+	}>(async () => {
 		const logTodosPromise = db.todos
 			.orderBy('completedAt')
 			.reverse()
@@ -180,6 +189,8 @@ export const TodoLists = ({}: {}) => {
 			.limit(logLimit)
 			.toArray()
 
+		// TODO: Fix bug where checkins keep duplicating in log
+		// TODO: Fix checkins having same key as todos
 		const checkinsPromise = db.checkins
 			.orderBy('date')
 			.reverse()
@@ -187,25 +198,30 @@ export const TodoLists = ({}: {}) => {
 			.toArray()
 			.then(checkins => {
 				const todoIds = checkins.map(({ todoId }) => todoId)
-				return db.todos.bulkGet(todoIds).then(todos => {
-					return todos
-						.map((todo, index) => ({
-							...todo!,
+				return db.todos.bulkGet(todoIds).then(todosForCheckins => {
+					return todosForCheckins
+						.map((todoForCheckin, index) => ({
+							...todoForCheckin!,
 							completedAt: checkins[index].date,
-							checkin: true,
+							checkins: true as const,
 						}))
-						.filter(
-							todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
-						)
+						.filter(todo => {
+							console.log('filtering', todo)
+							return matchesQuery(query, todo) && inActiveStarRoles(todo)
+						})
 				})
 			})
 
 		const todoOrderItems = await db.wayfinderOrder.orderBy('order').toArray()
 		const todoIds = todoOrderItems.map(({ todoId }) => todoId)
-		const wayfinderTodosPromise = db.todos.bulkGet(todoIds).then(todoIds => {
-			return todoIds
+		const wayfinderTodosPromise = Promise.all([
+			db.todos.bulkGet(todoIds),
+			db.checkins.where('todoId').anyOf(todoIds).toArray(),
+		]).then(([wayfinderTodos, checkins]) => {
+			return wayfinderTodos
 				.map((todo, index) => ({
 					...todo!,
+					checkins,
 					order: todoOrderItems[index].order,
 					snoozedUntil: todoOrderItems[index].snoozedUntil,
 				}))
@@ -225,27 +241,34 @@ export const TodoLists = ({}: {}) => {
 			.limit(iceboxLimit)
 			.toArray()
 
-		const todos = await Promise.all([
+		const [log, checkins, wayfinder, icebox] = await Promise.all([
 			logTodosPromise,
 			checkinsPromise,
 			wayfinderTodosPromise,
 			iceboxTodosPromise,
 		])
 		return {
-			log: todos[0].reverse(),
-			checkins: todos[1],
-			wayfinder: todos[2],
-			icebox: todos[3],
+			log: log.reverse(),
+			checkins,
+			wayfinder,
+			icebox,
 		}
 	}, [inActiveStarRoles, iceboxLimit, logLimit, query])
+	console.debug({ todos: data })
 
-	const loading = todos === undefined
+	const loading = data === undefined
+
 	const todosCount = useMemo(
 		() =>
-			todos === undefined
+			loading
 				? 0
-				: Object.values(todos).reduce((acc, todos) => acc + todos.length, 0),
-		[todos],
+				: Object.values(data).reduce((acc, todos) => acc + todos.length, 0),
+		[loading, data],
+	)
+
+	const [logGroups, todayCompletedTodos] = useCompletedTodoGroups(
+		data?.log,
+		data?.checkins,
 	)
 
 	const starRoles = useLiveQuery(() => db.starRoles.toArray())
@@ -258,7 +281,6 @@ export const TodoLists = ({}: {}) => {
 			position: [nextTodoPosition, setNextTodoPosition],
 		},
 	} = useTodoContext()
-	console.debug({ todos })
 
 	// TODO: When dev tools aren't open the todo has zero height
 	// useLayoutEffect doesn't work
@@ -277,7 +299,7 @@ export const TodoLists = ({}: {}) => {
 			console.debug('No next todo ref')
 			setNextTodoPosition(null) // Send this rather than the current ref as if unchanged then is will be memoised and nothing will happen.
 		}
-	}, [nextTodoRef, setNextTodoPosition, todos]) // The todos dep is used as an imperfect proxy for one the position of the next todo changes
+	}, [nextTodoRef, setNextTodoPosition, data]) // The todos dep is used as an imperfect proxy for one the position of the next todo changes
 
 	// Keyboard shortcut stuff
 	useEffect(() => {
@@ -302,21 +324,6 @@ export const TodoLists = ({}: {}) => {
 
 	const [presentTodoActionSheet] = useTodoActionSheet()
 	const [presentSnoozeTodoModal] = useSnoozeTodoModal()
-
-	const checkinsByTodo = useMemo(() => {
-		if (!todos?.checkins) return {}
-		return _.groupBy(todos.checkins, 'id')
-	}, [todos?.checkins])
-
-	const [logGroups, todayCompletedTodos] = useMemo(() => {
-		if (!todos?.log) return [[], []]
-		const pastTodos = [...todos.log, ...todos.checkins]
-		const groups = groupByCompletedAt(pastTodos)
-		const todayGroup = groups[groups.length - 1]
-		const logGroups = groups.slice(0, -1)
-		return [logGroups, todayGroup.todos]
-	}, [todos?.log, todos?.checkins])
-
 	const [presentCompletionPopover] = useTodoPopover()
 
 	return (
@@ -403,12 +410,16 @@ export const TodoLists = ({}: {}) => {
 											<div className="-mt-8">
 												{group.todos.map(todo => (
 													<TodoListItem
-														key={todo.id}
+														key={
+															todo.checkins === true
+																? `${todo.id}-${todo.completedAt}`
+																: todo.id
+														}
 														onSelect={_event => {
 															presentTodoActionSheet(todo)
 														}}
 														onCompletionChange={event => {
-															if ((todo as any).checkin) {
+															if (todo.checkins) {
 																alert(
 																	'Deletion of checkins not implemented yet',
 																)
@@ -447,11 +458,7 @@ export const TodoLists = ({}: {}) => {
 														)}
 														todo={todo}
 													>
-														{(todo as any).checkin && (
-															<IonNote>
-																Checked in {todo.completedAt?.toDateString()}
-															</IonNote>
-														)}
+														<CheckinInfo todo={todo} />
 													</TodoListItem>
 												))}
 											</div>
@@ -466,14 +473,18 @@ export const TodoLists = ({}: {}) => {
 											/>
 										</JourneyLabel>
 										<div className="-mt-8">
-											{todayCompletedTodos.map(todo => (
+											{todayCompletedTodos.todos.map(todo => (
 												<TodoListItem
-													key={todo.id}
-													onSelect={_event => {
+													key={
+														todo.checkins === true
+															? `${todo.id}-${todo.completedAt}`
+															: todo.id
+													}
+													onSelect={() => {
 														presentTodoActionSheet(todo)
 													}}
 													onCompletionChange={event => {
-														if ((todo as any).checkin) {
+														if (todo.checkins) {
 															alert('Deletion of checkins not implemented yet')
 														} else {
 															db.transaction(
@@ -509,17 +520,7 @@ export const TodoLists = ({}: {}) => {
 													)}
 													todo={todo}
 												>
-													{(todo as any).checkin ? (
-														<IonNote>
-															Checked in {todo.completedAt?.toDateString()}
-														</IonNote>
-													) : todo.starPoints !== undefined &&
-													  todo.starPoints > 0 ? (
-														<PulseGraph
-															checkins={checkinsByTodo[todo.id] || []}
-															starPoints={todo.starPoints}
-														/>
-													) : null}
+													<CheckinInfo todo={todo} />
 												</TodoListItem>
 											))}
 											<IonReorderGroup
@@ -534,8 +535,8 @@ export const TodoLists = ({}: {}) => {
 													 * If the todo moves up then all the todos
 													 */
 													// TODO: Could make this easier with IDs in the DOM
-													const fromTodo = todos.wayfinder[event.detail.from]
-													const toTodo = todos.wayfinder[event.detail.to]
+													const fromTodo = data.wayfinder[event.detail.from]
+													const toTodo = data.wayfinder[event.detail.to]
 
 													const wayfinderTodos = await db.wayfinderOrder
 														.orderBy('order')
@@ -571,7 +572,7 @@ export const TodoLists = ({}: {}) => {
 													})
 												}}
 											>
-												{todos.wayfinder.map((todo, index) => (
+												{data.wayfinder.map((todo, index) => (
 													<TodoListItem
 														key={todo.id}
 														data-id={todo.id}
@@ -585,36 +586,28 @@ export const TodoLists = ({}: {}) => {
 																async () => {
 																	if (todo.starPoints) {
 																		presentCompletionPopover(event, todo, {
-																			onDidDismiss: event => {
+																			onDidDismiss: async event => {
+																				console.log(
+																					'popover did dismiss',
+																					event,
+																				)
 																				if (event.detail.role === 'checkin') {
-																					db.transaction(
-																						'rw',
-																						db.checkins,
-																						async () => {
-																							db.checkins.add({
-																								todoId: todo.id,
-																								date: new Date(),
-																							})
-																						},
-																					)
+																					db.checkins.add({
+																						todoId: todo.id,
+																						date: new Date(),
+																					})
 																				} else if (
 																					event.detail.role === 'snooze'
 																				) {
-																					db.transaction(
-																						'rw',
-																						db.checkins,
-																						async () => {
-																							db.checkins.add({
-																								todoId: todo.id,
-																								date: new Date(),
-																							})
-																						},
-																					)
+																					await db.checkins.add({
+																						todoId: todo.id,
+																						date: new Date(),
+																					})
 																					presentSnoozeTodoModal(todo)
 																				} else if (
 																					event.detail.role === 'complete'
 																				) {
-																					db.transaction(
+																					await db.transaction(
 																						'rw',
 																						db.todos,
 																						db.wayfinderOrder,
@@ -684,20 +677,14 @@ export const TodoLists = ({}: {}) => {
 														)}
 														todo={{ ...todo }}
 													>
-														{todo.starPoints !== undefined &&
-															todo.starPoints > 0 && (
-																<PulseGraph
-																	checkins={checkinsByTodo[todo.id] || []}
-																	starPoints={todo.starPoints}
-																/>
-															)}
+														<CheckinInfo todo={todo} />
 													</TodoListItem>
 												))}
 											</IonReorderGroup>
 										</div>
 									</IonItemGroup>
 								</IonList>
-								<Icebox todos={todos.icebox} />
+								<Icebox todos={data.icebox} />
 								<IonButton
 									aria-label="Load more icebox todos"
 									color="medium"
@@ -884,8 +871,11 @@ export const ViewMenu = ({
 }: {
 	searchbarRef: RefObject<HTMLIonSearchbarElement>
 }) => {
-	const starRoles = useLiveQuery(() => db.starRoles.toArray())
-	const isLoading = starRoles === undefined
+	const queryResult = useLiveQuery(() =>
+		Promise.all([db.starRoles.toArray(), db.starRoleGroups.toArray()]),
+	)
+	const isLoading = queryResult === undefined
+	const starRolesByGroup = useGroupedStarRoles(queryResult)
 	const {
 		activateStarRole,
 		activeStarRoles,
@@ -893,6 +883,8 @@ export const ViewMenu = ({
 		setActiveStarRoles,
 		setQuery,
 	} = useView()
+
+	console.log({ starRolesByGroup })
 
 	return (
 		<IonMenu
@@ -942,15 +934,18 @@ export const ViewMenu = ({
 				) : (
 					<div className="space-y-2">
 						<IonList>
-							<IonItem>
+							<IonItem lines="none">
 								All
 								<IonToggle
-									checked={starRoles.length + 1 === activeStarRoles.length}
+									checked={queryResult[0].length + 1 === activeStarRoles.length}
 									color="secondary"
 									className="font-bold"
 									onIonChange={event => {
 										if (event.detail.checked) {
-											setActiveStarRoles([...starRoles.map(({ id }) => id), ''])
+											setActiveStarRoles([
+												...queryResult[0].map(({ id }) => id),
+												'',
+											])
 										} else {
 											setActiveStarRoles([])
 										}
@@ -958,64 +953,102 @@ export const ViewMenu = ({
 									slot="end"
 								></IonToggle>
 							</IonItem>
-							<IonItem>
-								None
-								<IonButton
-									fill="clear"
-									onClick={() => {
-										setActiveStarRoles([''])
-									}}
-									shape="round"
-									slot="end"
-									size="small"
-								>
-									<IonIcon
-										icon={locateOutline}
-										slot="icon-only"
-									></IonIcon>
-								</IonButton>
-								<IonToggle
-									checked={activeStarRoles.includes('')}
-									color="secondary"
-									onIonChange={event => {
-										if (event.detail.checked) {
-											activateStarRole('')
-										} else {
-											deactivateStarRole('')
-										}
-									}}
-									slot="end"
-								></IonToggle>
-							</IonItem>
-							{starRoles.map(starRole => (
-								<IonItem key={starRole.id}>
-									<StarRoleIcon starRole={starRole} />
-									{starRole?.title}
-									<IonButton
-										fill="clear"
-										onClick={() => {
-											setActiveStarRoles([starRole.id])
-										}}
-										shape="round"
-										slot="end"
-										size="small"
-									>
+							{starRolesByGroup.map(starRoleGroup => (
+								<IonItemGroup key={starRoleGroup.id}>
+									<IonItemDivider className="[--background:transparent]">
 										<IonIcon
-											icon={locateOutline}
-											slot="icon-only"
-										></IonIcon>
-									</IonButton>
-									<IonToggle
-										checked={activeStarRoles.includes(starRole.id)}
-										color="secondary"
-										onIonChange={event => {
-											event.detail.checked
-												? activateStarRole(starRole.id)
-												: deactivateStarRole(starRole.id)
-										}}
-										slot="end"
-									></IonToggle>
-								</IonItem>
+											color="light"
+											icon={layersSharp}
+											slot="end"
+										/>
+										<IonLabel>{starRoleGroup.title}</IonLabel>
+										{/* Wrapping div necessary to align items with ion items */}
+										<div
+											className="flex items-center"
+											slot="end"
+										>
+											<IonButton
+												fill="clear"
+												onClick={() => {
+													console.log('SETTING EM')
+													setActiveStarRoles(
+														starRoleGroup.starRoles.map(({ id }) => id),
+													)
+												}}
+												shape="round"
+												size="small"
+											>
+												<IonIcon
+													icon={locateOutline}
+													slot="icon-only"
+												></IonIcon>
+											</IonButton>
+											<IonToggle
+												checked={
+													starRoleGroup.starRoles.length !== 0 &&
+													starRoleGroup.starRoles.every(starRole =>
+														activeStarRoles.includes(starRole.id),
+													)
+												}
+												disabled={starRoleGroup.starRoles.length === 0}
+												color="secondary"
+												className="font-bold"
+												onIonChange={event => {
+													if (event.detail.checked) {
+														setActiveStarRoles(
+															activeStarRoles.concat(
+																starRoleGroup.starRoles.map(({ id }) => id),
+															),
+														)
+													} else {
+														setActiveStarRoles(
+															activeStarRoles.filter(
+																id =>
+																	!starRoleGroup.starRoles.some(
+																		role => role.id === id,
+																	),
+															),
+														)
+													}
+												}}
+											></IonToggle>
+										</div>
+									</IonItemDivider>
+									{starRoleGroup.starRoles.map(starRole => (
+										<IonItem
+											className="ml-2"
+											key={starRole.id}
+											lines="none"
+										>
+											<StarRoleIcon starRole={starRole} />
+											<IonLabel>{starRole?.title}</IonLabel>
+											<IonButton
+												fill="clear"
+												onClick={() => {
+													setActiveStarRoles([starRole.id])
+												}}
+												shape="round"
+												slot="end"
+												size="small"
+											>
+												<IonIcon
+													icon={locateOutline}
+													slot="icon-only"
+												></IonIcon>
+											</IonButton>
+											<IonToggle
+												checked={activeStarRoles.includes(starRole.id)}
+												color="secondary"
+												onIonChange={event => {
+													event.detail.checked
+														? activateStarRole(starRole.id)
+														: deactivateStarRole(starRole.id)
+												}}
+												slot="end"
+											></IonToggle>
+										</IonItem>
+									))}
+								</IonItemGroup>
 							))}
 						</IonList>
 					</div>
@@ -1211,4 +1244,33 @@ function useGlobalKeyboardShortcuts() {
 			document.removeEventListener('keydown', handleKeyDown)
 		}
 	}, [])
+}
+
+function useCompletedTodoGroups(
+	completedTodos?: LogTodoListItem[],
+	checkins?: LogTodoListItem[],
+): [TodoGroup[], TodoGroup] {
+	return useMemo(() => {
+		const pastTodos = [...(completedTodos || []), ...(checkins || [])]
+		const groups = groupByCompletedAt(pastTodos)
+		const todayGroup = groups[groups.length - 1]
+		const logGroups = groups.slice(0, -1)
+		return [logGroups, todayGroup]
+	}, [completedTodos, checkins])
+}
+
+type TodoGroup = {
+	label: string
+	todos: LogTodoListItem[]
+}
+
+function CheckinInfo({ todo }: { todo: TodoListItemBase }) {
+	return todo.checkins === true ? (
+		<IonNote>Checked in {todo.completedAt?.toDateString()}</IonNote>
+	) : Array.isArray(todo.checkins) && todo.starPoints ? (
+		<PulseGraph
+			checkins={todo.checkins}
+			starPoints={todo.starPoints}
+		/>
+	) : null
 }

@@ -23,6 +23,7 @@ import {
 } from 'ionicons/icons'
 import { db } from '../db'
 import StarPoints from './StarPoints'
+import { Link } from 'react-router-dom'
 
 export const Header = ({ title }: { title: string }) => {
 	const user = useObservable(db.cloud.currentUser)
@@ -32,11 +33,15 @@ export const Header = ({ title }: { title: string }) => {
 	return (
 		<IonHeader>
 			<IonToolbar>
-				<IonImg
-					src="/icon.png"
+				<Link
 					slot="start"
-					className="w-10 h-10 ml-2" // Needs to align with starship and trajectory
-				/>
+					to="/home"
+				>
+					<IonImg
+						src="/icon.png"
+						className="w-10 h-10 ml-2" // Needs to align with starship and trajectory
+					/>
+				</Link>
 				{/* <IonTitle>{title}</IonTitle> */}
 				<StarPoints />
 				<IonButtons

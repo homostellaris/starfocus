@@ -7,6 +7,8 @@ import {
 	IonIcon,
 	IonInput,
 	IonPage,
+	IonSelect,
+	IonSelectOption,
 	IonTitle,
 	IonToolbar,
 } from '@ionic/react'
@@ -17,8 +19,9 @@ import {
 	useCallback,
 	useState,
 } from 'react'
-import { StarRole } from '../db'
+import { db, StarRole, StarRoleGroup } from '../db'
 import Icons, { getIonIcon } from './icons'
+import { useLiveQuery } from 'dexie-react-hooks'
 
 export default function StarRoleModal({
 	dismiss,
@@ -30,13 +33,18 @@ export default function StarRoleModal({
 }: {
 	dismiss: (data?: any, role?: string) => void
 	starRole?: Partial<StarRole>
+	starRoleGroup?: StarRoleGroup
 	title: string
 	titleInput: MutableRefObject<HTMLIonInputElement | null>
 	toolbarSlot?: ReactNode
 } & ComponentProps<typeof IonPage>) {
+	const starRoleGroups = useLiveQuery(() => db.starRoleGroups.toArray())
 	const [starRoleTitleInput, setStarRoleTitleInput] = useState<string>(
 		starRole?.title || '',
 	) // TODO: Figure out why this becomes necessary due to other states resetting the title input value when its uncontrolled.
+	const [starRoleGroupId, setStarRoleGroupId] = useState<string | null>(
+		starRole?.starRoleGroupId ?? null,
+	)
 	const [iconInput, setIconInput] = useState<{
 		name: string
 		value: string
@@ -50,21 +58,21 @@ export default function StarRoleModal({
 	const starRoleTitle = starRoleTitleInput || starRole?.title
 
 	const emitStarRole = useCallback(() => {
+		if (!starRoleTitle || !icon) {
+			throw new TypeError('Star role title and icon are required')
+		}
 		dismiss(
 			{
-				...(icon
-					? {
-							icon: {
-								type: 'ionicon',
-								name: icon.name,
-							},
-						}
-					: {}),
+				icon: {
+					type: 'ionicon',
+					name: icon.name,
+				},
+				starRoleGroupId,
 				title: starRoleTitle,
 			},
 			'confirm',
 		)
-	}, [dismiss, icon, starRoleTitle])
+	}, [dismiss, icon, starRoleGroupId, starRoleTitle])
 
 	return (
 		<IonPage
@@ -94,6 +102,25 @@ export default function StarRoleModal({
 					}}
 					value={starRoleTitleInput || starRole?.title}
 				/>
+				<IonSelect
+					label="Group"
+					labelPlacement="floating"
+					fill="outline"
+					onIonChange={event => {
+						setStarRoleGroupId(event.detail.value)
+					}}
+					value={starRoleGroupId}
+				>
+					<IonSelectOption value={null}>No star role group</IonSelectOption>
+					{starRoleGroups?.map(group => (
+						<IonSelectOption
+							key={group.id}
+							value={group.id}
+						>
+							{group.title}
+						</IonSelectOption>
+					))}
+				</IonSelect>
 				<IonInput
 					debounce={200}
 					fill="outline"
@@ -105,7 +132,7 @@ export default function StarRoleModal({
 					}}
 					placeholder="Rocket"
 					type="text"
-					value={iconQuery}
+					// value={iconQuery}
 				>
 					{/* Conditionally rendering this  caused React errors, must be due to implemenation */}
 					<IonIcon

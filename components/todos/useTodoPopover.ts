@@ -1,8 +1,8 @@
 import { PopoverOptions, useIonPopover } from '@ionic/react'
-import { db, Todo } from '../db'
+import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
+import { Todo } from '../db'
 import { Popover } from './popover'
 import useTodoContext from './TodoContext'
-import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
 
 type TodoPopoverOptions = Omit<PopoverOptions, 'component' | 'componentProps'> &
 	HookOverlayOptions

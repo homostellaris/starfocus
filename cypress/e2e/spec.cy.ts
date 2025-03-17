@@ -5,7 +5,7 @@ before(() => {
 it('works', () => {
 	cy.visit('/home')
 
-	cy.get('ion-fab-button').click()
+	cy.get('ion-fab>ion-fab-button').click()
 	cy.get('ion-modal').within(() => {
 		cy.contains('label', 'Title')
 			.find('input')
@@ -21,7 +21,8 @@ it('works', () => {
 	// For some reason clicking edit roles doesn't work so we hard-navigate
 	cy.visit('/constellation')
 
-	cy.get('ion-fab-button').click()
+	cy.get('ion-fab>ion-fab-button').click()
+	cy.get('#create-star-role').click()
 	cy.get('ion-modal').within(() => {
 		cy.contains('label', 'Title').find('input').wait(2000).type('Father')
 		cy.get('#icons ion-icon').first().click()
@@ -30,7 +31,8 @@ it('works', () => {
 		cy.contains('Confirm').click()
 	})
 
-	cy.get('ion-fab-button').click()
+	cy.get('ion-fab>ion-fab-button').click()
+	cy.get('#create-star-role').click()
 	cy.get('ion-modal').within(() => {
 		cy.contains('label', 'Title').find('input').wait(2000).type('Partner')
 		cy.get('#icons ion-icon').eq(1).click()
@@ -41,7 +43,7 @@ it('works', () => {
 
 	cy.visit('/home')
 
-	cy.get('ion-fab-button').click()
+	cy.get('ion-fab>ion-fab-button').click()
 	cy.get('ion-modal').within(() => {
 		cy.contains('label', 'Title')
 			.find('input')
@@ -55,7 +57,7 @@ it('works', () => {
 	})
 	cy.get('ion-modal').contains('Confirm').click()
 
-	cy.get('ion-fab-button').click()
+	cy.get('ion-fab>ion-fab-button').click()
 	cy.get('ion-modal').within(() => {
 		cy.contains('label', 'Title')
 			.find('input')

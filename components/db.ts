@@ -11,16 +11,25 @@ export interface Todo {
 	title: string
 }
 
-export interface TodoMeta {
+export type WayfinderOrder = {
+	todoId: string
+} & WayfinderMeta
+
+export interface WayfinderMeta {
 	order: string
 	snoozedUntil?: Date
 }
 
-export type WayfinderOrder = {
-	todoId: string
-} & TodoMeta
+export type TodoListItemBase = Todo & {
+	/* Array means its a todo with checkins
+	 * undefined means its a todo that's not meant to have checkins
+	 * true means its actually a checkin itself */
+	checkins?: Checkin[] | true
+}
 
-export type EnrichedTodo = Todo & TodoMeta
+export type LogTodoListItem = TodoListItemBase
+
+export type WayfinderTodoListItem = TodoListItemBase & WayfinderMeta
 
 export interface Note {
 	uri: string
@@ -29,6 +38,12 @@ export interface Note {
 export interface StarRole {
 	id: string
 	icon: Icon
+	starRoleGroupId?: string
+	title: string
+}
+
+export interface StarRoleGroup {
+	id: string
 	title: string
 }
 
@@ -63,6 +78,7 @@ export class DexieStarfocus extends Dexie {
 	lists!: Table<List>
 	settings!: DexieCloudTable<Setting, 'key'>
 	starRoles: DexieCloudTable<StarRole, 'id'>
+	starRoleGroups: DexieCloudTable<StarRoleGroup, 'id'>
 	starRolesOrder!: DexieCloudTable<
 		{ starRoleId: string; order: number },
 		'starRoleId'
@@ -119,6 +135,16 @@ export class DexieStarfocus extends Dexie {
 			wayfinderOrder: '&todoId, order, snoozedUntil',
 			settings: '&key',
 			starRoles: '@id, title',
+			starRolesOrder: '&starRoleId, order',
+			todos: '@id, createdAt, completedAt, starRole, title',
+		})
+		this.version(8).stores({
+			checkins: '&todoId, date',
+			lists: 'type',
+			wayfinderOrder: '&todoId, order, snoozedUntil',
+			settings: '&key',
+			starRoles: '@id, starRoleGroupId, title',
+			starRoleGroups: '@id, title',
 			starRolesOrder: '&starRoleId, order',
 			todos: '@id, createdAt, completedAt, starRole, title',
 		})

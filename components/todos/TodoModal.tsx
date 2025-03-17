@@ -91,7 +91,7 @@ export default function TodoModal({
 					ref={starRoleInput}
 					value={todo?.starRole}
 				>
-					<IonSelectOption value={null}>None</IonSelectOption>
+					<IonSelectOption value={null}>No star role</IonSelectOption>
 					{starRoles.map(starRole => (
 						<IonSelectOption
 							key={starRole.id}

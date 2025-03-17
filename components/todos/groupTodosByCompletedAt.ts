@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import isBetween from 'dayjs/plugin/isBetween'
 import updateLocale from 'dayjs/plugin/updateLocale'
-import { Todo } from '../db'
+import { LogTodoListItem, Todo } from '../db'
 
 dayjs.extend(isBetween)
 dayjs.extend(updateLocale)
@@ -23,7 +23,7 @@ type Loggable = Pick<Todo, 'completedAt'>
  *
  * @param completedTodos assumed to be in chronological order
  */
-export function groupByCompletedAt(completedTodos: Todo[]) {
+export function groupByCompletedAt(completedTodos: LogTodoListItem[]) {
 	// Shame we can't rely on the database query order but this is necessary due to mixing in checkins.
 	completedTodos.sort(
 		(a, b) => dayjs(a.completedAt).valueOf() - dayjs(b.completedAt).valueOf(),
@@ -62,10 +62,13 @@ export function groupByCompletedAt(completedTodos: Todo[]) {
 	let currentMetaIndex = groupMeta.length - 1
 	let currentMeta = groupMeta[currentMetaIndex]
 
-	const groups: Record<string, Todo[]> = groupMeta.reduce((acc, meta) => {
-		acc[meta.label] = []
-		return acc
-	}, {})
+	const groups: Record<string, LogTodoListItem[]> = groupMeta.reduce(
+		(acc, meta) => {
+			acc[meta.label] = []
+			return acc
+		},
+		{},
+	)
 
 	// Iterate over completed todos in reverse order and assign to next group once one is exhausted
 	for (let i = completedTodos.length - 1; i >= 0; i--) {

@@ -1,20 +1,21 @@
 import dayjs from 'dayjs'
 import { cn } from '../common/cn'
 import starScale from '../common/starScale'
+import { Checkin } from '../db'
 
 export default function PulseGraph({
 	starPoints,
 	checkins,
 }: {
 	starPoints: number
-	checkins: { completedAt: Date }[]
+	checkins: Checkin[]
 }) {
 	const color = starScale[starPoints].tailwindBgColors
 	const last30Days: { date: Date; magnitude: 0 | 1 | 2 }[] = []
 	for (let i = 0; i < 14; i++) {
 		const date = dayjs().subtract(i, 'day')
 		const checkinsOnThisDay = checkins.filter(c =>
-			dayjs(c.completedAt).isSame(date, 'day'),
+			dayjs(c.date).isSame(date, 'day'),
 		)
 		console.debug('checkinsOnThisDay', checkinsOnThisDay.length)
 		last30Days.push({
