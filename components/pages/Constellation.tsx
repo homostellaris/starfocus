@@ -1,5 +1,4 @@
 import {
-	IonButton,
 	IonContent,
 	IonFab,
 	IonFabButton,
@@ -18,20 +17,20 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { add, layersSharp, starHalfSharp, starOutline } from 'ionicons/icons'
 import { RefObject, useCallback, useEffect, useRef } from 'react'
 import { Header } from '../common/Header'
-import { db } from '../db'
+import { db, StarRole, StarRoleGroup } from '../db'
 import { useCreateStarRoleGroupModal } from '../starRoleGroups/create/useCreateStarRoleGroupModal'
+import { useStarRoleGroupActionSheet } from '../starRoleGroups/StarRoleGroupActionSheet'
 import useGroupedStarRoles from '../starRoleGroups/useStarRoleGroups'
 import { useCreateStarRoleModal } from '../starRoles/create/useCreateStarRoleModal'
 import { getIonIcon } from '../starRoles/icons'
+import { noStarRole } from '../starRoles/noStarRole'
 import { useStarRoleActionSheet } from '../starRoles/StarRoleActionSheet'
-import { useStarRoleGroupActionSheet } from '../starRoleGroups/StarRoleGroupActionSheet'
 
 export default function Constellation() {
 	const data = useLiveQuery(() =>
 		Promise.all([db.starRoles.toArray(), db.starRoleGroups.toArray()]),
 	)
 	const isLoading = data === undefined
-	const starRolesByGroup = useGroupedStarRoles(data)
 
 	const fab = useRef<HTMLIonFabElement>(null)
 
@@ -52,9 +51,6 @@ export default function Constellation() {
 			},
 		})
 	}, [fab, presentCreateStarRoleGroupModal])
-
-	const [presentStarRoleActionSheet] = useStarRoleActionSheet()
-	const [presentStarRoleGroupActionSheet] = useStarRoleGroupActionSheet()
 
 	useGlobalKeyboardShortcuts(fab, openCreateStarRoleModal)
 
@@ -81,59 +77,10 @@ export default function Constellation() {
 						</p>
 					</div>
 				) : (
-					<IonList inset>
-						{/* <IonReorderGroup
-							disabled={false}
-							onIonItemReorder={handleReorder}
-						> */}
-						{starRolesByGroup.map(starRoleGroup => (
-							<IonItemGroup key={starRoleGroup.title}>
-								<IonItemDivider
-									className="[--background:transparent] cursor-pointer"
-									onClick={() => {
-										presentStarRoleGroupActionSheet(starRoleGroup)
-									}}
-								>
-									<IonLabel>{starRoleGroup.title}</IonLabel>
-								</IonItemDivider>
-								{starRoleGroup.starRoles.length === 0 ? (
-									<div className="flex items-center justify-center gap-5 m-4 h-fit">
-										<IonIcon
-											color="medium"
-											icon={starHalfSharp}
-											size="small"
-										/>
-										<IonLabel color="medium">
-											<span className="text-sm">
-												No star roles in this group yet
-											</span>
-										</IonLabel>
-									</div>
-								) : (
-									starRoleGroup.starRoles.map(starRole => (
-										<IonItem
-											button
-											className="ml-2"
-											key={starRole.id}
-											onClick={() => {
-												presentStarRoleActionSheet(starRole)
-											}}
-										>
-											<IonLabel>{starRole?.title}</IonLabel>
-											{starRole?.icon && (
-												<IonIcon
-													icon={getIonIcon(starRole.icon.name)}
-													slot="end"
-												/>
-											)}
-											<IonReorder slot="end"></IonReorder>
-										</IonItem>
-									))
-								)}
-							</IonItemGroup>
-						))}
-						{/* </IonReorderGroup> */}
-					</IonList>
+					<StarRolesList
+						starRoles={data[0]}
+						starRoleGroups={data[1]}
+					/>
 				)}
 				<IonFab
 					ref={fab}
@@ -163,6 +110,72 @@ export default function Constellation() {
 		</IonPage>
 	)
 }
+
+function StarRolesList({
+	starRoles,
+	starRoleGroups,
+}: {
+	starRoles: StarRole[]
+	starRoleGroups: StarRoleGroup[]
+}) {
+	const starRolesByGroup = useGroupedStarRoles(starRoles, starRoleGroups)
+	const [presentStarRoleActionSheet] = useStarRoleActionSheet()
+	const [presentStarRoleGroupActionSheet] = useStarRoleGroupActionSheet()
+	return (
+		<IonList inset>
+			{/* <IonReorderGroup
+							disabled={false}
+							onIonItemReorder={handleReorder}
+						> */}
+			{starRolesByGroup.map(starRoleGroup => (
+				<IonItemGroup key={starRoleGroup.title}>
+					<IonItemDivider
+						className="[--background:transparent] cursor-pointer"
+						onClick={() => {
+							presentStarRoleGroupActionSheet(starRoleGroup)
+						}}
+					>
+						<IonLabel>{starRoleGroup.title}</IonLabel>
+					</IonItemDivider>
+					{starRoleGroup.starRoles.length === 0 ? (
+						<div className="flex items-center justify-center gap-5 m-4 h-fit">
+							<IonIcon
+								color="medium"
+								icon={starHalfSharp}
+								size="small"
+							/>
+							<IonLabel color="medium">
+								<span className="text-sm">No star roles in this group yet</span>
+							</IonLabel>
+						</div>
+					) : (
+						starRoleGroup.starRoles.map(starRole => (
+							<IonItem
+								button
+								className="ml-2"
+								key={starRole.id}
+								onClick={() => {
+									presentStarRoleActionSheet(starRole)
+								}}
+							>
+								<IonLabel>{starRole?.title}</IonLabel>
+								{starRole?.icon && (
+									<IonIcon
+										icon={getIonIcon(starRole.icon.name)}
+										slot="end"
+									/>
+								)}
+								<IonReorder slot="end"></IonReorder>
+							</IonItem>
+						))
+					)}
+				</IonItemGroup>
+			))}
+			{/* </IonReorderGroup> */}
+		</IonList>
+	)
+}
+
 function useGlobalKeyboardShortcuts(
 	fab: RefObject<HTMLIonFabElement>,
 	openCreateStarRoleModal: any,
