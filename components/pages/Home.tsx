@@ -206,10 +206,9 @@ export const TodoLists = ({}: {}) => {
 							completedAt: checkins[index].date,
 							checkins: true as const,
 						}))
-						.filter(todo => {
-							console.log('filtering', todo)
-							return matchesQuery(query, todo) && inActiveStarRoles(todo)
-						})
+						.filter(
+							todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
+						)
 				})
 			})
 
@@ -255,7 +254,7 @@ export const TodoLists = ({}: {}) => {
 			icebox,
 		}
 	}, [inActiveStarRoles, iceboxLimit, logLimit, query])
-	console.debug({ todos: data })
+	// console.debug({ todos: data })
 
 	const loading = data === undefined
 
@@ -593,7 +592,7 @@ export const TodoLists = ({}: {}) => {
 																					event,
 																				)
 																				if (event.detail.role === 'checkin') {
-																					db.checkins.add({
+																					await db.checkins.add({
 																						todoId: todo.id,
 																						date: new Date(),
 																					})

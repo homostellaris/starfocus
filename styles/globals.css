@@ -2,6 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+	@font-palette-values --redshift {
+		font-family: '__Honk_460061'; /* Don't know why this won't work with CSS var */
+		/* font-family: var(
+			--font-honk
+		); */
+		override-colors:
+			/* 0 theme(colors.slate.900),
+			1 theme(colors.slate.800), */
+			2 theme(colors.blue.400),
+			3 theme(colors.violet.400),
+			4 theme(colors.fuchsia.400),
+			5 theme(colors.rose.400),
+			6 theme(colors.rose.500),
+			7 theme(colors.rose.900);
+	}
+
+	@font-palette-values --blue {
+		font-family: '__Honk_460061'; /* Don't know why this won't work with CSS var */
+		override-colors:
+			2 theme(colors.blue.100),
+			4 theme(colors.blue.200),
+			3 theme(colors.blue.300),
+			5 theme(colors.blue.400),
+			6 theme(colors.blue.500),
+			7 theme(colors.blue.600);
+	}
+
+	@font-palette-values --purple {
+		font-family: '__Honk_460061'; /* Don't know why this won't work with CSS var */
+		override-colors:
+			2 theme(colors.violet.100),
+			4 theme(colors.violet.200),
+			3 theme(colors.violet.300),
+			5 theme(colors.violet.400),
+			6 theme(colors.violet.500),
+			7 theme(colors.violet.600);
+	}
+
+	@font-palette-values --red {
+		font-family: '__Honk_460061'; /* Don't know why this won't work with CSS var */
+		override-colors:
+			2 theme(colors.rose.100),
+			4 theme(colors.rose.200),
+			3 theme(colors.rose.300),
+			5 theme(colors.rose.400),
+			6 theme(colors.rose.500),
+			7 theme(colors.rose.600);
+	}
+}
+
 /* From Capacitor starter template */
 :root {
 	--safe-area-top: env(safe-area-inset-top);
