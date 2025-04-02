@@ -11,7 +11,6 @@ import {
 	IonHeader,
 	IonIcon,
 	IonInput,
-	IonItem,
 	IonItemDivider,
 	IonItemGroup,
 	IonLabel,
@@ -27,7 +26,6 @@ import {
 	IonSpinner,
 	IonTitle,
 	IonToast,
-	IonToggle,
 	IonToolbar,
 } from '@ionic/react'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -36,11 +34,8 @@ import {
 	chevronDownOutline,
 	chevronUpOutline,
 	filterSharp,
-	layersSharp,
-	locateOutline,
 	rocketSharp,
 	settingsSharp,
-	timeSharp,
 } from 'ionicons/icons'
 import _ from 'lodash'
 import {
@@ -54,7 +49,6 @@ import {
 	useState,
 } from 'react'
 import { Header } from '../common/Header'
-import { StarRoleIcon } from '../common/StarRoleIcon'
 import Starship from '../common/Starship'
 import order, { calculateReorderIndices, starMudder } from '../common/order'
 import {
@@ -65,10 +59,11 @@ import {
 	WayfinderTodoListItem,
 } from '../db'
 import { useStarshipYPosition } from '../demo/Journey'
+import { ViewMenu } from '../focus/ViewMenu'
+import useView, { ViewProvider } from '../focus/view'
 import Tracjectory from '../landingPage/Journey/Trajectory'
 import NoteProviders from '../notes/providers'
 import useSettings from '../settings/useSettings'
-import useGroupedStarRoles from '../starRoleGroups/useStarRoleGroups'
 import { TodoCard, TodoListItem } from '../todos'
 import PulseGraph from '../todos/PulseGraph'
 import { useTodoActionSheet } from '../todos/TodoActionSheet'
@@ -77,8 +72,6 @@ import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
 import { groupByCompletedAt } from '../todos/groupTodosByCompletedAt'
 import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
 import { useTodoPopover } from '../todos/useTodoPopover'
-import useView, { ViewProvider } from '../focus/view'
-import { ViewMenu } from '../focus/ViewMenu'
 
 const Home = () => {
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
@@ -1007,7 +1000,7 @@ export const Searchbar = forwardRef<HTMLIonSearchbarElement>(
 function JourneyLabel({ children }: ComponentProps<typeof IonItemDivider>) {
 	return (
 		<IonItemDivider
-			className="top-4 h-8 -translate-x-[calc(100%+56px)] -translate-y-1/2 w-fit [--background:none] [--inner-padding-end:none]"
+			className="top-4 h-8 -translate-x-[calc(100%+(56px-100%)/2)] min-[992px]:-translate-x-[calc(100%+56px)] -translate-y-1/2 w-fit [--background:none] [--inner-padding-end:none] bg-[--ion-background-color] p-1"
 			sticky
 		>
 			{children}

@@ -40,12 +40,12 @@ export function groupByCompletedAt(completedTodos: LogTodoListItem[]) {
 			predicate: (_completedAt: dayjs.Dayjs) => true,
 		},
 		{
-			label: 'This Year',
+			label: 'Year',
 			predicate: (completedAt: dayjs.Dayjs) =>
 				completedAt.isBetween(startOfThisYear, lastMonday, 'day', '[]'),
 		},
 		{
-			label: 'This Week',
+			label: 'Week',
 			predicate: (completedAt: dayjs.Dayjs) =>
 				completedAt.isBetween(lastMonday, yesterday, 'day', '[]'),
 		},
