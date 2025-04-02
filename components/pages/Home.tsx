@@ -167,7 +167,7 @@ export const TodoLists = ({}: {}) => {
 
 	const data = useLiveQuery<{
 		log: LogTodoListItem[]
-		checkins: LogTodoListItem[]
+		visits: LogTodoListItem[]
 		wayfinder: WayfinderTodoListItem[]
 		icebox: Todo[]
 	}>(async () => {
@@ -183,21 +183,19 @@ export const TodoLists = ({}: {}) => {
 			.limit(logLimit)
 			.toArray()
 
-		// TODO: Fix bug where checkins keep duplicating in log
-		// TODO: Fix checkins having same key as todos
-		const checkinsPromise = db.visits
+		const visitsPromise = db.visits
 			.orderBy('date')
 			.reverse()
 			.limit(logLimit)
 			.toArray()
-			.then(checkins => {
-				const todoIds = checkins.map(({ todoId }) => todoId)
-				return db.todos.bulkGet(todoIds).then(todosForCheckins => {
-					return todosForCheckins
-						.map((todoForCheckin, index) => ({
-							...todoForCheckin!,
-							completedAt: checkins[index].date,
-							checkins: true as const,
+			.then(visits => {
+				const todoIds = visits.map(({ todoId }) => todoId)
+				return db.todos.bulkGet(todoIds).then(todosForvisits => {
+					return todosForvisits
+						.map((todoForvisit, index) => ({
+							...todoForvisit!,
+							completedAt: visits[index].date,
+							visits: true as const,
 						}))
 						.filter(
 							todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
@@ -210,11 +208,11 @@ export const TodoLists = ({}: {}) => {
 		const wayfinderTodosPromise = Promise.all([
 			db.todos.bulkGet(todoIds),
 			db.visits.where('todoId').anyOf(todoIds).toArray(),
-		]).then(([wayfinderTodos, checkins]) => {
+		]).then(([wayfinderTodos, visits]) => {
 			return wayfinderTodos
 				.map((todo, index) => ({
 					...todo!,
-					checkins,
+					visits,
 					order: todoOrderItems[index].order,
 					snoozedUntil: todoOrderItems[index].snoozedUntil,
 				}))
@@ -234,15 +232,15 @@ export const TodoLists = ({}: {}) => {
 			.limit(iceboxLimit)
 			.toArray()
 
-		const [log, checkins, wayfinder, icebox] = await Promise.all([
+		const [log, visits, wayfinder, icebox] = await Promise.all([
 			logTodosPromise,
-			checkinsPromise,
+			visitsPromise,
 			wayfinderTodosPromise,
 			iceboxTodosPromise,
 		])
 		return {
 			log: log.reverse(),
-			checkins,
+			visits: visits,
 			wayfinder,
 			icebox,
 		}
@@ -261,7 +259,7 @@ export const TodoLists = ({}: {}) => {
 
 	const [logGroups, todayCompletedTodos] = useCompletedTodoGroups(
 		data?.log,
-		data?.checkins,
+		data?.visits,
 	)
 
 	const starRoles = useLiveQuery(() => db.starRoles.toArray())
@@ -404,7 +402,7 @@ export const TodoLists = ({}: {}) => {
 												{group.todos.map(todo => (
 													<TodoListItem
 														key={
-															todo.checkins === true
+															todo.visits === true
 																? `${todo.id}-${todo.completedAt}`
 																: todo.id
 														}
@@ -412,10 +410,8 @@ export const TodoLists = ({}: {}) => {
 															presentTodoActionSheet(todo)
 														}}
 														onCompletionChange={event => {
-															if (todo.checkins) {
-																alert(
-																	'Deletion of checkins not implemented yet',
-																)
+															if (todo.visits) {
+																alert('Deletion of visits not implemented yet')
 															} else {
 																db.transaction(
 																	'rw',
@@ -451,7 +447,7 @@ export const TodoLists = ({}: {}) => {
 														)}
 														todo={todo}
 													>
-														<CheckinInfo todo={todo} />
+														<VisitInfo todo={todo} />
 													</TodoListItem>
 												))}
 											</div>
@@ -469,7 +465,7 @@ export const TodoLists = ({}: {}) => {
 											{todayCompletedTodos.todos.map(todo => (
 												<TodoListItem
 													key={
-														todo.checkins === true
+														todo.visits === true
 															? `${todo.id}-${todo.completedAt}`
 															: todo.id
 													}
@@ -477,8 +473,8 @@ export const TodoLists = ({}: {}) => {
 														presentTodoActionSheet(todo)
 													}}
 													onCompletionChange={event => {
-														if (todo.checkins) {
-															alert('Deletion of checkins not implemented yet')
+														if (todo.visits) {
+															alert('Deletion of visits not implemented yet')
 														} else {
 															db.transaction(
 																'rw',
@@ -513,7 +509,7 @@ export const TodoLists = ({}: {}) => {
 													)}
 													todo={todo}
 												>
-													<CheckinInfo todo={todo} />
+													<VisitInfo todo={todo} />
 												</TodoListItem>
 											))}
 											<IonReorderGroup
@@ -584,7 +580,7 @@ export const TodoLists = ({}: {}) => {
 																					'popover did dismiss',
 																					event,
 																				)
-																				if (event.detail.role === 'checkin') {
+																				if (event.detail.role === 'visit') {
 																					await db.visits.add({
 																						todoId: todo.id,
 																						date: new Date(),
@@ -670,7 +666,7 @@ export const TodoLists = ({}: {}) => {
 														)}
 														todo={{ ...todo }}
 													>
-														<CheckinInfo todo={todo} />
+														<VisitInfo todo={todo} />
 													</TodoListItem>
 												))}
 											</IonReorderGroup>
@@ -1049,15 +1045,15 @@ function useGlobalKeyboardShortcuts() {
 
 function useCompletedTodoGroups(
 	completedTodos?: LogTodoListItem[],
-	checkins?: LogTodoListItem[],
+	visits?: LogTodoListItem[],
 ): [TodoGroup[], TodoGroup] {
 	return useMemo(() => {
-		const pastTodos = [...(completedTodos || []), ...(checkins || [])]
+		const pastTodos = [...(completedTodos || []), ...(visits || [])]
 		const groups = groupByCompletedAt(pastTodos)
 		const todayGroup = groups[groups.length - 1]
 		const logGroups = groups.slice(0, -1)
 		return [logGroups, todayGroup]
-	}, [completedTodos, checkins])
+	}, [completedTodos, visits])
 }
 
 type TodoGroup = {
@@ -1065,12 +1061,12 @@ type TodoGroup = {
 	todos: LogTodoListItem[]
 }
 
-function CheckinInfo({ todo }: { todo: TodoListItemBase }) {
-	return todo.checkins === true ? (
+function VisitInfo({ todo }: { todo: TodoListItemBase }) {
+	return todo.visits === true ? (
 		<IonNote>Checked in {todo.completedAt?.toDateString()}</IonNote>
-	) : Array.isArray(todo.checkins) && todo.starPoints ? (
+	) : Array.isArray(todo.visits) && todo.starPoints ? (
 		<PulseGraph
-			checkins={todo.checkins}
+			visits={todo.visits}
 			starPoints={todo.starPoints}
 		/>
 	) : null

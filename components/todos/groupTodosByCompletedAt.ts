@@ -24,7 +24,7 @@ type Loggable = Pick<Todo, 'completedAt'>
  * @param completedTodos assumed to be in chronological order
  */
 export function groupByCompletedAt(completedTodos: LogTodoListItem[]) {
-	// Shame we can't rely on the database query order but this is necessary due to mixing in checkins.
+	// Shame we can't rely on the database query order but this is necessary due to mixing in visits.
 	completedTodos.sort(
 		(a, b) => dayjs(a.completedAt).valueOf() - dayjs(b.completedAt).valueOf(),
 	)
