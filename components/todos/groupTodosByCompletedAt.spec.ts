@@ -77,7 +77,7 @@ describe('one completed todo', () => {
 			]),
 		).toEqual([
 			{
-				label: 'This Week',
+				label: 'Week',
 				todos: [
 					{
 						completedAt: mondayEnd,
@@ -103,7 +103,7 @@ describe('one completed todo', () => {
 			]),
 		).toEqual([
 			{
-				label: 'This Week',
+				label: 'Week',
 				todos: [
 					{
 						completedAt: mondayStart,
@@ -130,7 +130,7 @@ describe('one completed todo', () => {
 			]),
 		).toEqual([
 			{
-				label: 'This Year',
+				label: 'Year',
 				todos: [
 					{
 						completedAt: new Date('2019-12-29T23:59:59.999Z'),
@@ -155,7 +155,7 @@ describe('one completed todo', () => {
 			]),
 		).toEqual([
 			{
-				label: 'This Year',
+				label: 'Year',
 				todos: [
 					{
 						completedAt: new Date('2019-01-01T00:00:00.000Z'),
@@ -237,7 +237,7 @@ describe('multiple completed todos', () => {
 			]),
 		).toEqual([
 			{
-				label: 'This Week',
+				label: 'Week',
 				todos: [
 					{
 						completedAt: new Date('2019-12-30T00:00:00.000Z'),
@@ -322,7 +322,7 @@ describe('multiple completed todos', () => {
 			]),
 		).toEqual([
 			{
-				label: 'This Year',
+				label: 'Year',
 				todos: [
 					{
 						completedAt: new Date('2019-12-01T00:00:00.000Z'),
