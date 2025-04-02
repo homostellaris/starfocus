@@ -5,6 +5,7 @@ const LazyApp = dynamic(() => import('../../components/App'), {
 	ssr: false,
 })
 
+// TODO: See if individual routes with static data fetching can be used instead.
 export async function generateStaticParams() {
 	return [
 		{ all: ['home'] },

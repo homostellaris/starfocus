@@ -15,7 +15,7 @@ export function useTodoPopover(): [
 		selectedTodo: [todo, setTodo],
 	} = useTodoContext()
 	const [present, dismiss] = useIonPopover(Popover, {
-		dismiss: (data: string, role: string) => dismiss(data, role),
+		dismiss: (_data: string, role: string) => dismiss(todo, role),
 		todo,
 	})
 
