@@ -14,7 +14,7 @@ export const Popover = ({
 			<IonItem
 				button={true}
 				onClick={() => {
-					dismiss(null, 'checkin')
+					dismiss(null, 'visit')
 				}}
 			>
 				<IonLabel>Check-in</IonLabel>

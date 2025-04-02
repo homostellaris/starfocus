@@ -21,10 +21,10 @@ export interface WayfinderMeta {
 }
 
 export type TodoListItemBase = Todo & {
-	/* Array means its a todo with checkins
-	 * undefined means its a todo that's not meant to have checkins
-	 * true means its actually a checkin itself */
-	checkins?: Checkin[] | true
+	/* Array means its a todo with visits
+	 * undefined means its a todo that's not meant to have visits
+	 * true means its actually a visit itself */
+	visits?: Visit[] | true
 }
 
 export type LogTodoListItem = TodoListItemBase
@@ -67,13 +67,13 @@ export interface Setting {
 	value: any
 }
 
-export interface Checkin {
+export interface Visit {
 	todoId: string
 	date: Date
 }
 
 export class DexieStarfocus extends Dexie {
-	checkins: DexieCloudTable<Checkin, 'todoId'>
+	visits: DexieCloudTable<Visit, 'todoId'>
 	wayfinderOrder!: DexieCloudTable<WayfinderOrder, 'todoId'>
 	lists!: Table<List>
 	settings!: DexieCloudTable<Setting, 'key'>

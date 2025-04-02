@@ -1,26 +1,26 @@
 import dayjs from 'dayjs'
 import { cn } from '../common/cn'
 import starScale from '../common/starScale'
-import { Checkin } from '../db'
+import { Visit } from '../db'
 
 export default function PulseGraph({
 	starPoints,
-	checkins,
+	visits,
 }: {
 	starPoints: number
-	checkins: Checkin[]
+	visits: Visit[]
 }) {
 	const color = starScale[starPoints].tailwindBgColors
 	const last30Days: { date: Date; magnitude: 0 | 1 | 2 }[] = []
 	for (let i = 0; i < 14; i++) {
 		const date = dayjs().subtract(i, 'day')
-		const checkinsOnThisDay = checkins.filter(c =>
+		const visitsOnThisDay = visits.filter(c =>
 			dayjs(c.date).isSame(date, 'day'),
 		)
-		console.debug('checkinsOnThisDay', checkinsOnThisDay.length)
+		console.debug('visitsOnThisDay', visitsOnThisDay.length)
 		last30Days.push({
 			date: date.toDate(),
-			magnitude: Math.min(checkinsOnThisDay.length, 2) as 0 | 1 | 2,
+			magnitude: Math.min(visitsOnThisDay.length, 2) as 0 | 1 | 2,
 		})
 	}
 
@@ -30,14 +30,14 @@ export default function PulseGraph({
 				'relative flex items-center gap-1 my-2 justify-evenly w-fit h-4 brightness-50',
 			)}
 		>
-			{last30Days.map(checkin => (
+			{last30Days.map(visit => (
 				<div
 					className={cn(
 						'w-1 rounded-full',
 						color,
-						heightClasses[checkin.magnitude],
+						heightClasses[visit.magnitude],
 					)}
-					key={checkin.date.toDateString()}
+					key={visit.date.toDateString()}
 				/>
 			))}
 		</div>
