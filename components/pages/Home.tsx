@@ -192,7 +192,7 @@ export const TodoLists = ({}: {}) => {
 
 		// TODO: Fix bug where checkins keep duplicating in log
 		// TODO: Fix checkins having same key as todos
-		const checkinsPromise = db.checkins
+		const checkinsPromise = db.visits
 			.orderBy('date')
 			.reverse()
 			.limit(logLimit)
@@ -216,7 +216,7 @@ export const TodoLists = ({}: {}) => {
 		const todoIds = todoOrderItems.map(({ todoId }) => todoId)
 		const wayfinderTodosPromise = Promise.all([
 			db.todos.bulkGet(todoIds),
-			db.checkins.where('todoId').anyOf(todoIds).toArray(),
+			db.visits.where('todoId').anyOf(todoIds).toArray(),
 		]).then(([wayfinderTodos, checkins]) => {
 			return wayfinderTodos
 				.map((todo, index) => ({
@@ -580,7 +580,7 @@ export const TodoLists = ({}: {}) => {
 														onCompletionChange={async event => {
 															db.transaction(
 																'rw',
-																db.checkins,
+																db.visits,
 																db.todos,
 																db.wayfinderOrder,
 																async () => {
@@ -592,14 +592,14 @@ export const TodoLists = ({}: {}) => {
 																					event,
 																				)
 																				if (event.detail.role === 'checkin') {
-																					await db.checkins.add({
+																					await db.visits.add({
 																						todoId: todo.id,
 																						date: new Date(),
 																					})
 																				} else if (
 																					event.detail.role === 'snooze'
 																				) {
-																					await db.checkins.add({
+																					await db.visits.add({
 																						todoId: todo.id,
 																						date: new Date(),
 																					})
