@@ -16,7 +16,7 @@ https://ionicframework.com/docs/theming/color-generator */
 
 /** Ionic CSS Variables **/
 :root {
-	--ion-background-color: linear-gradient(to top, #000020, #000000) !important;
+	/* --ion-background-color: linear-gradient(to top, #000020, #000000) !important; */
 
 	--ion-color-primary: theme(colors.blue.400);
 	--ion-color-primary-rgb: 96, 165, 250;

@@ -1,8 +1,7 @@
-const colors = require('tailwindcss/colors')
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
 	content: [
+		'./app/**/*.{js,ts,jsx,tsx}',
 		'./pages/**/*.{js,ts,jsx,tsx}',
 		'./components/**/*.{js,ts,jsx,tsx}',
 	],
@@ -13,13 +12,14 @@ module.exports = {
 				planets: "url('/planets.jpg')",
 				supernova: "url('/supernova - radial.png')",
 			},
-			extend: {
-				transitionProperty: {
-					width: 'width',
-				},
-				transitionProperty: {
-					'max-width': 'max-width',
-				},
+			fontFamily: {
+				mono: ['var(--font-jura)'],
+				display: [
+					'var(--font-honk)',
+					{
+						fontVariationSettings: '"MORF" 15, "SHLN" 50',
+					},
+				],
 			},
 		},
 		// TODO: Use fluid font sizes
