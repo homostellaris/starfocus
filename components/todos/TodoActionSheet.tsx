@@ -39,6 +39,19 @@ export function useTodoActionSheet() {
 							})
 						},
 					},
+					...(todo.note?.uri
+						? [
+								{
+									text: 'Open note',
+									data: {
+										action: 'open-note',
+									},
+									handler: async () => {
+										open(todo.note?.uri)
+									},
+								},
+							]
+						: []),
 				],
 				header: todo.title,
 				id: 'todo-action-sheet',
