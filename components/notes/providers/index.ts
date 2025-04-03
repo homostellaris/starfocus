@@ -1,10 +1,12 @@
+import { TodoInput, Todo } from '../../db'
+
 enum NoteProviders {
 	Stashpad = 'stashpad',
 	Obsidian = 'obsidian',
 }
 
 export abstract class NoteProvider {
-	abstract create({ content }): Promise<string>
+	abstract create({ todo }: { todo: TodoInput }): Promise<string>
 }
 
 export default NoteProviders

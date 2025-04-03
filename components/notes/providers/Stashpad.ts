@@ -1,4 +1,5 @@
 import { NoteProvider } from '.'
+import { TodoInput } from '../../db'
 
 export default class Stashpad extends NoteProvider {
 	apiKey: string
@@ -8,7 +9,7 @@ export default class Stashpad extends NoteProvider {
 		this.apiKey = apiKey
 	}
 
-	create({ content }) {
+	create({ todo }: { todo: TodoInput }) {
 		return fetch('https://api.stashpad.live/v1/docs', {
 			method: 'POST',
 			headers: {
@@ -16,7 +17,7 @@ export default class Stashpad extends NoteProvider {
 				'X-API-Key': this.apiKey,
 			},
 			body: JSON.stringify({
-				content,
+				content: todo.noteInitialContent,
 				access: 'public',
 				permission: 'write',
 			}),

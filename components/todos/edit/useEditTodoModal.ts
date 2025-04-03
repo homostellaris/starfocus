@@ -1,6 +1,6 @@
 import { useIonModal } from '@ionic/react'
 import { useCallback, useRef } from 'react'
-import { Todo, db } from '../../db'
+import { Todo, TodoInput, db } from '../../db'
 import useNoteProvider from '../../notes/useNoteProvider'
 import useTodoContext from '../TodoContext'
 import { EditTodoModal } from './modal'
@@ -21,12 +21,12 @@ export function useEditTodoModal(): [
 	})
 	const noteProvider = useNoteProvider()
 	const editTodo = useCallback(
-		async (updatedTodo: Todo) => {
+		async (updatedTodo: any) => {
 			if (!updatedTodo.title) throw new TypeError('Title is required')
 
 			let uri
-			if (updatedTodo.note && noteProvider) {
-				uri = await noteProvider.create({ content: updatedTodo.note })
+			if (updatedTodo.noteInitialContent && noteProvider) {
+				uri = await noteProvider.create({ todo: updatedTodo })
 			}
 			await db.todos.update(updatedTodo.id, {
 				createdAt: new Date(),

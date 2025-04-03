@@ -50,7 +50,7 @@ export default function TodoModal({
 		dismiss(
 			{
 				...todo,
-				note: noteInput.current?.value,
+				noteInitialContent: noteInput.current?.value,
 				starPoints: starPointsInput.current?.value,
 				starRole: starRoleInput.current?.value ?? undefined,
 				title: titleInput.current?.value,
