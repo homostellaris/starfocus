@@ -94,6 +94,7 @@ const Home = () => {
 			<ViewProvider>
 				<TodoContextProvider>
 					<ViewMenu searchbarRef={searchbarRef} />
+					<MiscMenu />
 					<IonPage id="main-content">
 						<Header title="Home"></Header>
 						<TodoLists />
@@ -118,9 +119,9 @@ const Home = () => {
 								<Searchbar ref={searchbarRef} />
 								<IonButtons slot="end">
 									<IonButton
-										id="view-menu-button"
+										id="misc-menu-button"
 										onClick={() => {
-											menuController.toggle('start')
+											menuController.toggle('end')
 										}}
 									>
 										<IonIcon
@@ -707,6 +708,8 @@ export const MiscMenu = () => {
 	const [noteProvider, setNoteProvider] = useState<{
 		type?: string
 		apiKey?: string
+		vault?: string
+		folder?: string
 	}>({})
 	const noteProviderSettings = settings['#noteProvider']
 	// Gross hack required because settings is initially undefined until the query resolves which doesn't re-trigger the state
@@ -720,6 +723,7 @@ export const MiscMenu = () => {
 		<IonMenu
 			contentId="main-content"
 			id="misc-menu"
+			side="end"
 			type="push"
 		>
 			<IonHeader>
@@ -736,15 +740,9 @@ export const MiscMenu = () => {
 							setNoteProvider({})
 							return db.settings.delete('#noteProvider')
 						}
-						if (!noteProvider.type || !noteProvider.apiKey) {
-							throw new TypeError('Note provider but no API key!')
-						}
 						await db.settings.put({
 							key: '#noteProvider',
-							value: {
-								type: noteProvider?.type,
-								apiKey: noteProvider?.apiKey,
-							},
+							value: noteProvider,
 						})
 					}}
 				>
@@ -762,7 +760,7 @@ export const MiscMenu = () => {
 							value={noteProvider.type || null} // defaultValue doesn't seem to work so have to make this a controlled component
 						>
 							<IonSelectOption value={null}>None</IonSelectOption>
-							<IonSelectOption value="stashpad">Stashpad</IonSelectOption>
+							<IonSelectOption value="obsidian">Obsidian</IonSelectOption>
 						</IonSelect>
 						{noteProvider.type === NoteProviders.Stashpad && (
 							<IonInput
@@ -780,6 +778,38 @@ export const MiscMenu = () => {
 								required
 								value={noteProvider?.apiKey}
 							></IonInput>
+						)}
+						{noteProvider.type === NoteProviders.Obsidian && (
+							<>
+								<IonInput
+									fill="outline"
+									helperText="The vault to use for new notes. If none is specified Obsidian will use the currently open vault."
+									label="Vault"
+									labelPlacement="floating"
+									onIonChange={event => {
+										setNoteProvider(noteProvider => ({
+											...noteProvider,
+											vault: event.detail.value?.toString(),
+										}))
+									}}
+									placeholder="My Vault"
+									value={noteProvider?.vault}
+								></IonInput>
+								<IonInput
+									fill="outline"
+									helperText="The folder where the todo notes will be created. This is a path relative to the vault root. If no folder is specified the vault's default location for new notes will be used."
+									label="Folder"
+									labelPlacement="floating"
+									onIonChange={event => {
+										setNoteProvider(noteProvider => ({
+											...noteProvider,
+											folder: event.detail.value?.toString(),
+										}))
+									}}
+									placeholder="My Todo Notes"
+									value={noteProvider?.folder}
+								></IonInput>
+							</>
 						)}
 					</fieldset>
 				</form>

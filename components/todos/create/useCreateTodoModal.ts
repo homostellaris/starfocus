@@ -1,11 +1,11 @@
 import { useIonModal } from '@ionic/react'
 import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
 import { useCallback, useRef } from 'react'
-import { db, ListType, Todo } from '../../db'
-import useNoteProvider from '../../notes/useNoteProvider'
-import { CreateTodoModal } from './modal'
 import order from '../../common/order'
+import { TodoInput, db, ListType, Todo } from '../../db'
+import useNoteProvider from '../../notes/useNoteProvider'
 import useTodoContext from '../TodoContext'
+import { CreateTodoModal } from './modal'
 
 export function useCreateTodoModal(): [
 	({
@@ -30,14 +30,16 @@ export function useCreateTodoModal(): [
 
 	const noteProvider = useNoteProvider()
 	const createTodo = useCallback(
-		async (todo: Todo, location: ListType) => {
+		async (todo: TodoInput, location: ListType) => {
 			if (!todo.title) throw new TypeError('Title is required')
 
 			let uri
-			if (todo.note && noteProvider) {
-				uri = await noteProvider.create({ content: todo.note })
-			}
 			await db.transaction('rw', db.todos, db.wayfinderOrder, async () => {
+				if (todo.noteInitialContent && noteProvider) {
+					uri = await noteProvider.create({
+						todo,
+					})
+				}
 				const createdTodoId = await db.todos.add({
 					createdAt: new Date(),
 					starPoints: todo.starPoints,
@@ -45,7 +47,6 @@ export function useCreateTodoModal(): [
 					title: todo.title,
 					...(uri && { note: { uri } }),
 				})
-
 				if (location === ListType.wayfinder) {
 					const wayfinderOrder = await db.wayfinderOrder.orderBy('order').keys()
 

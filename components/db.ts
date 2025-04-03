@@ -11,6 +11,10 @@ export interface Todo {
 	title: string
 }
 
+export type TodoInput = Pick<Todo, 'title' | 'starRole' | 'starPoints'> & {
+	noteInitialContent?: string
+}
+
 export type WayfinderOrder = {
 	todoId: string
 } & WayfinderMeta
