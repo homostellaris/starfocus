@@ -38,12 +38,12 @@ export default function Page() {
 					</li>
 				</ol>
 				<div className="space-y-4">
-					<Link
+					<a
 						className="inline-block px-4 py-2 text-3xl text-white uppercase border-2 rounded shadow-lg border-violet-500 shadow-violet-500/50 font-display [font-palette:--redshift] bg-violet-600/15 hover:bg-violet-700/20 active:bg-violet-800/30 transition-all duration-200 ease-in-out transform hover:scale-105"
 						href="/home"
 					>
 						Try it
-					</Link>
+					</a>
 					<p className="font-light">Free, private, no signup</p>
 				</div>
 				{/* <iframe

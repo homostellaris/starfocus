@@ -38,6 +38,15 @@ const App = () => {
 							path="/test"
 							render={() => <Test />}
 						/>
+						<Route
+							render={params => {
+								console.error(
+									'Rendering fallback route, something went wrong',
+									params,
+								)
+								return <p>Fallback route</p>
+							}}
+						/>
 					</ErrorBoundary>
 				</IonRouterOutlet>
 			</IonReactRouter>
