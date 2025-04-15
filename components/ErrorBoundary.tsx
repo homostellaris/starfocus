@@ -1,5 +1,4 @@
 import { Component, ErrorInfo, ReactNode } from 'react'
-import { Header } from './common/Header'
 
 interface Props {
 	children?: ReactNode
@@ -26,7 +25,6 @@ class ErrorBoundary extends Component<Props, State> {
 		if (this.state.hasError) {
 			return (
 				<div>
-					<Header title="Error" />
 					<p className="mx-auto my-4 text-xl text-center max-w-prose">
 						Sorry there was an error. If you&apos;ve unsynced, re-syncing might
 						fix the issue.
