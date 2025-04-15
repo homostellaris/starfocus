@@ -179,4 +179,5 @@ declare global {
 	}
 }
 
-window.db = db
+// Ignoring this while I investigate if disabling SSR is necessary for NextJS 'export' build
+// window.db = db
