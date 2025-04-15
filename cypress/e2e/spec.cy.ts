@@ -2,6 +2,48 @@ before(() => {
 	indexedDB.deleteDatabase('starfocus-z0vnq74nz')
 })
 
+describe('onboarding', () => {
+	it('can navigate from landing page to app', () => {
+		cy.visit('/')
+		cy.contains('Try it').click()
+		cy.get('ion-content').should('exist')
+	})
+})
+
+describe('constellation', () => {})
+
+describe('star roles', () => {})
+
+describe('star roles groups', () => {})
+
+describe('star points', () => {})
+
+describe('star sort', () => {})
+
+describe('wayfinder', () => {
+	it.skip('can edit todos')
+	it.skip('can reorder todos')
+	it.skip('can move todos between lists')
+	it.skip('can complete todos')
+	it.skip('can log visits')
+})
+
+describe('log', () => {})
+
+describe('icebox', () => {})
+
+describe('focus', () => {
+	it.skip('can focus a star role')
+	it.skip('can focus a star role group')
+})
+
+describe('search', () => {
+	it.skip('can search for a todo by title')
+	it.skip('can search for snoozed todos')
+})
+
+describe('notes', () => {})
+
 it('works', () => {
 	cy.visit('/home')
 
