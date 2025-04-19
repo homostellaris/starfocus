@@ -210,10 +210,11 @@ export const TodoLists = ({}: {}) => {
 			db.todos.bulkGet(todoIds),
 			db.visits.where('todoId').anyOf(todoIds).toArray(),
 		]).then(([wayfinderTodos, visits]) => {
+			const visitsByTodoId = _.groupBy(visits, 'todoId')
 			return wayfinderTodos
 				.map((todo, index) => ({
 					...todo!,
-					visits,
+					visits: visitsByTodoId[todo!.id],
 					order: todoOrderItems[index].order,
 					snoozedUntil: todoOrderItems[index].snoozedUntil,
 				}))
@@ -577,7 +578,7 @@ export const TodoLists = ({}: {}) => {
 																	if (todo.starPoints) {
 																		presentCompletionPopover(event, todo, {
 																			onDidDismiss: async event => {
-																				console.log(
+																				console.debug(
 																					'popover did dismiss',
 																					event,
 																				)

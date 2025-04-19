@@ -146,7 +146,6 @@ function StarRolesList({
 							<IonButton
 								fill="clear"
 								onClick={() => {
-									console.log('SETTING EM')
 									setActiveStarRoles(
 										starRoleGroup.starRoles.map(({ id }) => id),
 									)
