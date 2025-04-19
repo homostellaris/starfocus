@@ -1,4 +1,6 @@
-before(() => {
+import { db } from '../../components/db'
+
+beforeEach(() => {
 	indexedDB.deleteDatabase('starfocus-z0vnq74nz')
 })
 
@@ -38,7 +40,32 @@ describe('focus', () => {
 })
 
 describe('search', () => {
-	it.skip('can search for a todo by title')
+	beforeEach(() => {
+		cy.visit('/home')
+		new Cypress.Promise((resolve, reject) => {
+			db.todos
+				.bulkAdd([
+					{
+						title: 'take the bins out',
+					},
+					{
+						title: 'walk the dog',
+					},
+					{
+						title: 'eat a bin',
+					},
+				])
+				.then(resolve)
+				.catch(reject)
+		})
+	})
+
+	it('can search for a todo by title', () => {
+		assertLists([], ['eat a bin', 'walk the dog', 'take the bins out'])
+		cy.get('[role="search"] input').type('dog')
+		assertLists([], ['walk the dog'])
+	})
+
 	it.skip('can search for snoozed todos')
 })
 
