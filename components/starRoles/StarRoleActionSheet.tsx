@@ -32,7 +32,7 @@ export function useStarRoleActionSheet() {
 						},
 						handler: async () => {
 							db.transaction('rw', db.starRoles, db.todos, async () => {
-								console.log('deleting', starRole)
+								console.debug('deleting', starRole)
 								await db.starRoles.delete(starRole.id)
 								await db.todos
 									.where({ starRole: starRole.id })
