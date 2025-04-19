@@ -164,7 +164,8 @@ export class DexieStarfocus extends Dexie {
 			visits: '@id, todoId, date',
 		})
 		this.cloud.configure({
-			databaseUrl: process.env.NEXT_PUBLIC_DATABASE_URL!,
+			databaseUrl:
+				process.env.NEXT_PUBLIC_DATABASE_URL || 'https://z0vnq74nz.dexie.cloud', // Necessary because can't figure out how to set this in Cypress test
 			requireAuth: false,
 		})
 	}
@@ -178,6 +179,3 @@ declare global {
 		db: DexieStarfocus
 	}
 }
-
-// Ignoring this while I investigate if disabling SSR is necessary for NextJS 'export' build
-// window.db = db

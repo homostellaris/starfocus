@@ -7,6 +7,8 @@ import Home from './pages/Home'
 import Constellation from './pages/Constellation'
 import ErrorBoundary from './ErrorBoundary'
 import Test from './pages/Test'
+import { db } from './db'
+import { useEffect } from 'react'
 
 setupIonicReact({})
 
@@ -21,6 +23,9 @@ window
 	})
 
 const App = () => {
+	useEffect(() => {
+		window.db = db
+	}, [])
 	return (
 		<IonApp>
 			<IonReactRouter>
