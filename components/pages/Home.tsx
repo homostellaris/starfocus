@@ -955,19 +955,6 @@ export const Icebox = ({ todos }: { todos: Todo[] }) => {
 							})
 						},
 					},
-					...(todo.note
-						? [
-								{
-									text: 'Open note',
-									data: {
-										action: 'open-note',
-									},
-									handler: () => {
-										window.open(todo.note.uri)
-									},
-								},
-							]
-						: []),
 				],
 			})
 		},
