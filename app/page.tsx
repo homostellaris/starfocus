@@ -1,4 +1,9 @@
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+
+const LazyMood = dynamic(() => import('../components/mood'), {
+	ssr: false,
+})
 
 export default function Page() {
 	return (
@@ -11,6 +16,7 @@ export default function Page() {
 					Self-defined productivity
 				</h2>
 			</header>
+			<LazyMood />
 			<main className="p-4 space-y-12 font-mono font-bold text-center text-white">
 				<ol className="flex flex-wrap justify-center gap-4 max-w-[900px] mx-auto h-72">
 					<li className="p-4 text-4xl bg-blue-600/15 grow text-white border-2 border-blue-500 text-left rounded shadow-lg font-display [font-palette:--blue]">
