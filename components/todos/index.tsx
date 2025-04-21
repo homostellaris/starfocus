@@ -15,8 +15,6 @@ import {
 	forwardRef,
 	MouseEventHandler,
 	PropsWithChildren,
-	RefObject,
-	useMemo,
 } from 'react'
 import { cn } from '../common/cn'
 import { StarRoleIcon } from '../common/StarRoleIcon'
@@ -138,7 +136,17 @@ export function TodoCard({
 			{...props}
 		>
 			<IonCardHeader>
-				<IonCardTitle className="text-sm">{todo.title}</IonCardTitle>
+				<IonCardTitle className="text-sm">
+					<span
+						className={cn(
+							'!font-mono grow-0 min-w-[2ch] text-base me-4',
+							starScale[todo.starPoints || 0].textColor,
+						)}
+					>
+						{todo.starPoints || 0}
+					</span>
+					<span>{todo.title}</span>
+				</IonCardTitle>
 			</IonCardHeader>
 		</IonCard>
 	)
