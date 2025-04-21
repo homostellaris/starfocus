@@ -1,5 +1,7 @@
 import dynamic from 'next/dynamic'
 
+import '@ionic/react/css/structure.css'
+
 // See docs/disabling-ssr.md
 const LazyApp = dynamic(() => import('../../components/App'), {
 	ssr: false,

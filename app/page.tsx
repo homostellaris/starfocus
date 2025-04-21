@@ -7,7 +7,7 @@ const LazyMood = dynamic(() => import('../components/mood'), {
 
 export default function Page() {
 	return (
-		<div className="bg-[radial-gradient(circle_700px_at_50%_250px,#4453a9,#000000)] min-h-screen">
+		<div className="bg-[radial-gradient(circle_700px_at_50%_250px,#4453a9,#000000)] min-h-screen flex flex-col">
 			<header className="pt-4 mb-4 space-y-4 text-center text-white lg:mb-12">
 				<h1 className="font-bold uppercase text-6xl lg:text-9xl font-display [font-palette:--redshift]">
 					Starfocus
@@ -16,9 +16,8 @@ export default function Page() {
 					Self-defined productivity
 				</h2>
 			</header>
-			<LazyMood />
 			<main className="p-4 space-y-12 font-mono font-bold text-center text-white">
-				<ol className="flex flex-wrap justify-center gap-4 max-w-[900px] mx-auto h-72">
+				<ol className="flex flex-wrap justify-center gap-4 max-w-[900px] mx-auto">
 					<li className="p-4 text-4xl bg-blue-600/15 grow text-white border-2 border-blue-500 text-left rounded shadow-lg font-display [font-palette:--blue]">
 						Define
 						<ul className="font-mono text-xl font-semibold">
@@ -63,35 +62,38 @@ export default function Page() {
 					allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
 					loading="lazy"
 				></iframe> */}
-				<footer>
-					<nav>
-						<ul className="fixed left-0 right-0 flex justify-center gap-4 mx-auto text-xl font-normal text-blue-300 underline w-fit bottom-4">
-							<li>
-								<Link href="/philosophy">Philosophy</Link>
-							</li>
-							<li>
-								<a
-									href="https://discord.gg/TYHCj2VhpD"
-									title="Join the Discord community to discuss ideas for the product and just generally nerd out on productivity and space exploration 🚀"
-									target="_blank"
-									rel="noopener noreferrer"
-								>
-									Discord
-								</a>
-							</li>
-							<li>
-								<a
-									href="https://github.com/astrochoric/starfocus"
-									target="_blank"
-									rel="noopener noreferrer"
-								>
-									GitHub
-								</a>
-							</li>
-						</ul>
-					</nav>
-				</footer>
+				<div className="block mx-auto lg:absolute bottom-4 left-4 w-fit min-w-screen">
+					<LazyMood />
+				</div>
 			</main>
+			<footer className="mt-auto mb-8">
+				<nav>
+					<ul className="flex justify-center gap-4 mx-auto mt-auto font-mono text-xl font-normal text-blue-300 underline w-fit">
+						<li>
+							<Link href="/philosophy">Philosophy</Link>
+						</li>
+						<li>
+							<a
+								href="https://discord.gg/TYHCj2VhpD"
+								title="Join the Discord community to discuss ideas for the product and just generally nerd out on productivity and space exploration 🚀"
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								Discord
+							</a>
+						</li>
+						<li>
+							<a
+								href="https://github.com/astrochoric/starfocus"
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								GitHub
+							</a>
+						</li>
+					</ul>
+				</nav>
+			</footer>
 		</div>
 	)
 }

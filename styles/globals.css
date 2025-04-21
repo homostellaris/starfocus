@@ -60,38 +60,10 @@
 	--safe-area-left: env(safe-area-inset-left, 0);
 	--safe-area-right: env(safe-area-inset-right, 0);
 }
-/* From Capacitor starter template */
-body {
-	overflow: hidden;
-	height: 100vh;
-	width: 100vw;
-}
 
 * {
 	box-sizing: border-box;
 	scroll-behavior: smooth;
-}
-
-html,
-body {
-	margin: 0;
-	padding: 0;
-	overflow: hidden;
-}
-
-/* Should just be able to set height 100% on html for the mobile URL bar workaround but for some reason this is required with NextJS */
-html,
-body,
-body > div:first-child,
-div#__next,
-div#__next > div {
-	height: 100%;
-}
-
-/* TODO: https://www.freepik.com/free-vector/planets-outer-space-with-satellites-meteors-illustration_6690897.htm#query=space%20background&position=30&from_view=keyword */
-body {
-	font-family: 'Inter';
-	height: 100%;
 }
 
 body::-webkit-scrollbar {
