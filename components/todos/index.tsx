@@ -23,56 +23,6 @@ import { StarRoleIcon } from '../common/StarRoleIcon'
 import starScale from '../common/starScale'
 import type { StarRole, Todo as TodoType } from '../db'
 import { useDebug } from '../useDebug'
-import { Todo as TodoInterface } from './interfaces'
-import Todo from './Todo'
-
-export function Todos({
-	currentTodoRef,
-	listRef,
-	todos,
-}: {
-	currentTodoRef?: RefObject<HTMLDivElement>
-	listRef?: RefObject<HTMLDivElement>
-	todos: TodoInterface[]
-}) {
-	const sortedTodos = useMemo(
-		() =>
-			todos.sort((a, b) => {
-				if (a.completedAt || b.completedAt) {
-					return (
-						(a.completedAt?.getTime() || 0) - (b.completedAt?.getTime() || 0)
-					)
-				}
-				return Number(b.rank) - Number(a.rank)
-			}),
-		[todos],
-	)
-	const completedCount = useMemo(
-		() => todos.filter(todo => todo.completedAt).length,
-		[todos],
-	)
-
-	return (
-		// Without overflow-auto there is no margin between the bottom todo and the edge of the list 🤷‍♂️
-		<div
-			className="flex flex-wrap pt-2 todos"
-			ref={listRef}
-		>
-			{sortedTodos.map((todo, index) => (
-				<Todo
-					todo={todo}
-					key={todo.id}
-					reference={
-						index + 1 === todos.length - completedCount
-							? currentTodoRef
-							: undefined
-					}
-					compact={index < sortedTodos.length - 7 - completedCount}
-				/>
-			))}
-		</div>
-	)
-}
 
 export const TodoListItem = forwardRef<
 	HTMLDivElement,

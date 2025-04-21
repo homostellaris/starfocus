@@ -18,12 +18,11 @@ import {
 	cloudDownloadSharp,
 	cloudOfflineSharp,
 	cloudUploadSharp,
-	starSharp,
 	thunderstormSharp,
 } from 'ionicons/icons'
+import { Link } from 'react-router-dom'
 import { db } from '../db'
 import StarPoints from './StarPoints'
-import { Link } from 'react-router-dom'
 
 export const Header = ({ title }: { title: string }) => {
 	const user = useObservable(db.cloud.currentUser)
