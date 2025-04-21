@@ -58,10 +58,9 @@ import {
 	TodoListItemBase,
 	WayfinderTodoListItem,
 } from '../db'
-import { useStarshipYPosition } from '../demo/Journey'
 import { ViewMenu } from '../focus/ViewMenu'
 import useView, { ViewProvider } from '../focus/view'
-import Tracjectory from '../landingPage/Journey/Trajectory'
+import Tracjectory from '../starship/Trajectory'
 import NoteProviders from '../notes/providers'
 import useSettings from '../settings/useSettings'
 import { TodoCard, TodoListItem } from '../todos'
@@ -72,6 +71,7 @@ import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
 import { groupByCompletedAt } from '../todos/groupTodosByCompletedAt'
 import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
 import { useTodoPopover } from '../todos/useTodoPopover'
+import { useStarshipYPosition } from '../starship/useStarshipYPosition'
 
 const Home = () => {
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)

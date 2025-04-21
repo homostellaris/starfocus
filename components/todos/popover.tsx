@@ -1,6 +1,6 @@
 import { IonContent, IonIcon, IonItem, IonLabel, IonList } from '@ionic/react'
-import { db, Todo } from '../db'
 import { checkmarkDoneSharp, pulseSharp, timeSharp } from 'ionicons/icons'
+import { Todo } from '../db'
 
 export const Popover = ({
 	dismiss,

@@ -10,8 +10,8 @@ import {
 	IonToolbar,
 } from '@ionic/react'
 import { ComponentProps, useRef } from 'react'
-import { Todo } from '../interfaces'
 import dayjs from 'dayjs'
+import { Todo } from '../../db'
 
 export default function SnoozeModal({
 	dismiss,

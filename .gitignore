@@ -36,8 +36,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 
-convex/_generated/
-
 .gradle/
 
 # For setting JAVA_HOME

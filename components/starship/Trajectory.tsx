@@ -1,4 +1,4 @@
-import { cn } from '../../common/cn'
+import { cn } from '../common/cn'
 
 export default function Tracjectory(props: JSX.IntrinsicElements['div']) {
 	return (
