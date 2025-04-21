@@ -49,7 +49,7 @@ export default function Mood() {
 	return (
 		<div
 			className={cn(
-				'absolute flex items-center justify-center border-2 rounded shadow-lg w-min bottom-4 left-4 bg-blue-600/15',
+				'flex items-center justify-center border-2 rounded shadow-lg w-min bg-blue-600/15',
 				mode === 'hype'
 					? 'border-red-500 bg-red-600/15'
 					: 'border-blue-500 bg-blue-600/15',
@@ -79,6 +79,7 @@ export default function Mood() {
 				></IonIcon>
 			</IonButton>
 			<IonSegment
+				color={mode === 'hype' ? 'danger' : 'primary'}
 				value={mode}
 				onIonChange={event => {
 					setMode(event.detail.value as mode)
