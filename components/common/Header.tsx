@@ -20,9 +20,9 @@ import {
 	cloudUploadSharp,
 	thunderstormSharp,
 } from 'ionicons/icons'
-import { Link } from 'react-router-dom'
 import { db } from '../db'
 import StarPoints from './StarPoints'
+import Title from './Title'
 
 export const Header = ({ title }: { title: string }) => {
 	const user = useObservable(db.cloud.currentUser)
@@ -32,20 +32,21 @@ export const Header = ({ title }: { title: string }) => {
 	return (
 		<IonHeader>
 			<IonToolbar>
-				<Link
+				<div
+					className="ml-1"
 					slot="start"
-					to="/home"
 				>
-					<IonImg
-						src="/icon.png"
-						className="w-10 h-10 ml-2" // Needs to align with starship and trajectory
-					/>
-				</Link>
-				{/* <IonTitle>{title}</IonTitle> */}
-				<StarPoints />
+					<StarPoints />
+				</div>
+				<Title
+					className="font-display [font-palette:--redshift] text-3xl"
+					slot="start"
+				>
+					{title}
+				</Title>
 				<IonButtons
 					className="mx-2"
-					slot="secondary"
+					slot="end"
 				>
 					{isLoggedIn ? (
 						<>

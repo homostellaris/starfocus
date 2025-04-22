@@ -1,8 +1,7 @@
-import { IonButton, IonContent, IonIcon, IonPopover } from '@ionic/react'
-import { useLiveQuery } from 'dexie-react-hooks'
-import { starSharp } from 'ionicons/icons'
-import { db } from '../db'
+import { IonButton, IonContent, IonPopover } from '@ionic/react'
 import dayjs from 'dayjs'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '../db'
 
 export default function StarPoints() {
 	const starPointsEarned = useLiveQuery(async () => {
@@ -19,14 +18,10 @@ export default function StarPoints() {
 
 	return (
 		<IonButton
-			className="ml-4"
 			fill="clear"
 			id="star-points"
 		>
-			<IonIcon
-				icon={starSharp}
-				slot="icon-only"
-			></IonIcon>
+			<span className="font-mono text-xl">{starPointsEarned}</span>
 			<IonPopover
 				trigger="star-points"
 				triggerAction="click"
@@ -35,7 +30,6 @@ export default function StarPoints() {
 					Star points this week: {starPointsEarned}
 				</IonContent>
 			</IonPopover>
-			<span className="ml-3 font-mono text-xl">{starPointsEarned}</span>
 		</IonButton>
 	)
 }

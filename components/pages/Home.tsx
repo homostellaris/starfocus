@@ -24,7 +24,6 @@ import {
 	IonSelect,
 	IonSelectOption,
 	IonSpinner,
-	IonTitle,
 	IonToast,
 	IonToolbar,
 } from '@ionic/react'
@@ -50,6 +49,7 @@ import {
 } from 'react'
 import { Header } from '../common/Header'
 import Starship from '../common/Starship'
+import Title from '../common/Title'
 import order, { calculateReorderIndices, starMudder } from '../common/order'
 import {
 	db,
@@ -60,9 +60,11 @@ import {
 } from '../db'
 import { ViewMenu } from '../focus/ViewMenu'
 import useView, { ViewProvider } from '../focus/view'
-import Tracjectory from '../starship/Trajectory'
+import Mood from '../mood'
 import NoteProviders from '../notes/providers'
 import useSettings from '../settings/useSettings'
+import Tracjectory from '../starship/Trajectory'
+import { useStarshipYPosition } from '../starship/useStarshipYPosition'
 import { TodoCard, TodoListItem } from '../todos'
 import PulseGraph from '../todos/PulseGraph'
 import { useTodoActionSheet } from '../todos/TodoActionSheet'
@@ -71,7 +73,6 @@ import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
 import { groupByCompletedAt } from '../todos/groupTodosByCompletedAt'
 import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
 import { useTodoPopover } from '../todos/useTodoPopover'
-import { useStarshipYPosition } from '../starship/useStarshipYPosition'
 
 const Home = () => {
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
@@ -98,8 +99,11 @@ const Home = () => {
 					<IonPage id="main-content">
 						<Header title="Home"></Header>
 						<TodoLists />
+						<div className="absolute bottom-4 left-4">
+							<Mood />
+						</div>
 						<IonFooter
-							className="min-[992px]:w-[calc(66.67%+56*2px)] min-[992px]:mx-auto min-[992px]:rounded-t-lg overflow-hidden"
+							className="lg:w-[calc(66.67%+56*2px)] lg:mx-auto lg:rounded-t-lg overflow-hidden"
 							translucent
 						>
 							<IonToolbar>
@@ -331,7 +335,7 @@ export const TodoLists = ({}: {}) => {
 						size="auto"
 						sizeLg="2"
 					>
-						<IonFab className="fixed min-[992px]:left-[calc(100vw/12*2-40px-18px)] bottom-16">
+						<IonFab className="fixed lg:left-[calc(100vw/12*2-40px-18px)] bottom-16">
 							<IonFabButton
 								color="success"
 								onClick={openCreateTodoModal}
@@ -341,7 +345,7 @@ export const TodoLists = ({}: {}) => {
 							</IonFabButton>
 						</IonFab>
 						<IonButton
-							className="fixed left-[calc(23px-10px)] min-[992px]:left-[calc(100vw/12*2-40px-6px)] bottom-[calc(64px+52px)] z-10"
+							className="fixed left-[calc(23px-10px)] lg:left-[calc(100vw/12*2-40px-6px)] bottom-[calc(64px+52px)] z-10"
 							onClick={() => {
 								const y = nextTodoPosition ? nextTodoPosition.top + 32 : 0
 								contentRef.current?.scrollToPoint(undefined, y, 500)
@@ -729,7 +733,7 @@ export const MiscMenu = () => {
 		>
 			<IonHeader>
 				<IonToolbar>
-					<IonTitle>Misc</IonTitle>
+					<Title>Misc</Title>
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
@@ -1014,7 +1018,7 @@ export const Searchbar = forwardRef<HTMLIonSearchbarElement>(
 function JourneyLabel({ children }: ComponentProps<typeof IonItemDivider>) {
 	return (
 		<IonItemDivider
-			className="top-4 h-8 -translate-x-[calc(100%+(56px-100%)/2)] min-[992px]:-translate-x-[calc(100%+56px)] -translate-y-1/2 w-fit [--background:none] [--inner-padding-end:none] bg-[--ion-background-color] p-1"
+			className="top-4 h-8 -translate-x-[calc(100%+(56px-100%)/2)] lg:-translate-x-[calc(100%+56px)] -translate-y-1/2 w-fit [--background:none] [--inner-padding-end:none] bg-[--ion-background-color] p-1"
 			sticky
 		>
 			{children}
