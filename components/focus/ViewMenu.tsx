@@ -10,7 +10,6 @@ import {
 	IonList,
 	IonMenu,
 	IonSpinner,
-	IonTitle,
 	IonToggle,
 	IonToolbar,
 } from '@ionic/react'
@@ -23,6 +22,7 @@ import {
 } from 'ionicons/icons'
 import { RefObject } from 'react'
 import { StarRoleIcon } from '../common/StarRoleIcon'
+import Title from '../common/Title'
 import { db, StarRole, StarRoleGroup } from '../db'
 import useGroupedStarRoles from '../starRoleGroups/useStarRoleGroups'
 import useView from './view'
@@ -47,7 +47,7 @@ export const ViewMenu = ({
 		>
 			<IonHeader>
 				<IonToolbar>
-					<IonTitle>Views</IonTitle>
+					<Title>Views</Title>
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
