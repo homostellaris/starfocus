@@ -99,7 +99,7 @@ const Home = () => {
 					<IonPage id="main-content">
 						<Header title="Home"></Header>
 						<TodoLists />
-						<div className="absolute bottom-4 left-4">
+						<div className="absolute hidden 2xl:block bottom-4 left-4">
 							<Mood />
 						</div>
 						<IonFooter
