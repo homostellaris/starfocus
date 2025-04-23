@@ -30,6 +30,8 @@ import Title from '../common/Title'
 import { db, StarRole, StarRoleGroup } from '../db'
 import useGroupedStarRoles from '../starRoleGroups/useStarRoleGroups'
 import useView from './view'
+import useSettings from '../settings/useSettings'
+import useKeyboardShortcuts from '../common/useKeyboardShortcut'
 
 export const ViewMenu = ({
 	searchbarRef,
@@ -41,6 +43,16 @@ export const ViewMenu = ({
 	)
 	const isLoading = queryResult === undefined
 	const { setQuery } = useView()
+
+	const wayfinderOrderMode = useSettings('#wayfinderOrderMode')
+	useKeyboardShortcuts(event => {
+		if (event.key === 'm') {
+			db.settings.put({
+				key: '#wayfinderOrderMode',
+				value: wayfinderOrderMode === 'manual' ? 'star' : 'manual',
+			})
+		}
+	}, [])
 
 	return (
 		<IonMenu
@@ -56,16 +68,28 @@ export const ViewMenu = ({
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
 				<IonSegment
+					onIonChange={event => {
+						db.settings.put({
+							key: '#wayfinderOrderMode',
+							value: event.detail.value,
+						})
+					}}
 					scrollable={true}
-					value="manual"
+					value={wayfinderOrderMode || 'manual'}
 				>
 					<IonSegmentButton value="manual">
-						<IonLabel>Manual</IonLabel>
-						<IonIcon icon={reorderThreeSharp}></IonIcon>
+						<IonLabel color="secondary">Manual</IonLabel>
+						<IonIcon
+							color="secondary"
+							icon={reorderThreeSharp}
+						></IonIcon>
 					</IonSegmentButton>
 					<IonSegmentButton value="star">
-						<IonLabel>Star sort</IonLabel>
-						<IonIcon icon={sparklesSharp}></IonIcon>
+						<IonLabel color="tertiary">Star sort</IonLabel>
+						<IonIcon
+							color="tertiary"
+							icon={sparklesSharp}
+						></IonIcon>
 					</IonSegmentButton>
 				</IonSegment>
 				<IonButton
