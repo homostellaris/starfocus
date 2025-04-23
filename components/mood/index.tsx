@@ -21,30 +21,29 @@ export default function Mood() {
 	const [playing, setPlaying] = useState<boolean>(false)
 	const [mode, setMode] = useState<'chill' | 'hype'>('chill')
 
-	useEffect(() => {
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === 'z') {
-				event.preventDefault()
-				setMode('chill')
-			} else if (event.key === 'x') {
-				event.preventDefault()
-				setMode('hype')
-			} else if (event.code === 'Space') {
-				event.preventDefault()
-				setPlaying(playing => !playing)
-				if (audio.current?.paused) {
-					audio.current?.play()
-				} else {
-					audio.current?.pause()
-				}
-			}
-		}
-		document.addEventListener('keydown', handleKeyDown)
-		return () => {
-			document.removeEventListener('keydown', handleKeyDown)
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
+	// useEffect(() => {
+	// 	const handleKeyDown = (event: KeyboardEvent) => {
+	// 		if (event.key === 'z') {
+	// 			event.preventDefault()
+	// 			setMode('chill')
+	// 		} else if (event.key === 'x') {
+	// 			event.preventDefault()
+	// 			setMode('hype')
+	// 		} else if (event.code === 'Space') {
+	// 			event.preventDefault()
+	// 			setPlaying(playing => !playing)
+	// 			if (audio.current?.paused) {
+	// 				audio.current?.play()
+	// 			} else {
+	// 				audio.current?.pause()
+	// 			}
+	// 		}
+	// 	}
+	// 	document.addEventListener('keydown', handleKeyDown)
+	// 	return () => {
+	// 		document.removeEventListener('keydown', handleKeyDown)
+	// 	}
+	// }, [])
 
 	return (
 		<div

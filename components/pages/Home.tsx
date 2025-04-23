@@ -170,6 +170,7 @@ export const TodoLists = ({}: {}) => {
 
 	const { inActiveStarRoles, query } = useView()
 
+	const starSort = false
 	const data = useLiveQuery<{
 		log: LogTodoListItem[]
 		visits: LogTodoListItem[]
@@ -210,20 +211,42 @@ export const TodoLists = ({}: {}) => {
 
 		const todoOrderItems = await db.wayfinderOrder.orderBy('order').toArray()
 		const todoIds = todoOrderItems.map(({ todoId }) => todoId)
-		const wayfinderTodosPromise = Promise.all([
-			db.todos.bulkGet(todoIds),
-			db.visits.where('todoId').anyOf(todoIds).toArray(),
-		]).then(([wayfinderTodos, visits]) => {
-			const visitsByTodoId = _.groupBy(visits, 'todoId')
-			return wayfinderTodos
-				.map((todo, index) => ({
-					...todo!,
-					visits: visitsByTodoId[todo!.id],
-					order: todoOrderItems[index].order,
-					snoozedUntil: todoOrderItems[index].snoozedUntil,
-				}))
-				.filter(todo => matchesQuery(query, todo) && inActiveStarRoles(todo))
-		})
+		const wayfinderTodosPromise = starSort
+			? db.starRoles
+					.toArray()
+					.then(starRoles =>
+						Promise.all(
+							starRoles.map(starRole =>
+								db.todos
+									.where('starRole')
+									.equals(starRole.id)
+									// .limit(1)
+									.sortBy('starPoints'),
+							),
+						),
+					)
+					.then(todos => {
+						return todos
+							.filter(todo => !!todo)
+							.reduce((acc, curr) => acc.concat(curr), [])
+							.sort((a, b) => (b.starPoints || 0) - (a.starPoints || 0)) as any
+					})
+			: Promise.all([
+					db.todos.bulkGet(todoIds),
+					db.visits.where('todoId').anyOf(todoIds).toArray(),
+				]).then(([wayfinderTodos, visits]) => {
+					const visitsByTodoId = _.groupBy(visits, 'todoId')
+					return wayfinderTodos
+						.map((todo, index) => ({
+							...todo!,
+							visits: visitsByTodoId[todo!.id],
+							order: todoOrderItems[index].order,
+							snoozedUntil: todoOrderItems[index].snoozedUntil,
+						}))
+						.filter(
+							todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
+						)
+				})
 
 		const iceboxTodosPromise = db.todos
 			.where('id')
@@ -250,8 +273,7 @@ export const TodoLists = ({}: {}) => {
 			wayfinder,
 			icebox,
 		}
-	}, [inActiveStarRoles, iceboxLimit, logLimit, query])
-	// console.debug({ todos: data })
+	}, [inActiveStarRoles, iceboxLimit, logLimit, query, starSort])
 
 	const loading = data === undefined
 
@@ -567,114 +589,132 @@ export const TodoLists = ({}: {}) => {
 													})
 												}}
 											>
-												{data.wayfinder.map((todo, index) => (
-													<TodoListItem
-														key={todo.id}
-														data-id={todo.id}
-														data-next-todo={index === 0}
-														onCompletionChange={async event => {
-															db.transaction(
-																'rw',
-																db.visits,
-																db.todos,
-																db.wayfinderOrder,
-																async () => {
-																	if (todo.starPoints) {
-																		presentCompletionPopover(event, todo, {
-																			onDidDismiss: async event => {
-																				console.debug(
-																					'popover did dismiss',
-																					event,
-																				)
-																				if (event.detail.role === 'visit') {
-																					await db.visits.add({
-																						todoId: todo.id,
-																						date: new Date(),
-																					})
-																				} else if (
-																					event.detail.role === 'snooze'
-																				) {
-																					await db.visits.add({
-																						todoId: todo.id,
-																						date: new Date(),
-																					})
-																					presentSnoozeTodoModal(todo)
-																				} else if (
-																					event.detail.role === 'complete'
-																				) {
-																					await db.transaction(
-																						'rw',
-																						db.todos,
-																						db.wayfinderOrder,
-																						async () => {
-																							db.todos.update(todo.id, {
-																								completedAt: new Date(),
-																							})
-																							db.wayfinderOrder.delete(todo.id)
-																							// TODO: Extract common completion function
-																						},
+												{data.wayfinder.length === 0 ? (
+													<div className="p-4 space-y-2 text-center">
+														<h2 className="text-3xl font-display grayscale">
+															Wayfinder
+														</h2>
+														<p className="mx-auto text-gray-400 max-w-prose">
+															This is where your next most important todos live.
+															Order them manually or use <em>star sort</em> to
+															order them for you ✨
+														</p>
+													</div>
+												) : (
+													data.wayfinder.map((todo, index) => (
+														<TodoListItem
+															key={todo.id}
+															data-id={todo.id}
+															data-next-todo={index === 0}
+															onCompletionChange={async event => {
+																db.transaction(
+																	'rw',
+																	db.visits,
+																	db.todos,
+																	db.wayfinderOrder,
+																	async () => {
+																		if (todo.starPoints) {
+																			presentCompletionPopover(event, todo, {
+																				onDidDismiss: async event => {
+																					console.debug(
+																						'popover did dismiss',
+																						event,
 																					)
-																					setLogLimit(limit => limit + 1)
-																				}
-																			},
-																		})
-																	} else {
-																		await Promise.all([
-																			db.wayfinderOrder.delete(todo.id),
-																			db.todos.update(todo.id, {
-																				completedAt: event.detail.checked
-																					? new Date()
-																					: undefined,
-																			}),
-																		])
-																		setLogLimit(limit => limit + 1)
-																	}
-																},
-															)
-														}}
-														onSelect={event => {
-															// Prevent the action sheet from opening when reordering
-															if (event.target['localName'] === 'ion-item')
-																return
-
-															presentTodoActionSheet(todo, {
-																buttons: [
-																	{
-																		text: 'Move to icebox',
-																		data: {
-																			action: 'icebox',
-																		},
-																		handler: async () => {
-																			db.transaction(
-																				'rw',
-																				db.wayfinderOrder,
-																				async () => {
-																					await db.wayfinderOrder.delete(
-																						todo.id,
-																					)
+																					if (event.detail.role === 'visit') {
+																						await db.visits.add({
+																							todoId: todo.id,
+																							date: new Date(),
+																						})
+																					} else if (
+																						event.detail.role === 'snooze'
+																					) {
+																						await db.visits.add({
+																							todoId: todo.id,
+																							date: new Date(),
+																						})
+																						presentSnoozeTodoModal(todo)
+																					} else if (
+																						event.detail.role === 'complete'
+																					) {
+																						await db.transaction(
+																							'rw',
+																							db.todos,
+																							db.wayfinderOrder,
+																							async () => {
+																								db.todos.update(todo.id, {
+																									completedAt: new Date(),
+																								})
+																								db.wayfinderOrder.delete(
+																									todo.id,
+																								)
+																								// TODO: Extract common completion function
+																							},
+																						)
+																						setLogLimit(limit => limit + 1)
+																					}
 																				},
-																			)
-																		},
+																			})
+																		} else {
+																			await Promise.all([
+																				db.wayfinderOrder.delete(todo.id),
+																				db.todos.update(todo.id, {
+																					completedAt: event.detail.checked
+																						? new Date()
+																						: undefined,
+																				}),
+																			])
+																			setLogLimit(limit => limit + 1)
+																		}
 																	},
-																	{
-																		text: 'Snooze',
-																		data: {
-																			action: 'snooze',
+																)
+															}}
+															onSelect={event => {
+																// Prevent the action sheet from opening when reordering
+																if (event.target['localName'] === 'ion-item')
+																	return
+
+																presentTodoActionSheet(todo, {
+																	buttons: [
+																		{
+																			text: 'Move to icebox',
+																			data: {
+																				action: 'icebox',
+																			},
+																			handler: async () => {
+																				db.transaction(
+																					'rw',
+																					db.wayfinderOrder,
+																					async () => {
+																						await db.wayfinderOrder.delete(
+																							todo.id,
+																						)
+																					},
+																				)
+																			},
 																		},
-																		handler: () => presentSnoozeTodoModal(todo),
-																	},
-																],
-															})
-														}}
-														ref={index === 0 ? (nextTodoRef as any) : undefined}
-														starRole={starRoles?.find(
-															starRole => todo.starRole === starRole.id,
-														)}
-														todo={{ ...todo }}
-													>
-														<VisitInfo todo={todo} />
-													</TodoListItem>
-												))}
+																		{
+																			text: 'Snooze',
+																			data: {
+																				action: 'snooze',
+																			},
+																			handler: () =>
+																				presentSnoozeTodoModal(todo),
+																		},
+																	],
+																})
+															}}
+															ref={
+																index === 0 ? (nextTodoRef as any) : undefined
+															}
+															starRole={starRoles?.find(
+																starRole => todo.starRole === starRole.id,
+															)}
+															todo={{ ...todo }}
+														>
+															<VisitInfo todo={todo} />
+														</TodoListItem>
+													))
+												)}
 											</IonReorderGroup>
 										</div>
 									</IonItemGroup>
