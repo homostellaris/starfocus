@@ -9,6 +9,8 @@ import {
 	IonLabel,
 	IonList,
 	IonMenu,
+	IonSegment,
+	IonSegmentButton,
 	IonSpinner,
 	IonToggle,
 	IonToolbar,
@@ -17,7 +19,9 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import {
 	layersSharp,
 	locateOutline,
+	reorderThreeSharp,
 	rocketSharp,
+	sparklesSharp,
 	timeSharp,
 } from 'ionicons/icons'
 import { RefObject } from 'react'
@@ -51,6 +55,19 @@ export const ViewMenu = ({
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
+				<IonSegment
+					scrollable={true}
+					value="manual"
+				>
+					<IonSegmentButton value="manual">
+						<IonLabel>Manual</IonLabel>
+						<IonIcon icon={reorderThreeSharp}></IonIcon>
+					</IonSegmentButton>
+					<IonSegmentButton value="star">
+						<IonLabel>Star sort</IonLabel>
+						<IonIcon icon={sparklesSharp}></IonIcon>
+					</IonSegmentButton>
+				</IonSegment>
 				<IonButton
 					color="warning"
 					expand="block"
