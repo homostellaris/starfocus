@@ -217,12 +217,17 @@ export const TodoLists = ({}: {}) => {
 						.toArray()
 						.then(starRoles =>
 							Promise.all(
-								starRoles.map(starRole =>
-									db.todos
-										.where('starRole')
-										.equals(starRole.id)
-										// .limit(1)
-										.sortBy('starPoints'),
+								starRoles.map(
+									starRole =>
+										db.todos
+											.where('starRole')
+											.equals(starRole.id)
+											.reverse()
+											.limit(2)
+											.sortBy('starPoints'),
+									// .then(rankedStarRoleTodos =>
+									// 	rankedStarRoleTodos.slice(0, 2),
+									// ),
 								),
 							),
 						)
@@ -230,9 +235,9 @@ export const TodoLists = ({}: {}) => {
 							return todos
 								.filter(todo => !!todo)
 								.reduce((acc, curr) => acc.concat(curr), [])
-								.sort(
-									(a, b) => (b.starPoints || 0) - (a.starPoints || 0),
-								) as any
+							// .sort(
+							// 	(a, b) => (b.starPoints || 0) - (a.starPoints || 0),
+							// ) as any
 						})
 				: Promise.all([
 						db.todos.bulkGet(todoIds),
