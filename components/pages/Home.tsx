@@ -168,9 +168,9 @@ export const TodoLists = ({}: {}) => {
 		})
 	}, [fab, focusedStarRole, presentCreateTodoModal])
 
+	const wayfinderOrderMode = useSettings('#wayfinderOrderMode')
 	const { inActiveStarRoles, query } = useView()
 
-	const starSort = false
 	const data = useLiveQuery<{
 		log: LogTodoListItem[]
 		visits: LogTodoListItem[]
@@ -211,42 +211,45 @@ export const TodoLists = ({}: {}) => {
 
 		const todoOrderItems = await db.wayfinderOrder.orderBy('order').toArray()
 		const todoIds = todoOrderItems.map(({ todoId }) => todoId)
-		const wayfinderTodosPromise = starSort
-			? db.starRoles
-					.toArray()
-					.then(starRoles =>
-						Promise.all(
-							starRoles.map(starRole =>
-								db.todos
-									.where('starRole')
-									.equals(starRole.id)
-									// .limit(1)
-									.sortBy('starPoints'),
+		const wayfinderTodosPromise =
+			wayfinderOrderMode === 'star'
+				? db.starRoles
+						.toArray()
+						.then(starRoles =>
+							Promise.all(
+								starRoles.map(starRole =>
+									db.todos
+										.where('starRole')
+										.equals(starRole.id)
+										// .limit(1)
+										.sortBy('starPoints'),
+								),
 							),
-						),
-					)
-					.then(todos => {
-						return todos
-							.filter(todo => !!todo)
-							.reduce((acc, curr) => acc.concat(curr), [])
-							.sort((a, b) => (b.starPoints || 0) - (a.starPoints || 0)) as any
-					})
-			: Promise.all([
-					db.todos.bulkGet(todoIds),
-					db.visits.where('todoId').anyOf(todoIds).toArray(),
-				]).then(([wayfinderTodos, visits]) => {
-					const visitsByTodoId = _.groupBy(visits, 'todoId')
-					return wayfinderTodos
-						.map((todo, index) => ({
-							...todo!,
-							visits: visitsByTodoId[todo!.id],
-							order: todoOrderItems[index].order,
-							snoozedUntil: todoOrderItems[index].snoozedUntil,
-						}))
-						.filter(
-							todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
 						)
-				})
+						.then(todos => {
+							return todos
+								.filter(todo => !!todo)
+								.reduce((acc, curr) => acc.concat(curr), [])
+								.sort(
+									(a, b) => (b.starPoints || 0) - (a.starPoints || 0),
+								) as any
+						})
+				: Promise.all([
+						db.todos.bulkGet(todoIds),
+						db.visits.where('todoId').anyOf(todoIds).toArray(),
+					]).then(([wayfinderTodos, visits]) => {
+						const visitsByTodoId = _.groupBy(visits, 'todoId')
+						return wayfinderTodos
+							.map((todo, index) => ({
+								...todo!,
+								visits: visitsByTodoId[todo!.id],
+								order: todoOrderItems[index].order,
+								snoozedUntil: todoOrderItems[index].snoozedUntil,
+							}))
+							.filter(
+								todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
+							)
+					})
 
 		const iceboxTodosPromise = db.todos
 			.where('id')
@@ -273,7 +276,7 @@ export const TodoLists = ({}: {}) => {
 			wayfinder,
 			icebox,
 		}
-	}, [inActiveStarRoles, iceboxLimit, logLimit, query, starSort])
+	}, [inActiveStarRoles, iceboxLimit, logLimit, query, wayfinderOrderMode])
 
 	const loading = data === undefined
 
@@ -1090,6 +1093,8 @@ function matchesQuery(query: string, todo: Todo & { snoozedUntil?: Date }) {
 function useGlobalKeyboardShortcuts() {
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.target !== document.body) return
+
 			if (event.key === '[') {
 				event.preventDefault()
 				menuController.toggle('start')
