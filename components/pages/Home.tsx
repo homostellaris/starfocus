@@ -40,6 +40,7 @@ import _ from 'lodash'
 import {
 	ComponentProps,
 	forwardRef,
+	PropsWithChildren,
 	RefObject,
 	useCallback,
 	useEffect,
@@ -441,8 +442,17 @@ export const TodoLists = ({}: {}) => {
 											<JourneyLabel>
 												<TimeInfo
 													datetime={new Date().toISOString().split('T')[0]}
-													label={group.label}
-												/>
+												>
+													<span
+														className="inline lg:hidden"
+														title={group.label}
+													>
+														{group.todayDiff.toString()}
+													</span>
+													<span className="hidden lg:inline">
+														{group.label}
+													</span>
+												</TimeInfo>
 											</JourneyLabel>
 											<div className="-mt-8">
 												{group.todos.map(todo => (
@@ -503,9 +513,16 @@ export const TodoLists = ({}: {}) => {
 										<JourneyLabel>
 											<TimeInfo
 												datetime={new Date().toISOString().split('T')[0]}
-												label="Today"
 												key="today"
-											/>
+											>
+												<span
+													className="inline lg:hidden"
+													title="Today"
+												>
+													0
+												</span>
+												<span className="hidden lg:inline">Today</span>
+											</TimeInfo>
 										</JourneyLabel>
 										<div className="-mt-8">
 											{todayCompletedTodos.todos.map(todo => (
@@ -1075,8 +1092,9 @@ export const Searchbar = forwardRef<HTMLIonSearchbarElement>(
 
 function JourneyLabel({ children }: ComponentProps<typeof IonItemDivider>) {
 	return (
+		// Removed h-8 from here to ensure correct vertical centering but not sure if it was needed 😬
 		<IonItemDivider
-			className="top-4 h-8 -translate-x-[calc(100%+(56px-100%)/2)] lg:-translate-x-[calc(100%+56px)] -translate-y-1/2 w-fit [--background:none] [--inner-padding-end:none] bg-[--ion-background-color] p-1 max-w-[56px] lg:max-w-none"
+			className="top-4 -translate-x-[calc(100%+(56px-100%)/2)] lg:-translate-x-[calc(100%+56px)] -translate-y-1/2 w-fit [--background:none] [--inner-padding-end:none] bg-[--ion-background-color] p-1 max-w-[56px] lg:max-w-none"
 			sticky
 		>
 			{children}
@@ -1084,10 +1102,16 @@ function JourneyLabel({ children }: ComponentProps<typeof IonItemDivider>) {
 	)
 }
 
-function TimeInfo({ datetime, label }: { datetime: string; label: string }) {
+function TimeInfo({
+	children,
+	datetime,
+}: PropsWithChildren<{ datetime: string }>) {
 	return (
-		<IonLabel color="medium">
-			<time dateTime={datetime}>{label}</time>
+		<IonLabel
+			className="ion-no-margin"
+			color="medium"
+		>
+			<time dateTime={datetime}>{children}</time>
 		</IonLabel>
 	)
 }
@@ -1125,6 +1149,9 @@ function useGlobalKeyboardShortcuts() {
 	}, [])
 }
 
+/**
+ * Today group needs to be separated out as unlile the others, its rendered amongst uncompleted todos as well
+ */
 function useCompletedTodoGroups(
 	completedTodos?: LogTodoListItem[],
 	visits?: LogTodoListItem[],
@@ -1140,6 +1167,7 @@ function useCompletedTodoGroups(
 
 type TodoGroup = {
 	label: string
+	todayDiff: number
 	todos: LogTodoListItem[]
 }
 
