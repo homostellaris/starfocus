@@ -74,6 +74,7 @@ import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
 import { groupByCompletedAt } from '../todos/groupTodosByCompletedAt'
 import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
 import { useTodoPopover } from '../todos/useTodoPopover'
+import Placeholder from '../common/Placeholder'
 
 const Home = () => {
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
@@ -410,14 +411,6 @@ export const TodoLists = ({}: {}) => {
 									name="dots"
 								/>
 							</div>
-						) : todosCount === 0 ? (
-							<div className="flex flex-col items-center justify-center gap-5 m-4 h-fit">
-								<IonIcon
-									icon={rocketSharp}
-									size="large"
-								/>
-								<p>Create some todos to get started</p>
-							</div>
 						) : (
 							<>
 								<IonButton
@@ -437,78 +430,88 @@ export const TodoLists = ({}: {}) => {
 									className="relative mr-1 [contain:none] ion-no-padding"
 									id="log-and-wayfinder"
 								>
-									{logGroups.map(group => (
-										<IonItemGroup key={group.label}>
-											<JourneyLabel>
-												<TimeInfo
-													datetime={new Date().toISOString().split('T')[0]}
-												>
-													<span
-														className="inline lg:hidden"
-														title={group.label}
+									{data.log.length === 0 ? (
+										<Placeholder heading="Log">
+											This is a chronological list of your completed todos. It
+											represents your journey up until today and makes it is
+											easy to remind yourself what you did in the past.
+										</Placeholder>
+									) : (
+										logGroups.map(group => (
+											<IonItemGroup key={group.label}>
+												<JourneyLabel>
+													<TimeInfo
+														datetime={new Date().toISOString().split('T')[0]}
 													>
-														{group.todayDiff.toString()}
-													</span>
-													<span className="hidden lg:inline">
-														{group.label}
-													</span>
-												</TimeInfo>
-											</JourneyLabel>
-											<div className="-mt-8">
-												{group.todos.map(todo => (
-													<TodoListItem
-														key={
-															todo.visits === true
-																? `${todo.id}-${todo.completedAt}`
-																: todo.id
-														}
-														onSelect={_event => {
-															presentTodoActionSheet(todo)
-														}}
-														onCompletionChange={event => {
-															if (todo.visits) {
-																alert('Deletion of visits not implemented yet')
-															} else {
-																db.transaction(
-																	'rw',
-																	db.wayfinderOrder,
-																	db.todos,
-																	async () => {
-																		const wayfinderOrder =
-																			await db.wayfinderOrder
-																				.orderBy('order')
-																				.limit(1)
-																				.keys()
-																		await Promise.all([
-																			db.wayfinderOrder.add({
-																				todoId: todo.id,
-																				order: order(
-																					undefined,
-																					wayfinderOrder[0]?.toString(),
-																				),
-																			}),
-																			db.todos.update(todo.id, {
-																				completedAt: event.detail.checked
-																					? new Date()
-																					: undefined,
-																			}),
-																		])
-																	},
-																)
-																setLogLimit(limit => limit - 1)
+														<span
+															className="inline lg:hidden"
+															title={group.label}
+														>
+															{group.todayDiff.toString()}
+														</span>
+														<span className="hidden lg:inline">
+															{group.label}
+														</span>
+													</TimeInfo>
+												</JourneyLabel>
+												<div className="-mt-8">
+													{group.todos.map(todo => (
+														<TodoListItem
+															key={
+																todo.visits === true
+																	? `${todo.id}-${todo.completedAt}`
+																	: todo.id
 															}
-														}}
-														starRole={starRoles?.find(
-															starRole => todo.starRole === starRole.id,
-														)}
-														todo={todo}
-													>
-														<VisitInfo todo={todo} />
-													</TodoListItem>
-												))}
-											</div>
-										</IonItemGroup>
-									))}
+															onSelect={_event => {
+																presentTodoActionSheet(todo)
+															}}
+															onCompletionChange={event => {
+																if (todo.visits) {
+																	alert(
+																		'Deletion of visits not implemented yet',
+																	)
+																} else {
+																	db.transaction(
+																		'rw',
+																		db.wayfinderOrder,
+																		db.todos,
+																		async () => {
+																			const wayfinderOrder =
+																				await db.wayfinderOrder
+																					.orderBy('order')
+																					.limit(1)
+																					.keys()
+																			await Promise.all([
+																				db.wayfinderOrder.add({
+																					todoId: todo.id,
+																					order: order(
+																						undefined,
+																						wayfinderOrder[0]?.toString(),
+																					),
+																				}),
+																				db.todos.update(todo.id, {
+																					completedAt: event.detail.checked
+																						? new Date()
+																						: undefined,
+																				}),
+																			])
+																		},
+																	)
+																	setLogLimit(limit => limit - 1)
+																}
+															}}
+															starRole={starRoles?.find(
+																starRole => todo.starRole === starRole.id,
+															)}
+															todo={todo}
+														>
+															<VisitInfo todo={todo} />
+														</TodoListItem>
+													))}
+												</div>
+											</IonItemGroup>
+										))
+									)}
 									<IonItemGroup>
 										<JourneyLabel>
 											<TimeInfo
@@ -625,16 +628,11 @@ export const TodoLists = ({}: {}) => {
 												}}
 											>
 												{data.wayfinder.length === 0 ? (
-													<div className="p-4 space-y-2 text-center">
-														<h2 className="text-3xl font-display grayscale">
-															Wayfinder
-														</h2>
-														<p className="mx-auto text-gray-400 max-w-prose">
-															This is where your next most important todos live.
-															Order them manually or use <em>star sort</em> to
-															order them for you ✨
-														</p>
-													</div>
+													<Placeholder heading="Wayfinder">
+														This is where your next most important todos live.
+														Order them manually or use <em>star sort</em> to
+														order them for you ✨
+													</Placeholder>
 												) : (
 													data.wayfinder.map((todo, index) => (
 														<TodoListItem
@@ -754,7 +752,19 @@ export const TodoLists = ({}: {}) => {
 										</div>
 									</IonItemGroup>
 								</IonList>
-								<Icebox todos={data.icebox} />
+								{data.icebox.length === 0 ? (
+									<div className="bg-[--ion-item-background]">
+										<Placeholder heading="Database">
+											This is a database of todos that you might want to work on
+											in future but you don&apos;t think are a priority right
+											now. Brain dump as much as you want here, we&apos;ll hide
+											most of it and just show the most recent additions. If you
+											want to see more scroll down or search.
+										</Placeholder>
+									</div>
+								) : (
+									<Icebox todos={data.icebox} />
+								)}
 								<IonButton
 									aria-label="Load more icebox todos"
 									color="medium"
