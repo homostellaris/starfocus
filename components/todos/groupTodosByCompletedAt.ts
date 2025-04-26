@@ -10,8 +10,6 @@ dayjs.updateLocale('en', {
 	weekStart: 1,
 })
 
-type Loggable = Pick<Todo, 'completedAt'>
-
 /**
  * Groups completed todos into the following date ranges:
  *
@@ -37,38 +35,40 @@ export function groupByCompletedAt(completedTodos: LogTodoListItem[]) {
 	const groupMeta = [
 		{
 			label: 'Other',
+			todayDiff: Number.NEGATIVE_INFINITY,
 			predicate: (_completedAt: dayjs.Dayjs) => true,
 		},
 		{
 			label: 'Year',
+			todayDiff: -365,
 			predicate: (completedAt: dayjs.Dayjs) =>
 				completedAt.isBetween(startOfThisYear, lastMonday, 'day', '[]'),
 		},
 		{
 			label: 'Week',
+			todayDiff: -7,
 			predicate: (completedAt: dayjs.Dayjs) =>
 				completedAt.isBetween(lastMonday, yesterday, 'day', '[]'),
 		},
 		{
 			label: 'Yesterday',
+			todayDiff: -1,
 			predicate: (completedAt: dayjs.Dayjs) =>
 				completedAt.isSame(yesterday, 'day'),
 		},
 		{
 			label: 'Today',
+			todayDiff: 0,
 			predicate: (completedAt: dayjs.Dayjs) => completedAt.isSame(today, 'day'),
 		},
 	]
 	let currentMetaIndex = groupMeta.length - 1
 	let currentMeta = groupMeta[currentMetaIndex]
 
-	const groups: Record<string, LogTodoListItem[]> = groupMeta.reduce(
-		(acc, meta) => {
-			acc[meta.label] = []
-			return acc
-		},
-		{},
-	)
+	const groups = groupMeta.reduce<Record<string, any>>((acc, meta) => {
+		acc[meta.label] = []
+		return acc
+	}, {})
 
 	// Iterate over completed todos in reverse order and assign to next group once one is exhausted
 	for (let i = completedTodos.length - 1; i >= 0; i--) {
@@ -91,5 +91,9 @@ export function groupByCompletedAt(completedTodos: LogTodoListItem[]) {
 			return indexA - indexB
 		})
 		.filter(([label, todos]) => todos.length > 0 || label === 'Today') // Always include today because want to show the marker even when there are no todos yet completed
-		.map(([label, todos]) => ({ label, todos }))
+		.map(([label, todos]) => ({
+			label,
+			todayDiff: groupMeta.find(item => item.label === label)?.todayDiff!,
+			todos,
+		}))
 }
