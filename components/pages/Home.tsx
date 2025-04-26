@@ -223,7 +223,7 @@ export const TodoLists = ({}: {}) => {
 											.where('starRole')
 											.equals(starRole.id)
 											.reverse()
-											.limit(2)
+											.limit(1)
 											.sortBy('starPoints'),
 									// .then(rankedStarRoleTodos =>
 									// 	rankedStarRoleTodos.slice(0, 2),
@@ -231,13 +231,23 @@ export const TodoLists = ({}: {}) => {
 								),
 							),
 						)
-						.then(todos => {
-							return todos
+						.then(todos =>
+							todos
 								.filter(todo => !!todo)
-								.reduce((acc, curr) => acc.concat(curr), [])
-							// .sort(
-							// 	(a, b) => (b.starPoints || 0) - (a.starPoints || 0),
-							// ) as any
+								.reduce((acc, curr) => acc.concat(curr), []),
+						)
+						.then(async starSortTodos => {
+							const visits = await db.visits
+								.where('todoId')
+								.anyOf(todoIds)
+								.toArray()
+							const visitsByTodoId = _.groupBy(visits, 'todoId')
+							return starSortTodos.map((todo, index) => ({
+								...todo!,
+								visits: visitsByTodoId[todo!.id],
+								order: index.toString(),
+								snoozedUntil: todoOrderItems[index].snoozedUntil,
+							}))
 						})
 				: Promise.all([
 						db.todos.bulkGet(todoIds),
@@ -1066,7 +1076,7 @@ export const Searchbar = forwardRef<HTMLIonSearchbarElement>(
 function JourneyLabel({ children }: ComponentProps<typeof IonItemDivider>) {
 	return (
 		<IonItemDivider
-			className="top-4 h-8 -translate-x-[calc(100%+(56px-100%)/2)] lg:-translate-x-[calc(100%+56px)] -translate-y-1/2 w-fit [--background:none] [--inner-padding-end:none] bg-[--ion-background-color] p-1"
+			className="top-4 h-8 -translate-x-[calc(100%+(56px-100%)/2)] lg:-translate-x-[calc(100%+56px)] -translate-y-1/2 w-fit [--background:none] [--inner-padding-end:none] bg-[--ion-background-color] p-1 max-w-[56px] lg:max-w-none"
 			sticky
 		>
 			{children}
