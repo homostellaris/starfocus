@@ -6,7 +6,6 @@ export default function useKeyboardShortcuts(
 ) {
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
-			console.log({ event })
 			if (event.target !== document.body) return
 
 			return handler(event)
