@@ -12,17 +12,17 @@ describe('onboarding', () => {
 	})
 })
 
-describe('constellation', () => {})
+describe.skip('constellation', () => {})
 
-describe('star roles', () => {})
+describe.skip('star roles', () => {})
 
-describe('star roles groups', () => {})
+describe.skip('star roles groups', () => {})
 
-describe('star points', () => {})
+describe.skip('star points', () => {})
 
-describe('star sort', () => {})
+describe.skip('star sort', () => {})
 
-describe('wayfinder', () => {
+describe.skip('wayfinder', () => {
 	it.skip('can edit todos')
 	it.skip('can reorder todos')
 	it.skip('can move todos between lists')
@@ -30,11 +30,11 @@ describe('wayfinder', () => {
 	it.skip('can log visits')
 })
 
-describe('log', () => {})
+describe.skip('log', () => {})
 
-describe('icebox', () => {})
+describe.skip('icebox', () => {})
 
-describe('focus', () => {
+describe.skip('focus', () => {
 	it.skip('can focus a star role')
 	it.skip('can focus a star role group')
 })
@@ -69,7 +69,7 @@ describe('search', () => {
 	it.skip('can search for snoozed todos')
 })
 
-describe('notes', () => {})
+describe.skip('notes', () => {})
 
 it('works', () => {
 	cy.visit('/home')
@@ -160,35 +160,8 @@ it('works', () => {
 		['plan birthday day out', 'be silly together'],
 	)
 
-	// reorderImportantTodo(0, 2)
-	// cy.get('#log-and-wayfinder .todo')
-	// 	.first()
-	// 	.find('ion-reorder')
-	// 	.shadow()
-	// 	.find('.reorder-icon')
-	// 	.shadow()
-	// 	.find('svg')
-	// 	.drag('#log-and-wayfinder .todo:nth-child(3)')
-	// assertLists(
-	// 	[],
-	// 	['be silly together', 'plan birthday day out', 'take the bins out'],
-	// 	[],
-	// )
-	// reorderImportantTodo(1, -1)
-	// assertLists(
-	// 	[],
-	// 	['plan birthday day out', 'be silly together', 'take the bins out'],
-	// 	[],
-	// )
-	// cy.reload()
-	// assertLists(
-	// 	[],
-	// 	['plan birthday day out', 'be silly together', 'take the bins out'],
-	// 	[],
-	// )
-
 	cy.get('#log-and-wayfinder')
-		.contains('.todo', 'take the bins out')
+		.contains('[data-class="todo"]', 'take the bins out')
 		.find('ion-checkbox')
 		.click()
 
@@ -199,12 +172,12 @@ it('works', () => {
 })
 
 function assertLists(wayfinder: string[], icebox: string[]) {
-	cy.get('#log-and-wayfinder .todo ion-label')
+	cy.get('#log-and-wayfinder [data-class="todo"] [data-class="title"]')
 		.should('have.length', wayfinder.length)
 		.invoke('toArray')
 		.invoke('map', item => item.textContent)
 		.should('deep.equal', wayfinder)
-	cy.get('#icebox .todo')
+	cy.get('#icebox [data-class="todo"] [data-class="title"]')
 		.should('have.length', icebox.length)
 		.invoke('toArray')
 		.invoke('map', item => item.textContent)
@@ -212,7 +185,7 @@ function assertLists(wayfinder: string[], icebox: string[]) {
 }
 
 function reorderWayfinderTodo(todoIndex: number, places: number) {
-	cy.get(`#log-and-wayfinder .todo`)
+	cy.get(`#log-and-wayfinder [data-class="todo"]`)
 		.eq(todoIndex)
 		.find('ion-reorder')
 		.shadow()

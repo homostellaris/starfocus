@@ -53,7 +53,8 @@ export const TodoListItem = forwardRef<
 		>
 			<IonItem
 				button
-				className="todo [--inner-padding-top:0.5rem] [--inner-padding-bottom:0.5rem]"
+				className="[--inner-padding-top:0.5rem] [--inner-padding-bottom:0.5rem]"
+				data-class="todo"
 				onClick={onSelect}
 			>
 				<IonCheckbox
@@ -76,7 +77,7 @@ export const TodoListItem = forwardRef<
 					{starPoints || 0}
 				</span>
 				<div>
-					<IonLabel>{todo?.title}</IonLabel>
+					<IonLabel data-class="title">{todo?.title}</IonLabel>
 					{debug && (
 						<span className="space-x-2">
 							<data className="text-xs text-gray-500">{todo.id}</data>
@@ -132,7 +133,8 @@ export function TodoCard({
 }: { todo: TodoType } & ComponentProps<typeof IonCard>) {
 	return (
 		<IonCard
-			className="cursor-pointer todo ion-no-margin"
+			className="cursor-pointer ion-no-margin"
+			data-class="todo"
 			{...props}
 		>
 			<IonCardHeader>
@@ -145,7 +147,7 @@ export function TodoCard({
 					>
 						{todo.starPoints || 0}
 					</span>
-					<span>{todo.title}</span>
+					<span data-class="title">{todo.title}</span>
 				</IonCardTitle>
 			</IonCardHeader>
 		</IonCard>
