@@ -101,11 +101,11 @@ const Home = () => {
 					<IonPage id="main-content">
 						<Header title="Home"></Header>
 						<TodoLists />
-						<div className="absolute hidden 2xl:block bottom-4 left-4">
+						<div className="absolute hidden xl:block bottom-4 left-4">
 							<Mood />
 						</div>
 						<IonFooter
-							className="lg:w-[calc(66.67%+56*2px)] lg:mx-auto lg:rounded-t-lg overflow-hidden"
+							className="lg:w-[calc(100vw/12*6+56*2px+10px)] lg:mx-auto lg:rounded-t-lg overflow-hidden"
 							translucent
 						>
 							<IonToolbar>
@@ -375,9 +375,9 @@ export const TodoLists = ({}: {}) => {
 					<IonCol
 						className="relative"
 						size="auto"
-						sizeLg="2"
+						sizeLg="3"
 					>
-						<IonFab className="fixed lg:left-[calc(100vw/12*2-40px-18px)] bottom-16">
+						<IonFab className="fixed lg:left-[calc(100vw/12*3-40px-18px)] bottom-16">
 							<IonFabButton
 								color="success"
 								onClick={openCreateTodoModal}
@@ -387,7 +387,7 @@ export const TodoLists = ({}: {}) => {
 							</IonFabButton>
 						</IonFab>
 						<IonButton
-							className="fixed left-[calc(23px-10px)] lg:left-[calc(100vw/12*2-40px-6px)] bottom-[calc(64px+52px)] z-10"
+							className="fixed left-[calc(23px-10px)] lg:left-[calc(100vw/12*3-40px-6px)] bottom-[calc(64px+52px)] z-10"
 							onClick={() => {
 								const y = nextTodoPosition ? nextTodoPosition.top + 32 : 0
 								contentRef.current?.scrollToPoint(undefined, y, 500)
@@ -402,7 +402,7 @@ export const TodoLists = ({}: {}) => {
 						</IonButton>
 						<Journey commonAncestor={contentRef} />
 					</IonCol>
-					<IonCol sizeLg="8">
+					<IonCol sizeLg="6">
 						{/* TODO: Use suspense instead */}
 						{loading ? (
 							<div className="flex items-center justify-center h-full">
@@ -783,7 +783,7 @@ export const TodoLists = ({}: {}) => {
 					</IonCol>
 					<IonCol
 						size="0"
-						sizeLg="2"
+						sizeLg="3"
 					>
 						<div></div>
 					</IonCol>
