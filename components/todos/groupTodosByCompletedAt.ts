@@ -34,30 +34,42 @@ export function groupByCompletedAt(completedTodos: LogTodoListItem[]) {
 
 	const groupMeta = [
 		{
-			label: 'Other',
+			longLabel: 'Before this year',
+			shortLabel: 'Past',
 			todayDiff: Number.NEGATIVE_INFINITY,
 			predicate: (_completedAt: dayjs.Dayjs) => true,
 		},
 		{
-			label: 'Year',
+			longLabel: 'This year',
+			shortLabel: 'Year',
 			todayDiff: -365,
 			predicate: (completedAt: dayjs.Dayjs) =>
 				completedAt.isBetween(startOfThisYear, lastMonday, 'day', '[]'),
 		},
 		{
-			label: 'Week',
+			longLabel: 'This month',
+			shortLabel: 'Month',
 			todayDiff: -7,
 			predicate: (completedAt: dayjs.Dayjs) =>
 				completedAt.isBetween(lastMonday, yesterday, 'day', '[]'),
 		},
 		{
-			label: 'Yesterday',
+			longLabel: 'This week',
+			shortLabel: 'Week',
+			todayDiff: -7,
+			predicate: (completedAt: dayjs.Dayjs) =>
+				completedAt.isBetween(lastMonday, yesterday, 'day', '[]'),
+		},
+		{
+			longLabel: 'Yesterday',
+			shortLabel: 'Yester',
 			todayDiff: -1,
 			predicate: (completedAt: dayjs.Dayjs) =>
 				completedAt.isSame(yesterday, 'day'),
 		},
 		{
-			label: 'Today',
+			longLabel: 'Today',
+			shortLabel: 'Today',
 			todayDiff: 0,
 			predicate: (completedAt: dayjs.Dayjs) => completedAt.isSame(today, 'day'),
 		},
@@ -66,7 +78,7 @@ export function groupByCompletedAt(completedTodos: LogTodoListItem[]) {
 	let currentMeta = groupMeta[currentMetaIndex]
 
 	const groups = groupMeta.reduce<Record<string, any>>((acc, meta) => {
-		acc[meta.label] = []
+		acc[meta.shortLabel] = []
 		return acc
 	}, {})
 
@@ -77,7 +89,7 @@ export function groupByCompletedAt(completedTodos: LogTodoListItem[]) {
 
 		while (currentMeta) {
 			if (currentMeta.predicate(completedAt)) {
-				groups[currentMeta.label].unshift(todo)
+				groups[currentMeta.shortLabel].unshift(todo)
 				break
 			}
 			currentMeta = groupMeta[--currentMetaIndex]
@@ -86,14 +98,15 @@ export function groupByCompletedAt(completedTodos: LogTodoListItem[]) {
 
 	return Object.entries(groups)
 		.sort((a, b) => {
-			const indexA = groupMeta.findIndex(meta => meta.label === a[0])
-			const indexB = groupMeta.findIndex(meta => meta.label === b[0])
+			const indexA = groupMeta.findIndex(meta => meta.shortLabel === a[0])
+			const indexB = groupMeta.findIndex(meta => meta.shortLabel === b[0])
 			return indexA - indexB
 		})
-		.filter(([label, todos]) => todos.length > 0 || label === 'Today') // Always include today because want to show the marker even when there are no todos yet completed
-		.map(([label, todos]) => ({
-			label,
-			todayDiff: groupMeta.find(item => item.label === label)?.todayDiff!,
+		.filter(([shortLabel, todos]) => todos.length > 0 || shortLabel === 'Today') // Always include today because want to show the marker even when there are no todos yet completed
+		.map(([shortLabel, todos]) => ({
+			shortLabel,
+			longLabel: groupMeta.find(item => item.shortLabel === shortLabel)
+				?.longLabel!,
 			todos,
 		}))
 }

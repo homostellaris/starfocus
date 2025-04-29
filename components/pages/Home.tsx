@@ -305,7 +305,7 @@ export const TodoLists = ({}: {}) => {
 		[loading, data],
 	)
 
-	const [logGroups, todayCompletedTodos] = useCompletedTodoGroups(
+	const [logGroups, todayGroup] = useCompletedTodoGroups(
 		data?.log,
 		data?.visits,
 	)
@@ -438,19 +438,19 @@ export const TodoLists = ({}: {}) => {
 										</Placeholder>
 									) : (
 										logGroups.map(group => (
-											<IonItemGroup key={group.label}>
+											<IonItemGroup key={group.shortLabel}>
 												<JourneyLabel>
 													<TimeInfo
 														datetime={new Date().toISOString().split('T')[0]}
 													>
 														<span
 															className="inline lg:hidden"
-															title={group.label}
+															title={group.shortLabel}
 														>
-															{group.todayDiff.toString()}
+															{group.shortLabel}
 														</span>
 														<span className="hidden lg:inline">
-															{group.label}
+															{group.longLabel}
 														</span>
 													</TimeInfo>
 												</JourneyLabel>
@@ -520,15 +520,17 @@ export const TodoLists = ({}: {}) => {
 											>
 												<span
 													className="inline lg:hidden"
-													title="Today"
+													title={todayGroup.shortLabel}
 												>
-													0
+													{todayGroup.shortLabel}
 												</span>
-												<span className="hidden lg:inline">Today</span>
+												<span className="hidden lg:inline">
+													{todayGroup.longLabel}
+												</span>
 											</TimeInfo>
 										</JourneyLabel>
 										<div className="-mt-8">
-											{todayCompletedTodos.todos.map(todo => (
+											{todayGroup.todos.map(todo => (
 												<TodoListItem
 													key={
 														todo.visits === true
@@ -1176,8 +1178,9 @@ function useCompletedTodoGroups(
 }
 
 type TodoGroup = {
-	label: string
-	todayDiff: number
+	longLabel: string
+	shortLabel: string
+	// todayDiff: number
 	todos: LogTodoListItem[]
 }
 
