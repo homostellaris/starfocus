@@ -92,7 +92,7 @@ export default function StarRoleModal({
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
 				<IonInput
-					autoCapitalize="sentences"
+					autocapitalize="sentences"
 					fill="outline"
 					ref={titleInput}
 					type="text"

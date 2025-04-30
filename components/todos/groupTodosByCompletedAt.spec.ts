@@ -8,8 +8,8 @@ beforeAll(() => {
 test('no completed todos', () => {
 	expect(groupByCompletedAt([])).toEqual([
 		{
-			label: 'Today',
-			todayDiff: 0,
+			shortLabel: 'Today',
+			longLabel: 'Today',
 			todos: [],
 		},
 	])
@@ -27,8 +27,8 @@ describe('one completed todo', () => {
 			]),
 		).toEqual([
 			{
-				label: 'Today',
-				todayDiff: 0,
+				shortLabel: 'Today',
+				longLabel: 'Today',
 				todos: [
 					{
 						completedAt: new Date('2020-01-01T01:00:00.000Z'),
@@ -51,8 +51,8 @@ describe('one completed todo', () => {
 			]),
 		).toEqual([
 			{
-				label: 'Yesterday',
-				todayDiff: -1,
+				shortLabel: 'Yester',
+				longLabel: 'Yesterday',
 				todos: [
 					{
 						completedAt: new Date('2019-12-31T00:00:00.000Z'),
@@ -62,8 +62,8 @@ describe('one completed todo', () => {
 				],
 			},
 			{
-				label: 'Today',
-				todayDiff: 0,
+				shortLabel: 'Today',
+				longLabel: 'Today',
 				todos: [],
 			},
 		])
@@ -81,8 +81,8 @@ describe('one completed todo', () => {
 			]),
 		).toEqual([
 			{
-				label: 'Week',
-				todayDiff: -7,
+				shortLabel: 'Week',
+				longLabel: 'This week',
 				todos: [
 					{
 						completedAt: mondayEnd,
@@ -92,8 +92,8 @@ describe('one completed todo', () => {
 				],
 			},
 			{
-				label: 'Today',
-				todayDiff: 0,
+				shortLabel: 'Today',
+				longLabel: 'Today',
 				todos: [],
 			},
 		])
@@ -109,8 +109,8 @@ describe('one completed todo', () => {
 			]),
 		).toEqual([
 			{
-				label: 'Week',
-				todayDiff: -7,
+				shortLabel: 'Week',
+				longLabel: 'This week',
 				todos: [
 					{
 						completedAt: mondayStart,
@@ -120,8 +120,8 @@ describe('one completed todo', () => {
 				],
 			},
 			{
-				label: 'Today',
-				todayDiff: 0,
+				shortLabel: 'Today',
+				longLabel: 'Today',
 				todos: [],
 			},
 		])
@@ -138,8 +138,8 @@ describe('one completed todo', () => {
 			]),
 		).toEqual([
 			{
-				label: 'Year',
-				todayDiff: -365,
+				shortLabel: 'Year',
+				longLabel: 'This year',
 				todos: [
 					{
 						completedAt: new Date('2019-12-29T23:59:59.999Z'),
@@ -149,8 +149,8 @@ describe('one completed todo', () => {
 				],
 			},
 			{
-				label: 'Today',
-				todayDiff: 0,
+				shortLabel: 'Today',
+				longLabel: 'Today',
 				todos: [],
 			},
 		])
@@ -165,8 +165,8 @@ describe('one completed todo', () => {
 			]),
 		).toEqual([
 			{
-				label: 'Year',
-				todayDiff: -365,
+				shortLabel: 'Year',
+				longLabel: 'This year',
 				todos: [
 					{
 						completedAt: new Date('2019-01-01T00:00:00.000Z'),
@@ -176,8 +176,8 @@ describe('one completed todo', () => {
 				],
 			},
 			{
-				label: 'Today',
-				todayDiff: 0,
+				shortLabel: 'Today',
+				longLabel: 'Today',
 				todos: [],
 			},
 		])
@@ -206,8 +206,8 @@ describe('multiple completed todos', () => {
 			]),
 		).toEqual([
 			{
-				label: 'Today',
-				todayDiff: 0,
+				shortLabel: 'Today',
+				longLabel: 'Today',
 				todos: [
 					{
 						completedAt: new Date('2020-01-01T00:00:00.000Z'),
@@ -250,8 +250,8 @@ describe('multiple completed todos', () => {
 			]),
 		).toEqual([
 			{
-				label: 'Week',
-				todayDiff: -7,
+				shortLabel: 'Week',
+				longLabel: 'This week',
 				todos: [
 					{
 						completedAt: new Date('2019-12-30T00:00:00.000Z'),
@@ -271,8 +271,8 @@ describe('multiple completed todos', () => {
 				],
 			},
 			{
-				label: 'Today',
-				todayDiff: 0,
+				shortLabel: 'Today',
+				longLabel: 'Today',
 				todos: [],
 			},
 		])
@@ -294,8 +294,8 @@ describe('multiple completed todos', () => {
 			]),
 		).toEqual([
 			{
-				label: 'Yesterday',
-				todayDiff: -1,
+				shortLabel: 'Yester',
+				longLabel: 'Yesterday',
 				todos: [
 					{
 						completedAt: new Date('2019-12-31T23:59:59.999Z'),
@@ -305,8 +305,8 @@ describe('multiple completed todos', () => {
 				],
 			},
 			{
-				label: 'Today',
-				todayDiff: 0,
+				shortLabel: 'Today',
+				longLabel: 'Today',
 				todos: [
 					{
 						completedAt: new Date('2020-01-01T00:00:00.000Z'),
@@ -339,8 +339,8 @@ describe('multiple completed todos', () => {
 			]),
 		).toEqual([
 			{
-				label: 'Year',
-				todayDiff: -365,
+				shortLabel: 'Year',
+				longLabel: 'This year',
 				todos: [
 					{
 						completedAt: new Date('2019-12-01T00:00:00.000Z'),
@@ -355,8 +355,8 @@ describe('multiple completed todos', () => {
 				],
 			},
 			{
-				label: 'Yesterday',
-				todayDiff: -1,
+				shortLabel: 'Yester',
+				longLabel: 'Yesterday',
 				todos: [
 					{
 						completedAt: new Date('2019-12-31T23:59:59.999Z'),
@@ -366,8 +366,8 @@ describe('multiple completed todos', () => {
 				],
 			},
 			{
-				label: 'Today',
-				todayDiff: 0,
+				shortLabel: 'Today',
+				longLabel: 'Today',
 				todos: [],
 			},
 		])
