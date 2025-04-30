@@ -1106,7 +1106,9 @@ function JourneyLabel({ children }: ComponentProps<typeof IonItemDivider>) {
 	return (
 		// Removed h-8 from here to ensure correct vertical centering but not sure if it was needed 😬
 		<IonItemDivider
-			className="top-4 -translate-x-[calc(100%+(56px-100%)/2)] lg:-translate-x-[calc(100%+56px)] -translate-y-1/2 w-fit [--background:none] [--inner-padding-end:none] bg-[--ion-background-color] p-1 max-w-[56px] lg:max-w-none"
+			// IonItemDivider has a minimum height of 30px hence the need for min-h-fit
+			// Tried these shadows to blend the background but didn't like them: bg-black shadow-[0_0_6px_6px] shadow-black
+			className="bg-[--ion-background-color] top-4 -translate-x-[calc(100%+(56px-100%)/2)] lg:-translate-x-[calc(100%+56px)] -translate-y-1/2 w-fit [--background:none] [--inner-padding-end:none] ion-no-padding max-w-[56px] lg:max-w-none min-h-fit"
 			sticky
 		>
 			{children}
