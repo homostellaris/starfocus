@@ -888,6 +888,7 @@ export const MiscMenu = () => {
 									value={noteProvider?.vault}
 								></IonInput>
 								<IonInput
+									autocapitalize="sentences"
 									fill="outline"
 									helperText="The folder where the todo notes will be created. This is a path relative to the vault root. If no folder is specified the vault's default location for new notes will be used."
 									label="Folder"
