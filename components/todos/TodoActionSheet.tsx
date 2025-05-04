@@ -27,7 +27,6 @@ export function useTodoActionSheet() {
 								},
 							]
 						: []),
-					...(options?.buttons || []),
 					{
 						text: 'Edit',
 						data: {
@@ -59,6 +58,7 @@ export function useTodoActionSheet() {
 							)
 						},
 					},
+					...(options?.buttons || []),
 				],
 				header: todo.title,
 				id: 'todo-action-sheet',
