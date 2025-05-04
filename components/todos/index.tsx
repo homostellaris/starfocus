@@ -132,7 +132,8 @@ export const TodoListItem = forwardRef<
 					></IonIcon>
 				) : (
 					<IonReorder
-						className={cn(isPlatform('ios') && 'ml-4')}
+						// -mr-1 is a hack to negate the padding built into the SVG in order to align it with the log todo icons
+						className={cn('-mr-1', isPlatform('ios') && 'ml-4')}
 						slot="end"
 					></IonReorder>
 				)}
