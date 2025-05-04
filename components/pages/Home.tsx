@@ -26,6 +26,7 @@ import {
 	IonSpinner,
 	IonToast,
 	IonToolbar,
+	isPlatform,
 } from '@ionic/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
@@ -75,6 +76,7 @@ import { groupByCompletedAt } from '../todos/groupTodosByCompletedAt'
 import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
 import { useTodoPopover } from '../todos/useTodoPopover'
 import Placeholder from '../common/Placeholder'
+import { cn } from '../common/cn'
 
 const Home = () => {
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
@@ -108,7 +110,9 @@ const Home = () => {
 							className="lg:w-[calc(100vw/12*6+56*2px+10px)] lg:mx-auto lg:rounded-t-lg overflow-hidden"
 							translucent
 						>
-							<IonToolbar>
+							<IonToolbar
+								className={cn(isPlatform('ios') && 'ion-padding-top')}
+							>
 								<IonButtons slot="start">
 									<IonButton
 										id="view-menu-button"
@@ -908,6 +912,7 @@ export const MiscMenu = () => {
 				</form>
 				<IonButton
 					id="clean-database"
+					className="hidden"
 					onClick={async () => {
 						// Remove invalid notes from todos
 						await db.todos.toCollection().modify(todo => {
@@ -1081,7 +1086,10 @@ export const Searchbar = forwardRef<HTMLIonSearchbarElement>(
 		return (
 			<IonSearchbar
 				ref={ref}
-				className="mx-auto [--background:#121212]"
+				className={cn(
+					'mx-auto [--background:#121212]',
+					!isPlatform('ios') && 'ion-no-padding',
+				)}
 				debounce={100}
 				/* Binding to the capture phase allows the searchbar to complete its native behaviour of clearing the input.
 				 * Without this the input would blur but the input would still have a value and the todos would still be filtered. */
