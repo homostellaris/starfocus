@@ -7,6 +7,7 @@ import {
 	IonImg,
 	IonInput,
 	IonItem,
+	IonLabel,
 	IonList,
 	IonPopover,
 	IonTitle,
@@ -71,7 +72,12 @@ export const Header = ({ title }: { title: string }) => {
 									<IonContent className="text-xs">
 										<IonHeader>
 											<IonToolbar>
-												<IonTitle>{syncState?.status}</IonTitle>
+												<IonLabel
+													className="text-xl font-bold capitalize"
+													slot="start"
+												>
+													{syncState?.status}
+												</IonLabel>
 												<IonButtons slot="end">
 													<IonButton
 														color="danger"
@@ -79,6 +85,7 @@ export const Header = ({ title }: { title: string }) => {
 														onClick={() => {
 															db.cloud.logout()
 														}}
+														size="small"
 													>
 														Unsync
 													</IonButton>

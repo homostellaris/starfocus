@@ -14,6 +14,7 @@ import {
 	IonSpinner,
 	IonToggle,
 	IonToolbar,
+	isPlatform,
 } from '@ionic/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
@@ -32,6 +33,7 @@ import useGroupedStarRoles from '../starRoleGroups/useStarRoleGroups'
 import useView from './view'
 import useSettings from '../settings/useSettings'
 import useKeyboardShortcuts from '../common/useKeyboardShortcut'
+import { cn } from '../common/cn'
 
 export const ViewMenu = ({
 	searchbarRef,
@@ -172,7 +174,12 @@ function StarRolesList({
 			</IonItem>
 			{starRolesByGroup.map(starRoleGroup => (
 				<IonItemGroup key={starRoleGroup.id}>
-					<IonItemDivider className="[--background:transparent]">
+					<IonItemDivider
+						className={cn(
+							'[--background:transparent]',
+							isPlatform('ios') && '[--inner-padding-end:1rem]',
+						)}
+					>
 						<IonIcon
 							color="light"
 							icon={layersSharp}
@@ -234,7 +241,10 @@ function StarRolesList({
 							key={starRole.id}
 							lines="none"
 						>
-							<StarRoleIcon starRole={starRole} />
+							<StarRoleIcon
+								slot="end"
+								starRole={starRole}
+							/>
 							<IonLabel>{starRole?.title}</IonLabel>
 							<IonButton
 								fill="clear"

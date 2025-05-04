@@ -1,3 +1,4 @@
+import { isPlatform } from '@ionic/react'
 import {
 	IonCard,
 	IonCardHeader,
@@ -54,6 +55,7 @@ export const TodoListItem = forwardRef<
 			<IonItem
 				button
 				className="[--inner-padding-top:0.5rem] [--inner-padding-bottom:0.5rem]"
+				detail={false}
 				data-class="todo"
 				onClick={onSelect}
 			>
@@ -95,7 +97,7 @@ export const TodoListItem = forwardRef<
 				</div>
 				{todo.note ? (
 					<a
-						className="ion-hide-sm-down"
+						className={cn('ion-hide-sm-down', isPlatform('ios') && 'ml-4')}
 						href={todo.note.uri}
 						slot="end"
 						target="_blank"
@@ -104,23 +106,35 @@ export const TodoListItem = forwardRef<
 					</a>
 				) : (
 					<IonIcon
-						className="ion-hide-sm-down"
+						className={cn('ion-hide-sm-down', isPlatform('ios') && 'ml-4')}
 						color="light"
 						icon={documentText}
 						slot="end"
 					></IonIcon>
 				)}
-				<SnoozeIcon todo={todo} />
-				<StarRoleIcon starRole={starRole} />
+				<SnoozeIcon
+					className={cn('ion-hide-sm-down', isPlatform('ios') && 'ml-4')}
+					slot="end"
+					todo={todo}
+				/>
+				<StarRoleIcon
+					className={cn(isPlatform('ios') && 'ml-4')}
+					slot="end"
+					starRole={starRole}
+				/>
 				{todo.completedAt ? (
 					<IonIcon
+						className={cn(isPlatform('ios') && 'ml-4')}
 						color="medium"
 						icon={calendarSharp}
 						slot="end"
 						title={`Completed on ${todo.completedAt?.toDateString()}`}
 					></IonIcon>
 				) : (
-					<IonReorder slot="end"></IonReorder>
+					<IonReorder
+						className={cn(isPlatform('ios') && 'ml-4')}
+						slot="end"
+					></IonReorder>
 				)}
 			</IonItem>
 		</div>
@@ -155,10 +169,12 @@ export function TodoCard({
 }
 
 export function SnoozeIcon({
+	className,
 	todo,
+	...props
 }: {
 	todo: TodoType & { order?: string; snoozedUntil?: Date }
-}) {
+} & ComponentProps<typeof IonIcon>) {
 	let color = 'light'
 	let title = 'Not snoozed'
 
@@ -179,11 +195,11 @@ export function SnoozeIcon({
 
 	return (
 		<IonIcon
-			className="ion-hide-sm-down"
+			className={className}
 			color={color}
 			icon={timeSharp}
-			slot="end"
 			title={title}
+			{...props}
 		/>
 	)
 }
