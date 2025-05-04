@@ -14,6 +14,19 @@ export function useTodoActionSheet() {
 		(todo: Todo, options?: ActionSheetOptions & HookOverlayOptions) => {
 			presentActionSheet({
 				buttons: [
+					...(todo.note?.uri
+						? [
+								{
+									text: 'Open note',
+									data: {
+										action: 'open-note',
+									},
+									handler: async () => {
+										open(todo.note?.uri)
+									},
+								},
+							]
+						: []),
 					...(options?.buttons || []),
 					{
 						text: 'Edit',
@@ -46,19 +59,6 @@ export function useTodoActionSheet() {
 							)
 						},
 					},
-					...(todo.note?.uri
-						? [
-								{
-									text: 'Open note',
-									data: {
-										action: 'open-note',
-									},
-									handler: async () => {
-										open(todo.note?.uri)
-									},
-								},
-							]
-						: []),
 				],
 				header: todo.title,
 				id: 'todo-action-sheet',
