@@ -1,8 +1,8 @@
-import localFont from 'next/font/local'
+import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
+import { Honk, Jura, Kode_Mono } from 'next/font/google'
+import localFont from 'next/font/local'
 import Script from 'next/script'
-import PlausibleProvider from 'next-plausible'
-import { Jura, Kode_Mono, Honk } from 'next/font/google'
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css'
@@ -13,12 +13,12 @@ import '@ionic/react/css/normalize.css'
 import '@ionic/react/css/typography.css'
 
 /* Optional CSS utils that can be commented out */
-import '@ionic/react/css/padding.css'
+import '@ionic/react/css/display.css'
+import '@ionic/react/css/flex-utils.css'
 import '@ionic/react/css/float-elements.css'
+import '@ionic/react/css/padding.css'
 import '@ionic/react/css/text-alignment.css'
 import '@ionic/react/css/text-transformation.css'
-import '@ionic/react/css/flex-utils.css'
-import '@ionic/react/css/display.css'
 
 /**
  * Ionic Dark Palette
@@ -29,8 +29,8 @@ import '@ionic/react/css/display.css'
 import '@ionic/react/css/palettes/dark.always.css'
 
 /* Theme variables */
-import '../styles/theme.css'
 import '../styles/globals.css'
+import '../styles/theme.css'
 
 export const metadata: Metadata = {
 	title: 'Starfocus',
@@ -78,13 +78,10 @@ export default function RootLayout({
 			lang="en"
 			className={`${funnelDisplay.variable} ${honk.variable} ${jura.variable} ${kode.variable}`}
 		>
-			<PlausibleProvider
-				enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === 'production'}
-				domain="starfocus.app"
-				trackOutboundLinks={true}
-			>
-				<body>{children}</body>
-			</PlausibleProvider>
+			<body>
+				{children}
+				<Analytics />
+			</body>
 			<Script
 				type="module"
 				src="https://unpkg.com/ionicons@5.2.3/dist/ionicons/ionicons.esm.js"
