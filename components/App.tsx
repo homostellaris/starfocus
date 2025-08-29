@@ -2,7 +2,7 @@
 import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react'
 import { StatusBar, Style } from '@capacitor/status-bar'
 import { IonReactRouter } from '@ionic/react-router'
-import { Route } from 'react-router-dom'
+import { Redirect, Route } from 'react-router-dom'
 import Home from './pages/Home'
 import Constellation from './pages/Constellation'
 import ErrorBoundary from './ErrorBoundary'
@@ -31,6 +31,12 @@ const App = () => {
 			<IonReactRouter>
 				<IonRouterOutlet id="main">
 					<ErrorBoundary>
+						<Route
+							exact
+							path="/"
+						>
+							<Redirect to="/home" />
+						</Route>
 						<Route
 							path="/constellation"
 							render={() => <Constellation />}
