@@ -16,7 +16,7 @@
 		"future"
 	],
 	"scripts": {
-		"android:dev": "next build && cap sync && mv out/home.html out/index.html && cap run android",
+		"android:dev": "next build && cap sync android && mv out/home.html out/index.html && cap run android",
 		"build": "next build",
 		"check": "bun test && bun run type-check && bun run lint && bun run test",
 		"next:dev": "next dev -p 6603",
