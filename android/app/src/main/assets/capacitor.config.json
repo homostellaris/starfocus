@@ -4,15 +4,13 @@
 	"android": {
 		"adjustMarginsForEdgeToEdge": "auto"
 	},
-	"backgroundColor": "#1F1F1F",
 	"cordova": {},
 	"plugins": {
 		"SplashScreen": {
 			"launchShowDuration": 0
 		},
 		"StatusBar": {
-			"overlaysWebView": false,
-			"backgroundColor": "#1F1F1F"
+			"overlaysWebView": false
 		}
 	},
 	"webDir": "out"
