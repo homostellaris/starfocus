@@ -16,7 +16,7 @@ export default function Page() {
 					Self-defined productivity
 				</h2>
 			</header>
-			<main className="p-4 space-y-12 font-mono font-bold text-center text-white">
+			<main className="p-4 space-y-8 font-mono font-bold text-center text-white">
 				<ol className="flex flex-wrap justify-center gap-4 max-w-[900px] mx-auto">
 					<li className="p-4 text-4xl bg-blue-600/15 grow text-white border-2 border-blue-500 text-left rounded shadow-lg font-display [font-palette:--blue]">
 						Define
@@ -42,6 +42,11 @@ export default function Page() {
 						</ul>
 					</li>
 				</ol>
+				<p className="mx-auto font-sans font-medium max-w-prose">
+					Starfocus is not a todo list, it is a prioritisation engine which
+					ensures you are always spending your time & energy on the next most
+					important thing.
+				</p>
 				<div className="space-y-4">
 					<a
 						className="inline-block px-4 py-2 text-3xl text-white uppercase border-2 rounded shadow-lg border-violet-500 shadow-violet-500/50 font-display [font-palette:--redshift] bg-violet-600/15 hover:bg-violet-700/20 active:bg-violet-800/30 transition-all duration-200 ease-in-out transform hover:scale-105"
@@ -51,6 +56,12 @@ export default function Page() {
 					</a>
 					<p className="font-light">Free, private, no signup</p>
 				</div>
+				<p className="mx-auto font-sans font-medium max-w-prose">
+					The aim of Starfocus is to earn as many star points as possible. You
+					set the objectives and the number of star points awarded for
+					completing them because this is your life and your journey - no-one
+					else can chart the course except you.
+				</p>
 				{/* <iframe
 					className="hidden mx-auto bottom-4 left-4 lg:block lg:absolute"
 					style={{ borderRadius: '12px' }}
