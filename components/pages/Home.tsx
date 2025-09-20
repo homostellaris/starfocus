@@ -311,7 +311,7 @@ export const TodoLists = ({}: {}) => {
 	)
 
 	const [logGroups, todayGroup] = useCompletedTodoGroups(
-		data?.log,
+		data?.log.slice(-logLimit),
 		data?.visits,
 	)
 
