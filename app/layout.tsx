@@ -35,6 +35,7 @@ import '../styles/theme.css'
 export const metadata: Metadata = {
 	title: 'Starfocus',
 	description: 'Self-defined productivity',
+	keywords: ['productivity', 'self-improvement', 'space'],
 }
 
 export const viewport: Viewport = {
