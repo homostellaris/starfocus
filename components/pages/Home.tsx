@@ -157,6 +157,7 @@ export const TodoLists = ({}: {}) => {
 
 	// Query stuff
 	const [logLimit, setLogLimit] = useState(7)
+	console.debug({ logLimit })
 	const [iceboxLimit, setIceboxLimit] = useState(30)
 
 	// Creating todo stuff
