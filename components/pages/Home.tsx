@@ -311,8 +311,9 @@ export const TodoLists = ({}: {}) => {
 	)
 
 	const [logGroups, todayGroup] = useCompletedTodoGroups(
-		data?.log.slice(-logLimit),
-		data?.visits,
+		data?.log || [],
+		data?.visits || [],
+		logLimit,
 	)
 
 	const starRoles = useLiveQuery(() => db.starRoles.toArray())
@@ -1177,16 +1178,17 @@ function useGlobalKeyboardShortcuts() {
  * Today group needs to be separated out as unlile the others, its rendered amongst uncompleted todos as well
  */
 function useCompletedTodoGroups(
-	completedTodos?: LogTodoListItem[],
-	visits?: LogTodoListItem[],
+	completedTodos: LogTodoListItem[],
+	visits: LogTodoListItem[],
+	limit: number,
 ): [TodoGroup[], TodoGroup] {
 	return useMemo(() => {
-		const pastTodos = [...(completedTodos || []), ...(visits || [])]
+		const pastTodos = [...completedTodos, ...visits].slice(-limit)
 		const groups = groupByCompletedAt(pastTodos)
 		const todayGroup = groups[groups.length - 1]
 		const logGroups = groups.slice(0, -1)
 		return [logGroups, todayGroup]
-	}, [completedTodos, visits])
+	}, [completedTodos, limit, visits])
 }
 
 type TodoGroup = {
