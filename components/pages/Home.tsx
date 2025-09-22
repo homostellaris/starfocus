@@ -156,7 +156,7 @@ export const TodoLists = ({}: {}) => {
 	const contentRef = useRef<HTMLIonContentElement>(null)
 
 	// Query stuff
-	const [logLimit, setLogLimit] = useState(7)
+	const [logLimit, setLogLimit] = useState(3)
 	console.debug({ logLimit })
 	const [iceboxLimit, setIceboxLimit] = useState(30)
 
