@@ -36,6 +36,7 @@ import {
 	filterSharp,
 	rocketSharp,
 	settingsSharp,
+	snowSharp,
 } from 'ionicons/icons'
 import _ from 'lodash'
 import {
@@ -359,6 +360,11 @@ export const TodoLists = ({}: {}) => {
 				event.preventDefault()
 				const y = nextTodoPosition ? nextTodoPosition.top + 32 : 0
 				contentRef.current?.scrollToPoint(undefined, y, 500)
+			} else if (event.key === 'i') {
+				event.preventDefault()
+				document.getElementById('icebox')?.scrollIntoView({
+					behavior: 'smooth',
+				})
 			}
 		}
 		document.addEventListener('keydown', handleKeyDown)
@@ -393,7 +399,7 @@ export const TodoLists = ({}: {}) => {
 							</IonFabButton>
 						</IonFab>
 						<IonButton
-							className="fixed left-[calc(23px-10px)] lg:left-[calc(100vw/12*3-40px-6px)] bottom-[calc(64px+52px)] z-10"
+							className="fixed left-[calc(23px-10px)] lg:left-[calc(100vw/12*3-40px-6px)] bottom-[calc(64px+52px+34px)] z-10"
 							onClick={() => {
 								const y = nextTodoPosition ? nextTodoPosition.top + 32 : 0
 								contentRef.current?.scrollToPoint(undefined, y, 500)
@@ -404,6 +410,22 @@ export const TodoLists = ({}: {}) => {
 							<IonIcon
 								slot="icon-only"
 								icon={rocketSharp}
+							></IonIcon>
+						</IonButton>
+						<IonButton
+							className="fixed left-[calc(23px-10px)] lg:left-[calc(100vw/12*3-40px-6px)] bottom-[calc(64px+52px)] z-10"
+							onClick={() => {
+								document.getElementById('icebox')?.scrollIntoView({
+									behavior: 'smooth',
+								})
+							}}
+							shape="round"
+							size="small"
+							color="secondary"
+						>
+							<IonIcon
+								slot="icon-only"
+								icon={snowSharp}
 							></IonIcon>
 						</IonButton>
 						<Journey commonAncestor={contentRef} />
