@@ -31,12 +31,15 @@ import {
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
 	add,
+	arrowUpSharp,
+	checkmarkSharp,
 	chevronDownOutline,
 	chevronUpOutline,
 	filterSharp,
 	rocketSharp,
 	settingsSharp,
 	snowSharp,
+	timeSharp,
 } from 'ionicons/icons'
 import _ from 'lodash'
 import {
@@ -740,6 +743,7 @@ export const TodoLists = ({}: {}) => {
 																presentTodoActionSheet(todo, {
 																	buttons: [
 																		{
+																			icon: arrowUpSharp,
 																			text: 'Move to top',
 																			data: {
 																				action: 'top',
@@ -763,6 +767,7 @@ export const TodoLists = ({}: {}) => {
 																			},
 																		},
 																		{
+																			icon: snowSharp,
 																			text: 'Move to icebox',
 																			data: {
 																				action: 'icebox',
@@ -780,6 +785,7 @@ export const TodoLists = ({}: {}) => {
 																			},
 																		},
 																		{
+																			icon: timeSharp,
 																			text: 'Snooze',
 																			data: {
 																				action: 'snooze',
@@ -1072,6 +1078,7 @@ export const Icebox = ({ todos }: { todos: Todo[] }) => {
 			present(todo as Todo, {
 				buttons: [
 					{
+						icon: rocketSharp,
 						text: 'Move to wayfinder',
 						data: {
 							action: 'wayfinder',
@@ -1090,6 +1097,7 @@ export const Icebox = ({ todos }: { todos: Todo[] }) => {
 						},
 					},
 					{
+						icon: checkmarkSharp,
 						text: 'Complete',
 						data: {
 							action: 'complete',

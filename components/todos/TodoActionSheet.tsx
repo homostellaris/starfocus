@@ -2,6 +2,7 @@ import { ActionSheetOptions, useIonActionSheet } from '@ionic/react'
 import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
 import { Todo, db } from '../db'
 import { useEditTodoModal } from './edit/useEditTodoModal'
+import { createSharp, openSharp, trashSharp } from 'ionicons/icons'
 
 // TODO: Make this so that todo is never null, action sheet doesn't make sense to be open if its null
 export function useTodoActionSheet() {
@@ -17,6 +18,7 @@ export function useTodoActionSheet() {
 					...(todo.note?.uri
 						? [
 								{
+									icon: openSharp,
 									text: 'Open note',
 									data: {
 										action: 'open-note',
@@ -28,6 +30,7 @@ export function useTodoActionSheet() {
 							]
 						: []),
 					{
+						icon: createSharp,
 						text: 'Edit',
 						data: {
 							action: 'edit',
@@ -37,6 +40,7 @@ export function useTodoActionSheet() {
 						},
 					},
 					{
+						icon: trashSharp,
 						text: 'Delete',
 						role: 'destructive',
 						data: {
