@@ -740,6 +740,29 @@ export const TodoLists = ({}: {}) => {
 																presentTodoActionSheet(todo, {
 																	buttons: [
 																		{
+																			text: 'Move to top',
+																			data: {
+																				action: 'top',
+																			},
+																			handler: async () => {
+																				const wayfinderTodos =
+																					await db.wayfinderOrder
+																						.orderBy('order')
+																						.toArray()
+																				const newOrder = order(
+																					undefined,
+																					wayfinderTodos[0]?.order,
+																				)
+
+																				await db.wayfinderOrder.update(
+																					todo.id,
+																					{
+																						order: newOrder,
+																					},
+																				)
+																			},
+																		},
+																		{
 																			text: 'Move to icebox',
 																			data: {
 																				action: 'icebox',
