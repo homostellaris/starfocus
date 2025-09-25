@@ -2,6 +2,7 @@ import { ActionSheetOptions, useIonActionSheet } from '@ionic/react'
 import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
 import { StarRoleGroup, db } from '../db'
 import { useEditStarRoleGroupModal } from './edit/useEditStarRoleGroupModal'
+import { createSharp, trashSharp } from 'ionicons/icons'
 
 // TODO: Make this so that todo is never null, action sheet doesn't make sense to be open if its null
 export function useStarRoleGroupActionSheet() {
@@ -19,6 +20,7 @@ export function useStarRoleGroupActionSheet() {
 				buttons: [
 					...(options?.buttons || []),
 					{
+						icon: createSharp,
 						text: 'Edit',
 						data: {
 							action: 'edit',
@@ -28,6 +30,7 @@ export function useStarRoleGroupActionSheet() {
 						},
 					},
 					{
+						icon: trashSharp,
 						text: 'Delete',
 						role: 'destructive',
 						data: {
