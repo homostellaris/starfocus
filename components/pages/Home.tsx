@@ -78,6 +78,7 @@ import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
 import { useTodoPopover } from '../todos/useTodoPopover'
 import Placeholder from '../common/Placeholder'
 import { cn } from '../common/cn'
+import dayjs from 'dayjs'
 
 const Home = () => {
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
@@ -1205,7 +1206,13 @@ function useCompletedTodoGroups(
 	limit: number,
 ): [TodoGroup[], TodoGroup] {
 	return useMemo(() => {
-		const pastTodos = [...completedTodos, ...visits].slice(-limit)
+		// Shame we can't rely on the database query order but this is necessary due to mixing in visits.
+		const pastTodos = [...completedTodos, ...visits]
+			.sort(
+				(a, b) =>
+					dayjs(a.completedAt).valueOf() - dayjs(b.completedAt).valueOf(),
+			)
+			.slice(-limit)
 		const groups = groupByCompletedAt(pastTodos)
 		const todayGroup = groups[groups.length - 1]
 		const logGroups = groups.slice(0, -1)
