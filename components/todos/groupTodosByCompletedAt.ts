@@ -22,11 +22,6 @@ dayjs.updateLocale('en', {
  * @param completedTodos assumed to be in chronological order
  */
 export function groupByCompletedAt(completedTodos: LogTodoListItem[]) {
-	// Shame we can't rely on the database query order but this is necessary due to mixing in visits.
-	completedTodos.sort(
-		(a, b) => dayjs(a.completedAt).valueOf() - dayjs(b.completedAt).valueOf(),
-	)
-
 	const today = dayjs()
 	const yesterday = today.subtract(1, 'day')
 	const lastMonday = today.startOf('week')
