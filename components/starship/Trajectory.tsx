@@ -18,8 +18,8 @@ export default function Tracjectory({
 			)}
 			// Make the mask solid behind the rocket for a 'completed' effect
 			style={{
-				maskSize: `auto, ${currentPosition + 20}px`,
-				animation: '3s ease-in 1s 2 reverse both paused slide-in',
+				// maskSize: `auto, 100px`,
+				animation: '4s linear 0s infinite alternate sun-rise',
 			}}
 		></div>
 	)
