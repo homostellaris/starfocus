@@ -23,6 +23,7 @@ export default function Tracjectory({
 					'bg-[linear-gradient(theme(colors.rose.400),theme(colors.pink.400),theme(colors.fuchsia.400),theme(colors.violet.400),theme(colors.indigo.400),theme(colors.blue.400))]',
 					orientation === 'vertical' ? 'h-full w-[2px]' : 'w-full h-[2px]',
 					'transition-transform duration-500 ease-in-out',
+					'shadow-[0_10px_10px] shadow-cyan-500/80',
 					className,
 				)}
 				style={{
