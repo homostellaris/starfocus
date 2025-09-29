@@ -69,29 +69,29 @@ export const Header = ({ title }: { title: string }) => {
 									trigger="sync-status"
 									triggerAction="click"
 								>
-									<IonContent className="text-xs">
-										<IonHeader>
-											<IonToolbar>
-												<IonLabel
-													className="text-xl font-bold capitalize"
-													slot="start"
+									<IonHeader>
+										<IonToolbar>
+											<IonTitle
+												className="text-xl font-bold capitalize"
+												slot="start"
+											>
+												{syncState?.status}
+											</IonTitle>
+											<IonButtons slot="end">
+												<IonButton
+													color="danger"
+													fill="solid"
+													onClick={() => {
+														db.cloud.logout()
+													}}
+													size="small"
 												>
-													{syncState?.status}
-												</IonLabel>
-												<IonButtons slot="end">
-													<IonButton
-														color="danger"
-														fill="solid"
-														onClick={() => {
-															db.cloud.logout()
-														}}
-														size="small"
-													>
-														Unsync
-													</IonButton>
-												</IonButtons>
-											</IonToolbar>
-										</IonHeader>
+													Unsync
+												</IonButton>
+											</IonButtons>
+										</IonToolbar>
+									</IonHeader>
+									<IonContent className="text-xs">
 										{syncState?.error ? (
 											<p>Sync error: ${syncState.error.message}</p>
 										) : (
