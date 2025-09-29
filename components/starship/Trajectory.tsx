@@ -2,21 +2,24 @@ import { cn } from '../common/cn'
 
 export default function Tracjectory({
 	className,
+	currentPosition = 0,
 	orientation = 'vertical',
 }: {
+	currentPosition: number
 	orientation?: 'vertical' | 'horizontal'
 } & JSX.IntrinsicElements['div']) {
 	return (
 		<div
 			className={cn(
-				'trajectory bg-supernova',
+				'bg-[linear-gradient(theme(colors.rose.400),theme(colors.pink.400),theme(colors.fuchsia.400),theme(colors.violet.400),theme(colors.indigo.400),theme(colors.blue.400))]',
+				"[mask-image:repeating-linear-gradient(180deg,black,transparent_10px),url('/black-rectangle-svgrepo-com.svg')] [mask-repeat:no-repeat] [mask-position:left_top,left_top]",
 				orientation === 'vertical' ? 'h-full w-[2px]' : 'w-full h-[2px]',
 				className,
 			)}
 			// Make the mask solid behind the rocket for a 'completed' effect
 			style={{
-				maskImage: `repeating-linear-gradient(${orientation === 'vertical' ? '180' : '90'}deg, black, transparent 10px)`,
-				// maskSize: '10px 100%',
+				maskSize: `auto, ${currentPosition + 20}px`,
+				animation: '3s ease-in 1s 2 reverse both paused slide-in',
 			}}
 		></div>
 	)

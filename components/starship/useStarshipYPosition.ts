@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { useWindowSize } from '../common/useWindowResize'
 import { TodoPosition } from '../todos/TodoContext'
 
@@ -6,7 +6,7 @@ export function useStarshipYPosition(
 	starship: HTMLElement | null,
 	nextTodoPosition: TodoPosition,
 	commonAncestor: HTMLElement | null,
-) {
+): [number, Dispatch<SetStateAction<number>>] {
 	console.debug('Starship position render')
 	const size = useWindowSize()
 	const [starshipY, setStarshipY] = useState<number>(0)
