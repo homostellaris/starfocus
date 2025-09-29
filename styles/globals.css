@@ -158,12 +158,3 @@ body::-webkit-scrollbar {
 	backface-visibility: hidden;
 	-webkit-backface-visibility: hidden;
 }
-
-@keyframes sun-rise {
-	from {
-		mask-size: auto, 100px;
-	}
-	to {
-		mask-size: auto, 1000px;
-	}
-}
