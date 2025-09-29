@@ -1056,7 +1056,10 @@ export const Journey = ({
 
 	return (
 		<div className="min-w-[56px]">
-			<Tracjectory className="absolute right-[27px]" />
+			<Tracjectory
+				className="absolute right-[27px]"
+				currentPosition={starshipY}
+			/>
 			<div
 				id="starship"
 				className="absolute right-0 transition-transform duration-500 ease-in-out w-[56px] h-[56px]"

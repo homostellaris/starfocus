@@ -97,14 +97,6 @@ body::-webkit-scrollbar {
 	transform: scale(2);
 }
 
-.trajectory {
-	mask-image: repeating-linear-gradient(
-		to bottom,
-		transparent 0 4px,
-		#fff 4px 8px
-	);
-}
-
 /* section {
 	background: radial-gradient(circle, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
 } */
