@@ -494,7 +494,7 @@ export const TodoLists = ({}: {}) => {
 																	? `${todo.id}-${todo.completedAt}`
 																	: todo.id
 															}
-															onSelect={_event => {
+															onClick={_event => {
 																presentTodoActionSheet(todo)
 															}}
 															onCompletionChange={event => {
@@ -569,7 +569,7 @@ export const TodoLists = ({}: {}) => {
 															? `${todo.id}-${todo.completedAt}`
 															: todo.id
 													}
-													onSelect={() => {
+													onClick={() => {
 														presentTodoActionSheet(todo)
 													}}
 													onCompletionChange={event => {
@@ -735,11 +735,7 @@ export const TodoLists = ({}: {}) => {
 																	},
 																)
 															}}
-															onSelect={event => {
-																// Prevent the action sheet from opening when reordering
-																if (event.target['localName'] === 'ion-item')
-																	return
-
+															onClick={event => {
 																presentTodoActionSheet(todo, {
 																	buttons: [
 																		{
