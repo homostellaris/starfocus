@@ -464,7 +464,7 @@ export const TodoLists = ({}: {}) => {
 								>
 									{data.log.length === 0 ? (
 										<Placeholder heading="Log">
-											This is a chronological list of your completed todos. It
+											A chronological list of your completed objectives. It
 											represents your journey up until today and makes it is
 											easy to remind yourself what you did in the past.
 										</Placeholder>
@@ -663,9 +663,9 @@ export const TodoLists = ({}: {}) => {
 											>
 												{data.wayfinder.length === 0 ? (
 													<Placeholder heading="Wayfinder">
-														This is where your next most important todos live.
-														Order them manually or use <em>star sort</em> to
-														order them for you ✨
+														Mission-critical objectives. You should aim to do
+														these next. Order them manually or use{' '}
+														<em>star sort</em> to order them for you ✨
 													</Placeholder>
 												) : (
 													data.wayfinder.map((todo, index) => (
@@ -815,11 +815,9 @@ export const TodoLists = ({}: {}) => {
 								{data.icebox.length === 0 ? (
 									<div className="bg-[--ion-item-background]">
 										<Placeholder heading="Database">
-											This is a database of todos that you might want to work on
-											in future but you don&apos;t think are a priority right
-											now. Brain dump as much as you want here, we&apos;ll hide
-											most of it and just show the most recent additions. If you
-											want to see more scroll down or search.
+											A searchable database of future possible objectives, as
+											infinite as the cosmos itself. You&apos;ll never complete
+											them all.
 										</Placeholder>
 									</div>
 								) : (
@@ -1165,6 +1163,7 @@ export const Searchbar = forwardRef<HTMLIonSearchbarElement>(
 					if (target?.value) query = target.value.toLowerCase()
 					setQuery(query)
 				}}
+				// placeholder="command + k to focus, / to search, is:snoozed"
 			></IonSearchbar>
 		)
 	},
