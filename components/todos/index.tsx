@@ -30,7 +30,7 @@ export const TodoListItem = forwardRef<
 			starRole?: StarRole
 			todo: TodoType & { order?: string; snoozedUntil?: Date }
 			onCompletionChange: ComponentProps<typeof IonCheckbox>['onIonChange']
-			onSelect: MouseEventHandler<HTMLIonItemElement>
+			onClick: MouseEventHandler<HTMLIonItemElement>
 		} & JSX.IntrinsicElements['div']
 	>
 >(function TodoListItem(
@@ -39,7 +39,7 @@ export const TodoListItem = forwardRef<
 		starRole,
 		todo: { starPoints = 0, ...todo },
 		onCompletionChange,
-		onSelect,
+		onClick,
 		...props
 	},
 	ref,
@@ -57,7 +57,6 @@ export const TodoListItem = forwardRef<
 				className="[--inner-padding-top:0.5rem] [--inner-padding-bottom:0.5rem]"
 				detail={false}
 				data-class="todo"
-				onClick={onSelect}
 			>
 				<IonCheckbox
 					aria-label="Complete todo"
@@ -78,7 +77,10 @@ export const TodoListItem = forwardRef<
 				>
 					{starPoints || 0}
 				</span>
-				<div>
+				<div
+					className="grow"
+					onClick={onClick}
+				>
 					<IonLabel data-class="title">{todo?.title}</IonLabel>
 					{debug && (
 						<span className="space-x-2">
