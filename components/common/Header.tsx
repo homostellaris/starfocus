@@ -172,6 +172,7 @@ export const Header = ({ title }: { title: string }) => {
 									</IonPopover>
 								</IonButton>
 								<IonButton
+									color="primary"
 									fill="solid"
 									onClick={() => {
 										db.cloud.login()

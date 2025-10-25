@@ -4,9 +4,12 @@ import {
 	IonContent,
 	IonFooter,
 	IonHeader,
+	IonIcon,
 	IonInput,
+	IonInputOtp,
 	IonLabel,
 	IonModal,
+	IonText,
 	IonTitle,
 	IonToolbar,
 } from '@ionic/react'
@@ -15,7 +18,12 @@ import {
 	DXCUserInteraction,
 	resolveText,
 } from 'dexie-cloud-addon'
-import { useState } from 'react'
+import {
+	alertCircleSharp,
+	cloudDoneSharp,
+	cloudOfflineSharp,
+} from 'ionicons/icons'
+import { useRef, useState } from 'react'
 
 /**
  * This component showcases how to provide a custom login GUI for login dialog.
@@ -38,18 +46,32 @@ import { useState } from 'react'
  */
 export function LoginModal({ ui }: { ui?: DXCUserInteraction }) {
 	const [params, setParams] = useState<{ [param: string]: string }>({})
+	const textInput = useRef<HTMLIonInputElement>(null)
+	const otpInput = useRef<HTMLIonInputOtpElement>(null)
 
 	return (
-		<IonModal isOpen={!!ui}>
+		<IonModal
+			isOpen={!!ui}
+			onDidPresent={_event => {
+				textInput.current?.setFocus()
+				otpInput.current?.setFocus()
+			}}
+			onWillDismiss={event => {
+				console.log({ event })
+				if (event.detail.role !== 'confirm') {
+					ui?.onCancel()
+				}
+			}}
+		>
 			<IonHeader>
 				<IonToolbar>
 					<IonTitle>Sync</IonTitle>
 				</IonToolbar>
 			</IonHeader>
-			<IonContent>
-				{ui ? (
-					<>
-						<IonLabel>{ui.title}</IonLabel>
+			{ui ? (
+				<>
+					<IonContent className="space-y-4 ion-padding">
+						{/* <IonLabel>{ui.title}</IonLabel> */}
 						{ui.alerts?.map((alert, i) => (
 							<p
 								key={i}
@@ -58,61 +80,112 @@ export function LoginModal({ ui }: { ui?: DXCUserInteraction }) {
 								{resolveText(alert)}
 							</p>
 						))}
-						<form
-							onSubmit={ev => {
-								ev.preventDefault()
-								ui.onSubmit(params)
-							}}
-						>
-							{(Object.entries(ui.fields) as [string, DXCInputField][]).map(
-								([fieldName, { type, label, placeholder }], idx) => (
-									<IonInput
+						{(Object.entries(ui.fields) as [string, DXCInputField][]).map(
+							([fieldName, { type, label, placeholder }], idx) =>
+								type === 'otp' ? (
+									<IonInputOtp
 										autoFocus
-										label={label}
-										type="text"
 										key={idx}
-										name={fieldName}
-										placeholder={placeholder}
-										value={params[fieldName] || ''}
-										onChange={event => {
-											const value = event.detail.value
+										length={8}
+										onIonChange={event => {
+											const value = event.target.value
 											let updatedParams = {
 												...params,
-												[fieldName]: value,
+												[fieldName]: value as string,
 											}
 											setParams(updatedParams)
 										}}
+										ref={otpInput}
+										type="text"
+									></IonInputOtp>
+								) : (
+									<div
+										className="space-y-4"
+										key={idx}
 									>
-										<input />
-									</IonInput>
+										<IonInput
+											autoFocus
+											fill="outline"
+											label={type === 'email' ? 'Email' : 'Unknown'}
+											labelPlacement="floating"
+											placeholder={placeholder}
+											type={type}
+											onIonChange={event => {
+												const value = event.target.value
+												let updatedParams = {
+													...params,
+													[fieldName]: value as string,
+												}
+												setParams(updatedParams)
+											}}
+											ref={textInput}
+											name={fieldName}
+										/>
+										<ul className="space-y-2 text-gray-700">
+											<li className="flex items-start gap-4">
+												<IonIcon
+													className="shrink-0 pt-[0.2lh] h-5 w-5"
+													icon={cloudOfflineSharp}
+												/>
+												<IonText color="medium">
+													At the moment your data is stored on this device only.
+												</IonText>
+											</li>
+											<li className="flex items-start gap-4">
+												<IonIcon
+													className="shrink-0 pt-[0.2lh] h-5 w-5"
+													color="success"
+													icon={cloudDoneSharp}
+												/>
+												<IonText color="medium">
+													Syncing makes it available on all devices you log in
+													to with your email address.
+												</IonText>
+											</li>
+											<li className="flex items-start gap-4">
+												<IonIcon
+													className="shrink-0 pt-[0.2lh] h-5 w-5"
+													color="warning"
+													icon={alertCircleSharp}
+												/>
+												<IonText color="medium">
+													After syncing, the current data becomes associated
+													with your email address. Unsyncing will clear all data
+													on this device until you log in again.
+												</IonText>
+											</li>
+										</ul>
+									</div>
 								),
-							)}
-						</form>
-						<IonFooter>
-							<IonToolbar>
-								<IonButtons slot="secondary">
-									<IonButton
-										role="cancel"
-										onClick={ui.onCancel}
-									>
-										{ui.cancelLabel}
-									</IonButton>
-								</IonButtons>
-								<IonButtons slot="primary">
-									<IonButton
-										onClick={() => ui.onSubmit(params)}
-										strong={true}
-									>
-										{ui.submitLabel}
-									</IonButton>
-								</IonButtons>
-							</IonToolbar>
-						</IonFooter>
-					</>
-				) : (
-					<p>Something went wrong</p>
-				)}
-			</IonContent>
+						)}
+					</IonContent>
+					<IonFooter>
+						<IonToolbar>
+							<IonButtons slot="secondary">
+								<IonButton
+									role="cancel"
+									onClick={ui.onCancel}
+								>
+									{ui.cancelLabel}
+								</IonButton>
+							</IonButtons>
+							<IonButtons slot="primary">
+								<IonButton
+									onClick={() => {
+										console.log
+										ui.onSubmit(params)
+									}}
+									strong={true}
+								>
+									{ui.submitLabel}
+								</IonButton>
+							</IonButtons>
+						</IonToolbar>
+					</IonFooter>
+				</>
+			) : (
+				<p>Something went wrong</p>
+			)}
 		</IonModal>
 	)
 }
