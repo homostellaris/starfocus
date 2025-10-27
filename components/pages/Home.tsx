@@ -82,6 +82,7 @@ import { useTodoPopover } from '../todos/useTodoPopover'
 import Placeholder from '../common/Placeholder'
 import { cn } from '../common/cn'
 import dayjs from 'dayjs'
+import { matchesQuery } from '../search/matchesQuery'
 
 const Home = () => {
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
@@ -1191,19 +1192,6 @@ function TimeInfo({
 			<time dateTime={datetime}>{children}</time>
 		</IonLabel>
 	)
-}
-
-function matchesQuery(query: string, todo: Todo & { snoozedUntil?: Date }) {
-	if (!query && todo.snoozedUntil && todo.snoozedUntil > new Date()) {
-		return false
-	}
-	if (!query) {
-		return true
-	}
-	if (todo.snoozedUntil && query === 'is:snoozed') {
-		return true
-	}
-	return todo?.title.toLowerCase().includes(query)
 }
 
 function useGlobalKeyboardShortcuts() {
