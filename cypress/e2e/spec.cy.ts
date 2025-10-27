@@ -75,7 +75,7 @@ it('works', () => {
 	cy.visit('/home')
 
 	cy.get('ion-fab>ion-fab-button').click()
-	cy.get('ion-modal').within(() => {
+	cy.get('#create-todo-modal').within(() => {
 		cy.contains('label', 'Title')
 			.find('input')
 			.wait(2000)
@@ -92,7 +92,7 @@ it('works', () => {
 
 	cy.get('ion-fab>ion-fab-button').click()
 	cy.get('#create-star-role').click()
-	cy.get('ion-modal').within(() => {
+	cy.get('#create-star-role-modal').within(() => {
 		cy.contains('label', 'Title').find('input').wait(2000).type('Father')
 		cy.get('#icons ion-icon').first().click()
 		cy.get('#selected-icon').should('have.attr', 'icon')
@@ -102,7 +102,7 @@ it('works', () => {
 
 	cy.get('ion-fab>ion-fab-button').click()
 	cy.get('#create-star-role').click()
-	cy.get('ion-modal').within(() => {
+	cy.get('#create-star-role-modal').within(() => {
 		cy.contains('label', 'Title').find('input').wait(2000).type('Partner')
 		cy.get('#icons ion-icon').eq(1).click()
 		cy.get('#selected-icon').should('have.attr', 'icon')
@@ -113,7 +113,7 @@ it('works', () => {
 	cy.visit('/home')
 
 	cy.get('ion-fab>ion-fab-button').click()
-	cy.get('ion-modal').within(() => {
+	cy.get('#create-todo-modal').within(() => {
 		cy.contains('label', 'Title')
 			.find('input')
 			.wait(3000)
@@ -124,10 +124,10 @@ it('works', () => {
 		cy.contains('Father').click()
 		cy.contains('OK').click()
 	})
-	cy.get('ion-modal').contains('Confirm').click()
+	cy.get('#create-todo-modal').contains('Confirm').click()
 
 	cy.get('ion-fab>ion-fab-button').click()
-	cy.get('ion-modal').within(() => {
+	cy.get('#create-todo-modal').within(() => {
 		cy.contains('label', 'Title')
 			.find('input')
 			.wait(2000)
@@ -138,7 +138,7 @@ it('works', () => {
 		cy.contains('Partner').click()
 		cy.contains('OK').click()
 	})
-	cy.get('ion-modal').contains('Confirm').click()
+	cy.get('#create-todo-modal').contains('Confirm').click()
 
 	assertLists(
 		['plan birthday day out', 'be silly together', 'take the bins out'],

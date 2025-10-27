@@ -13,6 +13,7 @@ export function CreateTodoModal({
 
 	return (
 		<TodoModal
+			id="create-todo-modal"
 			dismiss={(data?: any, role?: string) => {
 				dismiss(
 					{
