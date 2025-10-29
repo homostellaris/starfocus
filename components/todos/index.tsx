@@ -1,4 +1,4 @@
-import { isPlatform } from '@ionic/react'
+import { IonText, isPlatform } from '@ionic/react'
 import {
 	IonCard,
 	IonCardHeader,
@@ -45,6 +45,7 @@ export const TodoListItem = forwardRef<
 	ref,
 ) {
 	const [debug] = useDebug()
+	console.log({ todo })
 
 	return (
 		<div
@@ -68,15 +69,25 @@ export const TodoListItem = forwardRef<
 					}}
 					onIonChange={onCompletionChange}
 				/>
-				<span
-					className={cn(
-						'!font-mono grow-0 min-w-[2ch] text-base',
-						starScale[starPoints].textColor,
-					)}
-					slot="start"
-				>
-					{starPoints || 0}
-				</span>
+				{starPoints ? (
+					<span
+						className={cn(
+							'!font-mono grow-0 min-w-[2ch] text-base',
+							starScale[starPoints].textColor,
+						)}
+						slot="start"
+					>
+						{starPoints}
+					</span>
+				) : (
+					<IonText
+						className={cn('!font-mono grow-0 min-w-[2ch] text-base')}
+						color="light"
+						slot="start"
+					>
+						0
+					</IonText>
+				)}
 				<div
 					className="grow"
 					onClick={onClick}

@@ -15,6 +15,10 @@ export type TodoInput = Pick<Todo, 'title' | 'starRole' | 'starPoints'> & {
 	noteInitialContent?: string
 }
 
+export type AsteroidFieldOrder = {
+	todoId: string
+} & WayfinderMeta
+
 export type WayfinderOrder = {
 	todoId: string
 } & WayfinderMeta
@@ -32,6 +36,8 @@ export type TodoListItemBase = Todo & {
 }
 
 export type LogTodoListItem = TodoListItemBase
+
+export type AsteroidFieldTodoListItem = TodoListItemBase & WayfinderMeta
 
 export type WayfinderTodoListItem = TodoListItemBase & WayfinderMeta
 
@@ -62,6 +68,7 @@ export interface List {
 }
 
 export enum ListType {
+	asteroidField,
 	wayfinder,
 	icebox,
 }
@@ -78,6 +85,7 @@ export interface Visit {
 
 export class DexieStarfocus extends Dexie {
 	visits: DexieCloudTable<Visit, 'todoId'>
+	asteroidFieldOrder: DexieCloudTable<AsteroidFieldOrder, 'todoId'>
 	wayfinderOrder!: DexieCloudTable<WayfinderOrder, 'todoId'>
 	lists!: Table<List>
 	settings!: DexieCloudTable<Setting, 'key'>
@@ -154,6 +162,17 @@ export class DexieStarfocus extends Dexie {
 		})
 		this.version(9).stores({
 			checkins: null,
+			lists: 'type',
+			wayfinderOrder: '&todoId, order, snoozedUntil',
+			settings: '&key',
+			starRoles: '@id, starRoleGroupId, title',
+			starRoleGroups: '@id, title',
+			starRolesOrder: '&starRoleId, order',
+			todos: '@id, createdAt, completedAt, starRole, title',
+			visits: '@id, todoId, date',
+		})
+		this.version(10).stores({
+			asteroidFieldOrder: '&todoId, order, snoozedUntil',
 			lists: 'type',
 			wayfinderOrder: '&todoId, order, snoozedUntil',
 			settings: '&key',

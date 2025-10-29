@@ -1,6 +1,6 @@
 import { useIonModal } from '@ionic/react'
 import { useCallback, useRef } from 'react'
-import { Todo, TodoInput, db } from '../../db'
+import { Todo, db } from '../../db'
 import useNoteProvider from '../../notes/useNoteProvider'
 import useTodoContext from '../TodoContext'
 import { EditTodoModal } from './modal'
