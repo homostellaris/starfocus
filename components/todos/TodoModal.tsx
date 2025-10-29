@@ -21,6 +21,7 @@ import {
 	ReactNode,
 	useCallback,
 	useRef,
+	useState,
 } from 'react'
 import { db, Todo } from '../db'
 import useNoteProvider from '../notes/useNoteProvider'
@@ -37,11 +38,16 @@ export default function TodoModal({
 	title: string
 	titleInput: MutableRefObject<HTMLIonInputElement | null>
 	todo?: Partial<Todo>
-	toolbarSlot?: ReactNode
+	toolbarSlot?: ({
+		starRole,
+		starPoints,
+	}: {
+		starRole?: string
+		starPoints?: number
+	}) => ReactNode
 } & ComponentProps<typeof IonPage>) {
+	const [todoDraft, setTodoDraft] = useState<Partial<Todo>>({ ...todo })
 	const noteInput = useRef<HTMLIonTextareaElement>(null)
-	const starPointsInput = useRef<HTMLIonSelectElement>(null)
-	const starRoleInput = useRef<HTMLIonSelectElement>(null)
 
 	const starRoles = useLiveQuery(() => db.starRoles.toArray(), [], [])
 
@@ -49,15 +55,12 @@ export default function TodoModal({
 	const emitTodo = useCallback(() => {
 		dismiss(
 			{
-				...todo,
+				...todoDraft,
 				noteInitialContent: noteInput.current?.value,
-				starPoints: starPointsInput.current?.value,
-				starRole: starRoleInput.current?.value ?? undefined,
-				title: titleInput.current?.value,
 			},
 			'confirm',
 		)
-	}, [dismiss, todo, titleInput])
+	}, [dismiss, todoDraft])
 
 	return (
 		<IonPage
@@ -79,18 +82,28 @@ export default function TodoModal({
 				<IonInput
 					autocapitalize="sentences"
 					fill="outline"
-					ref={titleInput}
 					type="text"
 					label="Title"
 					labelPlacement="floating"
-					value={todo?.title}
+					onIonChange={event => {
+						setTodoDraft(todoDraft => ({
+							...todoDraft,
+							title: event.detail.value || undefined,
+						}))
+					}}
+					value={todoDraft.title}
 				/>
 				<IonSelect
 					fill="outline"
 					label="Star role"
 					labelPlacement="floating"
-					ref={starRoleInput}
-					value={todo?.starRole}
+					onIonChange={event => {
+						setTodoDraft(todoDraft => ({
+							...todoDraft,
+							starRole: event.detail.value || undefined,
+						}))
+					}}
+					value={todoDraft.starRole}
 				>
 					<IonSelectOption value={null}>No star role</IonSelectOption>
 					{starRoles.map(starRole => (
@@ -107,10 +120,14 @@ export default function TodoModal({
 					label="Star points"
 					labelPlacement="floating"
 					interface="popover"
-					ref={starPointsInput}
-					value={todo?.starPoints}
+					onIonChange={event => {
+						setTodoDraft(todoDraft => ({
+							...todoDraft,
+							starPoints: event.detail.value || undefined,
+						}))
+					}}
+					value={todoDraft.starPoints}
 				>
-					<IonSelectOption value={0}>0</IonSelectOption>
 					<IonSelectOption value={1}>1</IonSelectOption>
 					<IonSelectOption value={2}>2</IonSelectOption>
 					<IonSelectOption value={3}>3</IonSelectOption>
@@ -118,9 +135,6 @@ export default function TodoModal({
 					<IonSelectOption value={8}>8</IonSelectOption>
 					<IonSelectOption value={13}>13</IonSelectOption>
 				</IonSelect>
-				{!noteProvider && (
-					<p>Set a note provider in settings to enable this feature.</p>
-				)}
 				{todo?.note ? (
 					<div>
 						<a
@@ -135,9 +149,12 @@ export default function TodoModal({
 					</div>
 				) : (
 					<IonTextarea
-						className="h-48"
 						disabled={!noteProvider}
-						helperText="A note with this initial content will be created with your note provider and linked to this todo."
+						helperText={
+							noteProvider
+								? 'A note with this initial content will be created with your note provider and linked to this todo'
+								: 'Set a note provider in settings to enable this feature'
+						}
 						fill="outline"
 						label="Note"
 						labelPlacement="floating"
@@ -166,7 +183,10 @@ export default function TodoModal({
 							Confirm
 						</IonButton>
 					</IonButtons>
-					{toolbarSlot}
+					{toolbarSlot?.({
+						starPoints: todoDraft.starPoints,
+						starRole: todoDraft.starRole,
+					})}
 				</IonToolbar>
 			</IonFooter>
 		</IonPage>

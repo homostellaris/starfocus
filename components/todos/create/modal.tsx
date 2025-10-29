@@ -30,23 +30,38 @@ export function CreateTodoModal({
 			}}
 			onKeyUp={event => {
 				if (!event.metaKey) {
-					locationSelect.current!.value = ListType.wayfinder
+					locationSelect.current!.value = ListType.asteroidField
 				}
 			}}
-			toolbarSlot={
-				<IonSelect
-					className="p-2"
-					fill="outline"
-					ref={locationSelect}
-					slot="end"
-					value={ListType.wayfinder}
-				>
-					<IonSelectOption value={ListType.icebox}>Icebox</IonSelectOption>
-					<IonSelectOption value={ListType.wayfinder}>
-						Wayfinder
-					</IonSelectOption>
-				</IonSelect>
-			}
+			toolbarSlot={({ starRole, starPoints }) => {
+				const eligibleForWayfinder = starRole && starPoints
+				console.log({ starRole, starPoints, eligibleForWayfinder })
+				return (
+					<IonSelect
+						className="p-2"
+						fill="outline"
+						ref={locationSelect}
+						slot="end"
+						value={
+							eligibleForWayfinder ? ListType.wayfinder : ListType.asteroidField
+						}
+					>
+						<IonSelectOption value={ListType.icebox}>Icebox</IonSelectOption>
+						<IonSelectOption
+							disabled={!!eligibleForWayfinder}
+							value={ListType.asteroidField}
+						>
+							Asteroid Field
+						</IonSelectOption>
+						<IonSelectOption
+							disabled={!eligibleForWayfinder}
+							value={ListType.wayfinder}
+						>
+							Wayfinder
+						</IonSelectOption>
+					</IonSelect>
+				)
+			}}
 			{...props}
 		/>
 	)

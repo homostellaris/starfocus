@@ -34,28 +34,45 @@ export function useCreateTodoModal(): [
 			if (!todo.title) throw new TypeError('Title is required')
 
 			let uri
-			await db.transaction('rw', db.todos, db.wayfinderOrder, async () => {
-				if (todo.noteInitialContent && noteProvider) {
-					uri = await noteProvider.create({
-						todo,
+			await db.transaction(
+				'rw',
+				db.todos,
+				db.asteroidFieldOrder,
+				db.wayfinderOrder,
+				async () => {
+					if (todo.noteInitialContent && noteProvider) {
+						uri = await noteProvider.create({
+							todo,
+						})
+					}
+					const createdTodoId = await db.todos.add({
+						createdAt: new Date(),
+						starPoints: todo.starPoints,
+						starRole: todo.starRole,
+						title: todo.title,
+						...(uri && { note: { uri } }),
 					})
-				}
-				const createdTodoId = await db.todos.add({
-					createdAt: new Date(),
-					starPoints: todo.starPoints,
-					starRole: todo.starRole,
-					title: todo.title,
-					...(uri && { note: { uri } }),
-				})
-				if (location === ListType.wayfinder) {
-					const wayfinderOrder = await db.wayfinderOrder.orderBy('order').keys()
+					if (location === ListType.asteroidField) {
+						const asteroidFieldOrder = await db.asteroidFieldOrder
+							.orderBy('order')
+							.keys()
 
-					await db.wayfinderOrder.add({
-						todoId: createdTodoId,
-						order: order(undefined, wayfinderOrder[0]?.toString()),
-					})
-				}
-			})
+						await db.asteroidFieldOrder.add({
+							todoId: createdTodoId,
+							order: order(undefined, asteroidFieldOrder[0]?.toString()),
+						})
+					} else if (location === ListType.wayfinder) {
+						const wayfinderOrder = await db.wayfinderOrder
+							.orderBy('order')
+							.keys()
+
+						await db.wayfinderOrder.add({
+							todoId: createdTodoId,
+							order: order(undefined, wayfinderOrder[0]?.toString()),
+						})
+					}
+				},
+			)
 		},
 		[noteProvider],
 	)

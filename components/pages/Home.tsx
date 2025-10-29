@@ -58,6 +58,7 @@ import Starship from '../common/Starship'
 import Title from '../common/Title'
 import order, { calculateReorderIndices, starMudder } from '../common/order'
 import {
+	AsteroidFieldTodoListItem,
 	db,
 	LogTodoListItem,
 	Todo,
@@ -187,6 +188,7 @@ export const TodoLists = ({}: {}) => {
 	const data = useLiveQuery<{
 		log: LogTodoListItem[]
 		visits: LogTodoListItem[]
+		asteroidField: AsteroidFieldTodoListItem[]
 		wayfinder: WayfinderTodoListItem[]
 		icebox: Todo[]
 	}>(async () => {
@@ -222,8 +224,22 @@ export const TodoLists = ({}: {}) => {
 				})
 			})
 
-		const todoOrderItems = await db.wayfinderOrder.orderBy('order').toArray()
-		const todoIds = todoOrderItems.map(({ todoId }) => todoId)
+		const asteroidFieldOrder = await db.asteroidFieldOrder
+			.orderBy('order')
+			.toArray()
+		const asteroidFieldTodoIds = asteroidFieldOrder.map(({ todoId }) => todoId)
+		const asteroidFieldTodosPromise = db.todos
+			.bulkGet(asteroidFieldTodoIds)
+			.then(todos =>
+				todos.map((todo, index) => ({
+					...todo!,
+					order: asteroidFieldOrder[index].order,
+					snoozedUntil: asteroidFieldOrder[index].snoozedUntil,
+				})),
+			)
+
+		const wayfinderOrder = await db.wayfinderOrder.orderBy('order').toArray()
+		const wayfinderTodoIds = wayfinderOrder.map(({ todoId }) => todoId)
 		const wayfinderTodosPromise =
 			wayfinderOrderMode === 'star'
 				? db.starRoles
@@ -252,27 +268,27 @@ export const TodoLists = ({}: {}) => {
 						.then(async starSortTodos => {
 							const visits = await db.visits
 								.where('todoId')
-								.anyOf(todoIds)
+								.anyOf(wayfinderTodoIds)
 								.toArray()
 							const visitsByTodoId = _.groupBy(visits, 'todoId')
 							return starSortTodos.map((todo, index) => ({
 								...todo!,
 								visits: visitsByTodoId[todo!.id],
 								order: index.toString(),
-								snoozedUntil: todoOrderItems[index].snoozedUntil,
+								snoozedUntil: wayfinderOrder[index].snoozedUntil,
 							}))
 						})
 				: Promise.all([
-						db.todos.bulkGet(todoIds),
-						db.visits.where('todoId').anyOf(todoIds).toArray(),
+						db.todos.bulkGet(wayfinderTodoIds),
+						db.visits.where('todoId').anyOf(wayfinderTodoIds).toArray(),
 					]).then(([wayfinderTodos, visits]) => {
 						const visitsByTodoId = _.groupBy(visits, 'todoId')
 						return wayfinderTodos
 							.map((todo, index) => ({
 								...todo!,
 								visits: visitsByTodoId[todo!.id],
-								order: todoOrderItems[index].order,
-								snoozedUntil: todoOrderItems[index].snoozedUntil,
+								order: wayfinderOrder[index].order,
+								snoozedUntil: wayfinderOrder[index].snoozedUntil,
 							}))
 							.filter(
 								todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
@@ -281,7 +297,7 @@ export const TodoLists = ({}: {}) => {
 
 		const iceboxTodosPromise = db.todos
 			.where('id')
-			.noneOf(todoOrderItems.map(({ todoId }) => todoId))
+			.noneOf([...asteroidFieldTodoIds, ...wayfinderTodoIds])
 			.and(
 				todo =>
 					todo.completedAt === undefined &&
@@ -292,15 +308,17 @@ export const TodoLists = ({}: {}) => {
 			.limit(iceboxLimit)
 			.toArray()
 
-		const [log, visits, wayfinder, icebox] = await Promise.all([
+		const [log, visits, asteroidField, wayfinder, icebox] = await Promise.all([
 			logTodosPromise,
 			visitsPromise,
+			asteroidFieldTodosPromise,
 			wayfinderTodosPromise,
 			iceboxTodosPromise,
 		])
 		return {
 			log: log.reverse(),
 			visits: visits,
+			asteroidField,
 			wayfinder,
 			icebox,
 		}
@@ -326,7 +344,8 @@ export const TodoLists = ({}: {}) => {
 
 	// Its possible for ref not to change when todo is completed because one other than 'next' is completed in which case starship doesn't move
 	// Consider using a callback ref instead: https://stackoverflow.com/questions/60881446/receive-dimensions-of-element-via-getboundingclientrect-in-react
-	const nextTodoRef = useRef<HTMLIonItemElement>(null)
+	const nextUrgentTodoRef = useRef<HTMLIonItemElement>(null)
+	const nextImportantTodoRef = useRef<HTMLIonItemElement>(null)
 	const {
 		nextTodo: {
 			position: [nextTodoPosition, setNextTodoPosition],
@@ -339,18 +358,21 @@ export const TodoLists = ({}: {}) => {
 	// callbackRef doesn't work
 	// This person thinks its an Ionic bug but I'm not sure: https://stackoverflow.com/questions/60881446/receive-dimensions-of-element-via-getboundingclientrect-in-react
 	useEffect(() => {
-		if (nextTodoRef.current) {
-			console.debug('Setting next todo with ID', nextTodoRef.current.dataset.id)
-			const domRect = nextTodoRef.current.getBoundingClientRect()
+		if (nextImportantTodoRef.current) {
+			console.debug(
+				'Setting next todo with ID',
+				nextImportantTodoRef.current.dataset.id,
+			)
+			const domRect = nextImportantTodoRef.current.getBoundingClientRect()
 			setNextTodoPosition({
 				height: domRect.height,
-				top: nextTodoRef.current.offsetTop,
+				top: nextImportantTodoRef.current.offsetTop,
 			}) // Send this rather than the current ref as if unchanged then is will be memoised and nothing will happen.
 		} else {
 			console.debug('No next todo ref')
 			setNextTodoPosition(null) // Send this rather than the current ref as if unchanged then is will be memoised and nothing will happen.
 		}
-	}, [nextTodoRef, setNextTodoPosition, data]) // The todos dep is used as an imperfect proxy for one the position of the next todo changes
+	}, [nextImportantTodoRef, setNextTodoPosition, data]) // The todos dep is used as an imperfect proxy for one the position of the next todo changes
 
 	// Keyboard shortcut stuff
 	useEffect(() => {
@@ -625,6 +647,208 @@ export const TodoLists = ({}: {}) => {
 													 * If the todo moves up then all the todos
 													 */
 													// TODO: Could make this easier with IDs in the DOM
+													const fromTodo = data.asteroidField[event.detail.from]
+													const toTodo = data.asteroidField[event.detail.to]
+
+													const asteroidFieldTodos = await db.asteroidFieldOrder
+														.orderBy('order')
+														.toArray()
+													const unfilteredFromIndex =
+														asteroidFieldTodos.findIndex(
+															({ todoId }) => todoId === fromTodo.id,
+														)
+													const unfilteredToIndex =
+														asteroidFieldTodos.findIndex(
+															({ todoId }) => todoId === toTodo.id,
+														)
+
+													const [startIndex, endIndex] =
+														calculateReorderIndices(
+															unfilteredFromIndex,
+															unfilteredToIndex,
+														)
+													const start = asteroidFieldTodos[startIndex]?.order
+													const end = asteroidFieldTodos[endIndex]?.order
+													const newOrder = order(start, end)
+
+													console.debug('Re-ordering', {
+														originalFromIndex: event.detail.from,
+														orignialToIndex: event.detail.to,
+														unfilteredFromIndex,
+														unfilteredToIndex,
+														start,
+														end,
+														newOrder,
+													})
+
+													await db.asteroidFieldOrder.update(fromTodo.id, {
+														order: newOrder,
+													})
+												}}
+											>
+												{data.asteroidField.length === 0 ? (
+													<Placeholder heading="Asteroid Field">
+														Tasks which demand immediate attention. They will
+														try to feign &apos;urgency&apos; but are usually
+														nothing more than distractions. Delegate, defer, or
+														delete where possible to accelerate though this
+														treacherous region as fast as possible so you can
+														move on to the mission-critical objectives in your
+														Wayfinder.
+													</Placeholder>
+												) : (
+													data.asteroidField.map((todo, index) => (
+														<TodoListItem
+															key={todo.id}
+															data-id={todo.id}
+															data-next-todo={index === 0}
+															onCompletionChange={async event => {
+																db.transaction(
+																	'rw',
+																	db.visits,
+																	db.todos,
+																	db.wayfinderOrder,
+																	async () => {
+																		if (todo.starPoints) {
+																			presentCompletionPopover(event, todo, {
+																				onDidDismiss: async event => {
+																					console.debug(
+																						'popover did dismiss',
+																						event,
+																					)
+																					if (event.detail.role === 'visit') {
+																						await db.visits.add({
+																							todoId: todo.id,
+																							date: new Date(),
+																						})
+																					} else if (
+																						event.detail.role === 'snooze'
+																					) {
+																						await db.visits.add({
+																							todoId: todo.id,
+																							date: new Date(),
+																						})
+																						presentSnoozeTodoModal(todo)
+																					} else if (
+																						event.detail.role === 'complete'
+																					) {
+																						await db.transaction(
+																							'rw',
+																							db.todos,
+																							db.wayfinderOrder,
+																							async () => {
+																								db.todos.update(todo.id, {
+																									completedAt: new Date(),
+																								})
+																								db.wayfinderOrder.delete(
+																									todo.id,
+																								)
+																								// TODO: Extract common completion function
+																							},
+																						)
+																						setLogLimit(limit => limit + 1)
+																					}
+																				},
+																			})
+																		} else {
+																			await Promise.all([
+																				db.asteroidFieldOrder.delete(todo.id),
+																				db.todos.update(todo.id, {
+																					completedAt: event.detail.checked
+																						? new Date()
+																						: undefined,
+																				}),
+																			])
+																			setLogLimit(limit => limit + 1)
+																		}
+																	},
+																)
+															}}
+															onClick={event => {
+																presentTodoActionSheet(todo, {
+																	buttons: [
+																		{
+																			icon: arrowUpSharp,
+																			text: 'Move to top',
+																			data: {
+																				action: 'top',
+																			},
+																			handler: async () => {
+																				const asteroidFieldTodos =
+																					await db.asteroidFieldOrder
+																						.orderBy('order')
+																						.toArray()
+																				const newOrder = order(
+																					undefined,
+																					asteroidFieldTodos[0]?.order,
+																				)
+
+																				await db.wayfinderOrder.update(
+																					todo.id,
+																					{
+																						order: newOrder,
+																					},
+																				)
+																			},
+																		},
+																		{
+																			icon: snowSharp,
+																			text: 'Move to icebox',
+																			data: {
+																				action: 'icebox',
+																			},
+																			handler: async () => {
+																				db.transaction(
+																					'rw',
+																					db.asteroidFieldOrder,
+																					async () => {
+																						await db.asteroidFieldOrder.delete(
+																							todo.id,
+																						)
+																					},
+																				)
+																			},
+																		},
+																		{
+																			icon: timeSharp,
+																			text: 'Snooze',
+																			data: {
+																				action: 'snooze',
+																			},
+																			handler: () =>
+																				presentSnoozeTodoModal(todo),
+																		},
+																	],
+																})
+															}}
+															ref={
+																index === 0
+																	? (nextUrgentTodoRef as any)
+																	: undefined
+															}
+															starRole={starRoles?.find(
+																starRole => todo.starRole === starRole.id,
+															)}
+															todo={{ ...todo }}
+														>
+															<VisitInfo todo={todo} />
+														</TodoListItem>
+													))
+												)}
+											</IonReorderGroup>
+											<div className="mx-auto w-full h-[1px] bg-[linear-gradient(to_right,transparent,theme(colors.rose.400),theme(colors.pink.400),theme(colors.fuchsia.400),theme(colors.violet.400),theme(colors.indigo.400),theme(colors.blue.400),transparent)] z-10 absolute"></div>
+											<IonReorderGroup
+												disabled={false}
+												onIonItemReorder={async event => {
+													console.debug('reorder event', { event })
+													// We don't use this to reorder for us because it results in a flash of 'unordered' content.
+													// Instead we re-order right away, calculate the new order ourselves, and update the DB.
+													event.detail.complete()
+
+													/* If the todo moves down then all the todos after its target location must be nudged up
+													 * If the todo moves up then all the todos
+													 */
+													// TODO: Could make this easier with IDs in the DOM
 													const fromTodo = data.wayfinder[event.detail.from]
 													const toTodo = data.wayfinder[event.detail.to]
 
@@ -794,7 +1018,9 @@ export const TodoLists = ({}: {}) => {
 																})
 															}}
 															ref={
-																index === 0 ? (nextTodoRef as any) : undefined
+																index === 0
+																	? (nextImportantTodoRef as any)
+																	: undefined
 															}
 															starRole={starRoles?.find(
 																starRole => todo.starRole === starRole.id,
@@ -813,7 +1039,7 @@ export const TodoLists = ({}: {}) => {
 									<div className="bg-[--ion-item-background]">
 										<Placeholder heading="Database">
 											A searchable database of future possible objectives, as
-											infinite as the cosmos itself. You&apos;ll never complete
+											infinite as the cosmos itself. You will never complete
 											them all.
 										</Placeholder>
 									</div>

@@ -49,12 +49,14 @@ export function useTodoActionSheet() {
 						handler: async () => {
 							db.transaction(
 								'rw',
+								db.visits,
+								db.asteroidFieldOrder,
 								db.wayfinderOrder,
 								db.todos,
-								db.visits,
 								async () => {
 									await Promise.all([
 										db.todos.delete(todo.id),
+										db.asteroidFieldOrder.delete(todo.id),
 										db.wayfinderOrder.delete(todo.id),
 										db.visits.where('todoId').equals(todo.id).delete(),
 									])
