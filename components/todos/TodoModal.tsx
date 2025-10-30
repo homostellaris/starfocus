@@ -25,6 +25,7 @@ import {
 } from 'react'
 import { db, Todo } from '../db'
 import useNoteProvider from '../notes/useNoteProvider'
+import { cn } from '../common/cn'
 
 export default function TodoModal({
 	dismiss,
@@ -47,6 +48,8 @@ export default function TodoModal({
 	}) => ReactNode
 } & ComponentProps<typeof IonPage>) {
 	const [todoDraft, setTodoDraft] = useState<Partial<Todo>>({ ...todo })
+	const [titleIsTouched, setTitleIsTouched] = useState(false)
+	const [titleIsValid, setTitleIsValid] = useState<boolean>()
 	const noteInput = useRef<HTMLIonTextareaElement>(null)
 
 	const starRoles = useLiveQuery(() => db.starRoles.toArray(), [], [])
@@ -81,15 +84,26 @@ export default function TodoModal({
 			<IonContent className="space-y-4 ion-padding">
 				<IonInput
 					autocapitalize="sentences"
+					className={cn(
+						titleIsTouched && 'ion-touched',
+						titleIsValid ? 'ion-valid' : 'ion-invalid',
+					)}
+					errorText="Title is required"
 					fill="outline"
 					type="text"
 					label="Title"
 					labelPlacement="floating"
-					onIonChange={event => {
+					onIonBlur={() => {
+						setTitleIsTouched(true)
+					}}
+					onIonInput={event => {
+						const { value } = event.detail
+						const isValid = typeof value === 'string' && value.length > 0
 						setTodoDraft(todoDraft => ({
 							...todoDraft,
 							title: event.detail.value || undefined,
 						}))
+						setTitleIsValid(isValid)
 					}}
 					value={todoDraft.title}
 				/>
@@ -128,6 +142,7 @@ export default function TodoModal({
 					}}
 					value={todoDraft.starPoints}
 				>
+					<IonSelectOption value={null}>-</IonSelectOption>
 					<IonSelectOption value={1}>1</IonSelectOption>
 					<IonSelectOption value={2}>2</IonSelectOption>
 					<IonSelectOption value={3}>3</IonSelectOption>
