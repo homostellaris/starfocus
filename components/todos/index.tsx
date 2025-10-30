@@ -45,7 +45,6 @@ export const TodoListItem = forwardRef<
 	ref,
 ) {
 	const [debug] = useDebug()
-	console.log({ todo })
 
 	return (
 		<div
