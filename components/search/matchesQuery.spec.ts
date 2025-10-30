@@ -65,15 +65,6 @@ describe('snoozed todos', () => {
 })
 
 describe('query by star points', () => {
-	test('0 star points', () => {
-		expect(
-			matchesQuery('#0', {
-				id: '1',
-				title: 'Complete that darned foobar task',
-				starPoints: 0,
-			}),
-		).toBeTrue()
-	})
 	test('5 star points', () => {
 		expect(
 			matchesQuery('#5', {
@@ -91,5 +82,21 @@ describe('query by star points', () => {
 				starPoints: 2,
 			}),
 		).toBeFalse()
+	})
+	test('0 star points', () => {
+		expect(
+			matchesQuery('#0', {
+				id: '1',
+				title: 'Complete that darned foobar task',
+				starPoints: 0,
+			}),
+		).toBeTrue()
+		expect(
+			matchesQuery('#0', {
+				id: '1',
+				title: 'Complete that darned foobar task',
+				starPoints: undefined,
+			}),
+		).toBeTrue()
 	})
 })

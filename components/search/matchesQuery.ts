@@ -20,7 +20,7 @@ export function matchesQuery(
 	const matchers: Matcher[] = tokens.map(token => {
 		if (token.startsWith('#')) {
 			const starPoints = token.slice(1)
-			return todo => todo.starPoints === Number(starPoints)
+			return todo => (todo.starPoints ?? 0) === Number(starPoints)
 		} else if (token === 'is:snoozed') {
 			return todo =>
 				Boolean(
