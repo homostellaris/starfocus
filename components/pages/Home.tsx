@@ -231,11 +231,13 @@ export const TodoLists = ({}: {}) => {
 		const asteroidFieldTodosPromise = db.todos
 			.bulkGet(asteroidFieldTodoIds)
 			.then(todos =>
-				todos.map((todo, index) => ({
-					...todo!,
-					order: asteroidFieldOrder[index].order,
-					snoozedUntil: asteroidFieldOrder[index].snoozedUntil,
-				})),
+				todos
+					.map((todo, index) => ({
+						...todo!,
+						order: asteroidFieldOrder[index].order,
+						snoozedUntil: asteroidFieldOrder[index].snoozedUntil,
+					}))
+					.filter(todo => matchesQuery(query, todo) && inActiveStarRoles(todo)),
 			)
 
 		const wayfinderOrder = await db.wayfinderOrder.orderBy('order').toArray()

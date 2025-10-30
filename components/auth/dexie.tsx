@@ -57,7 +57,6 @@ export function LoginModal({ ui }: { ui?: DXCUserInteraction }) {
 				otpInput.current?.setFocus()
 			}}
 			onWillDismiss={event => {
-				console.log({ event })
 				if (event.detail.role !== 'confirm') {
 					ui?.onCancel()
 				}
@@ -172,7 +171,6 @@ export function LoginModal({ ui }: { ui?: DXCUserInteraction }) {
 							<IonButtons slot="primary">
 								<IonButton
 									onClick={() => {
-										console.log
 										ui.onSubmit(params)
 									}}
 									strong={true}
