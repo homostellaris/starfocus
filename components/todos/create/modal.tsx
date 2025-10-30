@@ -33,9 +33,8 @@ export function CreateTodoModal({
 					locationSelect.current!.value = ListType.asteroidField
 				}
 			}}
-			toolbarSlot={({ starRole, starPoints }) => {
-				const eligibleForWayfinder = starRole && starPoints
-				console.log({ starRole, starPoints, eligibleForWayfinder })
+			toolbarSlot={({ starPoints }) => {
+				const eligibleForWayfinder = !!starPoints
 				return (
 					<IonSelect
 						className="p-2"
