@@ -2,9 +2,8 @@ import { useIonModal } from '@ionic/react'
 import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
 import { useCallback, useRef } from 'react'
 import order from '../../common/order'
-import { TodoInput, db, ListType, Todo } from '../../db'
+import { db, ListType, Todo, TodoInput } from '../../db'
 import useNoteProvider from '../../notes/useNoteProvider'
-import useTodoContext from '../TodoContext'
 import { CreateTodoModal } from './modal'
 
 export function useCreateTodoModal(): [
@@ -17,15 +16,13 @@ export function useCreateTodoModal(): [
 	}) => void,
 	(data?: any, role?: string) => void,
 ] {
-	const {
-		selectedTodo: [todo, setTodo],
-	} = useTodoContext()
 	const titleInput = useRef<HTMLIonInputElement>(null)
+	const todoRef = useRef<Todo>()
 	const [present, dismiss] = useIonModal(CreateTodoModal, {
 		dismiss: (data: string, role: string) => dismiss(data, role),
 		title: 'Create todo',
 		titleInput,
-		todo,
+		todo: todoRef.current,
 	})
 
 	const noteProvider = useNoteProvider()
@@ -36,9 +33,9 @@ export function useCreateTodoModal(): [
 			let uri
 			await db.transaction(
 				'rw',
-				db.todos,
 				db.asteroidFieldOrder,
 				db.wayfinderOrder,
+				db.todos,
 				async () => {
 					if (todo.noteInitialContent && noteProvider) {
 						uri = await noteProvider.create({
@@ -79,12 +76,10 @@ export function useCreateTodoModal(): [
 
 	return [
 		({ onWillDismiss, todo }: HookOverlayOptions & { todo: Todo }) => {
+			todoRef.current = todo
 			present({
 				onDidPresent: _event => {
 					titleInput.current?.setFocus()
-				},
-				onWillPresent: () => {
-					setTodo(todo)
 				},
 				onWillDismiss: event => {
 					if (event.detail.role === 'confirm') {
