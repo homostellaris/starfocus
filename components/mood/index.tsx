@@ -11,15 +11,63 @@ import {
 import { pauseCircleSharp, playCircleSharp } from 'ionicons/icons'
 import { useEffect, useRef, useState } from 'react'
 import { cn } from '../common/cn'
+import { useMood } from './MoodContext'
 
 setupIonicReact({})
 
 type mode = 'chill' | 'hype'
 
+const MUSIC_FILES = {
+	chill: [
+		'/music/chill/Melodysheep - Water Worlds.mp3',
+		'/music/chill/Melodysheep - Sights of Space 1.mp3',
+		'/music/chill/Melodysheep - Sights of Space 2.mp3',
+		'/music/chill/Melodysheep - Sights of Space 3.mp3',
+		'/music/chill/Melodysheep - Sights of Space 4.mp3',
+		'/music/chill/Melodysheep - Sights of Space 5.mp3',
+		'/music/chill/Melodysheep - Sights of Space 6.mp3',
+	],
+	hype: [
+		'music/hype/Karl Casey - Black Lotus.mp3',
+		'music/hype/Karl Casey - Lucid Dream.mp3',
+		'music/hype/Karl Casey - Radiation Sickness.mp3',
+		'music/hype/Karl Casey - Replicant Hunter.mp3',
+	],
+}
+
+const parseTrackInfo = (filePath: string) => {
+	const fileName = filePath.split('/').pop()?.replace('.mp3', '') || ''
+
+	if (fileName.includes(' - ')) {
+		const [artist, track] = fileName.split(' - ')
+		return { artist, track }
+	}
+
+	return { artist: 'Unknown Artist', track: fileName }
+}
+
 export default function Mood() {
 	const audio = useRef<HTMLAudioElement>(null)
 	const [playing, setPlaying] = useState<boolean>(false)
-	const [mode, setMode] = useState<'chill' | 'hype'>('chill')
+	const { mode, setMode } = useMood()
+	const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(0)
+
+	const currentPlaylist = MUSIC_FILES[mode]
+	const currentTrack = currentPlaylist[currentTrackIndex] || null
+	const { artist, track } = currentTrack ? parseTrackInfo(currentTrack) : { artist: '', track: '' }
+
+	useEffect(() => {
+		setCurrentTrackIndex(0)
+	}, [mode])
+
+	useEffect(() => {
+		if (audio.current && currentTrack) {
+			audio.current.load()
+			if (playing) {
+				audio.current.play()
+			}
+		}
+	}, [currentTrack, playing])
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -47,6 +95,11 @@ export default function Mood() {
 		}
 	}, [])
 
+	const handleTrackEnd = () => {
+		const nextIndex = (currentTrackIndex + 1) % currentPlaylist.length
+		setCurrentTrackIndex(nextIndex)
+	}
+
 	return (
 		<div
 			className={cn(
@@ -56,12 +109,17 @@ export default function Mood() {
 					: 'border-blue-500 bg-blue-600/15',
 			)}
 		>
-			<audio ref={audio}>
-				<source
-					src="Melodysheep - Water Worlds.mp3"
-					type="audio/mpeg"
-				/>
-			</audio>
+			{currentTrack && (
+				<audio
+					ref={audio}
+					onEnded={handleTrackEnd}
+				>
+					<source
+						src={currentTrack}
+						type="audio/mpeg"
+					/>
+				</audio>
+			)}
 			<IonButton
 				fill="clear"
 				onClick={() => {

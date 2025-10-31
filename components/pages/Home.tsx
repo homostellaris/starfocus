@@ -68,6 +68,7 @@ import {
 import { ViewMenu } from '../focus/ViewMenu'
 import useView, { ViewProvider } from '../focus/view'
 import Mood from '../mood'
+import { MoodProvider } from '../mood/MoodContext'
 import NoteProviders from '../notes/providers'
 import useSettings from '../settings/useSettings'
 import Tracjectory from '../starship/Trajectory'
@@ -103,55 +104,57 @@ const Home = () => {
 
 	return (
 		<>
-			<ViewProvider>
-				<TodoContextProvider>
-					<ViewMenu searchbarRef={searchbarRef} />
-					<MiscMenu />
-					<IonPage id="main-content">
-						<Header title="Home"></Header>
-						<TodoLists />
-						<div className="absolute hidden xl:block bottom-4 left-4">
-							<Mood />
-						</div>
-						<IonFooter
-							className="lg:w-[calc(100vw/12*6+56*2px+10px)] lg:mx-auto lg:rounded-t-lg overflow-hidden"
-							translucent
-						>
-							<IonToolbar
-								className={cn(isPlatform('ios') && 'ion-padding-top')}
+			<MoodProvider>
+				<ViewProvider>
+					<TodoContextProvider>
+						<ViewMenu searchbarRef={searchbarRef} />
+						<MiscMenu />
+						<IonPage id="main-content">
+							<Header title="Home"></Header>
+							<TodoLists />
+							<div className="absolute hidden xl:block bottom-4 left-4">
+								<Mood />
+							</div>
+							<IonFooter
+								className="lg:w-[calc(100vw/12*6+56*2px+10px)] lg:mx-auto lg:rounded-t-lg overflow-hidden"
+								translucent
 							>
-								<IonButtons slot="start">
-									<IonButton
-										id="view-menu-button"
-										onClick={() => {
-											menuController.toggle('start')
-										}}
-									>
-										<IonIcon
-											icon={filterSharp}
-											slot="icon-only"
-										/>
-									</IonButton>
-								</IonButtons>
-								<Searchbar ref={searchbarRef} />
-								<IonButtons slot="end">
-									<IonButton
-										id="misc-menu-button"
-										onClick={() => {
-											menuController.toggle('end')
-										}}
-									>
-										<IonIcon
-											icon={settingsSharp}
-											slot="icon-only"
-										/>
-									</IonButton>
-								</IonButtons>
-							</IonToolbar>
-						</IonFooter>
-					</IonPage>
-				</TodoContextProvider>
-			</ViewProvider>
+								<IonToolbar
+									className={cn(isPlatform('ios') && 'ion-padding-top')}
+								>
+									<IonButtons slot="start">
+										<IonButton
+											id="view-menu-button"
+											onClick={() => {
+												menuController.toggle('start')
+											}}
+										>
+											<IonIcon
+												icon={filterSharp}
+												slot="icon-only"
+											/>
+										</IonButton>
+									</IonButtons>
+									<Searchbar ref={searchbarRef} />
+									<IonButtons slot="end">
+										<IonButton
+											id="misc-menu-button"
+											onClick={() => {
+												menuController.toggle('end')
+											}}
+										>
+											<IonIcon
+												icon={settingsSharp}
+												slot="icon-only"
+											/>
+										</IonButton>
+									</IonButtons>
+								</IonToolbar>
+							</IonFooter>
+						</IonPage>
+					</TodoContextProvider>
+				</ViewProvider>
+			</MoodProvider>
 		</>
 	)
 }
