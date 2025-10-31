@@ -18,39 +18,36 @@ import { openOutline } from 'ionicons/icons'
 import {
 	ComponentProps,
 	MutableRefObject,
-	ReactNode,
 	useCallback,
+	useMemo,
 	useRef,
 	useState,
 } from 'react'
-import { db, Todo } from '../db'
-import useNoteProvider from '../notes/useNoteProvider'
 import { cn } from '../common/cn'
+import { db, ListType, Todo } from '../db'
+import useNoteProvider from '../notes/useNoteProvider'
 
 export default function TodoModal({
 	dismiss,
-	title,
+	modalTitle,
 	titleInput,
 	todo = {},
-	toolbarSlot,
 	...props
 }: {
 	dismiss: (data?: any, role?: string) => void
-	title: string
+	modalTitle: string
 	titleInput: MutableRefObject<HTMLIonInputElement | null>
 	todo?: Partial<Todo>
-	toolbarSlot?: ({
-		starRole,
-		starPoints,
-	}: {
-		starRole?: string
-		starPoints?: number
-	}) => ReactNode
 } & ComponentProps<typeof IonPage>) {
-	const [todoDraft, setTodoDraft] = useState<Partial<Todo>>({ ...todo })
+	// Certain things don't seem to work unless using controlled inputs unfortunately
+	const [title, setTitle] = useState(todo?.title)
 	const [titleIsTouched, setTitleIsTouched] = useState(false)
-	const [titleIsValid, setTitleIsValid] = useState<boolean>()
+	const [titleIsValid, setTitleIsValid] = useState<boolean>(!!todo?.title)
 	const noteInput = useRef<HTMLIonTextareaElement>(null)
+	const [starPoints, setStarPoints] = useState(todo?.starPoints)
+	const starRoleInput = useRef<HTMLIonSelectElement>(null)
+	const locationSelect = useRef<HTMLIonSelectElement>(null)
+	const eligibleForWayfinder = useMemo(() => !!starPoints, [starPoints])
 
 	const starRoles = useLiveQuery(() => db.starRoles.toArray(), [], [])
 
@@ -58,27 +55,39 @@ export default function TodoModal({
 	const emitTodo = useCallback(() => {
 		dismiss(
 			{
-				...todoDraft,
-				noteInitialContent: noteInput.current?.value,
+				todo: {
+					...todo,
+					noteInitialContent: noteInput.current?.value,
+					starPoints,
+					starRole: starRoleInput.current?.value ?? undefined,
+					title,
+				},
+				location: locationSelect.current?.value,
 			},
 			'confirm',
 		)
-	}, [dismiss, todoDraft])
+	}, [dismiss, starPoints, todo, title])
 
 	return (
 		<IonPage
 			{...props}
 			onKeyDown={event => {
-				if (event.key === 'Enter') {
+				if (event.metaKey) {
+					locationSelect.current!.value = ListType.icebox
+				} else if (event.key === 'Enter') {
 					event.preventDefault()
 					emitTodo()
 				}
-				props.onKeyDown?.(event)
+			}}
+			onKeyUp={event => {
+				if (!event.metaKey) {
+					locationSelect.current!.value = ListType.asteroidField
+				}
 			}}
 		>
 			<IonHeader>
 				<IonToolbar>
-					<IonTitle slot="start">{title}</IonTitle>
+					<IonTitle slot="start">{modalTitle}</IonTitle>
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
@@ -90,6 +99,7 @@ export default function TodoModal({
 					)}
 					errorText="Title is required"
 					fill="outline"
+					ref={titleInput}
 					type="text"
 					label="Title"
 					labelPlacement="floating"
@@ -99,25 +109,17 @@ export default function TodoModal({
 					onIonInput={event => {
 						const { value } = event.detail
 						const isValid = typeof value === 'string' && value.length > 0
-						setTodoDraft(todoDraft => ({
-							...todoDraft,
-							title: event.detail.value || undefined,
-						}))
 						setTitleIsValid(isValid)
+						setTitle(value ?? undefined)
 					}}
-					value={todoDraft.title}
+					value={title}
 				/>
 				<IonSelect
 					fill="outline"
 					label="Star role"
 					labelPlacement="floating"
-					onIonChange={event => {
-						setTodoDraft(todoDraft => ({
-							...todoDraft,
-							starRole: event.detail.value || undefined,
-						}))
-					}}
-					value={todoDraft.starRole}
+					ref={starRoleInput}
+					value={todo?.starRole}
 				>
 					<IonSelectOption value={null}>No star role</IonSelectOption>
 					{starRoles.map(starRole => (
@@ -135,12 +137,9 @@ export default function TodoModal({
 					labelPlacement="floating"
 					interface="popover"
 					onIonChange={event => {
-						setTodoDraft(todoDraft => ({
-							...todoDraft,
-							starPoints: event.detail.value || undefined,
-						}))
+						setStarPoints(event.detail.value)
 					}}
-					value={todoDraft.starPoints}
+					value={starPoints}
 				>
 					<IonSelectOption value={null}>-</IonSelectOption>
 					<IonSelectOption value={1}>1</IonSelectOption>
@@ -198,10 +197,29 @@ export default function TodoModal({
 							Confirm
 						</IonButton>
 					</IonButtons>
-					{toolbarSlot?.({
-						starPoints: todoDraft.starPoints,
-						starRole: todoDraft.starRole,
-					})}
+					<IonSelect
+						className="p-2"
+						fill="outline"
+						ref={locationSelect}
+						slot="end"
+						value={
+							eligibleForWayfinder ? ListType.wayfinder : ListType.asteroidField
+						}
+					>
+						<IonSelectOption value={ListType.icebox}>Icebox</IonSelectOption>
+						<IonSelectOption
+							disabled={!!eligibleForWayfinder}
+							value={ListType.asteroidField}
+						>
+							Asteroid Field
+						</IonSelectOption>
+						<IonSelectOption
+							disabled={!eligibleForWayfinder}
+							value={ListType.wayfinder}
+						>
+							Wayfinder
+						</IonSelectOption>
+					</IonSelect>
 				</IonToolbar>
 			</IonFooter>
 		</IonPage>
