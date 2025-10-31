@@ -346,8 +346,9 @@ export const TodoLists = ({}: {}) => {
 
 	// Its possible for ref not to change when todo is completed because one other than 'next' is completed in which case starship doesn't move
 	// Consider using a callback ref instead: https://stackoverflow.com/questions/60881446/receive-dimensions-of-element-via-getboundingclientrect-in-react
-	const nextUrgentTodoRef = useRef<HTMLIonItemElement>(null)
-	const nextImportantTodoRef = useRef<HTMLIonItemElement>(null)
+	const nextUrgentTodo = useRef<HTMLIonItemElement>(null)
+	const nextImportantTodo = useRef<HTMLIonItemElement>(null)
+	const nextTodo = nextUrgentTodo || nextImportantTodo
 	const {
 		nextTodo: {
 			position: [nextTodoPosition, setNextTodoPosition],
@@ -360,21 +361,18 @@ export const TodoLists = ({}: {}) => {
 	// callbackRef doesn't work
 	// This person thinks its an Ionic bug but I'm not sure: https://stackoverflow.com/questions/60881446/receive-dimensions-of-element-via-getboundingclientrect-in-react
 	useEffect(() => {
-		if (nextImportantTodoRef.current) {
-			console.debug(
-				'Setting next todo with ID',
-				nextImportantTodoRef.current.dataset.id,
-			)
-			const domRect = nextImportantTodoRef.current.getBoundingClientRect()
+		if (nextTodo.current) {
+			console.debug('Setting next todo with ID', nextTodo.current.dataset.id)
+			const domRect = nextTodo.current.getBoundingClientRect()
 			setNextTodoPosition({
 				height: domRect.height,
-				top: nextImportantTodoRef.current.offsetTop,
+				top: nextTodo.current.offsetTop,
 			}) // Send this rather than the current ref as if unchanged then is will be memoised and nothing will happen.
 		} else {
 			console.debug('No next todo ref')
 			setNextTodoPosition(null) // Send this rather than the current ref as if unchanged then is will be memoised and nothing will happen.
 		}
-	}, [nextImportantTodoRef, setNextTodoPosition, data]) // The todos dep is used as an imperfect proxy for one the position of the next todo changes
+	}, [nextTodo, setNextTodoPosition, data]) // The todos dep is used as an imperfect proxy for one the position of the next todo changes
 
 	// Keyboard shortcut stuff
 	useEffect(() => {
@@ -825,7 +823,7 @@ export const TodoLists = ({}: {}) => {
 															}}
 															ref={
 																index === 0
-																	? (nextUrgentTodoRef as any)
+																	? (nextUrgentTodo as any)
 																	: undefined
 															}
 															starRole={starRoles?.find(
@@ -1021,7 +1019,7 @@ export const TodoLists = ({}: {}) => {
 															}}
 															ref={
 																index === 0
-																	? (nextImportantTodoRef as any)
+																	? (nextImportantTodo as any)
 																	: undefined
 															}
 															starRole={starRoles?.find(
