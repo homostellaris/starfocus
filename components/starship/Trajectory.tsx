@@ -1,4 +1,5 @@
 import { cn } from '../common/cn'
+import { useMood } from '../mood/MoodContext'
 
 export default function Tracjectory({
 	className,
@@ -8,6 +9,17 @@ export default function Tracjectory({
 	currentPosition: number
 	orientation?: 'vertical' | 'horizontal'
 } & JSX.IntrinsicElements['div']) {
+	const { mode } = useMood()
+	const gradientColors = {
+		chill:
+			'bg-[linear-gradient(theme(colors.rose.400),theme(colors.pink.400),theme(colors.fuchsia.400),theme(colors.violet.400),theme(colors.indigo.400),theme(colors.blue.400))]',
+		hype: 'bg-[linear-gradient(theme(colors.blue.400),theme(colors.indigo.400),theme(colors.violet.400),theme(colors.fuchsia.400),theme(colors.pink.400),theme(colors.rose.400))]',
+	}
+	const shadowColor = {
+		chill: 'shadow-cyan-500/80',
+		hype: 'shadow-rose-500/80',
+	}
+
 	return (
 		<>
 			<div
@@ -20,10 +32,11 @@ export default function Tracjectory({
 			></div>
 			<div
 				className={cn(
-					'bg-[linear-gradient(theme(colors.rose.400),theme(colors.pink.400),theme(colors.fuchsia.400),theme(colors.violet.400),theme(colors.indigo.400),theme(colors.blue.400))]',
+					gradientColors[mode],
 					orientation === 'vertical' ? 'h-full w-[2px]' : 'w-full h-[2px]',
 					'transition-transform duration-500 ease-in-out',
-					'shadow-[0_10px_10px] shadow-cyan-500/80',
+					'shadow-[0_10px_10px]',
+					shadowColor[mode],
 					className,
 				)}
 				style={{
