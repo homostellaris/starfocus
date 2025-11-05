@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import { MoodProvider } from '../components/mood/MoodContext'
 
 const LazyMood = dynamic(() => import('../components/mood'), {
 	ssr: false,
@@ -74,7 +75,9 @@ export default function Page() {
 					loading="lazy"
 				></iframe> */}
 				<div className="block mx-auto lg:absolute bottom-4 left-4 w-fit min-w-screen">
-					<LazyMood />
+					<MoodProvider>
+						<LazyMood />
+					</MoodProvider>
 				</div>
 			</main>
 			<footer className="mt-auto mb-8">
