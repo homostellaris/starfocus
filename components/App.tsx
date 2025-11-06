@@ -51,10 +51,7 @@ const App = () => {
 						/>
 						<Route
 							render={params => {
-								console.error(
-									'Rendering fallback route, something went wrong',
-									params,
-								)
+								console.warn('Rendering fallback route', params)
 								return <p>Fallback route</p>
 							}}
 						/>
