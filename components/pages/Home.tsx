@@ -28,6 +28,7 @@ import {
 	IonToolbar,
 	isPlatform,
 } from '@ionic/react'
+import dayjs from 'dayjs'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
 	add,
@@ -54,8 +55,10 @@ import {
 	useState,
 } from 'react'
 import { Header } from '../common/Header'
+import Placeholder from '../common/Placeholder'
 import Starship from '../common/Starship'
 import Title from '../common/Title'
+import { cn } from '../common/cn'
 import order, { calculateReorderIndices, starMudder } from '../common/order'
 import {
 	AsteroidFieldTodoListItem,
@@ -70,6 +73,7 @@ import useView, { ViewProvider } from '../focus/view'
 import Mood from '../mood'
 import { MoodProvider } from '../mood/MoodContext'
 import NoteProviders from '../notes/providers'
+import { matchesQuery } from '../search/matchesQuery'
 import useSettings from '../settings/useSettings'
 import Tracjectory from '../starship/Trajectory'
 import { useStarshipYPosition } from '../starship/useStarshipYPosition'
@@ -79,12 +83,9 @@ import { useTodoActionSheet } from '../todos/TodoActionSheet'
 import useTodoContext, { TodoContextProvider } from '../todos/TodoContext'
 import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
 import { groupByCompletedAt } from '../todos/groupTodosByCompletedAt'
+import todoRepository from '../todos/repository'
 import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
 import { useTodoPopover } from '../todos/useTodoPopover'
-import Placeholder from '../common/Placeholder'
-import { cn } from '../common/cn'
-import dayjs from 'dayjs'
-import { matchesQuery } from '../search/matchesQuery'
 
 const Home = () => {
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
@@ -523,38 +524,13 @@ export const TodoLists = ({}: {}) => {
 															onClick={_event => {
 																presentTodoActionSheet(todo)
 															}}
-															onCompletionChange={event => {
+															onCompletionChange={async _event => {
 																if (todo.visits) {
 																	alert(
 																		'Deletion of visits not implemented yet',
 																	)
 																} else {
-																	db.transaction(
-																		'rw',
-																		db.wayfinderOrder,
-																		db.todos,
-																		async () => {
-																			const wayfinderOrder =
-																				await db.wayfinderOrder
-																					.orderBy('order')
-																					.limit(1)
-																					.keys()
-																			await Promise.all([
-																				db.wayfinderOrder.add({
-																					todoId: todo.id,
-																					order: order(
-																						undefined,
-																						wayfinderOrder[0]?.toString(),
-																					),
-																				}),
-																				db.todos.update(todo.id, {
-																					completedAt: event.detail.checked
-																						? new Date()
-																						: undefined,
-																				}),
-																			])
-																		},
-																	)
+																	await todoRepository.uncomplete(todo)
 																	setLogLimit(limit => limit - 1)
 																}
 															}}
@@ -598,35 +574,11 @@ export const TodoLists = ({}: {}) => {
 													onClick={() => {
 														presentTodoActionSheet(todo)
 													}}
-													onCompletionChange={event => {
+													onCompletionChange={async _event => {
 														if (todo.visits) {
 															alert('Deletion of visits not implemented yet')
 														} else {
-															db.transaction(
-																'rw',
-																db.wayfinderOrder,
-																db.todos,
-																async () => {
-																	const wayfinderOrder = await db.wayfinderOrder
-																		.orderBy('order')
-																		.limit(1)
-																		.keys()
-																	await Promise.all([
-																		db.wayfinderOrder.add({
-																			todoId: todo.id,
-																			order: order(
-																				undefined,
-																				wayfinderOrder[0]?.toString(),
-																			),
-																		}),
-																		db.todos.update(todo.id, {
-																			completedAt: event.detail.checked
-																				? new Date()
-																				: undefined,
-																		}),
-																	])
-																},
-															)
+															await todoRepository.uncomplete(todo)
 															setLogLimit(limit => limit - 1)
 														}
 													}}
@@ -706,68 +658,15 @@ export const TodoLists = ({}: {}) => {
 															data-id={todo.id}
 															data-next-todo={index === 0}
 															onCompletionChange={async event => {
-																db.transaction(
-																	'rw',
-																	db.visits,
-																	db.todos,
-																	db.wayfinderOrder,
-																	async () => {
-																		if (todo.starPoints) {
-																			presentCompletionPopover(event, todo, {
-																				onDidDismiss: async event => {
-																					console.debug(
-																						'popover did dismiss',
-																						event,
-																					)
-																					if (event.detail.role === 'visit') {
-																						await db.visits.add({
-																							todoId: todo.id,
-																							date: new Date(),
-																						})
-																					} else if (
-																						event.detail.role === 'snooze'
-																					) {
-																						await db.visits.add({
-																							todoId: todo.id,
-																							date: new Date(),
-																						})
-																						presentSnoozeTodoModal(todo)
-																					} else if (
-																						event.detail.role === 'complete'
-																					) {
-																						await db.transaction(
-																							'rw',
-																							db.todos,
-																							db.wayfinderOrder,
-																							async () => {
-																								db.todos.update(todo.id, {
-																									completedAt: new Date(),
-																								})
-																								db.wayfinderOrder.delete(
-																									todo.id,
-																								)
-																								// TODO: Extract common completion function
-																							},
-																						)
-																						setLogLimit(limit => limit + 1)
-																					}
-																				},
-																			})
-																		} else {
-																			await Promise.all([
-																				db.asteroidFieldOrder.delete(todo.id),
-																				db.todos.update(todo.id, {
-																					completedAt: event.detail.checked
-																						? new Date()
-																						: undefined,
-																				}),
-																			])
-																			setLogLimit(limit => limit + 1)
-																		}
-																	},
-																)
+																if (event.detail.checked) {
+																	await todoRepository.complete(todo)
+																	setLogLimit(limit => limit + 1)
+																} else {
+																	await todoRepository.uncomplete(todo)
+																	setLogLimit(limit => limit - 1)
+																}
 															}}
-															onClick={event => {
+															onClick={_event => {
 																presentTodoActionSheet(todo, {
 																	buttons: [
 																		{
@@ -901,67 +800,39 @@ export const TodoLists = ({}: {}) => {
 															key={todo.id}
 															data-id={todo.id}
 															data-next-todo={index === 0}
-															onCompletionChange={async event => {
-																db.transaction(
-																	'rw',
-																	db.visits,
-																	db.todos,
-																	db.wayfinderOrder,
-																	async () => {
-																		if (todo.starPoints) {
-																			presentCompletionPopover(event, todo, {
-																				onDidDismiss: async event => {
-																					console.debug(
-																						'popover did dismiss',
-																						event,
-																					)
-																					if (event.detail.role === 'visit') {
-																						await db.visits.add({
-																							todoId: todo.id,
-																							date: new Date(),
-																						})
-																					} else if (
-																						event.detail.role === 'snooze'
-																					) {
-																						await db.visits.add({
-																							todoId: todo.id,
-																							date: new Date(),
-																						})
-																						presentSnoozeTodoModal(todo)
-																					} else if (
-																						event.detail.role === 'complete'
-																					) {
-																						await db.transaction(
-																							'rw',
-																							db.todos,
-																							db.wayfinderOrder,
-																							async () => {
-																								db.todos.update(todo.id, {
-																									completedAt: new Date(),
-																								})
-																								db.wayfinderOrder.delete(
-																									todo.id,
-																								)
-																								// TODO: Extract common completion function
-																							},
-																						)
-																						setLogLimit(limit => limit + 1)
-																					}
-																				},
+															onCompletionChange={async checkboxEvent => {
+																presentCompletionPopover(checkboxEvent, todo, {
+																	onDidDismiss: async overlayEvent => {
+																		console.debug(
+																			'popover did dismiss',
+																			overlayEvent,
+																		)
+																		if (overlayEvent.detail.role === 'visit') {
+																			await db.visits.add({
+																				todoId: todo.id,
+																				date: new Date(),
 																			})
-																		} else {
-																			await Promise.all([
-																				db.wayfinderOrder.delete(todo.id),
-																				db.todos.update(todo.id, {
-																					completedAt: event.detail.checked
-																						? new Date()
-																						: undefined,
-																				}),
-																			])
-																			setLogLimit(limit => limit + 1)
+																		} else if (
+																			overlayEvent.detail.role === 'snooze'
+																		) {
+																			await db.visits.add({
+																				todoId: todo.id,
+																				date: new Date(),
+																			})
+																			presentSnoozeTodoModal(todo)
+																		} else if (
+																			overlayEvent.detail.role === 'complete'
+																		) {
+																			if (checkboxEvent.detail.checked) {
+																				await todoRepository.complete(todo)
+																				setLogLimit(limit => limit + 1)
+																			} else {
+																				await todoRepository.uncomplete(todo)
+																				setLogLimit(limit => limit - 1)
+																			}
 																		}
 																	},
-																)
+																})
 															}}
 															onClick={event => {
 																presentTodoActionSheet(todo, {

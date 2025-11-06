@@ -54,7 +54,9 @@ export default function Mood() {
 
 	const currentPlaylist = MUSIC_FILES[mode]
 	const currentTrack = currentPlaylist[currentTrackIndex] || null
-	const { artist, track } = currentTrack ? parseTrackInfo(currentTrack) : { artist: '', track: '' }
+	const { artist, track } = currentTrack
+		? parseTrackInfo(currentTrack)
+		: { artist: '', track: '' }
 
 	useEffect(() => {
 		setCurrentTrackIndex(0)
@@ -93,7 +95,7 @@ export default function Mood() {
 		return () => {
 			document.removeEventListener('keydown', handleKeyDown)
 		}
-	}, [])
+	}, [setMode])
 
 	const handleTrackEnd = () => {
 		const nextIndex = (currentTrackIndex + 1) % currentPlaylist.length
