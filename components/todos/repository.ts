@@ -36,15 +36,13 @@ export class TodoRepository {
 					}),
 				]
 
-				console.log({ todo })
-
 				if (todo.starPoints) {
 					const wayfinderOrder = await db.wayfinderOrder
 						.orderBy('order')
 						.limit(1)
 						.keys()
 					promises.push(
-						db.wayfinderOrder.add({
+						db.wayfinderOrder.put({
 							todoId: todo.id,
 							order: order(undefined, wayfinderOrder[0]?.toString()),
 						}),
@@ -55,7 +53,7 @@ export class TodoRepository {
 						.limit(1)
 						.keys()
 					promises.push(
-						db.asteroidFieldOrder.add({
+						db.asteroidFieldOrder.put({
 							todoId: todo.id,
 							order: order(undefined, asteroidFieldOrder[0]?.toString()),
 						}),
