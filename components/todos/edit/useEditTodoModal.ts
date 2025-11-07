@@ -45,7 +45,7 @@ export function useEditTodoModal(): [
 							.orderBy('order')
 							.keys()
 						await Promise.all([
-							db.asteroidFieldOrder.add({
+							db.asteroidFieldOrder.put({
 								todoId: updatedTodo.id,
 								order: order(undefined, asteroidFieldOrder[0]?.toString()),
 							}),
@@ -56,13 +56,11 @@ export function useEditTodoModal(): [
 							.orderBy('order')
 							.keys()
 						await Promise.all([
-							db.wayfinderOrder.add({
+							db.wayfinderOrder.put({
 								todoId: updatedTodo.id,
 								order: order(undefined, wayfinderOrder[0]?.toString()),
 							}),
-							await db.asteroidFieldOrder
-								.where({ todoId: updatedTodo.id })
-								.delete(),
+							db.asteroidFieldOrder.where({ todoId: updatedTodo.id }).delete(),
 						])
 					}
 				},
