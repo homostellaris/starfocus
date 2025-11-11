@@ -69,6 +69,17 @@ describe('search', () => {
 	it.skip('can search for snoozed todos')
 })
 
+describe('setting', () => {
+	it('can open and close the settings panel', () => {
+		cy.visit('/home')
+		cy.get('#misc-menu-button').click()
+		cy.contains('ion-title', 'Misc').should('be.visible')
+		cy.wait(1000)
+		cy.get('ion-button').contains('Cancel').click()
+		cy.contains('ion-title', 'Misc').should('not.be.visible')
+	})
+})
+
 describe.skip('notes', () => {})
 
 it('works', () => {

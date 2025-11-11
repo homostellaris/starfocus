@@ -1119,7 +1119,13 @@ export const MiscMenu = () => {
 						</IonButton>
 					</IonButtons>
 					<IonButtons slot="secondary">
-						<IonButton>Cancel</IonButton>
+						<IonButton
+							onClick={() => {
+								menuController.toggle('end')
+							}}
+						>
+							Cancel
+						</IonButton>
 					</IonButtons>
 				</IonToolbar>
 				<IonToast
