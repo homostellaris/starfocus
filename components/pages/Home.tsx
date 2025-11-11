@@ -169,7 +169,7 @@ export const TodoLists = ({}: {}) => {
 	// Query stuff
 	const [logLimit, setLogLimit] = useState(3)
 	console.debug({ logLimit })
-	const [iceboxLimit, setIceboxLimit] = useState(30)
+	const [databaseLimit, setDatabaseLimit] = useState(30)
 
 	// Creating todo stuff
 	const fab = useRef<HTMLIonFabElement>(null)
@@ -194,7 +194,7 @@ export const TodoLists = ({}: {}) => {
 		visits: LogTodoListItem[]
 		asteroidField: AsteroidFieldTodoListItem[]
 		wayfinder: WayfinderTodoListItem[]
-		icebox: Todo[]
+		database: Todo[]
 	}>(async () => {
 		const logTodosPromise = db.todos
 			.orderBy('completedAt')
@@ -301,7 +301,7 @@ export const TodoLists = ({}: {}) => {
 							)
 					})
 
-		const iceboxTodosPromise = db.todos
+		const databaseTodosPromise = db.todos
 			.where('id')
 			.noneOf([...asteroidFieldTodoIds, ...wayfinderTodoIds])
 			.and(
@@ -311,24 +311,26 @@ export const TodoLists = ({}: {}) => {
 					inActiveStarRoles(todo),
 			)
 			.reverse()
-			.limit(iceboxLimit)
+			.limit(databaseLimit)
 			.toArray()
 
-		const [log, visits, asteroidField, wayfinder, icebox] = await Promise.all([
-			logTodosPromise,
-			visitsPromise,
-			asteroidFieldTodosPromise,
-			wayfinderTodosPromise,
-			iceboxTodosPromise,
-		])
+		const [log, visits, asteroidField, wayfinder, database] = await Promise.all(
+			[
+				logTodosPromise,
+				visitsPromise,
+				asteroidFieldTodosPromise,
+				wayfinderTodosPromise,
+				databaseTodosPromise,
+			],
+		)
 		return {
 			log: log.reverse(),
 			visits: visits,
 			asteroidField,
 			wayfinder,
-			icebox,
+			database: database,
 		}
-	}, [inActiveStarRoles, iceboxLimit, logLimit, query, wayfinderOrderMode])
+	}, [inActiveStarRoles, databaseLimit, logLimit, query, wayfinderOrderMode])
 
 	const loading = data === undefined
 
@@ -393,7 +395,7 @@ export const TodoLists = ({}: {}) => {
 				contentRef.current?.scrollToPoint(undefined, y, 500)
 			} else if (event.key === 'i') {
 				event.preventDefault()
-				document.getElementById('icebox')?.scrollIntoView({
+				document.getElementById('database')?.scrollIntoView({
 					behavior: 'smooth',
 				})
 			}
@@ -446,7 +448,7 @@ export const TodoLists = ({}: {}) => {
 						<IonButton
 							className="fixed left-[calc(23px-10px)] lg:left-[calc(100vw/12*3-40px-6px)] bottom-[calc(64px+52px)] z-10"
 							onClick={() => {
-								document.getElementById('icebox')?.scrollIntoView({
+								document.getElementById('database')?.scrollIntoView({
 									behavior: 'smooth',
 								})
 							}}
@@ -695,9 +697,9 @@ export const TodoLists = ({}: {}) => {
 																		},
 																		{
 																			icon: snowSharp,
-																			text: 'Move to icebox',
+																			text: 'Move to database',
 																			data: {
-																				action: 'icebox',
+																				action: 'database',
 																			},
 																			handler: async () => {
 																				db.transaction(
@@ -863,9 +865,9 @@ export const TodoLists = ({}: {}) => {
 																		},
 																		{
 																			icon: snowSharp,
-																			text: 'Move to icebox',
+																			text: 'Move to database',
 																			data: {
-																				action: 'icebox',
+																				action: 'database',
 																			},
 																			handler: async () => {
 																				db.transaction(
@@ -909,7 +911,7 @@ export const TodoLists = ({}: {}) => {
 										</div>
 									</IonItemGroup>
 								</IonList>
-								{data.icebox.length === 0 ? (
+								{data.database.length === 0 ? (
 									<div className="bg-[--ion-item-background]">
 										<Placeholder heading="Database">
 											A searchable database of future possible objectives, as
@@ -918,14 +920,14 @@ export const TodoLists = ({}: {}) => {
 										</Placeholder>
 									</div>
 								) : (
-									<Icebox todos={data.icebox} />
+									<Database todos={data.database} />
 								)}
 								<IonButton
-									aria-label="Load more icebox todos"
+									aria-label="Load more database todos"
 									color="medium"
 									expand="full"
 									fill="clear"
-									onClick={() => setIceboxLimit(limit => limit + 10)}
+									onClick={() => setDatabaseLimit(limit => limit + 10)}
 									size="small"
 								>
 									<IonIcon
@@ -1175,7 +1177,7 @@ export const Journey = ({
 	)
 }
 
-export const Icebox = ({ todos }: { todos: Todo[] }) => {
+export const Database = ({ todos }: { todos: Todo[] }) => {
 	const [present] = useTodoActionSheet()
 	const onClick = useCallback(
 		todo => {
@@ -1221,7 +1223,7 @@ export const Icebox = ({ todos }: { todos: Todo[] }) => {
 	if (todos === undefined) return null
 
 	return (
-		<section id="icebox">
+		<section id="database">
 			<IonGrid className="ion-no-padding ion-margin-vertical">
 				<IonRow className="gap-2">
 					{todos.map(todo => (

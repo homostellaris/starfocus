@@ -73,7 +73,7 @@ export default function TodoModal({
 			{...props}
 			onKeyDown={event => {
 				if (event.metaKey) {
-					locationSelect.current!.value = ListType.icebox
+					locationSelect.current!.value = ListType.database
 				} else if (event.key === 'Enter') {
 					event.preventDefault()
 					emitTodo()
@@ -206,7 +206,9 @@ export default function TodoModal({
 							eligibleForWayfinder ? ListType.wayfinder : ListType.asteroidField
 						}
 					>
-						<IonSelectOption value={ListType.icebox}>Icebox</IonSelectOption>
+						<IonSelectOption value={ListType.database}>
+							Database
+						</IonSelectOption>
 						<IonSelectOption
 							disabled={!!eligibleForWayfinder}
 							value={ListType.asteroidField}
