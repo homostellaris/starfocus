@@ -109,7 +109,7 @@ const Home = () => {
 				<ViewProvider>
 					<TodoContextProvider>
 						<ViewMenu searchbarRef={searchbarRef} />
-						<MiscMenu />
+						<SettingsMenu />
 						<IonPage id="main-content">
 							<Header title="Home"></Header>
 							<TodoLists />
@@ -139,7 +139,7 @@ const Home = () => {
 									<Searchbar ref={searchbarRef} />
 									<IonButtons slot="end">
 										<IonButton
-											id="misc-menu-button"
+											id="settings-menu-button"
 											onClick={() => {
 												menuController.toggle('end')
 											}}
@@ -948,7 +948,7 @@ export const TodoLists = ({}: {}) => {
 	)
 }
 
-export const MiscMenu = () => {
+export const SettingsMenu = () => {
 	const settings = useSettings()
 	const [noteProvider, setNoteProvider] = useState<{
 		type?: string
@@ -967,13 +967,13 @@ export const MiscMenu = () => {
 	return (
 		<IonMenu
 			contentId="main-content"
-			id="misc-menu"
+			id="settings-menu"
 			side="end"
 			type="push"
 		>
 			<IonHeader>
 				<IonToolbar>
-					<Title>Misc</Title>
+					<Title>Settings</Title>
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
