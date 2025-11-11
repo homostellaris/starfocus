@@ -19,7 +19,7 @@
 		"android:dev": "next build && cap sync android && mv out/home.html out/index.html && cap run android",
 		"build": "next build",
 		"check": "bun test && bun run type-check && bun run lint && bun run test",
-		"next:dev": "next dev -p 6603",
+		"dev": "next dev -p 6603",
 		"lint": "next lint",
 		"prepare": "husky install",
 		"prettier:fix": "prettier --write components/ interfaces/ pages/ public/ styles/ utils/",
