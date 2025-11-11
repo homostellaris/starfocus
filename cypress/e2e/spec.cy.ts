@@ -32,7 +32,7 @@ describe.skip('wayfinder', () => {
 
 describe.skip('log', () => {})
 
-describe.skip('icebox', () => {})
+describe.skip('database', () => {})
 
 describe.skip('focus', () => {
 	it.skip('can focus a star role')
@@ -157,13 +157,13 @@ it('works', () => {
 	)
 
 	cy.get('#log-and-wayfinder').contains('be silly together').click()
-	cy.get('#todo-action-sheet').contains('Move to icebox').click()
-	cy.get('#icebox').contains('be silly together')
+	cy.get('#todo-action-sheet').contains('Move to database').click()
+	cy.get('#database').contains('be silly together')
 	cy.get('#todo-action-sheet').should('not.exist')
 
 	cy.get('#log-and-wayfinder').contains('plan birthday day out').click()
-	cy.get('#todo-action-sheet').contains('Move to icebox').click()
-	cy.get('#icebox').contains('plan birthday day out')
+	cy.get('#todo-action-sheet').contains('Move to database').click()
+	cy.get('#database').contains('plan birthday day out')
 	cy.get('#todo-action-sheet').should('not.exist')
 
 	assertLists(
@@ -182,17 +182,17 @@ it('works', () => {
 	)
 })
 
-function assertLists(wayfinder: string[], icebox: string[]) {
+function assertLists(wayfinder: string[], database: string[]) {
 	cy.get('#log-and-wayfinder [data-class="todo"] [data-class="title"]')
 		.should('have.length', wayfinder.length)
 		.invoke('toArray')
 		.invoke('map', item => item.textContent)
 		.should('deep.equal', wayfinder)
-	cy.get('#icebox [data-class="todo"] [data-class="title"]')
-		.should('have.length', icebox.length)
+	cy.get('#database [data-class="todo"] [data-class="title"]')
+		.should('have.length', database.length)
 		.invoke('toArray')
 		.invoke('map', item => item.textContent)
-		.should('deep.equal', icebox)
+		.should('deep.equal', database)
 }
 
 function reorderWayfinderTodo(todoIndex: number, places: number) {

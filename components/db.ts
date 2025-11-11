@@ -70,7 +70,7 @@ export interface List {
 export enum ListType {
 	asteroidField,
 	wayfinder,
-	icebox,
+	database,
 }
 
 export interface Setting {
