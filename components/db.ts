@@ -1,6 +1,7 @@
 import Dexie, { Table } from 'dexie'
 
 import dexieCloud, { DexieCloudTable } from 'dexie-cloud-addon'
+import { TodoRepository } from './todos/repository'
 
 export interface Todo {
 	completedAt?: Date
@@ -197,5 +198,6 @@ export const db = new DexieStarfocus()
 declare global {
 	interface Window {
 		db: DexieStarfocus
+		todoRepository: TodoRepository
 	}
 }
