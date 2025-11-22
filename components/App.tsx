@@ -9,6 +9,7 @@ import ErrorBoundary from './ErrorBoundary'
 import Test from './pages/Test'
 import { db } from './db'
 import { useEffect } from 'react'
+import todoRepository from './todos/repository'
 
 setupIonicReact({})
 
@@ -25,6 +26,7 @@ window
 const App = () => {
 	useEffect(() => {
 		window.db = db
+		window.todoRepository = todoRepository
 	}, [])
 	return (
 		<IonApp>

@@ -64,6 +64,28 @@ export class TodoRepository {
 			},
 		)
 	}
+
+	async asteroidFieldTodos() {
+		const asteroidFieldOrder = await db.asteroidFieldOrder
+			.orderBy('order')
+			.toArray()
+		const todoIds = asteroidFieldOrder.map(item => item.todoId)
+		const todos = await db.todos.bulkGet(todoIds)
+		return todos.map((todo, index) => ({
+			...asteroidFieldOrder[index],
+			...todo,
+		}))
+	}
+
+	async wayfinderTodos() {
+		const wayfinderOrder = await db.wayfinderOrder.orderBy('order').toArray()
+		const todoIds = wayfinderOrder.map(item => item.todoId)
+		const todos = await db.todos.bulkGet(todoIds)
+		return todos.map((todo, index) => ({
+			...wayfinderOrder[index],
+			...todo,
+		}))
+	}
 }
 
 const todoRepository = new TodoRepository(db)
