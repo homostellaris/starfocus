@@ -45,7 +45,7 @@ export default function TodoModal({
 	const [titleIsValid, setTitleIsValid] = useState<boolean>(!!todo?.title)
 	const noteInput = useRef<HTMLIonTextareaElement>(null)
 	const [starPoints, setStarPoints] = useState(todo?.starPoints)
-	const starRoleInput = useRef<HTMLIonSelectElement>(null)
+	const [starRole, setStarRole] = useState(todo?.starRole)
 	const locationSelect = useRef<HTMLIonSelectElement>(null)
 	const eligibleForWayfinder = useMemo(() => !!starPoints, [starPoints])
 
@@ -59,14 +59,14 @@ export default function TodoModal({
 					...todo,
 					noteInitialContent: noteInput.current?.value,
 					starPoints,
-					starRole: starRoleInput.current?.value ?? undefined,
+					starRole,
 					title,
 				},
 				location: locationSelect.current?.value,
 			},
 			'confirm',
 		)
-	}, [dismiss, starPoints, todo, title])
+	}, [dismiss, starPoints, starRole, todo, title])
 
 	return (
 		<IonPage
@@ -118,8 +118,10 @@ export default function TodoModal({
 					fill="outline"
 					label="Star role"
 					labelPlacement="floating"
-					ref={starRoleInput}
-					value={todo?.starRole}
+					onIonChange={event => {
+						setStarRole(event.detail.value)
+					}}
+					value={starRole}
 				>
 					<IonSelectOption value={null}>No star role</IonSelectOption>
 					{starRoles.map(starRole => (

@@ -1,15 +1,8 @@
-import { db } from '../../components/db'
+import { db, Potodo, Todo } from '../../components/db'
 
 beforeEach(() => {
 	indexedDB.deleteDatabase('starfocus-z0vnq74nz')
-})
-
-describe('onboarding', () => {
-	it('can navigate from landing page to app', () => {
-		cy.visit('/')
-		cy.contains('Try it').click()
-		cy.get('ion-content').should('exist')
-	})
+	cy.visit('/home')
 })
 
 describe.skip('constellation', () => {})
@@ -22,7 +15,73 @@ describe.skip('star points', () => {})
 
 describe.skip('star sort', () => {})
 
-describe.skip('wayfinder', () => {
+describe('asteroid field', () => {
+	it('stores todos with no star points', () => {
+		createTodo({ title: 'take the bins out' })
+		assertList('asteroid-field', ['take the bins out'])
+	})
+
+	it('stores todos with no star points and star role', () => {
+		new Cypress.Promise((resolve, reject) => {
+			db.starRoles
+				.add({
+					title: 'Father',
+					icon: {
+						type: 'ionicon',
+						name: 'maleSharp',
+					},
+				})
+				.then(resolve)
+				.catch(reject)
+		})
+		createTodo({ title: 'be silly together', starRole: 'Father' })
+		assertList('asteroid-field', [
+			{ title: 'be silly together', starRole: 'Father' },
+		])
+	})
+})
+
+describe('wayfinder', () => {
+	it('stores todos with star points', () => {
+		new Cypress.Promise((resolve, reject) => {
+			db.starRoles
+				.add({
+					title: 'Father',
+					icon: {
+						type: 'ionicon',
+						name: 'maleSharp',
+					},
+				})
+				.then(resolve)
+				.catch(reject)
+		})
+		createTodo({ title: 'be silly together', starPoints: 1 })
+		assertList('wayfinder', ['be silly together'])
+	})
+
+	it('stores todos with star points and star role', () => {
+		new Cypress.Promise((resolve, reject) => {
+			db.starRoles
+				.add({
+					title: 'Father',
+					icon: {
+						type: 'ionicon',
+						name: 'maleSharp',
+					},
+				})
+				.then(resolve)
+				.catch(reject)
+		})
+		createTodo({
+			title: 'be silly together',
+			starRole: 'Father',
+			starPoints: 1,
+		})
+		assertList('wayfinder', [
+			{ title: 'be silly together', starPoints: 1, starRole: 'Father' },
+		])
+	})
+
 	it.skip('can edit todos')
 	it.skip('can reorder todos')
 	it.skip('can move todos between lists')
@@ -41,7 +100,6 @@ describe.skip('focus', () => {
 
 describe('search', () => {
 	beforeEach(() => {
-		cy.visit('/home')
 		new Cypress.Promise((resolve, reject) => {
 			db.todos
 				.bulkAdd([
@@ -71,7 +129,6 @@ describe('search', () => {
 
 describe('setting', () => {
 	it('can open and close the settings panel', () => {
-		cy.visit('/home')
 		cy.get('#settings-menu-button').click()
 		cy.contains('ion-title', 'Settings').should('be.visible')
 		cy.wait(1000)
@@ -83,8 +140,6 @@ describe('setting', () => {
 describe.skip('notes', () => {})
 
 it('works', () => {
-	cy.visit('/home')
-
 	cy.get('ion-fab>ion-fab-button').click()
 	cy.get('#create-todo-modal').within(() => {
 		cy.contains('label', 'Title')
@@ -121,7 +176,7 @@ it('works', () => {
 		cy.contains('Confirm').click()
 	})
 
-	cy.visit('/home')
+	cy.go('back')
 
 	cy.get('ion-fab>ion-fab-button').click()
 	cy.get('#create-todo-modal').within(() => {
@@ -195,6 +250,30 @@ function assertLists(wayfinder: string[], database: string[]) {
 		.should('deep.equal', database)
 }
 
+function assertList(id: string, todos: Array<string | Potodo>) {
+	cy.get(`#${id} [data-class="todo"]`)
+		.should('have.length', todos.length)
+		.invoke('toArray')
+		.invoke('map', (item, index) => {
+			const todo: any = todos[index]
+			if (typeof todo === 'string') {
+				expect(item.querySelector('[data-class="title"]').textContent).to.eq(
+					todo,
+				)
+			} else {
+				expect(item.querySelector('[data-class="title"]').textContent).to.eq(
+					todo.title,
+				)
+				expect(
+					item.querySelector('[data-class="star-role-icon"]').dataset.starRole,
+				).to.eq(todo.starRole ?? null)
+				expect(item.querySelector('[data-star-points]')?.textContent).to.eq(
+					todo.starPoints?.toString() ?? undefined,
+				)
+			}
+		})
+}
+
 function reorderWayfinderTodo(todoIndex: number, places: number) {
 	cy.get(`#log-and-wayfinder [data-class="todo"]`)
 		.eq(todoIndex)
@@ -204,4 +283,36 @@ function reorderWayfinderTodo(todoIndex: number, places: number) {
 		.trigger('mousedown', { which: 1 })
 		.trigger('mousemove', { screenX: 936, screenY: 287 + 49 })
 		.trigger('mouseup')
+}
+
+function createTodo({
+	title,
+	starPoints,
+	starRole,
+}: {
+	title: string
+	starPoints?: number
+	starRole?: string
+}) {
+	cy.get('ion-fab>ion-fab-button').click()
+	cy.get('#create-todo-modal').within(() => {
+		cy.contains('label', 'Title').find('input').wait(2000).type(title)
+	})
+
+	if (starRole) {
+		cy.get('ion-select[label="Star role"]').click()
+		cy.get('ion-alert').within(() => {
+			cy.contains('Father').click()
+			cy.contains('OK').click()
+		})
+	}
+
+	if (starPoints) {
+		cy.get('ion-select[label="Star points"]').click()
+		cy.get('ion-select-popover').within(() => {
+			cy.contains(starPoints.toString()).click()
+		})
+	}
+
+	cy.get('#create-todo-modal').contains('Confirm').click()
 }

@@ -594,6 +594,7 @@ export const TodoLists = ({}: {}) => {
 											))}
 											<IonReorderGroup
 												disabled={false}
+												id="asteroid-field"
 												onIonItemReorder={async event => {
 													console.debug('reorder event', { event })
 													// We don't use this to reorder for us because it results in a flash of 'unordered' content.
@@ -743,6 +744,7 @@ export const TodoLists = ({}: {}) => {
 											<div className="mx-auto w-full h-[1px] bg-[linear-gradient(to_right,transparent,theme(colors.rose.400),theme(colors.pink.400),theme(colors.fuchsia.400),theme(colors.violet.400),theme(colors.indigo.400),theme(colors.blue.400),transparent)] z-10 absolute"></div>
 											<IonReorderGroup
 												disabled={false}
+												id="wayfinder"
 												onIonItemReorder={async event => {
 													console.debug('reorder event', { event })
 													// We don't use this to reorder for us because it results in a flash of 'unordered' content.
