@@ -74,6 +74,7 @@ export const TodoListItem = forwardRef<
 							'!font-mono grow-0 min-w-[2ch] text-base',
 							starScale[starPoints].textColor,
 						)}
+						data-star-points={starPoints}
 						slot="start"
 					>
 						{starPoints}

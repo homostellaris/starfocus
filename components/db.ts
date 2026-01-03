@@ -3,6 +3,13 @@ import Dexie, { Table } from 'dexie'
 import dexieCloud, { DexieCloudTable } from 'dexie-cloud-addon'
 import { TodoRepository } from './todos/repository'
 
+// Plain old todo
+export interface Potodo {
+	title: string
+	starRole?: string
+	starPoints?: number
+}
+
 export interface Todo {
 	completedAt?: Date
 	id: string
