@@ -177,6 +177,7 @@ it('works', () => {
 	})
 
 	cy.go('back')
+	cy.wait(1000) // No idea why this is necessary but otherwise the create todo modal doesn't open
 
 	cy.get('ion-fab>ion-fab-button').click()
 	cy.get('#create-todo-modal').within(() => {
