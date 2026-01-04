@@ -63,6 +63,7 @@ import order, { calculateReorderIndices, starMudder } from '../common/order'
 import {
 	AsteroidFieldTodoListItem,
 	db,
+	ListType,
 	LogTodoListItem,
 	Todo,
 	TodoListItemBase,
@@ -721,7 +722,10 @@ export const TodoLists = ({}: {}) => {
 																				action: 'snooze',
 																			},
 																			handler: () =>
-																				presentSnoozeTodoModal(todo),
+																				presentSnoozeTodoModal(
+																					todo,
+																					ListType.asteroidField,
+																				),
 																		},
 																	],
 																})
@@ -823,7 +827,10 @@ export const TodoLists = ({}: {}) => {
 																				todoId: todo.id,
 																				date: new Date(),
 																			})
-																			presentSnoozeTodoModal(todo)
+																			presentSnoozeTodoModal(
+																				todo,
+																				ListType.wayfinder,
+																			)
 																		} else if (
 																			overlayEvent.detail.role === 'complete'
 																		) {
@@ -890,7 +897,10 @@ export const TodoLists = ({}: {}) => {
 																				action: 'snooze',
 																			},
 																			handler: () =>
-																				presentSnoozeTodoModal(todo),
+																				presentSnoozeTodoModal(
+																					todo,
+																					ListType.wayfinder,
+																				),
 																		},
 																	],
 																})
