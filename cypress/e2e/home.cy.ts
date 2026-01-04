@@ -1,8 +1,8 @@
+import dayjs from 'dayjs'
 import { db, Potodo, Todo } from '../../components/db'
 
 beforeEach(() => {
 	indexedDB.deleteDatabase('starfocus-z0vnq74nz')
-	cy.visit('/home')
 })
 
 describe.skip('constellation', () => {})
@@ -96,6 +96,35 @@ describe.skip('database', () => {})
 describe.skip('focus', () => {
 	it.skip('can focus a star role')
 	it.skip('can focus a star role group')
+})
+
+describe('snooze', () => {
+	beforeEach(() => {
+		cy.clock(dayjs('2025-01-01').valueOf(), ['Date'])
+		cy.visit('/home')
+		cy.tick(1000)
+	})
+
+	it.only('removes todo from view until the snoozed date', () => {
+		createTodo({ title: 'take the bins out' })
+		cy.get('[data-class="todo"]').click()
+		cy.get('#todo-action-sheet').contains('Snooze').click()
+		cy.get('[aria-label="Friday 3 January"]').click()
+		cy.contains('Confirm')
+			.click()
+			.wait(1000)
+			.then(
+				() =>
+					new Cypress.Promise((resolve, reject) =>
+						db.asteroidFieldOrder.toArray().then(resolve).catch(reject),
+					),
+			)
+			.its('0.snoozedUntil')
+			.invoke('toISOString')
+			.should('eq', '2025-01-03T00:00:00.000Z')
+
+		cy.get('[data-class="todo"]').should('not.exist')
+	})
 })
 
 describe('search', () => {

@@ -1,12 +1,12 @@
 import { useIonModal } from '@ionic/react'
 import { useCallback, useRef } from 'react'
-import { Todo, WayfinderOrder, db } from '../../db'
+import { ListType, Todo, WayfinderOrder, db } from '../../db'
 import useNoteProvider from '../../notes/useNoteProvider'
 import useTodoContext from '../TodoContext'
 import SnoozeTodoModal from './modal'
 
 export function useSnoozeTodoModal(): [
-	(todo: Todo) => void,
+	(todo: Todo, location: ListType) => void,
 	(data?: any, role?: string) => void,
 ] {
 	const {
@@ -20,16 +20,22 @@ export function useSnoozeTodoModal(): [
 		todo,
 	})
 	const snoozeTodo = useCallback(
-		async ({ todoId, snoozedUntil }: WayfinderOrder) => {
-			await db.wayfinderOrder.update(todoId, {
-				snoozedUntil,
-			})
+		async ({ todoId, snoozedUntil }: WayfinderOrder, location: ListType) => {
+			if (location === ListType.wayfinder)
+				await db.wayfinderOrder.update(todoId, {
+					snoozedUntil,
+				})
+			else if (location === ListType.asteroidField)
+				await db.asteroidFieldOrder.update(todoId, {
+					snoozedUntil,
+				})
+			else throw new Error('No list type provided')
 		},
 		[],
 	)
 
 	return [
-		(todo: Todo) => {
+		(todo: Todo, location: ListType) => {
 			present({
 				// cssClass: 'auto-height',
 				// onDidPresent: _event => {
@@ -40,7 +46,7 @@ export function useSnoozeTodoModal(): [
 				},
 				onWillDismiss: event => {
 					const todo = event.detail.data
-					if (event.detail.role === 'confirm') snoozeTodo(todo)
+					if (event.detail.role === 'confirm') snoozeTodo(todo, location)
 					setTodo(null)
 				},
 			})
