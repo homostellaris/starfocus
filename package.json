@@ -66,7 +66,7 @@
 		"@types/react-router": "5.1.20",
 		"@types/react-router-dom": "5.3.3",
 		"autoprefixer": "10.4.18",
-		"cypress": "^13.17.0",
+		"cypress": "^15.8.1",
 		"eslint": "8.57.0",
 		"eslint-config-next": "14.2.3",
 		"gitmoji-cli": "^7.1.0",
