@@ -16,17 +16,17 @@
 		"future"
 	],
 	"scripts": {
-		"android:dev": "next build && cap sync android && mv out/home.html out/index.html && cap run android",
-		"build": "next build",
-		"check": "bun test && bun run type-check && bun run lint && bun run test",
-		"dev": "next dev -p 6603",
-		"lint": "next lint",
 		"prepare": "husky install",
+		"dev": "next dev -p 6603",
+		"android:dev": "next build && cap sync android && mv out/home.html out/index.html && cap run android",
+		"typecheck": "tsc",
+		"lint": "next lint",
 		"prettier:fix": "prettier --write components/ interfaces/ pages/ public/ styles/ utils/",
-		"start": "serve -p 6603 out",
-		"test": "cypress run",
-		"test:dev": "cypress open",
-		"type-check": "tsc"
+		"integration": "cypress run",
+		"unit": "bun test",
+		"test": "bun typecheck && bun lint && bun unit && bun integration",
+		"build": "next build",
+		"start": "serve -p 6603 out"
 	},
 	"dependencies": {
 		"@capacitor/android": "^7.4.3",
