@@ -1,0 +1,57 @@
+import Callout from '@/components/docs/Callout'
+
+# Advanced Features
+
+This page demonstrates how to use custom React components in your MDX documentation.
+
+## Using Custom Components
+
+You can import and use React components directly in MDX files. Here's an example using our custom `Callout` component:
+
+<Callout type="info" title="Pro Tip">
+  This is a custom React component embedded in MDX! You can pass props and use full React functionality.
+</Callout>
+
+## Different Callout Types
+
+<Callout type="success" title="Success">
+  This is a success message. Great for highlighting positive outcomes!
+</Callout>
+
+<Callout type="warning" title="Warning">
+  This is a warning. Use it to draw attention to important caveats.
+</Callout>
+
+<Callout type="error" title="Error">
+  This is an error message. Use it to highlight things to avoid.
+</Callout>
+
+## Code Examples
+
+Here's how the Callout component is used:
+
+```jsx
+import Callout from '@/components/docs/Callout'
+
+<Callout type="info" title="My Title">
+  Your content here
+</Callout>
+```
+
+## Creating Your Own Components
+
+You can create any React component and use it in MDX:
+
+1. Create a component in `/components/docs/`
+2. Import it at the top of your MDX file
+3. Use it like any JSX element
+
+<Callout type="success" title="That's it!">
+  You now know how to combine the power of React components with the simplicity of Markdown.
+</Callout>
+
+## Next Steps
+
+- Create your own custom documentation components
+- Style them with Tailwind CSS
+- Use them across your docs
