@@ -84,7 +84,7 @@ export default function Page() {
 				<nav>
 					<ul className="flex justify-center gap-4 mx-auto mt-auto font-mono text-xl font-normal text-blue-300 underline w-fit">
 						<li>
-							<Link href="/philosophy">Philosophy</Link>
+							<Link href="/docs">Docs</Link>
 						</li>
 						<li>
 							<a
