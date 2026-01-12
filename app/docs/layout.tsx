@@ -1,5 +1,5 @@
-import Link from 'next/link'
 import Nav from '../../components/common/Nav'
+import { DocsSidebar } from './DocsSidebar'
 
 export default function DocsLayout({
 	children,
@@ -14,31 +14,8 @@ export default function DocsLayout({
 				</h1>
 			</header>
 			<div className="flex gap-8 px-4 mx-auto max-w-7xl">
-				{/* Sidebar Navigation */}
-				<aside className="w-64 shrink-0">
-					<nav className="sticky top-4">
-						<ul className="space-y-2 text-blue-300">
-							<li>
-								<Link
-									href="/docs/getting-started"
-									className="block px-3 py-2 rounded hover:bg-white/10"
-								>
-									Getting Started
-								</Link>
-							</li>
-							<li>
-								<Link
-									href="/docs/advanced"
-									className="block px-3 py-2 rounded hover:bg-white/10"
-								>
-									Advanced Features
-								</Link>
-							</li>
-						</ul>
-					</nav>
-				</aside>
+				<DocsSidebar />
 
-				{/* Main Content */}
 				<main className="flex-1 min-w-0 pb-16 font-sans text-lg text-white">
 					<div className="prose prose-invert max-w-none">{children}</div>
 				</main>
