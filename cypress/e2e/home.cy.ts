@@ -16,6 +16,10 @@ describe.skip('star points', () => {})
 describe.skip('star sort', () => {})
 
 describe('asteroid field', () => {
+	beforeEach(() => {
+		cy.visit('/home')
+	})
+
 	it('stores todos with no star points', () => {
 		createTodo({ title: 'take the bins out' })
 		assertList('asteroid-field', ['take the bins out'])
@@ -42,6 +46,10 @@ describe('asteroid field', () => {
 })
 
 describe('wayfinder', () => {
+	beforeEach(() => {
+		cy.visit('/home')
+	})
+
 	it('stores todos with star points', () => {
 		new Cypress.Promise((resolve, reject) => {
 			db.starRoles
@@ -105,7 +113,7 @@ describe('snooze', () => {
 		cy.tick(1000)
 	})
 
-	it.only('removes todo from view until the snoozed date', () => {
+	it('removes todo from view until the snoozed date', () => {
 		createTodo({ title: 'take the bins out' })
 		cy.get('[data-class="todo"]').click()
 		cy.get('#todo-action-sheet').contains('Snooze').click()
@@ -145,6 +153,7 @@ describe('search', () => {
 				.then(resolve)
 				.catch(reject)
 		})
+		cy.visit('/home')
 	})
 
 	it('can search for a todo by title', () => {
@@ -157,6 +166,10 @@ describe('search', () => {
 })
 
 describe('setting', () => {
+	beforeEach(() => {
+		cy.visit('/home')
+	})
+
 	it('can open and close the settings panel', () => {
 		cy.get('#settings-menu-button').click()
 		cy.contains('ion-title', 'Settings').should('be.visible')
@@ -169,6 +182,7 @@ describe('setting', () => {
 describe.skip('notes', () => {})
 
 it('works', () => {
+	cy.visit('/home')
 	cy.get('ion-fab>ion-fab-button').click()
 	cy.get('#create-todo-modal').within(() => {
 		cy.contains('label', 'Title')
