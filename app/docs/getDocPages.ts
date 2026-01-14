@@ -4,55 +4,96 @@ import path from 'path'
 export interface DocPage {
 	slug: string
 	title: string
-	href: string
+	href: string | null
+	comingSoon?: boolean
+	children?: DocPage[]
 }
 
 export function getDocPages(): DocPage[] {
 	const docsDirectory = path.join(process.cwd(), 'app/docs')
-	const entries = fs.readdirSync(docsDirectory, { withFileTypes: true })
+	const indexPath = path.join(docsDirectory, 'index.mdx')
+	const indexContent = fs.readFileSync(indexPath, 'utf-8')
 
-	const pages: DocPage[] = []
-
-	for (const entry of entries) {
-		if (!entry.isDirectory()) continue
-
-		const mdxPath = path.join(docsDirectory, entry.name, 'page.mdx')
-		if (!fs.existsSync(mdxPath)) continue
-
-		const content = fs.readFileSync(mdxPath, 'utf-8')
-		const title = extractTitle(content, entry.name)
-
-		pages.push({
-			slug: entry.name,
-			title,
-			href: `/docs/${entry.name}`,
-		})
-	}
-
-	return pages.sort((a, b) => {
-		const order = ['getting-started', 'philosophy', 'constellation', 'asteroid-field', 'advanced']
-		const aIndex = order.indexOf(a.slug)
-		const bIndex = order.indexOf(b.slug)
-		if (aIndex === -1 && bIndex === -1) return a.title.localeCompare(b.title)
-		if (aIndex === -1) return 1
-		if (bIndex === -1) return -1
-		return aIndex - bIndex
-	})
+	return parseIndexMdx(indexContent, docsDirectory)
 }
 
-function extractTitle(content: string, fallbackSlug: string): string {
-	const metadataMatch = content.match(/title:\s*['"]([^'"]+)['"]/)
-	if (metadataMatch) {
-		return metadataMatch[1].replace(/ - Starfocus Docs$/, '')
+function parseIndexMdx(content: string, docsDirectory: string): DocPage[] {
+	const lines = content.split('\n').filter(line => line.trim())
+	const pages: DocPage[] = []
+	let currentParent: DocPage | null = null
+
+	for (const line of lines) {
+		const topLevelMatch = line.match(/^- (.+)$/)
+		const nestedMatch = line.match(/^  - (.+)$/)
+
+		if (topLevelMatch) {
+			const item = topLevelMatch[1]
+			const page = parseItem(item, docsDirectory)
+			pages.push(page)
+			currentParent = page
+		} else if (nestedMatch && currentParent) {
+			const item = nestedMatch[1]
+			const page = parseItem(item, docsDirectory, currentParent.slug)
+			if (!currentParent.children) {
+				currentParent.children = []
+			}
+			currentParent.children.push(page)
+		}
 	}
 
-	const h1Match = content.match(/^#\s+(.+)$/m)
-	if (h1Match) {
-		return h1Match[1]
+	return pages
+}
+
+function parseItem(item: string, docsDirectory: string, parentSlug?: string): DocPage {
+	const comingSoonLinkMatch = item.match(/^\[coming soon\]\s*\[([^\]]+)\]\(([^)]+)\)$/)
+	const comingSoonMatch = item.match(/^\[coming soon\]\s*([^[].*)$/)
+	const linkMatch = item.match(/^\[([^\]]+)\]\(([^)]+)\)$/)
+
+	if (comingSoonLinkMatch) {
+		const title = comingSoonLinkMatch[1]
+		const relativePath = comingSoonLinkMatch[2]
+		const slug = relativePath.replace(/^\.\//, '').replace(/\/page\.mdx$/, '')
+		return {
+			slug,
+			title,
+			href: `/docs/${slug}`,
+			comingSoon: true,
+		}
 	}
 
-	return fallbackSlug
-		.split('-')
-		.map(word => word.charAt(0).toUpperCase() + word.slice(1))
-		.join(' ')
+	if (comingSoonMatch) {
+		const title = comingSoonMatch[1]
+		const slug = title.toLowerCase().replace(/\s+/g, '-')
+		const pagePath = parentSlug
+			? path.join(docsDirectory, parentSlug, slug, 'page.mdx')
+			: path.join(docsDirectory, slug, 'page.mdx')
+		const hasPage = fs.existsSync(pagePath)
+		const href = hasPage
+			? `/docs/${parentSlug ? `${parentSlug}/${slug}` : slug}`
+			: null
+		return { slug, title, href, comingSoon: true }
+	}
+
+	if (linkMatch) {
+		const title = linkMatch[1]
+		const relativePath = linkMatch[2]
+		const slug = relativePath.replace(/^\.\//, '').replace(/\/page\.mdx$/, '')
+		return {
+			slug,
+			title,
+			href: `/docs/${slug}`,
+		}
+	}
+
+	const slug = item.toLowerCase().replace(/\s+/g, '-')
+	const pagePath = parentSlug
+		? path.join(docsDirectory, parentSlug, slug, 'page.mdx')
+		: path.join(docsDirectory, slug, 'page.mdx')
+	const hasPage = fs.existsSync(pagePath)
+
+	return {
+		slug,
+		title: item,
+		href: hasPage ? `/docs/${parentSlug ? `${parentSlug}/${slug}` : slug}` : null,
+	}
 }
