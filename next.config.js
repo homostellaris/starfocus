@@ -22,13 +22,4 @@ module.exports = withMDX({
 		'@stencil/core',
 		'ionicons',
 	],
-	async redirects() {
-		return [
-			{
-				source: '/docs',
-				destination: '/docs/getting-started',
-				permanent: true,
-			},
-		]
-	},
 })
