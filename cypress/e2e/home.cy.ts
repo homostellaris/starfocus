@@ -117,7 +117,7 @@ describe('snooze', () => {
 		createTodo({ title: 'take the bins out' })
 		cy.get('[data-class="todo"]').click()
 		cy.get('#todo-action-sheet').contains('Snooze').click()
-		cy.get('[aria-label="Friday 3 January"]').click()
+		cy.get('[data-day="3"][data-month="1"][data-year="2025"]').click()
 		cy.contains('Confirm')
 			.click()
 			.wait(1000)
