@@ -5,7 +5,7 @@ export default function Nav() {
 		<nav>
 			<ul className="flex justify-center gap-4 mx-auto mt-auto font-mono text-xl font-normal text-blue-300 underline w-fit">
 				<li>
-					<Link href="/docs">Docs</Link>
+					<Link href="/docs/get-started/quickstart">Docs</Link>
 				</li>
 				<li>
 					<Link href="/privacy">Privacy</Link>
