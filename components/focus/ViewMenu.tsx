@@ -69,7 +69,8 @@ export const ViewMenu = ({
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
-				<IonSegment
+				{/* Disabled until star sort is fixed */}
+				{/* <IonSegment
 					onIonChange={event => {
 						db.settings.put({
 							key: '#wayfinderOrderMode',
@@ -93,7 +94,7 @@ export const ViewMenu = ({
 							icon={sparklesSharp}
 						></IonIcon>
 					</IonSegmentButton>
-				</IonSegment>
+				</IonSegment> */}
 				<IonButton
 					color="warning"
 					expand="block"
