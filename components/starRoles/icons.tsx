@@ -11,7 +11,7 @@ export default function Icons({
 }) {
 	const matchingIcons = useMemo(() => {
 		return Object.entries(icons).filter(([name]) =>
-			!query ? true : name.includes('Sharp') && name.includes(query),
+			name.includes('Sharp') && (query ? name.includes(query) : true),
 		)
 	}, [query])
 
