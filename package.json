@@ -18,14 +18,14 @@
   "scripts": {
     "prepare": "husky install",
     "dev": "next dev --webpack -p 6603",
-    "android:dev": "next build && cap sync android && mv out/home.html out/index.html && cap run android",
+    "android:dev": "next build --webpack && cap sync android && mv out/home.html out/index.html && cap run android",
     "typecheck": "tsc",
     "lint": "eslint .",
     "prettier:fix": "prettier --write components/ interfaces/ pages/ public/ styles/ utils/",
     "integration": "cypress run",
     "unit": "bun test",
     "test": "bun typecheck && bun lint && bun unit && bun integration",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "serve -p 6603 out"
   },
   "dependencies": {
