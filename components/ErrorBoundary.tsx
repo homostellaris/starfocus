@@ -1,3 +1,4 @@
+import posthog from 'posthog-js'
 import { Component, ErrorInfo, ReactNode } from 'react'
 
 interface Props {
@@ -19,6 +20,7 @@ class ErrorBoundary extends Component<Props, State> {
 
 	public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
 		console.error('Uncaught error:', error, errorInfo)
+		posthog.captureException(error)
 	}
 
 	public render() {

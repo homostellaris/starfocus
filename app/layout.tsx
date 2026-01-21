@@ -31,6 +31,7 @@ import '@ionic/react/css/palettes/dark.always.css'
 /* Theme variables */
 import '../styles/globals.css'
 import '../styles/theme.css'
+import { PostHogProvider } from './providers'
 
 export const metadata: Metadata = {
 	title: 'Starfocus',
@@ -80,7 +81,7 @@ export default function RootLayout({
 			className={`${funnelDisplay.variable} ${honk.variable} ${jura.variable} ${kode.variable}`}
 		>
 			<body>
-				{children}
+				<PostHogProvider>{children}</PostHogProvider>
 				<Analytics />
 			</body>
 			<Script

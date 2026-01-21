@@ -5,6 +5,8 @@ import order from '../../common/order'
 import { db, ListType, Todo, TodoInput } from '../../db'
 import useNoteProvider from '../../notes/useNoteProvider'
 import { CreateTodoModal } from './modal'
+import { usePostHog } from 'posthog-js/react'
+import StarPoints from '../../common/StarPoints'
 
 export function useCreateTodoModal(): [
 	({
@@ -16,6 +18,7 @@ export function useCreateTodoModal(): [
 	}) => void,
 	(data?: any, role?: string) => void,
 ] {
+	const posthog = usePostHog()
 	const titleInput = useRef<HTMLIonInputElement>(null)
 	const todoRef = useRef<Todo>(undefined)
 	const [present, dismiss] = useIonModal(CreateTodoModal, {
@@ -81,10 +84,11 @@ export function useCreateTodoModal(): [
 				onDidPresent: _event => {
 					titleInput.current?.setFocus()
 				},
-				onWillDismiss: event => {
+				onWillDismiss: async event => {
 					if (event.detail.role === 'confirm') {
 						const { todo, location } = event.detail.data
-						createTodo(todo, location)
+						await createTodo(todo, location)
+						posthog.capture('todo created')
 					}
 					onWillDismiss?.(event)
 				},
