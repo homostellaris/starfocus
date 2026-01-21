@@ -10,7 +10,7 @@ export function useEditTodoModal(): [
 	(data?: any, role?: string) => void,
 ] {
 	const titleInput = useRef<HTMLIonInputElement>(null)
-	const todoRef = useRef<Todo>()
+	const todoRef = useRef<Todo>(undefined)
 	const [present, dismiss] = useIonModal(EditTodoModal, {
 		dismiss: (data: string, role: string) => dismiss(data, role),
 		title: 'Edit todo',

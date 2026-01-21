@@ -38,7 +38,7 @@ import { cn } from '../common/cn'
 export const ViewMenu = ({
 	searchbarRef,
 }: {
-	searchbarRef: RefObject<HTMLIonSearchbarElement>
+	searchbarRef: RefObject<HTMLIonSearchbarElement | null>
 }) => {
 	const queryResult = useLiveQuery(() =>
 		Promise.all([db.starRoles.toArray(), db.starRoleGroups.toArray()]),

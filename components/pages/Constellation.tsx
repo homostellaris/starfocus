@@ -177,7 +177,7 @@ function StarRolesList({
 }
 
 function useGlobalKeyboardShortcuts(
-	fab: RefObject<HTMLIonFabElement>,
+	fab: RefObject<HTMLIonFabElement | null>,
 	openCreateStarRoleModal: any,
 ) {
 	useEffect(() => {

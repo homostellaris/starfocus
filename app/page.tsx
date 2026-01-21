@@ -1,5 +1,7 @@
-import Link from 'next/link'
+'use client'
+
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { MoodProvider } from '../components/mood/MoodContext'
 import Nav from '../components/common/Nav'
 
@@ -50,12 +52,12 @@ export default function Page() {
 					important thing.
 				</p>
 				<div className="space-y-4">
-					<a
+					<Link
 						className="inline-block px-4 py-2 text-3xl text-white uppercase border-2 rounded shadow-lg border-violet-500 shadow-violet-500/50 font-display [font-palette:--redshift] bg-violet-600/15 hover:bg-violet-700/20 active:bg-violet-800/30 transition-all duration-200 ease-in-out transform hover:scale-105"
 						href="/home"
 					>
 						Try it
-					</a>
+					</Link>
 					<p className="font-light">Free, private, no signup</p>
 				</div>
 				<p className="mx-auto font-sans font-medium max-w-prose">
