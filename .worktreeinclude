@@ -1,0 +1,5 @@
+.env
+.env.local
+.env.*
+.envrc
+**/.claude/settings.local.json
