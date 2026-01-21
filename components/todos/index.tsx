@@ -1,4 +1,3 @@
-import { IonText, isPlatform } from '@ionic/react'
 import {
 	IonCard,
 	IonCardHeader,
@@ -8,14 +7,17 @@ import {
 	IonItem,
 	IonLabel,
 	IonReorder,
+	IonText,
+	isPlatform,
 } from '@ionic/react'
 import dayjs from 'dayjs'
 import { calendarSharp, documentText, timeSharp } from 'ionicons/icons'
 import {
-	ComponentProps,
+	type ComponentProps,
 	forwardRef,
-	MouseEventHandler,
-	PropsWithChildren,
+	type JSX,
+	type MouseEventHandler,
+	type PropsWithChildren,
 } from 'react'
 import { cn } from '../common/cn'
 import { StarRoleIcon } from '../common/StarRoleIcon'
@@ -114,6 +116,7 @@ export const TodoListItem = forwardRef<
 						href={todo.note.uri}
 						slot="end"
 						target="_blank"
+						rel="noreferrer"
 					>
 						<IonIcon icon={documentText}></IonIcon>
 					</a>

@@ -1,3 +1,4 @@
+import { type JSX } from 'react'
 import { cn } from '../common/cn'
 import { useMood } from '../mood/MoodContext'
 

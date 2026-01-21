@@ -21,6 +21,7 @@ export default function Icons({
 				className="absolute p-1 space-x-1 text-xs bg-white right-2 -top-3"
 				href="https://ionic.io/ionicons"
 				target="_blank"
+				rel="noreferrer"
 			>
 				<span>View all icons</span>
 				<IonIcon icon={icons.openSharp} />

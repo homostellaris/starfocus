@@ -163,7 +163,7 @@ const Home = () => {
 
 export default Home
 
-export const TodoLists = ({}: {}) => {
+export const TodoLists = () => {
 	// Initial loading & scrolling stuff
 	const contentRef = useRef<HTMLIonContentElement>(null)
 
@@ -1155,7 +1155,7 @@ export const SettingsMenu = () => {
 export const Journey = ({
 	commonAncestor,
 }: {
-	commonAncestor: RefObject<HTMLElement>
+	commonAncestor: RefObject<HTMLElement | null>
 }) => {
 	const {
 		nextTodo: {
@@ -1365,12 +1365,16 @@ type TodoGroup = {
 }
 
 function VisitInfo({ todo }: { todo: TodoListItemBase }) {
-	return todo.visits === true ? (
-		<IonNote>Checked in {todo.completedAt?.toDateString()}</IonNote>
-	) : Array.isArray(todo.visits) && todo.starPoints ? (
-		<PulseGraph
-			visits={todo.visits}
-			starPoints={todo.starPoints}
-		/>
-	) : null
+	if (todo.visits === true) {
+		return <IonNote>Checked in {todo.completedAt?.toDateString()}</IonNote>
+	}
+	if (Array.isArray(todo.visits) && todo.starPoints) {
+		return (
+			<PulseGraph
+				visits={todo.visits}
+				starPoints={todo.starPoints}
+			/>
+		)
+	}
+	return null
 }

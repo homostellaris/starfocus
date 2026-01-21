@@ -17,7 +17,7 @@ export function useCreateTodoModal(): [
 	(data?: any, role?: string) => void,
 ] {
 	const titleInput = useRef<HTMLIonInputElement>(null)
-	const todoRef = useRef<Todo>()
+	const todoRef = useRef<Todo>(undefined)
 	const [present, dismiss] = useIonModal(CreateTodoModal, {
 		dismiss: (data: string, role: string) => dismiss(data, role),
 		title: 'Create todo',

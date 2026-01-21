@@ -2,6 +2,7 @@ import { defineConfig } from 'cypress'
 
 export default defineConfig({
 	video: true,
+	screenshotOnRunFailure: true,
 	e2e: {
 		baseUrl: 'http://localhost:6603',
 		includeShadowDom: true,

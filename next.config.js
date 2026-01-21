@@ -15,7 +15,6 @@ module.exports = withMDX({
 		unoptimized: true,
 	},
 	output: 'export',
-	swcMinify: true,
 	transpilePackages: [
 		'@ionic/react',
 		'@ionic/core',
