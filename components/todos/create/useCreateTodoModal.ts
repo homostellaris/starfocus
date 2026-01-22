@@ -88,7 +88,12 @@ export function useCreateTodoModal(): [
 					if (event.detail.role === 'confirm') {
 						const { todo, location } = event.detail.data
 						await createTodo(todo, location)
-						posthog.capture('todo created')
+						posthog.capture('todo_created', {
+							location,
+							has_star_role: !!todo.starRole,
+							star_points: todo.starPoints,
+							has_note: !!todo.noteInitialContent,
+						})
 					}
 					onWillDismiss?.(event)
 				},

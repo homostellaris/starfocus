@@ -4,11 +4,13 @@ import { ListType, Todo, WayfinderOrder, db } from '../../db'
 import useNoteProvider from '../../notes/useNoteProvider'
 import useTodoContext from '../TodoContext'
 import SnoozeTodoModal from './modal'
+import { usePostHog } from 'posthog-js/react'
 
 export function useSnoozeTodoModal(): [
 	(todo: Todo, location: ListType) => void,
 	(data?: any, role?: string) => void,
 ] {
+	const posthog = usePostHog()
 	const {
 		selectedTodo: [todo, setTodo],
 	} = useTodoContext()
@@ -46,7 +48,16 @@ export function useSnoozeTodoModal(): [
 				},
 				onWillDismiss: event => {
 					const todo = event.detail.data
-					if (event.detail.role === 'confirm') snoozeTodo(todo, location)
+					if (event.detail.role === 'confirm') {
+						snoozeTodo(todo, location)
+						const snoozeDurationMs = todo.snoozedUntil
+							? new Date(todo.snoozedUntil).getTime() - Date.now()
+							: 0
+						posthog.capture('todo_snoozed', {
+							location,
+							snooze_duration: Math.round(snoozeDurationMs / (1000 * 60)),
+						})
+					}
 					setTodo(null)
 				},
 			})

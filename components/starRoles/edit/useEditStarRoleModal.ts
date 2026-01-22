@@ -2,11 +2,13 @@ import { useIonModal } from '@ionic/react'
 import { useCallback, useRef, useState } from 'react'
 import { StarRole, db } from '../../db'
 import { EditStarRoleModal } from './modal'
+import { usePostHog } from 'posthog-js/react'
 
 export function useEditStarRoleModal(): [
 	(starRole: StarRole) => void,
 	(data?: any, role?: string) => void,
 ] {
+	const posthog = usePostHog()
 	const [starRole, setStarRole] = useState<StarRole | null>(null)
 	const titleInput = useRef<HTMLIonInputElement>(null)
 	const [present, dismiss] = useIonModal(EditStarRoleModal, {
@@ -34,7 +36,13 @@ export function useEditStarRoleModal(): [
 				},
 				onWillDismiss: event => {
 					if (event.detail.role === 'confirm') {
-						editStarRole(starRole.id, event.detail.data)
+						const updatedStarRole = event.detail.data
+						editStarRole(starRole.id, updatedStarRole)
+						posthog.capture('star_role_edited', {
+							changed_icon: updatedStarRole.icon !== starRole.icon,
+							changed_group:
+								updatedStarRole.starRoleGroup !== starRole.starRoleGroupId,
+						})
 					}
 					setStarRole(null)
 				},

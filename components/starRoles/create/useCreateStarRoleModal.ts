@@ -3,6 +3,7 @@ import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOpt
 import { useCallback, useRef } from 'react'
 import { db, StarRole } from '../../db'
 import { CreateStarRoleModal } from './modal'
+import { usePostHog } from 'posthog-js/react'
 
 export function useCreateStarRoleModal(): [
 	({
@@ -12,6 +13,7 @@ export function useCreateStarRoleModal(): [
 	}) => void,
 	(data?: any, role?: string) => void,
 ] {
+	const posthog = usePostHog()
 	const titleInput = useRef<HTMLIonInputElement>(null)
 	const [present, dismiss] = useIonModal(CreateStarRoleModal, {
 		dismiss: (data: string, role: string) => dismiss(data, role),
@@ -30,7 +32,12 @@ export function useCreateStarRoleModal(): [
 				},
 				onWillDismiss: event => {
 					if (event.detail.role === 'confirm') {
-						createStarRole(event.detail.data)
+						const starRole = event.detail.data
+						createStarRole(starRole)
+						posthog.capture('star_role_created', {
+							has_icon: !!starRole.icon,
+							has_group: !!starRole.group,
+						})
 					}
 					onWillDismiss?.(event)
 				},
