@@ -173,10 +173,10 @@ export function TodoCard({
 					<span
 						className={cn(
 							'!font-mono grow-0 min-w-[2ch] text-base me-4',
-							starScale[todo.starPoints || 0].textColor,
+							starScale[todo.starPoints].textColor,
 						)}
 					>
-						{todo.starPoints || 0}
+						{todo.starPoints}
 					</span>
 					<span data-class="title">{todo.title}</span>
 				</IonCardTitle>

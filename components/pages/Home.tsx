@@ -87,14 +87,20 @@ import { groupByCompletedAt } from '../todos/groupTodosByCompletedAt'
 import todoRepository from '../todos/repository'
 import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
 import { useTodoPopover } from '../todos/useTodoPopover'
+import { usePostHog } from 'posthog-js/react'
 
 const Home = () => {
+	const posthog = usePostHog()
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (event.key === '/') {
 				event.preventDefault()
 				searchbarRef.current?.setFocus()
+				posthog.capture('keyboard_shortcut_used', {
+					shortcut_key: '/',
+					action: 'search_focus',
+				})
 			}
 		}
 		document.addEventListener('keydown', handleKeyDown)
@@ -129,6 +135,7 @@ const Home = () => {
 											id="view-menu-button"
 											onClick={() => {
 												menuController.toggle('start')
+												posthog.capture('view_menu_opened')
 											}}
 										>
 											<IonIcon
@@ -143,6 +150,7 @@ const Home = () => {
 											id="settings-menu-button"
 											onClick={() => {
 												menuController.toggle('end')
+												posthog.capture('settings_menu_opened')
 											}}
 										>
 											<IonIcon
@@ -164,6 +172,7 @@ const Home = () => {
 export default Home
 
 export const TodoLists = () => {
+	const posthog = usePostHog()
 	// Initial loading & scrolling stuff
 	const contentRef = useRef<HTMLIonContentElement>(null)
 
@@ -390,14 +399,26 @@ export const TodoLists = () => {
 				event.preventDefault()
 				openCreateTodoModal()
 				if (fab.current) fab.current.activated = true
+				posthog.capture('keyboard_shortcut_used', {
+					shortcut_key: 'c',
+					action: 'create_todo',
+				})
 			} else if (event.key === 's') {
 				event.preventDefault()
 				const y = nextTodoPosition ? nextTodoPosition.top + 32 : 0
 				contentRef.current?.scrollToPoint(undefined, y, 500)
+				posthog.capture('keyboard_shortcut_used', {
+					shortcut_key: 's',
+					action: 'scroll_to_next_todo',
+				})
 			} else if (event.key === 'i') {
 				event.preventDefault()
 				document.getElementById('database')?.scrollIntoView({
 					behavior: 'smooth',
+				})
+				posthog.capture('keyboard_shortcut_used', {
+					shortcut_key: 'i',
+					action: 'scroll_to_database',
 				})
 			}
 		}
@@ -480,7 +501,13 @@ export const TodoLists = () => {
 									color="medium"
 									expand="full"
 									fill="clear"
-									onClick={() => setLogLimit(limit => limit + 10)}
+									onClick={() => {
+										setLogLimit(limit => {
+											const newLimit = limit + 10
+											posthog.capture('load_more_log', { new_limit: newLimit })
+											return newLimit
+										})
+									}}
 									size="small"
 								>
 									<IonIcon
@@ -535,6 +562,10 @@ export const TodoLists = () => {
 																} else {
 																	await todoRepository.uncomplete(todo)
 																	setLogLimit(limit => limit - 1)
+																	posthog.capture('todo_uncompleted', {
+																		todo_id: todo.id,
+																		location: 'log',
+																	})
 																}
 															}}
 															starRole={starRoles?.find(
@@ -583,6 +614,10 @@ export const TodoLists = () => {
 														} else {
 															await todoRepository.uncomplete(todo)
 															setLogLimit(limit => limit - 1)
+															posthog.capture('todo_uncompleted', {
+																todo_id: todo.id,
+																location: 'log',
+															})
 														}
 													}}
 													starRole={starRoles?.find(
@@ -643,6 +678,11 @@ export const TodoLists = () => {
 													await db.asteroidFieldOrder.update(fromTodo.id, {
 														order: newOrder,
 													})
+													posthog.capture('todo_reordered', {
+														location: 'asteroid_field',
+														from_index: event.detail.from,
+														to_index: event.detail.to,
+													})
 												}}
 											>
 												{data.asteroidField.length === 0 ? (
@@ -665,9 +705,18 @@ export const TodoLists = () => {
 																if (event.detail.checked) {
 																	await todoRepository.complete(todo)
 																	setLogLimit(limit => limit + 1)
+																	posthog.capture('todo_completed', {
+																		location: 'asteroid_field',
+																		has_star_role: !!todo.starRole,
+																		star_points: todo.starPoints,
+																	})
 																} else {
 																	await todoRepository.uncomplete(todo)
 																	setLogLimit(limit => limit - 1)
+																	posthog.capture('todo_uncompleted', {
+																		todo_id: todo.id,
+																		location: 'asteroid_field',
+																	})
 																}
 															}}
 															onClick={_event => {
@@ -713,6 +762,12 @@ export const TodoLists = () => {
 																						)
 																					},
 																				)
+																				posthog.capture('todo_moved', {
+																					from_list: 'asteroid_field',
+																					to_list: 'database',
+																					has_star_role: !!todo.starRole,
+																					star_points: todo.starPoints,
+																				})
 																			},
 																		},
 																		{
@@ -794,6 +849,11 @@ export const TodoLists = () => {
 													await db.wayfinderOrder.update(fromTodo.id, {
 														order: newOrder,
 													})
+													posthog.capture('todo_reordered', {
+														location: 'wayfinder',
+														from_index: event.detail.from,
+														to_index: event.detail.to,
+													})
 												}}
 											>
 												{data.wayfinder.length === 0 ? (
@@ -820,12 +880,18 @@ export const TodoLists = () => {
 																				todoId: todo.id,
 																				date: new Date(),
 																			})
+																			posthog.capture('todo_visited', {
+																				todo_id: todo.id,
+																			})
 																		} else if (
 																			overlayEvent.detail.role === 'snooze'
 																		) {
 																			await db.visits.add({
 																				todoId: todo.id,
 																				date: new Date(),
+																			})
+																			posthog.capture('todo_visited', {
+																				todo_id: todo.id,
 																			})
 																			presentSnoozeTodoModal(
 																				todo,
@@ -837,9 +903,18 @@ export const TodoLists = () => {
 																			if (checkboxEvent.detail.checked) {
 																				await todoRepository.complete(todo)
 																				setLogLimit(limit => limit + 1)
+																				posthog.capture('todo_completed', {
+																					location: 'wayfinder',
+																					has_star_role: !!todo.starRole,
+																					star_points: todo.starPoints,
+																				})
 																			} else {
 																				await todoRepository.uncomplete(todo)
 																				setLogLimit(limit => limit - 1)
+																				posthog.capture('todo_uncompleted', {
+																					todo_id: todo.id,
+																					location: 'wayfinder',
+																				})
 																			}
 																		}
 																	},
@@ -888,6 +963,12 @@ export const TodoLists = () => {
 																						)
 																					},
 																				)
+																				posthog.capture('todo_moved', {
+																					from_list: 'wayfinder',
+																					to_list: 'database',
+																					has_star_role: !!todo.starRole,
+																					star_points: todo.starPoints,
+																				})
 																			},
 																		},
 																		{
@@ -939,7 +1020,15 @@ export const TodoLists = () => {
 									color="medium"
 									expand="full"
 									fill="clear"
-									onClick={() => setDatabaseLimit(limit => limit + 10)}
+									onClick={() => {
+										setDatabaseLimit(limit => {
+											const newLimit = limit + 10
+											posthog.capture('load_more_database', {
+												new_limit: newLimit,
+											})
+											return newLimit
+										})
+									}}
 									size="small"
 								>
 									<IonIcon
@@ -963,6 +1052,7 @@ export const TodoLists = () => {
 }
 
 export const SettingsMenu = () => {
+	const posthog = usePostHog()
 	const settings = useSettings()
 	const [noteProvider, setNoteProvider] = useState<{
 		type?: string
@@ -1002,6 +1092,11 @@ export const SettingsMenu = () => {
 						await db.settings.put({
 							key: '#noteProvider',
 							value: noteProvider,
+						})
+						posthog.capture('settings_saved', {
+							note_provider_type: noteProvider.type,
+							has_vault: !!noteProvider.vault,
+							has_folder: !!noteProvider.folder,
 						})
 					}}
 				>
@@ -1190,6 +1285,7 @@ export const Journey = ({
 }
 
 export const Database = ({ todos }: { todos: Todo[] }) => {
+	const posthog = usePostHog()
 	const [present] = useTodoActionSheet()
 	const onClick = useCallback(
 		todo => {
@@ -1212,6 +1308,12 @@ export const Database = ({ todos }: { todos: Todo[] }) => {
 									order: order(undefined, wayfinderOrder[0]?.toString()),
 								})
 							})
+							posthog.capture('todo_moved', {
+								from_list: 'database',
+								to_list: 'wayfinder',
+								has_star_role: !!todo.starRole,
+								star_points: todo.starPoints,
+							})
 						},
 					},
 					{
@@ -1229,7 +1331,7 @@ export const Database = ({ todos }: { todos: Todo[] }) => {
 				],
 			})
 		},
-		[present],
+		[present, posthog],
 	)
 
 	if (todos === undefined) return null
@@ -1255,6 +1357,7 @@ export const Database = ({ todos }: { todos: Todo[] }) => {
 
 export const Searchbar = forwardRef<HTMLIonSearchbarElement>(
 	function Searchbar(_props, ref) {
+		const posthog = usePostHog()
 		const { setQuery } = useView()
 
 		return (
@@ -1272,6 +1375,10 @@ export const Searchbar = forwardRef<HTMLIonSearchbarElement>(
 						// TS complains unless we narrow the type
 						if (document.activeElement instanceof HTMLElement)
 							document.activeElement.blur()
+						posthog.capture('keyboard_shortcut_used', {
+							shortcut_key: 'Escape',
+							action: 'blur_search',
+						})
 					}
 				}}
 				onIonInput={event => {
@@ -1279,6 +1386,8 @@ export const Searchbar = forwardRef<HTMLIonSearchbarElement>(
 					let query = ''
 					if (target?.value) query = target.value.toLowerCase()
 					setQuery(query)
+					if (query)
+						posthog.capture('search_performed', { query_length: query.length })
 				}}
 				// placeholder="command + k to focus, / to search, is:snoozed"
 			></IonSearchbar>
@@ -1315,6 +1424,7 @@ function TimeInfo({
 }
 
 function useGlobalKeyboardShortcuts() {
+	const posthog = usePostHog()
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (event.target !== document.body) return
@@ -1322,9 +1432,17 @@ function useGlobalKeyboardShortcuts() {
 			if (event.key === '[') {
 				event.preventDefault()
 				menuController.toggle('start')
+				posthog.capture('keyboard_shortcut_used', {
+					shortcut_key: '[',
+					action: 'toggle_start_menu',
+				})
 			} else if (event.key === ']') {
 				event.preventDefault()
 				menuController.toggle('end')
+				posthog.capture('keyboard_shortcut_used', {
+					shortcut_key: ']',
+					action: 'toggle_end_menu',
+				})
 			}
 		}
 		document.addEventListener('keydown', handleKeyDown)

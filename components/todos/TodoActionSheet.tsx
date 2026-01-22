@@ -3,9 +3,11 @@ import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOpt
 import { Todo, db } from '../db'
 import { useEditTodoModal } from './edit/useEditTodoModal'
 import { createSharp, openSharp, trashSharp } from 'ionicons/icons'
+import { usePostHog } from 'posthog-js/react'
 
 // TODO: Make this so that todo is never null, action sheet doesn't make sense to be open if its null
 export function useTodoActionSheet() {
+	const posthog = usePostHog()
 	// Using controller action sheet rather than inline because I was re-inventing what it was doing allowing dynamic options to be passed easily
 	const [presentActionSheet, dismissActionSheet] = useIonActionSheet()
 	// Using controller modal rather than inline because the trigger prop doesn't work with an ID on a controller-based action sheet button
@@ -25,6 +27,12 @@ export function useTodoActionSheet() {
 									},
 									handler: async () => {
 										open(todo.note?.uri)
+										posthog.capture('todo_note_opened', {
+											has_note: !!todo.note,
+											note_provider: todo.note?.uri
+												? new URL(todo.note.uri).protocol.replace(':', '')
+												: undefined,
+										})
 									},
 								},
 							]
@@ -62,6 +70,11 @@ export function useTodoActionSheet() {
 									])
 								},
 							)
+							posthog.capture('todo_deleted', {
+								has_star_role: !!todo.starRole,
+								star_points: todo.starPoints,
+								has_note: !!todo.note,
+							})
 						},
 					},
 					...(options?.buttons || []),

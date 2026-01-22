@@ -34,12 +34,14 @@ import useView from './view'
 import useSettings from '../settings/useSettings'
 import useKeyboardShortcuts from '../common/useKeyboardShortcut'
 import { cn } from '../common/cn'
+import { usePostHog } from 'posthog-js/react'
 
 export const ViewMenu = ({
 	searchbarRef,
 }: {
 	searchbarRef: RefObject<HTMLIonSearchbarElement | null>
 }) => {
+	const posthog = usePostHog()
 	const queryResult = useLiveQuery(() =>
 		Promise.all([db.starRoles.toArray(), db.starRoleGroups.toArray()]),
 	)
@@ -49,9 +51,13 @@ export const ViewMenu = ({
 	const wayfinderOrderMode = useSettings('#wayfinderOrderMode')
 	useKeyboardShortcuts(event => {
 		if (event.key === 'm') {
+			const newMode = wayfinderOrderMode === 'manual' ? 'star' : 'manual'
 			db.settings.put({
 				key: '#wayfinderOrderMode',
-				value: wayfinderOrderMode === 'manual' ? 'star' : 'manual',
+				value: newMode,
+			})
+			posthog.capture('wayfinder_order_mode_changed', {
+				new_mode: newMode,
 			})
 		}
 	}, [])
@@ -75,6 +81,9 @@ export const ViewMenu = ({
 						db.settings.put({
 							key: '#wayfinderOrderMode',
 							value: event.detail.value,
+						})
+						posthog.capture('wayfinder_order_mode_changed', {
+							new_mode: event.detail.value,
 						})
 					}}
 					scrollable={true}

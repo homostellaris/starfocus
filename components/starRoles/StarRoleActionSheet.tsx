@@ -3,9 +3,11 @@ import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOpt
 import { StarRole, db } from '../db'
 import { useEditStarRoleModal } from './edit/useEditStarRoleModal'
 import { createSharp, trashSharp } from 'ionicons/icons'
+import { usePostHog } from 'posthog-js/react'
 
 // TODO: Make this so that todo is never null, action sheet doesn't make sense to be open if its null
 export function useStarRoleActionSheet() {
+	const posthog = usePostHog()
 	// Using controller action sheet rather than inline because I was re-inventing what it was doing allowing dynamic options to be passed easily
 	const [presentActionSheet, dismissActionSheet] = useIonActionSheet()
 	// Using controller modal than inline because the trigger prop doesn't work with an ID on a controller-based action sheet button
@@ -42,6 +44,7 @@ export function useStarRoleActionSheet() {
 									.modify({ starRole: undefined })
 								// TODO: Set starRole to undefined on todos with this star role
 							})
+							posthog.capture('star_role_deleted')
 						},
 					},
 				],

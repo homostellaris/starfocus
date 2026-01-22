@@ -4,11 +4,13 @@ import { ListType, Todo, db } from '../../db'
 import useNoteProvider from '../../notes/useNoteProvider'
 import { EditTodoModal } from './modal'
 import order from '../../common/order'
+import { usePostHog } from 'posthog-js/react'
 
 export function useEditTodoModal(): [
 	(todo: Todo) => void,
 	(data?: any, role?: string) => void,
 ] {
+	const posthog = usePostHog()
 	const titleInput = useRef<HTMLIonInputElement>(null)
 	const todoRef = useRef<Todo>(undefined)
 	const [present, dismiss] = useIonModal(EditTodoModal, {
@@ -79,7 +81,13 @@ export function useEditTodoModal(): [
 				onWillDismiss: event => {
 					if (event.detail.role === 'confirm') {
 						const { todo, location } = event.detail.data
+						const originalTodo = todoRef.current
 						editTodo(todo, location)
+						posthog.capture('todo_edited', {
+							location,
+							changed_star_role: todo.starRole !== originalTodo!.starRole,
+							changed_star_points: todo.starPoints !== originalTodo!.starPoints,
+						})
 					}
 				},
 			})
