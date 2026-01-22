@@ -173,7 +173,9 @@ export function TodoCard({
 					<span
 						className={cn(
 							'!font-mono grow-0 min-w-[2ch] text-base me-4',
-							starScale[todo.starPoints].textColor,
+							todo.starPoints
+								? starScale[todo.starPoints].textColor
+								: undefined,
 						)}
 					>
 						{todo.starPoints}
