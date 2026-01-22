@@ -7,7 +7,6 @@ import {
 	IonIcon,
 	IonInput,
 	IonInputOtp,
-	IonLabel,
 	IonModal,
 	IonText,
 	IonTitle,
@@ -88,7 +87,7 @@ export function LoginModal({ ui }: { ui?: DXCUserInteraction }) {
 										length={8}
 										onIonChange={event => {
 											const value = event.target.value
-											let updatedParams = {
+											const updatedParams = {
 												...params,
 												[fieldName]: value as string,
 											}
@@ -111,7 +110,7 @@ export function LoginModal({ ui }: { ui?: DXCUserInteraction }) {
 											type={type}
 											onIonChange={event => {
 												const value = event.target.value
-												let updatedParams = {
+												const updatedParams = {
 													...params,
 													[fieldName]: value as string,
 												}
