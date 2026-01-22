@@ -11,8 +11,13 @@ export default async function handler(
 
 	const { userId, email } = request.body
 
-	const posthog = new PostHog(process.env.POSTHOG_API_KEY!)
-
+	console.debug('Posthog', {
+		hasApiKey: !!process.env.POSTHOG_API_KEY,
+		host: process.env.POSTHOG_HOST,
+	})
+	const posthog = new PostHog(process.env.POSTHOG_API_KEY!, {
+		host: process.env.POSTHOG_HOST,
+	})
 	posthog.capture({
 		distinctId: userId,
 		event: 'user_signed_up',
@@ -21,7 +26,6 @@ export default async function handler(
 			source: 'dexie-cloud',
 		},
 	})
-
 	await posthog.shutdown()
 
 	return response.status(200).json({
