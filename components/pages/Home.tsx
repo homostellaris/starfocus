@@ -437,6 +437,50 @@ export const TodoLists = () => {
 			className="relative"
 			ref={contentRef}
 		>
+			<IonFab
+				className="left-0 lg:left-[calc((100vw/12*3)-56px)] bottom-0"
+				slot="fixed"
+				horizontal="start"
+				vertical="bottom"
+			>
+				<div className="flex flex-col items-center">
+					<IonButton
+						onClick={() => {
+							const y = nextTodoPosition ? nextTodoPosition.top + 32 : 0
+							contentRef.current?.scrollToPoint(undefined, y, 500)
+						}}
+						shape="round"
+						size="small"
+					>
+						<IonIcon
+							slot="icon-only"
+							icon={rocketSharp}
+						></IonIcon>
+					</IonButton>
+					<IonButton
+						onClick={() => {
+							document.getElementById('database')?.scrollIntoView({
+								behavior: 'smooth',
+							})
+						}}
+						shape="round"
+						size="small"
+						color="secondary"
+					>
+						<IonIcon
+							slot="icon-only"
+							icon={snowSharp}
+						></IonIcon>
+					</IonButton>
+				</div>
+				<IonFabButton
+					color="success"
+					onClick={openCreateTodoModal}
+					size="small"
+				>
+					<IonIcon icon={add}></IonIcon>
+				</IonFabButton>
+			</IonFab>
 			<IonGrid className="h-full ion-no-padding">
 				<IonRow className="h-full">
 					<IonCol
@@ -444,45 +488,6 @@ export const TodoLists = () => {
 						size="auto"
 						sizeLg="3"
 					>
-						<IonFab className="fixed lg:left-[calc(100vw/12*3-40px-18px)] bottom-16">
-							<IonFabButton
-								color="success"
-								onClick={openCreateTodoModal}
-								size="small"
-							>
-								<IonIcon icon={add}></IonIcon>
-							</IonFabButton>
-						</IonFab>
-						<IonButton
-							className="fixed left-[calc(23px-10px)] lg:left-[calc(100vw/12*3-40px-6px)] bottom-[calc(64px+52px+34px)] z-10"
-							onClick={() => {
-								const y = nextTodoPosition ? nextTodoPosition.top + 32 : 0
-								contentRef.current?.scrollToPoint(undefined, y, 500)
-							}}
-							shape="round"
-							size="small"
-						>
-							<IonIcon
-								slot="icon-only"
-								icon={rocketSharp}
-							></IonIcon>
-						</IonButton>
-						<IonButton
-							className="fixed left-[calc(23px-10px)] lg:left-[calc(100vw/12*3-40px-6px)] bottom-[calc(64px+52px)] z-10"
-							onClick={() => {
-								document.getElementById('database')?.scrollIntoView({
-									behavior: 'smooth',
-								})
-							}}
-							shape="round"
-							size="small"
-							color="secondary"
-						>
-							<IonIcon
-								slot="icon-only"
-								icon={snowSharp}
-							></IonIcon>
-						</IonButton>
 						<Journey commonAncestor={contentRef} />
 					</IonCol>
 					<IonCol sizeLg="6">
