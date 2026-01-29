@@ -12,6 +12,9 @@ module.exports = {
 				planets: "url('/planets.jpg')",
 				supernova: "url('/supernova - radial.png')",
 			},
+			cursor: {
+				crosshair: "url('/crosshair.png'), pointer",
+			},
 			fontFamily: {
 				mono: ['var(--font-jura)'],
 				display: [
