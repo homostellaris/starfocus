@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { db, Potodo, Todo } from '../../components/db'
+import { db, Potodo } from '../../components/db'
 
 beforeEach(() => {
 	indexedDB.deleteDatabase('starfocus-z0vnq74nz')
@@ -285,12 +285,12 @@ function assertLists(wayfinder: string[], database: string[]) {
 	cy.get('#log-and-wayfinder [data-class="todo"] [data-class="title"]')
 		.should('have.length', wayfinder.length)
 		.invoke('toArray')
-		.invoke('map', item => item.textContent)
+		.invoke('map', (item: Element) => item.textContent)
 		.should('deep.equal', wayfinder)
 	cy.get('#database [data-class="todo"] [data-class="title"]')
 		.should('have.length', database.length)
 		.invoke('toArray')
-		.invoke('map', item => item.textContent)
+		.invoke('map', (item: Element) => item.textContent)
 		.should('deep.equal', database)
 }
 
@@ -298,35 +298,25 @@ function assertList(id: string, todos: Array<string | Potodo>) {
 	cy.get(`#${id} [data-class="todo"]`)
 		.should('have.length', todos.length)
 		.invoke('toArray')
-		.invoke('map', (item, index) => {
+		.invoke('map', (item: HTMLElement, index: number) => {
 			const todo: any = todos[index]
 			if (typeof todo === 'string') {
-				expect(item.querySelector('[data-class="title"]').textContent).to.eq(
+				expect(item.querySelector('[data-class="title"]')!.textContent).to.eq(
 					todo,
 				)
 			} else {
-				expect(item.querySelector('[data-class="title"]').textContent).to.eq(
+				expect(item.querySelector('[data-class="title"]')!.textContent).to.eq(
 					todo.title,
 				)
 				expect(
-					item.querySelector('[data-class="star-role-icon"]').dataset.starRole,
+					(item.querySelector('[data-class="star-role-icon"]') as HTMLElement)
+						?.dataset.starRole,
 				).to.eq(todo.starRole ?? null)
 				expect(item.querySelector('[data-star-points]')?.textContent).to.eq(
 					todo.starPoints?.toString() ?? undefined,
 				)
 			}
 		})
-}
-
-function reorderWayfinderTodo(todoIndex: number, places: number) {
-	cy.get(`#log-and-wayfinder [data-class="todo"]`)
-		.eq(todoIndex)
-		.find('ion-reorder')
-		.shadow()
-		.find('.reorder-icon')
-		.trigger('mousedown', { which: 1 })
-		.trigger('mousemove', { screenX: 936, screenY: 287 + 49 })
-		.trigger('mouseup')
 }
 
 function createTodo({
