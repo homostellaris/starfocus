@@ -17,54 +17,61 @@ export default function Page() {
 					Starfocus
 				</h1>
 				<h2 className="font-mono text-xl font-bold lg:text-4xl">
-					Self-defined productivity
+					Always know what to work on next
 				</h2>
+				<div className="pt-4">
+					<Link
+						className="inline-block px-6 py-3 text-2xl lg:text-3xl text-white uppercase border-2 rounded shadow-lg border-violet-500 shadow-violet-500/50 font-display [font-palette:--redshift] bg-violet-600/15 hover:bg-violet-700/20 active:bg-violet-800/30 transition-all duration-200 ease-in-out transform hover:scale-105"
+						href="/home"
+					>
+						Get Started Free
+					</Link>
+					<p className="mt-2 text-sm text-gray-300">No signup required</p>
+				</div>
 			</header>
 			<main className="p-4 space-y-8 font-mono font-bold text-center text-white">
 				<ol className="flex flex-wrap justify-center gap-4 max-w-[900px] mx-auto">
 					<li className="p-4 text-4xl bg-blue-600/15 grow text-white border-2 border-blue-500 text-left rounded shadow-lg font-display [font-palette:--blue]">
 						Define
-						<ul className="font-mono text-xl font-semibold">
-							<li>Create star roles</li>
-							<li>Assign star points</li>
-						</ul>
+						<p className="font-mono text-lg font-medium mt-2">
+							Set goals that matter to you and assign star points based on importance
+						</p>
 					</li>
 					<li className="p-4 text-4xl bg-blue-600/15 grow text-white border-2 border-blue-500 text-left rounded shadow-lg font-display [font-palette:--purple]">
 						Focus
-						<ul className="font-mono text-xl font-semibold">
-							<li>Categorise</li>
-							<li>Order</li>
-							<li>Filter</li>
-						</ul>
+						<p className="font-mono text-lg font-medium mt-2">
+							See your priorities clearly with smart filtering and ordering
+						</p>
 					</li>
 					<li className="p-4 text-4xl bg-blue-600/15 grow text-white border-2 border-blue-500 text-left rounded shadow-lg font-display [font-palette:--red]">
 						Execute
-						<ul className="font-mono text-xl font-semibold">
-							<li>Check-in</li>
-							<li>Complete</li>
-							<li>Earn star points</li>
-						</ul>
+						<p className="font-mono text-lg font-medium mt-2">
+							Complete tasks and earn star points to track your progress
+						</p>
 					</li>
 				</ol>
-				<p className="mx-auto font-sans font-medium max-w-prose">
-					Starfocus is not a todo list, it is a prioritisation engine which
-					ensures you are always spending your time & energy on the next most
-					important thing.
+				<blockquote className="mx-auto max-w-prose border-l-4 border-violet-500 pl-4 italic text-gray-300">
+					<p className="font-sans font-medium text-lg">
+						"Finally, a system that helps me focus on what I actually care about
+						instead of drowning in endless task lists."
+					</p>
+				</blockquote>
+				<p className="mx-auto font-sans font-medium max-w-prose text-lg">
+					Not another todo list. A prioritisation engine that ensures you spend
+					your time on what actually matters.
 				</p>
 				<div className="space-y-4">
 					<Link
-						className="inline-block px-4 py-2 text-3xl text-white uppercase border-2 rounded shadow-lg border-violet-500 shadow-violet-500/50 font-display [font-palette:--redshift] bg-violet-600/15 hover:bg-violet-700/20 active:bg-violet-800/30 transition-all duration-200 ease-in-out transform hover:scale-105"
+						className="inline-block px-6 py-3 text-2xl lg:text-3xl text-white uppercase border-2 rounded shadow-lg border-violet-500 shadow-violet-500/50 font-display [font-palette:--redshift] bg-violet-600/15 hover:bg-violet-700/20 active:bg-violet-800/30 transition-all duration-200 ease-in-out transform hover:scale-105"
 						href="/home"
 					>
-						Try it
+						Start Earning Stars
 					</Link>
-					<p className="font-light">Free, private, no signup</p>
+					<p className="text-sm text-gray-300">Free forever. Your data stays on your device.</p>
 				</div>
 				<p className="mx-auto font-sans font-medium max-w-prose">
-					The aim of Starfocus is to earn as many star points as possible. You
-					set the objectives and the number of star points awarded for
-					completing them because this is your life and your journey - no-one
-					else can chart the course except you.
+					You define your goals. You assign the points. Because this is your
+					life and your journey.
 				</p>
 				{/* <iframe
 					className="hidden mx-auto bottom-4 left-4 lg:block lg:absolute"
