@@ -7,7 +7,6 @@ import {
 	IonListHeader,
 	IonNote,
 	IonSpinner,
-	IonText,
 } from '@ionic/react'
 import {
 	checkmarkCircleSharp,

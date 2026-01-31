@@ -1,4 +1,4 @@
-/// <reference path="./fileSystemTypes.d.ts" />
+import './fileSystemTypes.d'
 
 /**
  * File System Access API service for managing markdown export directory
