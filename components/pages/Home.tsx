@@ -74,6 +74,7 @@ import useView, { ViewProvider } from '../focus/view'
 import Mood from '../mood'
 import { MoodProvider } from '../mood/MoodContext'
 import NoteProviders from '../notes/providers'
+import ExportSettings from '../export/ExportSettings'
 import { matchesQuery } from '../search/matchesQuery'
 import useSettings from '../settings/useSettings'
 import Tracjectory from '../starship/Trajectory'
@@ -1086,6 +1087,7 @@ export const SettingsMenu = () => {
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
+				<ExportSettings />
 				<form
 					id="settings"
 					onSubmit={async event => {
