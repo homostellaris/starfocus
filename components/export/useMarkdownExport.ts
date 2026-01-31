@@ -14,9 +14,7 @@ import {
 	requestDirectory,
 	getStoredDirectoryHandle,
 	clearStoredDirectoryHandle,
-	hasValidDirectoryHandle,
 	syncFiles,
-	writeFile,
 } from './fileSystem'
 
 export interface ExportStatus {
@@ -64,19 +62,16 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 
 		// Check if we have a stored directory handle
 		if (supported) {
-			checkStoredDirectory()
-		}
-	}, [])
-
-	const checkStoredDirectory = useCallback(async () => {
-		const handle = await getStoredDirectoryHandle()
-		if (handle) {
-			setStatus(s => ({
-				...s,
-				isEnabled: true,
-				directoryName: handle.name,
-			}))
-			syncEnabledRef.current = true
+			getStoredDirectoryHandle().then(handle => {
+				if (handle) {
+					setStatus(s => ({
+						...s,
+						isEnabled: true,
+						directoryName: handle.name,
+					}))
+					syncEnabledRef.current = true
+				}
+			})
 		}
 	}, [])
 
