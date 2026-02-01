@@ -91,6 +91,8 @@ export interface Visit {
 	date: Date
 }
 
+const isPreviewEnvironment = process.env.VERCEL_ENV === 'preview'
+
 export class DexieStarfocus extends Dexie {
 	visits: DexieCloudTable<Visit, 'todoId'>
 	asteroidFieldOrder: DexieCloudTable<AsteroidFieldOrder, 'todoId'>
@@ -107,7 +109,7 @@ export class DexieStarfocus extends Dexie {
 
 	constructor() {
 		super('starfocus', {
-			addons: [dexieCloud],
+			addons: isPreviewEnvironment ? [] : [dexieCloud],
 		})
 
 		this.on.ready.subscribe(async (db: DexieStarfocus) => {
@@ -190,12 +192,16 @@ export class DexieStarfocus extends Dexie {
 			todos: '@id, createdAt, completedAt, starRole, title',
 			visits: '@id, todoId, date',
 		})
-		this.cloud.configure({
-			customLoginGui: true,
-			databaseUrl:
-				process.env.NEXT_PUBLIC_DATABASE_URL || 'https://z0vnq74nz.dexie.cloud', // Necessary because can't figure out how to set this in Cypress test
-			requireAuth: false,
-		})
+
+		if (!isPreviewEnvironment) {
+			this.cloud.configure({
+				customLoginGui: true,
+				databaseUrl:
+					process.env.NEXT_PUBLIC_DATABASE_URL ||
+					'https://z0vnq74nz.dexie.cloud', // Necessary because can't figure out how to set this in Cypress test
+				requireAuth: false,
+			})
+		}
 	}
 }
 
