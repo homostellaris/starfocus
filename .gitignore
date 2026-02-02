@@ -47,3 +47,4 @@ backups/
 
 # Cypress
 cypress/screenshots/
+cypress/videos/
