@@ -1,8 +1,16 @@
 import dayjs from 'dayjs'
-import { db, Potodo } from '../../components/db'
+import { Potodo } from '../../components/db'
 
 beforeEach(() => {
-	indexedDB.deleteDatabase('starfocus-z0vnq74nz')
+	cy.visit('about:blank')
+	cy.window().then(win => {
+		return new Cypress.Promise(resolve => {
+			const request = win.indexedDB.deleteDatabase('starfocus-z0vnq74nz')
+			request.onsuccess = () => resolve(null)
+			request.onerror = () => resolve(null)
+			request.onblocked = () => resolve(null)
+		})
+	})
 })
 
 describe.skip('constellation', () => {})
@@ -18,6 +26,7 @@ describe.skip('star sort', () => {})
 describe('asteroid field', () => {
 	beforeEach(() => {
 		cy.visit('/home')
+		cy.get('ion-fab>ion-fab-button').should('be.visible')
 	})
 
 	it('stores todos with no star points', () => {
@@ -26,18 +35,15 @@ describe('asteroid field', () => {
 	})
 
 	it('stores todos with no star points and star role', () => {
-		new Cypress.Promise((resolve, reject) => {
-			db.starRoles
-				.add({
-					title: 'Father',
-					icon: {
-						type: 'ionicon',
-						name: 'maleSharp',
-					},
-				})
-				.then(resolve)
-				.catch(reject)
-		})
+		cy.db(db =>
+			db.starRoles.add({
+				title: 'Father',
+				icon: {
+					type: 'ionicon',
+					name: 'maleSharp',
+				},
+			}),
+		)
 		createTodo({ title: 'be silly together', starRole: 'Father' })
 		assertList('asteroid-field', [
 			{ title: 'be silly together', starRole: 'Father' },
@@ -48,38 +54,33 @@ describe('asteroid field', () => {
 describe('wayfinder', () => {
 	beforeEach(() => {
 		cy.visit('/home')
+		cy.get('ion-fab>ion-fab-button').should('be.visible')
 	})
 
 	it('stores todos with star points', () => {
-		new Cypress.Promise((resolve, reject) => {
-			db.starRoles
-				.add({
-					title: 'Father',
-					icon: {
-						type: 'ionicon',
-						name: 'maleSharp',
-					},
-				})
-				.then(resolve)
-				.catch(reject)
-		})
+		cy.db(db =>
+			db.starRoles.add({
+				title: 'Father',
+				icon: {
+					type: 'ionicon',
+					name: 'maleSharp',
+				},
+			}),
+		)
 		createTodo({ title: 'be silly together', starPoints: 1 })
 		assertList('wayfinder', ['be silly together'])
 	})
 
 	it('stores todos with star points and star role', () => {
-		new Cypress.Promise((resolve, reject) => {
-			db.starRoles
-				.add({
-					title: 'Father',
-					icon: {
-						type: 'ionicon',
-						name: 'maleSharp',
-					},
-				})
-				.then(resolve)
-				.catch(reject)
-		})
+		cy.db(db =>
+			db.starRoles.add({
+				title: 'Father',
+				icon: {
+					type: 'ionicon',
+					name: 'maleSharp',
+				},
+			}),
+		)
 		createTodo({
 			title: 'be silly together',
 			starRole: 'Father',
@@ -111,6 +112,7 @@ describe('snooze', () => {
 		cy.clock(dayjs('2025-01-01').valueOf(), ['Date'])
 		cy.visit('/home')
 		cy.tick(1000)
+		cy.get('ion-fab>ion-fab-button').should('be.visible')
 	})
 
 	it('removes todo from view until the snoozed date', () => {
@@ -118,41 +120,30 @@ describe('snooze', () => {
 		cy.get('[data-class="todo"]').click()
 		cy.get('#todo-action-sheet').contains('Snooze').click()
 		cy.get('[data-day="3"][data-month="1"][data-year="2025"]').click()
-		cy.contains('Confirm')
-			.click()
-			.wait(1000)
-			.then(
-				() =>
-					new Cypress.Promise((resolve, reject) =>
-						db.asteroidFieldOrder.toArray().then(resolve).catch(reject),
-					),
-			)
+		cy.contains('Confirm').click()
+		cy.get('[data-class="todo"]').should('not.exist')
+		cy.db(db => db.asteroidFieldOrder.toArray())
 			.its('0.snoozedUntil')
 			.invoke('toISOString')
 			.should('eq', '2025-01-03T00:00:00.000Z')
-
-		cy.get('[data-class="todo"]').should('not.exist')
 	})
 })
 
 describe('search', () => {
 	beforeEach(() => {
-		new Cypress.Promise((resolve, reject) => {
-			db.todos
-				.bulkAdd([
-					{
-						title: 'take the bins out',
-					},
-					{
-						title: 'walk the dog',
-					},
-					{
-						title: 'eat a bin',
-					},
-				])
-				.then(resolve)
-				.catch(reject)
-		})
+		cy.db(db =>
+			db.todos.bulkAdd([
+				{
+					title: 'take the bins out',
+				},
+				{
+					title: 'walk the dog',
+				},
+				{
+					title: 'eat a bin',
+				},
+			]),
+		)
 		cy.visit('/home')
 	})
 
@@ -168,13 +159,15 @@ describe('search', () => {
 describe('setting', () => {
 	beforeEach(() => {
 		cy.visit('/home')
+		cy.get('#settings-menu-button').should('be.visible')
 	})
 
 	it('can open and close the settings panel', () => {
 		cy.get('#settings-menu-button').click()
 		cy.contains('ion-title', 'Settings').should('be.visible')
-		cy.wait(1000)
-		cy.get('ion-button').contains('Cancel').click()
+		// Wait for menu animation to complete before clicking Cancel
+		cy.wait(500)
+		cy.get('ion-menu').contains('ion-button', 'Cancel').click()
 		cy.contains('ion-title', 'Settings').should('not.be.visible')
 	})
 })
@@ -183,11 +176,11 @@ describe.skip('notes', () => {})
 
 it('works', () => {
 	cy.visit('/home')
-	cy.get('ion-fab>ion-fab-button').click()
+	cy.get('ion-fab>ion-fab-button').should('be.visible').click()
 	cy.get('#create-todo-modal').within(() => {
 		cy.contains('label', 'Title')
 			.find('input')
-			.wait(2000)
+			.should('be.visible')
 			.type('take the bins out')
 		cy.contains('Confirm').click()
 	})
@@ -202,31 +195,36 @@ it('works', () => {
 	cy.get('ion-fab>ion-fab-button').click()
 	cy.get('#create-star-role').click()
 	cy.get('#create-star-role-modal').within(() => {
-		cy.contains('label', 'Title').find('input').wait(2000).type('Father')
+		cy.contains('label', 'Title')
+			.find('input')
+			.should('be.visible')
+			.type('Father')
 		cy.get('#icons ion-icon').first().click()
 		cy.get('#selected-icon').should('have.attr', 'icon')
-		cy.wait(1000)
-		cy.contains('Confirm').click()
+		cy.contains('Confirm').should('be.visible').click()
 	})
+	cy.get('#create-star-role-modal').should('not.exist')
 
 	cy.get('ion-fab>ion-fab-button').click()
 	cy.get('#create-star-role').click()
 	cy.get('#create-star-role-modal').within(() => {
-		cy.contains('label', 'Title').find('input').wait(2000).type('Partner')
+		cy.contains('label', 'Title')
+			.find('input')
+			.should('be.visible')
+			.type('Partner')
 		cy.get('#icons ion-icon').eq(1).click()
 		cy.get('#selected-icon').should('have.attr', 'icon')
-		cy.wait(1000)
-		cy.contains('Confirm').click()
+		cy.contains('Confirm').should('be.visible').click()
 	})
+	cy.get('#create-star-role-modal').should('not.exist')
 
 	cy.go('back')
-	cy.wait(1000) // No idea why this is necessary but otherwise the create todo modal doesn't open
-
-	cy.get('ion-fab>ion-fab-button').click()
+	cy.url().should('include', '/home')
+	cy.get('ion-fab>ion-fab-button').should('be.visible').click()
 	cy.get('#create-todo-modal').within(() => {
 		cy.contains('label', 'Title')
 			.find('input')
-			.wait(3000)
+			.should('be.visible')
 			.type('be silly together')
 		cy.get('ion-select[label="Star role"]').click()
 	})
@@ -240,7 +238,7 @@ it('works', () => {
 	cy.get('#create-todo-modal').within(() => {
 		cy.contains('label', 'Title')
 			.find('input')
-			.wait(2000)
+			.should('be.visible')
 			.type('plan birthday day out')
 		cy.get('ion-select[label="Star role"]').click()
 	})
@@ -330,7 +328,7 @@ function createTodo({
 }) {
 	cy.get('ion-fab>ion-fab-button').click()
 	cy.get('#create-todo-modal').within(() => {
-		cy.contains('label', 'Title').find('input').wait(2000).type(title)
+		cy.contains('label', 'Title').find('input').should('be.visible').type(title)
 	})
 
 	if (starRole) {

@@ -112,11 +112,11 @@ export class DexieStarfocus extends Dexie {
 			addons: isPreviewEnvironment ? [] : [dexieCloud],
 		})
 
-		this.on.ready.subscribe(async (db: DexieStarfocus) => {
+		this.on.ready.subscribe(async (_db: DexieStarfocus) => {
 			console.debug('Database ready')
 		}, false)
 		this.on.populate.subscribe(() => {
-			this.on.ready.subscribe((db: DexieStarfocus) => {
+			this.on.ready.subscribe((_db: DexieStarfocus) => {
 				console.debug('Database ready for population')
 			}, false)
 		})
