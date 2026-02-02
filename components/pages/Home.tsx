@@ -78,6 +78,7 @@ import { matchesQuery } from '../search/matchesQuery'
 import useSettings from '../settings/useSettings'
 import Tracjectory from '../starship/Trajectory'
 import { useStarshipYPosition } from '../starship/useStarshipYPosition'
+import { GameProvider, GameCanvas, useGameContext } from '../game'
 import { TodoCard, TodoListItem } from '../todos'
 import PulseGraph from '../todos/PulseGraph'
 import { useTodoActionSheet } from '../todos/TodoActionSheet'
@@ -113,11 +114,13 @@ const Home = () => {
 	return (
 		<>
 			<MoodProvider>
-				<ViewProvider>
-					<TodoContextProvider>
-						<ViewMenu searchbarRef={searchbarRef} />
-						<SettingsMenu />
-						<IonPage id="main-content">
+				<GameProvider>
+					<ViewProvider>
+						<TodoContextProvider>
+							<ViewMenu searchbarRef={searchbarRef} />
+							<SettingsMenu />
+							<GameModeOverlay />
+							<IonPage id="main-content">
 							<Header title="Home"></Header>
 							<TodoLists />
 							<div className="absolute hidden xl:block bottom-4 left-4">
@@ -162,14 +165,66 @@ const Home = () => {
 								</IonToolbar>
 							</IonFooter>
 						</IonPage>
-					</TodoContextProvider>
-				</ViewProvider>
+						</TodoContextProvider>
+					</ViewProvider>
+				</GameProvider>
 			</MoodProvider>
 		</>
 	)
 }
 
 export default Home
+
+/**
+ * GameModeOverlay - Renders the full-screen game canvas when in game mode
+ * Press 'G' to enter game mode, 'Escape' to exit
+ */
+const GameModeOverlay = () => {
+	const { isGameMode, enterGameMode, exitGameMode, isTransitioning } =
+		useGameContext()
+
+	// Keyboard shortcut to enter game mode
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			// Don't trigger if typing in an input
+			if (
+				e.target instanceof HTMLInputElement ||
+				e.target instanceof HTMLTextAreaElement
+			) {
+				return
+			}
+
+			if (e.key.toLowerCase() === 'g' && !isGameMode && !isTransitioning) {
+				enterGameMode()
+			}
+		}
+
+		window.addEventListener('keydown', handleKeyDown)
+		return () => window.removeEventListener('keydown', handleKeyDown)
+	}, [isGameMode, isTransitioning, enterGameMode])
+
+	if (!isGameMode && !isTransitioning) return null
+
+	return (
+		<div
+			className={cn(
+				'fixed inset-0 z-50 bg-black transition-opacity duration-500',
+				isGameMode ? 'opacity-100' : 'opacity-0 pointer-events-none',
+			)}
+		>
+			<GameCanvas className="w-full h-full" />
+			<button
+				onClick={exitGameMode}
+				className="absolute top-4 right-4 px-4 py-2 bg-rose-500/20 hover:bg-rose-500/40 text-rose-300 rounded-lg border border-rose-500/50 transition-colors font-mono text-sm"
+			>
+				ESC to Exit
+			</button>
+			<div className="absolute bottom-4 left-4 text-white/50 font-mono text-xs">
+				WASD or Arrow Keys to move
+			</div>
+		</div>
+	)
+}
 
 export const TodoLists = () => {
 	const posthog = usePostHog()
@@ -1262,6 +1317,7 @@ export const Journey = ({
 			position: [nextTodoPosition],
 		},
 	} = useTodoContext()
+	const { isGameMode, enterGameMode } = useGameContext()
 	const starship = useRef<HTMLImageElement>(null)
 	const [starshipY] = useStarshipYPosition(
 		starship?.current,
@@ -1270,21 +1326,35 @@ export const Journey = ({
 	)
 
 	return (
-		<div className="min-w-[56px]">
+		<div className="min-w-[56px] h-full relative overflow-hidden">
+			{/* Canvas-based starfield and spaceship */}
+			<GameCanvas starshipY={starshipY} className="z-10" />
+
+			{/* Trajectory line overlay */}
 			<Tracjectory
-				className="absolute right-[27px]"
+				className="absolute right-[27px] z-20"
 				currentPosition={starshipY}
 			/>
+
+			{/* Hidden reference element for position calculation */}
 			<div
 				id="starship"
-				className="absolute right-0 transition-transform duration-500 ease-in-out w-[56px] h-[56px]"
+				className="absolute right-0 opacity-0 pointer-events-none w-[56px] h-[56px]"
 				style={{ transform: `translateY(${starshipY}px)` }}
 			>
-				<Starship
-					className="rotate-180"
-					ref={starship}
-				/>
+				<Starship ref={starship} />
 			</div>
+
+			{/* Game mode trigger button - visible on hover */}
+			{!isGameMode && (
+				<button
+					onClick={enterGameMode}
+					className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity px-2 py-1 bg-violet-500/20 hover:bg-violet-500/40 text-violet-300 rounded text-xs font-mono border border-violet-500/30"
+					title="Press G to play"
+				>
+					Play
+				</button>
+			)}
 		</div>
 	)
 }
