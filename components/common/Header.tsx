@@ -20,8 +20,12 @@ import {
 	cloudDownloadSharp,
 	cloudOfflineSharp,
 	cloudUploadSharp,
+	documentTextSharp,
+	syncSharp,
 	thunderstormSharp,
+	warningSharp,
 } from 'ionicons/icons'
+import { useMarkdownExportContext } from '../export/MarkdownExportContext'
 import { db } from '../db'
 import StarPoints from './StarPoints'
 import Title from './Title'
@@ -36,6 +40,8 @@ export const Header = ({ title }: { title: string }) => {
 	const user = useObservable(db.cloud.currentUser)
 	const isLoggedIn = user?.isLoggedIn
 	const syncState = useObservable(db.cloud.syncState)
+
+	const { status: exportStatus } = useMarkdownExportContext()
 
 	return (
 		<>
@@ -58,6 +64,52 @@ export const Header = ({ title }: { title: string }) => {
 						className="mx-2"
 						slot="end"
 					>
+						{exportStatus.isEnabled && (
+							<>
+								<IonButton id="markdown-export-status">
+									<IonIcon
+										icon={
+											exportStatus.error
+												? warningSharp
+												: exportStatus.isSyncing
+													? syncSharp
+													: documentTextSharp
+										}
+										color={
+											exportStatus.error
+												? 'warning'
+												: exportStatus.isSyncing
+													? 'medium'
+													: 'success'
+										}
+										slot="icon-only"
+									/>
+								</IonButton>
+								<IonPopover
+									trigger="markdown-export-status"
+									triggerAction="click"
+								>
+									<IonContent class="ion-padding">
+										<p className="font-semibold">Markdown Export</p>
+										<p className="text-sm text-gray-500">
+											{exportStatus.directoryName}
+										</p>
+										{exportStatus.isSyncing ? (
+											<p className="text-sm">Syncing...</p>
+										) : exportStatus.lastSyncAt ? (
+											<p className="text-sm">
+												Last synced: {exportStatus.lastSyncAt.toLocaleTimeString()}
+											</p>
+										) : (
+											<p className="text-sm">Not synced yet</p>
+										)}
+										{exportStatus.error && (
+											<p className="text-sm text-red-500">{exportStatus.error}</p>
+										)}
+									</IonContent>
+								</IonPopover>
+							</>
+						)}
 						{isLoggedIn ? (
 							<>
 								<IonButton id="sync-status">
