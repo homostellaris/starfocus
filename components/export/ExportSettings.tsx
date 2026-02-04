@@ -9,18 +9,16 @@ import {
 	IonSpinner,
 } from '@ionic/react'
 import {
-	checkmarkCircleSharp,
-	closeCircleSharp,
 	cloudOfflineSharp,
 	documentTextSharp,
 	folderOpenSharp,
 	syncSharp,
-	warningSharp,
 } from 'ionicons/icons'
-import useMarkdownExport from './useMarkdownExport'
+import { useMarkdownExportContext } from './MarkdownExportContext'
 
 export default function ExportSettings() {
-	const { status, enable, disable, syncNow, exportOnce } = useMarkdownExport()
+	const { status, enable, disable, syncNow, exportOnce } =
+		useMarkdownExportContext()
 
 	if (!status.isSupported) {
 		return (
@@ -64,88 +62,43 @@ export default function ExportSettings() {
 							<h3>Sync Directory</h3>
 							<p>{status.directoryName}</p>
 						</IonLabel>
-						<IonButton
-							fill="clear"
-							size="small"
-							onClick={disable}
-						>
-							Disconnect
-						</IonButton>
 					</IonItem>
 
 					<IonItem>
-						<IonIcon
-							icon={syncSharp}
-							slot="start"
-							color={status.isSyncing ? 'warning' : 'success'}
-						/>
 						<IonLabel>
-							<h3>Sync Status</h3>
-							{status.isSyncing ? (
-								<p>Syncing...</p>
-							) : status.lastSyncAt ? (
-								<p>
-									Last synced:{' '}
-									{status.lastSyncAt.toLocaleTimeString()}
-								</p>
-							) : (
-								<p>Not synced yet</p>
-							)}
+							<IonButton
+								expand="block"
+								fill="outline"
+								onClick={syncNow}
+								disabled={status.isSyncing}
+							>
+								{status.isSyncing ? (
+									<IonSpinner name="crescent" />
+								) : (
+									<>
+										<IonIcon
+											icon={syncSharp}
+											slot="start"
+										/>
+										Sync Now
+									</>
+								)}
+							</IonButton>
 						</IonLabel>
-						<IonButton
-							fill="clear"
-							size="small"
-							onClick={syncNow}
-							disabled={status.isSyncing}
-						>
-							{status.isSyncing ? (
-								<IonSpinner name="crescent" />
-							) : (
-								'Sync Now'
-							)}
-						</IonButton>
 					</IonItem>
 
-					{status.lastSyncResult && (
-						<IonItem>
-							<IonIcon
-								icon={
-									status.lastSyncResult.failed > 0
-										? warningSharp
-										: checkmarkCircleSharp
-								}
-								slot="start"
-								color={
-									status.lastSyncResult.failed > 0
-										? 'warning'
-										: 'success'
-								}
-							/>
-							<IonLabel>
-								<h3>Last Sync Result</h3>
-								<p>
-									{status.lastSyncResult.written} written
-									{status.lastSyncResult.deleted > 0 &&
-										`, ${status.lastSyncResult.deleted} deleted`}
-									{status.lastSyncResult.failed > 0 &&
-										`, ${status.lastSyncResult.failed} failed`}
-								</p>
-							</IonLabel>
-						</IonItem>
-					)}
-
-					{status.error && (
-						<IonItem color="danger">
-							<IonIcon
-								icon={closeCircleSharp}
-								slot="start"
-							/>
-							<IonLabel>
-								<h3>Error</h3>
-								<p>{status.error}</p>
-							</IonLabel>
-						</IonItem>
-					)}
+					<IonItem>
+						<IonLabel>
+							<IonButton
+								expand="block"
+								fill="clear"
+								color="danger"
+								onClick={disable}
+							>
+								Disconnect
+							</IonButton>
+						</IonLabel>
+					</IonItem>
 				</>
 			) : (
 				<>
@@ -158,9 +111,9 @@ export default function ExportSettings() {
 						<IonLabel className="ion-text-wrap">
 							<h3>Export to Markdown</h3>
 							<p>
-								Export your todos as markdown files with metadata in YAML
-								front matter. Perfect for use with LLMs, Obsidian, or any
-								text-based workflow.
+								Export your todos as markdown files with metadata in YAML front
+								matter. Perfect for use with LLMs, Obsidian, or any text-based
+								workflow.
 							</p>
 						</IonLabel>
 					</IonItem>

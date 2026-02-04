@@ -49,12 +49,9 @@ function buildFrontMatter(todo: TodoWithRelations): string {
 		}
 	}
 
-	// Completion status
+	// Completion status - only include completedAt when completed
 	if (todo.completedAt) {
-		lines.push(`completed: true`)
 		lines.push(`completedAt: ${todo.completedAt.toISOString()}`)
-	} else {
-		lines.push(`completed: false`)
 	}
 
 	// Note reference
@@ -101,16 +98,6 @@ function buildContent(
 		sections.push(`\n**Star Points:** ${todo.starPoints}`)
 	}
 
-	// Status
-	const status = todo.completedAt ? 'Completed' : 'Active'
-	sections.push(`\n**Status:** ${status}`)
-
-	if (todo.completedAt) {
-		sections.push(
-			`\n**Completed:** ${formatDate(todo.completedAt)}`,
-		)
-	}
-
 	// Visits history
 	if (options.includeVisits && todo.visitsData && todo.visitsData.length > 0) {
 		sections.push(`\n## Visit History\n`)
@@ -126,10 +113,7 @@ function buildContent(
 }
 
 function escapeYamlString(str: string): string {
-	return str
-		.replace(/\\/g, '\\\\')
-		.replace(/"/g, '\\"')
-		.replace(/\n/g, '\\n')
+	return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n')
 }
 
 function formatDate(date: Date): string {
@@ -211,10 +195,12 @@ version: ${manifest.version}
 
 ## Star Roles
 
-${starRoles.map(sr => {
-	const group = starRoleGroups.find(g => g.id === sr.starRoleGroupId)
-	return `- **${sr.title}**${group ? ` (${group.title})` : ''}`
-}).join('\n')}
+${starRoles
+	.map(sr => {
+		const group = starRoleGroups.find(g => g.id === sr.starRoleGroupId)
+		return `- **${sr.title}**${group ? ` (${group.title})` : ''}`
+	})
+	.join('\n')}
 
 ## Star Role Groups
 
