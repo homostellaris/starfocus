@@ -2,7 +2,7 @@ import dayjs from 'dayjs'
 import { Potodo } from '../../components/db'
 
 beforeEach(() => {
-	cy.visit('about:blank')
+	cy.visit('/home')
 	cy.window().then(win => {
 		return new Cypress.Promise(resolve => {
 			const request = win.indexedDB.deleteDatabase('starfocus-z0vnq74nz')
