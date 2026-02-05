@@ -22,7 +22,8 @@ import {
 	cloudDoneSharp,
 	cloudOfflineSharp,
 } from 'ionicons/icons'
-import { useRef, useState } from 'react'
+import posthog from 'posthog-js'
+import { useEffect, useRef, useState } from 'react'
 
 /**
  * This component showcases how to provide a custom login GUI for login dialog.
@@ -47,6 +48,14 @@ export function LoginModal({ ui }: { ui?: DXCUserInteraction }) {
 	const [params, setParams] = useState<{ [param: string]: string }>({})
 	const textInput = useRef<HTMLIonInputElement>(null)
 	const otpInput = useRef<HTMLIonInputOtpElement>(null)
+
+	useEffect(() => {
+		if (ui?.type === 'email') {
+			posthog.capture('login_started')
+		} else if (ui?.type === 'otp') {
+			posthog.capture('otp_requested')
+		}
+	}, [ui?.type])
 
 	return (
 		<IonModal

@@ -9,6 +9,7 @@ import {
 	setupIonicReact,
 } from '@ionic/react'
 import { pauseCircleSharp, playCircleSharp } from 'ionicons/icons'
+import posthog from 'posthog-js'
 import { useEffect, useRef, useState } from 'react'
 import { cn } from '../common/cn'
 import { useMood } from './MoodContext'
@@ -125,9 +126,13 @@ export default function Mood() {
 			<IonButton
 				fill="clear"
 				onClick={() => {
+					const wasPlaying = playing
 					setPlaying(playing => !playing)
 					if (audio.current?.paused) {
 						audio.current?.play()
+						if (!wasPlaying) {
+							posthog.capture('music_played', { mode })
+						}
 					} else {
 						audio.current?.pause()
 					}
@@ -143,7 +148,9 @@ export default function Mood() {
 				color={mode === 'hype' ? 'danger' : 'primary'}
 				value={mode}
 				onIonChange={event => {
-					setMode(event.detail.value as mode)
+					const newMode = event.detail.value as mode
+					setMode(newMode)
+					posthog.capture('music_mode_changed', { mode: newMode })
 				}}
 			>
 				<IonSegmentButton value="chill">

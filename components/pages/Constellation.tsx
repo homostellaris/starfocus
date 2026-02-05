@@ -15,6 +15,7 @@ import {
 } from '@ionic/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { add, layersSharp, starHalfSharp, starOutline } from 'ionicons/icons'
+import posthog from 'posthog-js'
 import { RefObject, useCallback, useEffect, useRef } from 'react'
 import { Header } from '../common/Header'
 import { db, StarRole, StarRoleGroup } from '../db'
@@ -53,6 +54,10 @@ export default function Constellation() {
 	}, [fab, presentCreateStarRoleGroupModal])
 
 	useGlobalKeyboardShortcuts(fab, openCreateStarRoleModal)
+
+	useEffect(() => {
+		posthog.capture('constellation_viewed')
+	}, [])
 
 	return (
 		<IonPage>
