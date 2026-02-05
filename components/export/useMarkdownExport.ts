@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import debounce from 'debounce'
+import posthog from 'posthog-js'
 import { db, Todo, StarRole, StarRoleGroup, Visit } from '../db'
 import {
 	todoToMarkdown,
@@ -136,6 +137,8 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 			}))
 			syncEnabledRef.current = true
 
+			posthog.capture('markdown_export_enabled')
+
 			// Perform initial sync
 			if (todos.length > 0) {
 				debouncedSync.current(todos, starRoles, starRoleGroups, visits)
@@ -156,6 +159,7 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 			lastSyncAt: null,
 			lastSyncResult: null,
 		}))
+		posthog.capture('markdown_export_disabled')
 	}, [])
 
 	const syncNow = useCallback(async (): Promise<void> => {
@@ -214,6 +218,12 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 				lastSyncAt: new Date(),
 				lastSyncResult: result,
 			}))
+
+			posthog.capture('markdown_exported', {
+				files_written: result.written,
+				files_deleted: result.deleted,
+				files_failed: result.failed,
+			})
 
 			// Don't keep the directory for ongoing sync
 			await clearStoredDirectoryHandle()

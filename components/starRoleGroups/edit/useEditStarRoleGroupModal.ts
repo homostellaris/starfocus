@@ -1,4 +1,5 @@
 import { useIonModal } from '@ionic/react'
+import posthog from 'posthog-js'
 import { useCallback, useRef, useState } from 'react'
 import { StarRoleGroup, db } from '../../db'
 import { EditStarRoleGroupModal } from './modal'
@@ -35,6 +36,7 @@ export function useEditStarRoleGroupModal(): [
 				onWillDismiss: event => {
 					if (event.detail.role === 'confirm') {
 						editStarRoleGroup(starRoleGroup.id, event.detail.data)
+						posthog.capture('star_role_group_edited')
 					}
 					setStarRoleGroup(null)
 				},
