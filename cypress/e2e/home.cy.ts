@@ -2,7 +2,6 @@ import dayjs from 'dayjs'
 import { Potodo } from '../../components/db'
 
 beforeEach(() => {
-	cy.visit('/home')
 	cy.window().then(win => {
 		return new Cypress.Promise(resolve => {
 			const request = win.indexedDB.deleteDatabase('starfocus-z0vnq74nz')
@@ -188,9 +187,12 @@ it('works', () => {
 	assertLists(['take the bins out'], [])
 
 	cy.get('#view-menu-button').click()
-	cy.contains('ion-button', 'Edit roles')
+	cy.contains('ion-button', 'Edit roles').should('be.visible')
 	// For some reason clicking edit roles doesn't work so we hard-navigate
+	// Dismiss the menu first by clicking elsewhere
+	cy.get('body').click(0, 0)
 	cy.visit('/constellation')
+	cy.get('ion-fab>ion-fab-button').should('be.visible')
 
 	cy.get('ion-fab>ion-fab-button').click()
 	cy.get('#create-star-role').click()
