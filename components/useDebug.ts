@@ -1,13 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+
+function getDebugParam() {
+	if (typeof window === 'undefined') return ''
+	return new URLSearchParams(window.location.search).get('debug') ?? ''
+}
 
 export function useDebug() {
-	const [debug, setDebug] = useState('')
-	useEffect(() => {
-		const params = new URLSearchParams(window.location.search)
-		const searchQuery = params.get('debug')
-		if (searchQuery) {
-			setDebug(searchQuery)
-		}
-	}, [])
+	const [debug, setDebug] = useState(getDebugParam)
 	return [debug, setDebug]
 }
