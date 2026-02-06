@@ -1,0 +1,37 @@
+name: Whitelist Dexie Cloud Origin
+
+on:
+  repository_dispatch:
+    types:
+      - 'vercel.deployment.ready'
+      - 'vercel.deployment.success'
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Origin URL to whitelist (e.g. https://example.vercel.app)'
+        required: true
+
+jobs:
+  whitelist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Dexie Cloud credentials
+        run: |
+          echo '${{ secrets.DEXIE_CLOUD_JSON }}' > dexie-cloud.json
+          echo '${{ secrets.DEXIE_CLOUD_KEY }}' > dexie-cloud.key
+
+      - name: Whitelist origin
+        run: |
+          if [ -n "${{ github.event.client_payload.url }}" ]; then
+            URL="${{ github.event.client_payload.url }}"
+          else
+            URL="${{ github.event.inputs.url }}"
+          fi
+          # Ensure URL has protocol prefix
+          if [[ ! "$URL" =~ ^https?:// ]]; then
+            URL="https://$URL"
+          fi
+          echo "Whitelisting origin: $URL"
+          npx dexie-cloud whitelist "$URL"
