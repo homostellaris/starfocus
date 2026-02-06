@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import posthog from 'posthog-js'
 import { MoodProvider } from '../components/mood/MoodContext'
 import Nav from '../components/common/Nav'
 
@@ -55,6 +56,7 @@ export default function Page() {
 					<Link
 						className="inline-block px-4 py-2 text-3xl text-white uppercase border-2 rounded shadow-lg border-violet-500 shadow-violet-500/50 font-display [font-palette:--redshift] bg-violet-600/15 hover:bg-violet-700/20 active:bg-violet-800/30 transition-all duration-200 ease-in-out transform hover:scale-105"
 						href="/home"
+						onClick={() => posthog.capture('cta_clicked', { cta_name: 'try_it' })}
 					>
 						Try it
 					</Link>

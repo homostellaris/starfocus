@@ -74,6 +74,8 @@ import useView, { ViewProvider } from '../focus/view'
 import Mood from '../mood'
 import { MoodProvider } from '../mood/MoodContext'
 import NoteProviders from '../notes/providers'
+import ExportSettings from '../export/ExportSettings'
+import { MarkdownExportProvider } from '../export/MarkdownExportContext'
 import { matchesQuery } from '../search/matchesQuery'
 import useSettings from '../settings/useSettings'
 import Tracjectory from '../starship/Trajectory'
@@ -112,11 +114,12 @@ const Home = () => {
 
 	return (
 		<>
-			<MoodProvider>
-				<ViewProvider>
-					<TodoContextProvider>
-						<ViewMenu searchbarRef={searchbarRef} />
-						<SettingsMenu />
+			<MarkdownExportProvider>
+				<MoodProvider>
+					<ViewProvider>
+						<TodoContextProvider>
+							<ViewMenu searchbarRef={searchbarRef} />
+							<SettingsMenu />
 						<IonPage id="main-content">
 							<Header title="Home"></Header>
 							<TodoLists />
@@ -163,8 +166,9 @@ const Home = () => {
 							</IonFooter>
 						</IonPage>
 					</TodoContextProvider>
-				</ViewProvider>
-			</MoodProvider>
+					</ViewProvider>
+				</MoodProvider>
+			</MarkdownExportProvider>
 		</>
 	)
 }
@@ -1086,6 +1090,7 @@ export const SettingsMenu = () => {
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
+				<ExportSettings />
 				<form
 					id="settings"
 					onSubmit={async event => {

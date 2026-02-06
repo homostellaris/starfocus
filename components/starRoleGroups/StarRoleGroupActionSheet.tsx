@@ -1,8 +1,9 @@
 import { ActionSheetOptions, useIonActionSheet } from '@ionic/react'
 import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
+import { createSharp, trashSharp } from 'ionicons/icons'
+import posthog from 'posthog-js'
 import { StarRoleGroup, db } from '../db'
 import { useEditStarRoleGroupModal } from './edit/useEditStarRoleGroupModal'
-import { createSharp, trashSharp } from 'ionicons/icons'
 
 // TODO: Make this so that todo is never null, action sheet doesn't make sense to be open if its null
 export function useStarRoleGroupActionSheet() {
@@ -48,6 +49,7 @@ export function useStarRoleGroupActionSheet() {
 										.modify({ starRoleGroupId: undefined })
 								},
 							)
+							posthog.capture('star_role_group_deleted')
 						},
 					},
 				],
