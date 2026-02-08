@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# gitmoji as a commit hook
+# Only run interactively - non-interactive callers (e.g. Claude Code) should
+# include the gitmoji in the commit message directly.
+if [ -t 0 ] || (exec 0</dev/tty) 2>/dev/null; then
+  exec < /dev/tty
+  gitmoji --hook $1 $2
+fi
