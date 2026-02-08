@@ -6,7 +6,7 @@ A Next.js todo application with Ionic React UI and Capacitor for mobile.
 
 ## Package Manager
 
-Use **Bun** for all commands (not npm/yarn).
+Use **Bun** for all commands (not npm/yarn). This means also bunx instead of npx.
 
 ## Common Commands
 
