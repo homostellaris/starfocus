@@ -19,12 +19,12 @@ import posthog from 'posthog-js'
 import { RefObject, useCallback, useEffect, useRef } from 'react'
 import { Header } from '../common/Header'
 import { db, StarRole, StarRoleGroup } from '../db'
+import { MarkdownExportProvider } from '../export/MarkdownExportContext'
 import { useCreateStarRoleGroupModal } from '../starRoleGroups/create/useCreateStarRoleGroupModal'
 import { useStarRoleGroupActionSheet } from '../starRoleGroups/StarRoleGroupActionSheet'
 import useGroupedStarRoles from '../starRoleGroups/useStarRoleGroups'
 import { useCreateStarRoleModal } from '../starRoles/create/useCreateStarRoleModal'
 import { getIonIcon } from '../starRoles/icons'
-import { noStarRole } from '../starRoles/noStarRole'
 import { useStarRoleActionSheet } from '../starRoles/StarRoleActionSheet'
 
 export default function Constellation() {
@@ -60,59 +60,61 @@ export default function Constellation() {
 	}, [])
 
 	return (
-		<IonPage>
-			<Header title="Constellation" />
-			<IonContent fullscreen>
-				{isLoading ? (
-					<div className="flex items-center justify-center h-full">
-						<IonSpinner
-							className="w-20 h-20"
-							name="dots"
-						/>
-					</div>
-				) : data[0].length === 0 ? (
-					<div className="flex flex-col items-center justify-center h-full gap-5">
-						<IonIcon
-							icon={starOutline}
-							size="large"
-						/>
-						<p>
-							Create some roles to focus on what matters in different areas of
-							your life
-						</p>
-					</div>
-				) : (
-					<StarRolesList
-						starRoles={data[0]}
-						starRoleGroups={data[1]}
-					/>
-				)}
-				<IonFab
-					ref={fab}
-					slot="fixed"
-					vertical="bottom"
-					horizontal="end"
-				>
-					<IonFabButton color="success">
-						<IonIcon icon={add}></IonIcon>
-					</IonFabButton>
-					<IonFabList side="top">
-						<IonFabButton
-							id="create-star-role"
-							onClick={openCreateStarRoleModal}
-						>
-							<IonIcon icon={starHalfSharp}></IonIcon>
-						</IonFabButton>
-						<IonFabButton id="create-star-role-group">
+		<MarkdownExportProvider>
+			<IonPage>
+				<Header title="Constellation" />
+				<IonContent fullscreen>
+					{isLoading ? (
+						<div className="flex items-center justify-center h-full">
+							<IonSpinner
+								className="w-20 h-20"
+								name="dots"
+							/>
+						</div>
+					) : data[0].length === 0 ? (
+						<div className="flex flex-col items-center justify-center h-full gap-5">
 							<IonIcon
-								onClick={openCreateStarRoleGroupModal}
-								icon={layersSharp}
-							></IonIcon>
+								icon={starOutline}
+								size="large"
+							/>
+							<p>
+								Create some roles to focus on what matters in different areas of
+								your life
+							</p>
+						</div>
+					) : (
+						<StarRolesList
+							starRoles={data[0]}
+							starRoleGroups={data[1]}
+						/>
+					)}
+					<IonFab
+						ref={fab}
+						slot="fixed"
+						vertical="bottom"
+						horizontal="end"
+					>
+						<IonFabButton color="success">
+							<IonIcon icon={add}></IonIcon>
 						</IonFabButton>
-					</IonFabList>
-				</IonFab>
-			</IonContent>
-		</IonPage>
+						<IonFabList side="top">
+							<IonFabButton
+								id="create-star-role"
+								onClick={openCreateStarRoleModal}
+							>
+								<IonIcon icon={starHalfSharp}></IonIcon>
+							</IonFabButton>
+							<IonFabButton id="create-star-role-group">
+								<IonIcon
+									onClick={openCreateStarRoleGroupModal}
+									icon={layersSharp}
+								></IonIcon>
+							</IonFabButton>
+						</IonFabList>
+					</IonFab>
+				</IonContent>
+			</IonPage>
+		</MarkdownExportProvider>
 	)
 }
 
