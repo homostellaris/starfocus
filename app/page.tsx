@@ -12,7 +12,7 @@ const LazyMood = dynamic(() => import('../components/mood'), {
 
 export default function Page() {
 	return (
-		<div className="bg-[radial-gradient(circle_700px_at_50%_250px,#4453a9,#000000)] min-h-screen flex flex-col">
+		<div className="bg-[radial-gradient(circle_700px_at_50%_250px,#4453a9,#000000)] min-h-dvh flex flex-col">
 			<header className="pt-4 mb-4 space-y-4 text-center text-white lg:mb-12">
 				<h1 className="font-bold uppercase text-6xl lg:text-9xl font-display [font-palette:--redshift]">
 					<span className="cursor-crosshair">Starfocus</span>
