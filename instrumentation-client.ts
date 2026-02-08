@@ -2,6 +2,7 @@ import posthog from 'posthog-js'
 import identifyOnLoad from './app/identify'
 
 posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
+	capture_exceptions: true,
 	capture_performance: {
 		web_vitals: false, // Doesn't work with cookieless mode
 	},
