@@ -2,13 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import debounce from 'debounce'
 import posthog from 'posthog-js'
-import { db, Todo, StarRole, StarRoleGroup, Visit } from '../db'
+import { db, Todo, StarRole, StarRoleGroup } from '../db'
 import {
 	todoToMarkdown,
 	generateFilename,
 	createManifest,
 	TodoWithRelations,
-	MarkdownExportOptions,
 } from './markdown'
 import {
 	isFileSystemAccessSupported,
@@ -80,51 +79,45 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 	const todos = useLiveQuery(() => db.todos.toArray(), [], [])
 	const starRoles = useLiveQuery(() => db.starRoles.toArray(), [], [])
 	const starRoleGroups = useLiveQuery(() => db.starRoleGroups.toArray(), [], [])
-	const visits = useLiveQuery(() => db.visits.toArray(), [], [])
-
 	// Debounced sync function
 	const debouncedSync = useRef(
-		debounce(async (
-			todos: Todo[],
-			starRoles: StarRole[],
-			starRoleGroups: StarRoleGroup[],
-			visits: Visit[],
-		) => {
-			if (!syncEnabledRef.current) return
+		debounce(
+			async (
+				todos: Todo[],
+				starRoles: StarRole[],
+				starRoleGroups: StarRoleGroup[],
+			) => {
+				if (!syncEnabledRef.current) return
 
-			setStatus(s => ({ ...s, isSyncing: true, error: null }))
+				setStatus(s => ({ ...s, isSyncing: true, error: null }))
 
-			try {
-				const result = await performSync(
-					todos,
-					starRoles,
-					starRoleGroups,
-					visits,
-					{ includeCompleted: true, includeVisits: true },
-				)
+				try {
+					const result = await performSync(todos, starRoles, starRoleGroups)
 
-				setStatus(s => ({
-					...s,
-					isSyncing: false,
-					lastSyncAt: new Date(),
-					lastSyncResult: result,
-				}))
-			} catch (error) {
-				setStatus(s => ({
-					...s,
-					isSyncing: false,
-					error: (error as Error).message,
-				}))
-			}
-		}, SYNC_DEBOUNCE_MS),
+					setStatus(s => ({
+						...s,
+						isSyncing: false,
+						lastSyncAt: new Date(),
+						lastSyncResult: result,
+					}))
+				} catch (error) {
+					setStatus(s => ({
+						...s,
+						isSyncing: false,
+						error: (error as Error).message,
+					}))
+				}
+			},
+			SYNC_DEBOUNCE_MS,
+		),
 	)
 
 	// Trigger sync when data changes
 	useEffect(() => {
 		if (syncEnabledRef.current && todos.length > 0) {
-			debouncedSync.current(todos, starRoles, starRoleGroups, visits)
+			debouncedSync.current(todos, starRoles, starRoleGroups)
 		}
-	}, [todos, starRoles, starRoleGroups, visits])
+	}, [todos, starRoles, starRoleGroups])
 
 	const enable = useCallback(async (): Promise<boolean> => {
 		const handle = await requestDirectory()
@@ -141,13 +134,13 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 
 			// Perform initial sync
 			if (todos.length > 0) {
-				debouncedSync.current(todos, starRoles, starRoleGroups, visits)
+				debouncedSync.current(todos, starRoles, starRoleGroups)
 			}
 
 			return true
 		}
 		return false
-	}, [todos, starRoles, starRoleGroups, visits])
+	}, [todos, starRoles, starRoleGroups])
 
 	const disable = useCallback(async (): Promise<void> => {
 		await clearStoredDirectoryHandle()
@@ -170,13 +163,7 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 		setStatus(s => ({ ...s, isSyncing: true, error: null }))
 
 		try {
-			const result = await performSync(
-				todos,
-				starRoles,
-				starRoleGroups,
-				visits,
-				{ includeCompleted: true, includeVisits: true },
-			)
+			const result = await performSync(todos, starRoles, starRoleGroups)
 
 			setStatus(s => ({
 				...s,
@@ -192,7 +179,7 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 			}))
 			throw error
 		}
-	}, [todos, starRoles, starRoleGroups, visits])
+	}, [todos, starRoles, starRoleGroups])
 
 	const exportOnce = useCallback(async (): Promise<void> => {
 		// Request a directory just for this export
@@ -204,13 +191,7 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 		setStatus(s => ({ ...s, isSyncing: true, error: null }))
 
 		try {
-			const result = await performSync(
-				todos,
-				starRoles,
-				starRoleGroups,
-				visits,
-				{ includeCompleted: true, includeVisits: true },
-			)
+			const result = await performSync(todos, starRoles, starRoleGroups)
 
 			setStatus(s => ({
 				...s,
@@ -236,7 +217,7 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 			}))
 			throw error
 		}
-	}, [todos, starRoles, starRoleGroups, visits])
+	}, [todos, starRoles, starRoleGroups])
 
 	return {
 		status,
@@ -251,22 +232,10 @@ async function performSync(
 	todos: Todo[],
 	starRoles: StarRole[],
 	starRoleGroups: StarRoleGroup[],
-	visits: Visit[],
-	options: MarkdownExportOptions,
 ): Promise<{ written: number; deleted: number; failed: number }> {
-	// Build lookup maps
 	const starRolesById = new Map(starRoles.map(sr => [sr.id, sr]))
 	const starRoleGroupsById = new Map(starRoleGroups.map(g => [g.id, g]))
-	const visitsByTodoId = visits.reduce(
-		(acc, v) => {
-			if (!acc[v.todoId]) acc[v.todoId] = []
-			acc[v.todoId].push(v)
-			return acc
-		},
-		{} as Record<string, Visit[]>,
-	)
 
-	// Enrich todos with related data
 	const enrichedTodos: TodoWithRelations[] = todos.map(todo => {
 		const starRoleData = todo.starRole
 			? starRolesById.get(todo.starRole)
@@ -279,14 +248,12 @@ async function performSync(
 			...todo,
 			starRoleData,
 			starRoleGroupData,
-			visitsData: visitsByTodoId[todo.id] || [],
 		}
 	})
 
-	// Generate markdown files
 	const files = enrichedTodos.map(todo => ({
 		filename: generateFilename(todo),
-		content: todoToMarkdown(todo, options),
+		content: todoToMarkdown(todo),
 	}))
 
 	// Add manifest file
