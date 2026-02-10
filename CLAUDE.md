@@ -20,6 +20,12 @@ bun unit             # Unit tests
 bun test             # Full test suite (typecheck + lint + unit + integration)
 ```
 
+# Testing
+
+## Unit
+
+Use Bun test for unit tests.
+
 ## Cypress Testing
 
 ### Running Cypress Tests
