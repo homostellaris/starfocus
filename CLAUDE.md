@@ -25,6 +25,7 @@ bun test             # Full test suite (typecheck + lint + unit + integration)
 ## Unit
 
 Use Bun test for unit tests.
+Use `setSystemTime` for stubbing dates.
 
 ## Cypress Testing
 
