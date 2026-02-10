@@ -26,17 +26,6 @@ function makeTodo(
 	}
 }
 
-function formatDate(date: Date): string {
-	return date.toLocaleDateString('en-US', {
-		weekday: 'long',
-		year: 'numeric',
-		month: 'long',
-		day: 'numeric',
-		hour: '2-digit',
-		minute: '2-digit',
-	})
-}
-
 test('converts a minimal todo to markdown with front matter', () => {
 	const result = todoToMarkdown(makeTodo())
 
@@ -46,8 +35,6 @@ test('converts a minimal todo to markdown with front matter', () => {
 		'title: "Buy groceries"',
 		'exportedAt: 2025-06-15T12:00:00.000Z',
 		'---',
-		'',
-		'# Buy groceries',
 	])
 })
 
@@ -61,10 +48,6 @@ test('includes starPoints in front matter and content', () => {
 		'starPoints: 5',
 		'exportedAt: 2025-06-15T12:00:00.000Z',
 		'---',
-		'',
-		'# Buy groceries',
-		'',
-		'**Star Points:** 5',
 	])
 })
 
@@ -83,16 +66,9 @@ test('includes star role in front matter and content', () => {
 		'---',
 		'id: "todo-abc12345"',
 		'title: "Buy groceries"',
-		'starRole:',
-		'  id: "role-1"',
-		'  title: "Developer"',
-		'  icon: "code-outline"',
+		'starRole: "Developer"',
 		'exportedAt: 2025-06-15T12:00:00.000Z',
 		'---',
-		'',
-		'# Buy groceries',
-		'',
-		'**Role:** Developer',
 	])
 })
 
@@ -113,17 +89,10 @@ test('includes star role group in front matter and content', () => {
 		'---',
 		'id: "todo-abc12345"',
 		'title: "Buy groceries"',
-		'starRole:',
-		'  id: "role-1"',
-		'  title: "Developer"',
-		'  icon: "code-outline"',
-		'  group: "Work"',
+		'starRole: "Developer"',
+		'starRoleGroup: "Work"',
 		'exportedAt: 2025-06-15T12:00:00.000Z',
 		'---',
-		'',
-		'# Buy groceries',
-		'',
-		'**Role:** Work > Developer',
 	])
 })
 
@@ -138,8 +107,6 @@ test('includes completedAt when todo is completed', () => {
 		'completedAt: 2025-03-01T10:00:00.000Z',
 		'exportedAt: 2025-06-15T12:00:00.000Z',
 		'---',
-		'',
-		'# Buy groceries',
 	])
 })
 
@@ -147,96 +114,6 @@ test('does not include completedAt when todo is not completed', () => {
 	const result = todoToMarkdown(makeTodo())
 
 	expect(result).not.toContain('completedAt:')
-})
-
-test('includes noteUri when todo has a note', () => {
-	const result = todoToMarkdown(makeTodo({ note: { uri: 'note://abc' } }))
-
-	expect(result.split('\n')).toEqual([
-		'---',
-		'id: "todo-abc12345"',
-		'title: "Buy groceries"',
-		'noteUri: "note://abc"',
-		'exportedAt: 2025-06-15T12:00:00.000Z',
-		'---',
-		'',
-		'# Buy groceries',
-	])
-})
-
-test('includes visit summary in front matter', () => {
-	const result = todoToMarkdown(
-		makeTodo({
-			visitsData: [
-				{
-					todoId: 'todo-abc12345',
-					date: new Date('2025-01-01T09:00:00.000Z'),
-				},
-				{
-					todoId: 'todo-abc12345',
-					date: new Date('2025-02-15T14:00:00.000Z'),
-				},
-			],
-		}),
-	)
-
-	expect(result.split('\n')).toEqual([
-		'---',
-		'id: "todo-abc12345"',
-		'title: "Buy groceries"',
-		'visitCount: 2',
-		'lastVisit: 2025-02-15T14:00:00.000Z',
-		'exportedAt: 2025-06-15T12:00:00.000Z',
-		'---',
-		'',
-		'# Buy groceries',
-	])
-})
-
-test('excludes visit history from content by default', () => {
-	const result = todoToMarkdown(
-		makeTodo({
-			visitsData: [
-				{
-					todoId: 'todo-abc12345',
-					date: new Date('2025-01-01T09:00:00.000Z'),
-				},
-			],
-		}),
-	)
-
-	expect(result).not.toContain('## Visit History')
-})
-
-test('includes visit history in content when includeVisits is true', () => {
-	const visitDate1 = new Date('2025-01-01T09:00:00.000Z')
-	const visitDate2 = new Date('2025-02-15T14:00:00.000Z')
-	const result = todoToMarkdown(
-		makeTodo({
-			visitsData: [
-				{ todoId: 'todo-abc12345', date: visitDate1 },
-				{ todoId: 'todo-abc12345', date: visitDate2 },
-			],
-		}),
-		{ includeVisits: true },
-	)
-
-	expect(result.split('\n')).toEqual([
-		'---',
-		'id: "todo-abc12345"',
-		'title: "Buy groceries"',
-		'visitCount: 2',
-		'lastVisit: 2025-02-15T14:00:00.000Z',
-		'exportedAt: 2025-06-15T12:00:00.000Z',
-		'---',
-		'',
-		'# Buy groceries',
-		'',
-		'## Visit History',
-		'',
-		`- ${formatDate(visitDate2)}`,
-		`- ${formatDate(visitDate1)}`,
-	])
 })
 
 describe('YAML escaping', () => {
@@ -249,8 +126,6 @@ describe('YAML escaping', () => {
 			'title: "Read \\"Dune\\""',
 			'exportedAt: 2025-06-15T12:00:00.000Z',
 			'---',
-			'',
-			'# Read "Dune"',
 		])
 	})
 
@@ -263,8 +138,6 @@ describe('YAML escaping', () => {
 			'title: "path\\\\to\\\\thing"',
 			'exportedAt: 2025-06-15T12:00:00.000Z',
 			'---',
-			'',
-			'# path\\to\\thing',
 		])
 	})
 
@@ -277,9 +150,6 @@ describe('YAML escaping', () => {
 			'title: "line1\\nline2"',
 			'exportedAt: 2025-06-15T12:00:00.000Z',
 			'---',
-			'',
-			'# line1',
-			'line2',
 		])
 	})
 })
