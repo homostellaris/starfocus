@@ -8,23 +8,16 @@ import {
 	IonFabButton,
 	IonFooter,
 	IonGrid,
-	IonHeader,
 	IonIcon,
-	IonInput,
 	IonItemDivider,
 	IonItemGroup,
 	IonLabel,
 	IonList,
-	IonMenu,
 	IonNote,
 	IonPage,
 	IonReorderGroup,
 	IonRow,
-	IonSearchbar,
-	IonSelect,
-	IonSelectOption,
 	IonSpinner,
-	IonToast,
 	IonToolbar,
 	isPlatform,
 } from '@ionic/react'
@@ -43,11 +36,10 @@ import {
 	timeSharp,
 } from 'ionicons/icons'
 import _ from 'lodash'
+import { usePostHog } from 'posthog-js/react'
 import {
 	ComponentProps,
-	forwardRef,
 	PropsWithChildren,
-	RefObject,
 	useCallback,
 	useEffect,
 	useMemo,
@@ -56,10 +48,8 @@ import {
 } from 'react'
 import { Header } from '../common/Header'
 import Placeholder from '../common/Placeholder'
-import Starship from '../common/Starship'
-import Title from '../common/Title'
 import { cn } from '../common/cn'
-import order, { calculateReorderIndices, starMudder } from '../common/order'
+import order, { calculateReorderIndices } from '../common/order'
 import {
 	AsteroidFieldTodoListItem,
 	db,
@@ -69,17 +59,12 @@ import {
 	TodoListItemBase,
 	WayfinderTodoListItem,
 } from '../db'
+import { MarkdownExportProvider } from '../export/MarkdownExportContext'
 import { ViewMenu } from '../focus/ViewMenu'
 import useView, { ViewProvider } from '../focus/view'
 import Mood from '../mood'
 import { MoodProvider } from '../mood/MoodContext'
-import NoteProviders from '../notes/providers'
-import ExportSettings from '../export/ExportSettings'
-import { MarkdownExportProvider } from '../export/MarkdownExportContext'
 import { matchesQuery } from '../search/matchesQuery'
-import useSettings from '../settings/useSettings'
-import Tracjectory from '../starship/Trajectory'
-import { useStarshipYPosition } from '../starship/useStarshipYPosition'
 import { TodoCard, TodoListItem } from '../todos'
 import PulseGraph from '../todos/PulseGraph'
 import { useTodoActionSheet } from '../todos/TodoActionSheet'
@@ -89,7 +74,9 @@ import { groupByCompletedAt } from '../todos/groupTodosByCompletedAt'
 import todoRepository from '../todos/repository'
 import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
 import { useTodoPopover } from '../todos/useTodoPopover'
-import { usePostHog } from 'posthog-js/react'
+import { SettingsMenu } from '../settings/SettingsMenu'
+import { Searchbar } from '../search/Searchbar'
+import { Journey } from '../starship/Journey'
 
 const Home = () => {
 	const posthog = usePostHog()
@@ -120,52 +107,52 @@ const Home = () => {
 						<TodoContextProvider>
 							<ViewMenu searchbarRef={searchbarRef} />
 							<SettingsMenu />
-						<IonPage id="main-content">
-							<Header title="Home"></Header>
-							<TodoLists />
-							<div className="absolute hidden xl:block bottom-4 left-4">
-								<Mood />
-							</div>
-							<IonFooter
-								className="lg:w-[calc(100vw/12*6+56*2px+10px)] lg:mx-auto lg:rounded-t-lg overflow-hidden"
-								translucent
-							>
-								<IonToolbar
-									className={cn(isPlatform('ios') && 'ion-padding-top')}
+							<IonPage id="main-content">
+								<Header title="Home"></Header>
+								<TodoLists />
+								<div className="absolute hidden xl:block bottom-4 left-4">
+									<Mood />
+								</div>
+								<IonFooter
+									className="lg:w-[calc(100vw/12*6+56*2px+10px)] lg:mx-auto lg:rounded-t-lg overflow-hidden"
+									translucent
 								>
-									<IonButtons slot="start">
-										<IonButton
-											id="view-menu-button"
-											onClick={() => {
-												menuController.toggle('start')
-												posthog.capture('view_menu_opened')
-											}}
-										>
-											<IonIcon
-												icon={filterSharp}
-												slot="icon-only"
-											/>
-										</IonButton>
-									</IonButtons>
-									<Searchbar ref={searchbarRef} />
-									<IonButtons slot="end">
-										<IonButton
-											id="settings-menu-button"
-											onClick={() => {
-												menuController.toggle('end')
-												posthog.capture('settings_menu_opened')
-											}}
-										>
-											<IonIcon
-												icon={settingsSharp}
-												slot="icon-only"
-											/>
-										</IonButton>
-									</IonButtons>
-								</IonToolbar>
-							</IonFooter>
-						</IonPage>
-					</TodoContextProvider>
+									<IonToolbar
+										className={cn(isPlatform('ios') && 'ion-padding-top')}
+									>
+										<IonButtons slot="start">
+											<IonButton
+												id="view-menu-button"
+												onClick={() => {
+													menuController.toggle('start')
+													posthog.capture('view_menu_opened')
+												}}
+											>
+												<IonIcon
+													icon={filterSharp}
+													slot="icon-only"
+												/>
+											</IonButton>
+										</IonButtons>
+										<Searchbar ref={searchbarRef} />
+										<IonButtons slot="end">
+											<IonButton
+												id="settings-menu-button"
+												onClick={() => {
+													menuController.toggle('end')
+													posthog.capture('settings_menu_opened')
+												}}
+											>
+												<IonIcon
+													icon={settingsSharp}
+													slot="icon-only"
+												/>
+											</IonButton>
+										</IonButtons>
+									</IonToolbar>
+								</IonFooter>
+							</IonPage>
+						</TodoContextProvider>
 					</ViewProvider>
 				</MoodProvider>
 			</MarkdownExportProvider>
@@ -266,14 +253,13 @@ export const TodoLists = () => {
 						.toArray()
 						.then(starRoles =>
 							Promise.all(
-								starRoles.map(
-									starRole =>
-										db.todos
-											.where('starRole')
-											.equals(starRole.id)
-											.reverse()
-											.limit(1)
-											.sortBy('starPoints'),
+								starRoles.map(starRole =>
+									db.todos
+										.where('starRole')
+										.equals(starRole.id)
+										.reverse()
+										.limit(1)
+										.sortBy('starPoints'),
 								),
 							),
 						)
@@ -1057,240 +1043,6 @@ export const TodoLists = () => {
 	)
 }
 
-export const SettingsMenu = () => {
-	const posthog = usePostHog()
-	const settings = useSettings()
-	const [noteProvider, setNoteProvider] = useState<{
-		type?: string
-		apiKey?: string
-		vault?: string
-		folder?: string
-	}>({})
-	const noteProviderSettings = settings['#noteProvider']
-	// Gross hack required because settings is initially undefined until the query resolves which doesn't re-trigger the state
-	useEffect(() => {
-		if (noteProviderSettings) {
-			setNoteProvider(noteProviderSettings)
-		}
-	}, [noteProviderSettings])
-
-	return (
-		<IonMenu
-			contentId="main-content"
-			id="settings-menu"
-			side="end"
-			type="push"
-		>
-			<IonHeader>
-				<IonToolbar>
-					<Title>Settings</Title>
-				</IonToolbar>
-			</IonHeader>
-			<IonContent className="space-y-4 ion-padding">
-				<ExportSettings />
-				<form
-					id="settings"
-					onSubmit={async event => {
-						event.preventDefault()
-						if (noteProvider.type === null) {
-							setNoteProvider({})
-							return db.settings.delete('#noteProvider')
-						}
-						await db.settings.put({
-							key: '#noteProvider',
-							value: noteProvider,
-						})
-						posthog.capture('settings_saved', {
-							note_provider_type: noteProvider.type,
-							has_vault: !!noteProvider.vault,
-							has_folder: !!noteProvider.folder,
-						})
-					}}
-				>
-					<fieldset className="space-y-2">
-						<IonSelect
-							fill="outline"
-							label="Note provider"
-							labelPlacement="floating"
-							onIonChange={event => {
-								setNoteProvider(noteProvider => ({
-									...noteProvider,
-									type: event.detail.value,
-								}))
-							}}
-							value={noteProvider.type || null} // defaultValue doesn't seem to work so have to make this a controlled component
-						>
-							<IonSelectOption value={null}>None</IonSelectOption>
-							<IonSelectOption value="obsidian">Obsidian</IonSelectOption>
-						</IonSelect>
-						{noteProvider.type === NoteProviders.Stashpad && (
-							<IonInput
-								fill="outline"
-								helperText="Notes are created with public permissions. API key is stored unencrypted in your database which is synced to our servers if you enable it."
-								label="API key"
-								labelPlacement="floating"
-								onIonChange={event => {
-									setNoteProvider(noteProvider => ({
-										...noteProvider,
-										apiKey: event.detail.value?.toString(),
-									}))
-								}}
-								placeholder="Enter text"
-								required
-								value={noteProvider?.apiKey}
-							></IonInput>
-						)}
-						{noteProvider.type === NoteProviders.Obsidian && (
-							<>
-								<IonInput
-									fill="outline"
-									helperText="The vault to use for new notes. If none is specified Obsidian will use the currently open vault."
-									label="Vault"
-									labelPlacement="floating"
-									onIonChange={event => {
-										setNoteProvider(noteProvider => ({
-											...noteProvider,
-											vault: event.detail.value?.toString(),
-										}))
-									}}
-									placeholder="My Vault"
-									value={noteProvider?.vault}
-								></IonInput>
-								<IonInput
-									autocapitalize="sentences"
-									fill="outline"
-									helperText="The folder where the todo notes will be created. This is a path relative to the vault root. If no folder is specified the vault's default location for new notes will be used."
-									label="Folder"
-									labelPlacement="floating"
-									onIonChange={event => {
-										setNoteProvider(noteProvider => ({
-											...noteProvider,
-											folder: event.detail.value?.toString(),
-										}))
-									}}
-									placeholder="My Todo Notes"
-									value={noteProvider?.folder}
-								></IonInput>
-							</>
-						)}
-					</fieldset>
-				</form>
-				<IonButton
-					id="clean-database"
-					className="hidden"
-					onClick={async () => {
-						// Remove invalid notes from todos
-						await db.todos.toCollection().modify(todo => {
-							delete todo['uri']
-							if (todo.note && !todo.note.uri) {
-								delete todo.note
-							}
-						})
-
-						// Remove empty todos
-						await db.todos.where('title').equals('').delete()
-
-						// Remove todos from important list that don't exist
-						const important = await db.lists.get('#important')
-						const todos = await db.todos.bulkGet(important?.order || [])
-						const cleanedImportantOrder = _.zip(important!.order, todos)
-							.filter(([_id, todo]) => todo !== undefined)
-							.map(([id, _todo]) => id) as string[]
-						await db.lists.update('#important', {
-							order: cleanedImportantOrder,
-						})
-
-						// Migrate to new important order
-						const wayfinderOrder = await db.wayfinderOrder
-							.orderBy('order')
-							.keys()
-						if (wayfinderOrder.length === 0) {
-							const oldOrder = await db.lists.get('#important')
-							const orderKeys = starMudder(oldOrder?.order.length)
-							const records = oldOrder?.order.map(todoId => ({
-								todoId,
-								order: orderKeys.shift(),
-							}))
-							db.wayfinderOrder.bulkAdd(records as any)
-						}
-					}}
-				>
-					Clean database
-				</IonButton>
-				<IonToast
-					trigger="clean-database"
-					message="Database cleaned"
-					duration={2000}
-				></IonToast>
-			</IonContent>
-			<IonFooter>
-				<IonToolbar>
-					<IonButtons slot="primary">
-						<IonButton
-							form="settings"
-							id="save-settings"
-							type="submit"
-						>
-							Save
-						</IonButton>
-					</IonButtons>
-					<IonButtons slot="secondary">
-						<IonButton
-							onClick={() => {
-								menuController.toggle('end')
-							}}
-						>
-							Cancel
-						</IonButton>
-					</IonButtons>
-				</IonToolbar>
-				<IonToast
-					trigger="save-settings"
-					message="Settings saved"
-					duration={2000}
-				></IonToast>
-			</IonFooter>
-		</IonMenu>
-	)
-}
-
-export const Journey = ({
-	commonAncestor,
-}: {
-	commonAncestor: RefObject<HTMLElement | null>
-}) => {
-	const {
-		nextTodo: {
-			position: [nextTodoPosition],
-		},
-	} = useTodoContext()
-	const starship = useRef<HTMLImageElement>(null)
-	const [starshipY] = useStarshipYPosition(
-		starship?.current,
-		nextTodoPosition,
-		commonAncestor.current,
-	)
-
-	return (
-		<div className="min-w-[56px]">
-			<Tracjectory
-				className="absolute right-[27px]"
-				currentPosition={starshipY}
-			/>
-			<div
-				id="starship"
-				className="absolute right-0 transition-transform duration-500 ease-in-out w-[56px] h-[56px]"
-				style={{ transform: `translateY(${starshipY}px)` }}
-			>
-				<Starship
-					className="rotate-180"
-					ref={starship}
-				/>
-			</div>
-		</div>
-	)
-}
-
 export const Database = ({ todos }: { todos: Todo[] }) => {
 	const posthog = usePostHog()
 	const [present] = useTodoActionSheet()
@@ -1361,46 +1113,6 @@ export const Database = ({ todos }: { todos: Todo[] }) => {
 		</section>
 	)
 }
-
-export const Searchbar = forwardRef<HTMLIonSearchbarElement>(
-	function Searchbar(_props, ref) {
-		const posthog = usePostHog()
-		const { setQuery } = useView()
-
-		return (
-			<IonSearchbar
-				ref={ref}
-				className={cn(
-					'mx-auto [--background:#121212]',
-					!isPlatform('ios') && 'ion-no-padding',
-				)}
-				debounce={100}
-				/* Binding to the capture phase allows the searchbar to complete its native behaviour of clearing the input.
-				 * Without this the input would blur but the input would still have a value and the todos would still be filtered. */
-				onKeyDownCapture={event => {
-					if (event.key === 'Escape') {
-						// TS complains unless we narrow the type
-						if (document.activeElement instanceof HTMLElement)
-							document.activeElement.blur()
-						posthog.capture('keyboard_shortcut_used', {
-							shortcut_key: 'Escape',
-							action: 'blur_search',
-						})
-					}
-				}}
-				onIonInput={event => {
-					const target = event.target as HTMLIonSearchbarElement
-					let query = ''
-					if (target?.value) query = target.value.toLowerCase()
-					setQuery(query)
-					if (query)
-						posthog.capture('search_performed', { query_length: query.length })
-				}}
-				// placeholder="command + k to focus, / to search, is:snoozed"
-			></IonSearchbar>
-		)
-	},
-)
 
 function JourneyLabel({ children }: ComponentProps<typeof IonItemDivider>) {
 	return (
