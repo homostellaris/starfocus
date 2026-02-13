@@ -163,7 +163,7 @@ describe('setting', () => {
 		// Ionic menu animation must complete before toggle() will close it
 		cy.wait(500)
 		cy.get('ion-menu')
-			.contains('ion-button', 'Cancel')
+			.contains('ion-button', 'Close')
 			.should('be.visible')
 			.click()
 		cy.contains('ion-title', 'Settings').should('not.be.visible')

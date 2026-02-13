@@ -55,6 +55,7 @@ export const SettingsMenu = () => {
 			<IonContent className="space-y-4 ion-padding">
 				<ExportSettings />
 				<form
+					hidden
 					id="settings"
 					onSubmit={async event => {
 						event.preventDefault()
@@ -193,28 +194,14 @@ export const SettingsMenu = () => {
 				<IonToolbar>
 					<IonButtons slot="primary">
 						<IonButton
-							form="settings"
-							id="save-settings"
-							type="submit"
-						>
-							Save
-						</IonButton>
-					</IonButtons>
-					<IonButtons slot="secondary">
-						<IonButton
 							onClick={() => {
 								menuController.toggle('end')
 							}}
 						>
-							Cancel
+							Close
 						</IonButton>
 					</IonButtons>
 				</IonToolbar>
-				<IonToast
-					trigger="save-settings"
-					message="Settings saved"
-					duration={2000}
-				></IonToast>
 			</IonFooter>
 		</IonMenu>
 	)
