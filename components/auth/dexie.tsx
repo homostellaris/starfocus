@@ -88,7 +88,7 @@ export function LoginModal({ ui }: { ui?: DXCUserInteraction }) {
 							</p>
 						))}
 						{(Object.entries(ui.fields) as [string, DXCInputField][]).map(
-							([fieldName, { type, label, placeholder }], idx) =>
+							([fieldName, { type, placeholder }], idx) =>
 								type === 'otp' ? (
 									<IonInputOtp
 										autoFocus

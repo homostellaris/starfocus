@@ -1,9 +1,6 @@
-import Image from 'next/image'
 import Nav from '../../components/common/Nav'
 import { DocsSidebar } from './DocsSidebar'
 import { getDocPages } from './getDocPages'
-import logo from '../icon.png'
-import Link from 'next/link'
 
 export default function DocsLayout({
 	children,

@@ -6,7 +6,6 @@ import { db, ListType, Todo, TodoInput } from '../../db'
 import useNoteProvider from '../../notes/useNoteProvider'
 import { CreateTodoModal } from './modal'
 import { usePostHog } from 'posthog-js/react'
-import StarPoints from '../../common/StarPoints'
 
 export function useCreateTodoModal(): [
 	({
@@ -25,6 +24,7 @@ export function useCreateTodoModal(): [
 		dismiss: (data: string, role: string) => dismiss(data, role),
 		title: 'Create todo',
 		titleInput,
+		// eslint-disable-next-line react-hooks/refs -- Value is set before present() is called
 		todo: todoRef.current,
 	})
 

@@ -4,7 +4,7 @@ import { Todo } from '../db'
 
 export const Popover = ({
 	dismiss,
-	todo,
+	todo: _todo,
 }: {
 	dismiss: (data?: any, role?: string) => void
 	todo: Todo

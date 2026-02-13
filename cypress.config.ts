@@ -6,7 +6,7 @@ export default defineConfig({
 	e2e: {
 		baseUrl: 'http://localhost:6603',
 		includeShadowDom: true,
-		setupNodeEvents(on, config) {
+		setupNodeEvents(_on, _config) {
 			// implement node event listeners here
 		},
 	},

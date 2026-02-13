@@ -16,9 +16,9 @@ export const Journey = ({
 	} = useTodoContext()
 	const starship = useRef<HTMLImageElement>(null)
 	const [starshipY] = useStarshipYPosition(
-		starship?.current,
+		starship,
 		nextTodoPosition,
-		commonAncestor.current,
+		commonAncestor,
 	)
 
 	return (
