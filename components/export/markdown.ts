@@ -53,8 +53,10 @@ export function generateFilename(todo: Todo): string {
 		.replace(/^-|-$/g, '')
 		.slice(0, 50)
 
-	// Use a short ID suffix to ensure uniqueness
-	const shortId = todo.id.slice(-8)
+	const shortId = todo.id
+		.slice(-8)
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-|-$/g, '')
 
 	return `${safeTitle}-${shortId}.md`
 }

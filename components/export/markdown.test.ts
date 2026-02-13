@@ -6,7 +6,7 @@ import {
 	afterEach,
 	setSystemTime,
 } from 'bun:test'
-import { todoToMarkdown, TodoWithRelations } from './markdown'
+import { generateFilename, todoToMarkdown, TodoWithRelations } from './markdown'
 
 beforeEach(() => {
 	setSystemTime(new Date('2025-06-15T12:00:00.000Z'))
@@ -114,6 +114,19 @@ test('does not include completedAt when todo is not completed', () => {
 	const result = todoToMarkdown(makeTodo())
 
 	expect(result).not.toContain('completedAt:')
+})
+
+describe('generateFilename', () => {
+	test('generates a filename from title and ID suffix', () => {
+		expect(generateFilename(makeTodo())).toBe('buy-groceries-abc12345.md')
+	})
+
+	test('sanitizes slash characters from Dexie Cloud realm IDs', () => {
+		const filename = generateFilename(makeTodo({ id: 'todABC/rlm1234' }))
+
+		expect(filename).toBe('buy-groceries-rlm1234.md')
+		expect(filename).not.toContain('/')
+	})
 })
 
 describe('YAML escaping', () => {
