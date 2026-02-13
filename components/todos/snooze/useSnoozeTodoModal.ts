@@ -1,7 +1,6 @@
 import { useIonModal } from '@ionic/react'
-import { useCallback, useRef } from 'react'
+import { useCallback } from 'react'
 import { ListType, Todo, WayfinderOrder, db } from '../../db'
-import useNoteProvider from '../../notes/useNoteProvider'
 import useTodoContext from '../TodoContext'
 import SnoozeTodoModal from './modal'
 import { usePostHog } from 'posthog-js/react'

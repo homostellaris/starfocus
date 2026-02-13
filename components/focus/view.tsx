@@ -3,8 +3,8 @@ import {
 	createContext,
 	useCallback,
 	useContext,
-	useEffect,
 	useMemo,
+	useRef,
 	useState,
 } from 'react'
 import { db, StarRole, Todo } from '../db'
@@ -49,12 +49,13 @@ export function ViewProvider({ children }: { children: React.ReactNode }) {
 	)
 
 	const [activeStarRoles, setActiveStarRoles] = useState<string[]>([])
-	useEffect(() => {
-		if (!starRolesIncludingNoStarRole) return
-		/* In the rare event that a star role is added or removed we're happy to reset the state because
-		   it's not clear whether the user would want the new star role to be active or not. */
+	const prevStarRolesRef = useRef(starRolesIncludingNoStarRole)
+	// eslint-disable-next-line react-hooks/refs -- React-recommended "adjust state during render" pattern
+	if (prevStarRolesRef.current !== starRolesIncludingNoStarRole) {
+		// eslint-disable-next-line react-hooks/refs -- React-recommended "adjust state during render" pattern
+		prevStarRolesRef.current = starRolesIncludingNoStarRole
 		setActiveStarRoles(starRolesIncludingNoStarRole)
-	}, [starRolesIncludingNoStarRole])
+	}
 
 	const focusedStarRole = useMemo(
 		() => (activeStarRoles.length === 1 && activeStarRoles[0]) || null,

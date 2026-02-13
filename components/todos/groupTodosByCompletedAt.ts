@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import isBetween from 'dayjs/plugin/isBetween'
 import updateLocale from 'dayjs/plugin/updateLocale'
-import { LogTodoListItem, Todo } from '../db'
+import { LogTodoListItem } from '../db'
 
 dayjs.extend(isBetween)
 dayjs.extend(updateLocale)
@@ -100,8 +100,8 @@ export function groupByCompletedAt(completedTodos: LogTodoListItem[]) {
 		.filter(([shortLabel, todos]) => todos.length > 0 || shortLabel === 'Today') // Always include today because want to show the marker even when there are no todos yet completed
 		.map(([shortLabel, todos]) => ({
 			shortLabel,
-			longLabel: groupMeta.find(item => item.shortLabel === shortLabel)
-				?.longLabel!,
+			longLabel:
+				groupMeta.find(item => item.shortLabel === shortLabel)?.longLabel ?? '',
 			todos,
 		}))
 }

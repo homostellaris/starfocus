@@ -9,8 +9,6 @@ import {
 	IonLabel,
 	IonList,
 	IonMenu,
-	IonSegment,
-	IonSegmentButton,
 	IonSpinner,
 	IonToggle,
 	IonToolbar,
@@ -20,9 +18,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import {
 	layersSharp,
 	locateOutline,
-	reorderThreeSharp,
 	rocketSharp,
-	sparklesSharp,
 	timeSharp,
 } from 'ionicons/icons'
 import { RefObject } from 'react'

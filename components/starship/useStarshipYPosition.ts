@@ -1,11 +1,17 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import {
+	type Dispatch,
+	type RefObject,
+	type SetStateAction,
+	useEffect,
+	useState,
+} from 'react'
 import { useWindowSize } from '../common/useWindowResize'
 import { TodoPosition } from '../todos/TodoContext'
 
 export function useStarshipYPosition(
-	starship: HTMLElement | null,
+	starship: RefObject<HTMLElement | null>,
 	nextTodoPosition: TodoPosition,
-	commonAncestor: HTMLElement | null,
+	commonAncestor: RefObject<HTMLElement | null>,
 ): [number, Dispatch<SetStateAction<number>>] {
 	console.debug('Starship position render')
 	const size = useWindowSize()
@@ -15,16 +21,19 @@ export function useStarshipYPosition(
 	useEffect(() => {
 		console.debug('Starship position effect')
 		if (
-			starship === null ||
+			starship.current === null ||
 			nextTodoPosition === null ||
-			commonAncestor === null
+			commonAncestor.current === null
 		)
+			// eslint-disable-next-line react-hooks/set-state-in-effect -- Derived from DOM measurements
 			return setStarshipY(0)
 
-		const commonAncestorRect = commonAncestor.getBoundingClientRect()
+		const starshipEl = starship.current
+		const commonAncestorEl = commonAncestor.current
+		const commonAncestorRect = commonAncestorEl.getBoundingClientRect()
 		const todoDistanceFromCommonAncestor = nextTodoPosition.top
 		const starshipHeightAdjustment =
-			(nextTodoPosition.height - starship?.offsetHeight) / 2
+			(nextTodoPosition.height - starshipEl.offsetHeight) / 2
 		const additionalOffset = 32 // Hack to accommodate the 'load more' buttons, should calculate properly based on common ancestor.
 
 		const y =
@@ -38,7 +47,7 @@ export function useStarshipYPosition(
 			starshipHeightAdjustment,
 		})
 		setStarshipY(y)
-	}, [commonAncestor, nextTodoPosition, size, starship, setStarshipY])
+	}, [commonAncestor, nextTodoPosition, size, starship])
 
 	return [starshipY, setStarshipY]
 }

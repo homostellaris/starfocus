@@ -14,7 +14,7 @@ import {
 } from '@ionic/react'
 import _ from 'lodash'
 import { usePostHog } from 'posthog-js/react'
-import { useEffect, useState } from 'react'
+import { useRef, useState } from 'react'
 import { starMudder } from '../common/order'
 import Title from '../common/Title'
 import { db } from '../db'
@@ -32,12 +32,13 @@ export const SettingsMenu = () => {
 		folder?: string
 	}>({})
 	const noteProviderSettings = settings['#noteProvider']
-	// Gross hack required because settings is initially undefined until the query resolves which doesn't re-trigger the state
-	useEffect(() => {
-		if (noteProviderSettings) {
-			setNoteProvider(noteProviderSettings)
-		}
-	}, [noteProviderSettings])
+	const prevNoteProviderRef = useRef(noteProviderSettings)
+	// eslint-disable-next-line react-hooks/refs -- React-recommended "adjust state during render" pattern
+	if (noteProviderSettings && prevNoteProviderRef.current !== noteProviderSettings) {
+		// eslint-disable-next-line react-hooks/refs -- React-recommended "adjust state during render" pattern
+		prevNoteProviderRef.current = noteProviderSettings
+		setNoteProvider(noteProviderSettings)
+	}
 
 	return (
 		<IonMenu

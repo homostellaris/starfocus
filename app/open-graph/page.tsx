@@ -1,5 +1,4 @@
 import Starship from '../../components/common/Starship'
-import Tracjectory from '../../components/starship/Trajectory'
 
 export default function Page() {
 	return (

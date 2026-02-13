@@ -36,17 +36,6 @@ const MUSIC_FILES = {
 	],
 }
 
-const parseTrackInfo = (filePath: string) => {
-	const fileName = filePath.split('/').pop()?.replace('.mp3', '') || ''
-
-	if (fileName.includes(' - ')) {
-		const [artist, track] = fileName.split(' - ')
-		return { artist, track }
-	}
-
-	return { artist: 'Unknown Artist', track: fileName }
-}
-
 export default function Mood() {
 	const audio = useRef<HTMLAudioElement>(null)
 	const [playing, setPlaying] = useState<boolean>(false)
@@ -55,13 +44,14 @@ export default function Mood() {
 
 	const currentPlaylist = MUSIC_FILES[mode]
 	const currentTrack = currentPlaylist[currentTrackIndex] || null
-	const { artist, track } = currentTrack
-		? parseTrackInfo(currentTrack)
-		: { artist: '', track: '' }
 
-	useEffect(() => {
+	const prevModeRef = useRef(mode)
+	// eslint-disable-next-line react-hooks/refs -- React-recommended "adjust state during render" pattern
+	if (prevModeRef.current !== mode) {
+		// eslint-disable-next-line react-hooks/refs -- React-recommended "adjust state during render" pattern
+		prevModeRef.current = mode
 		setCurrentTrackIndex(0)
-	}, [mode])
+	}
 
 	useEffect(() => {
 		if (audio.current && currentTrack) {

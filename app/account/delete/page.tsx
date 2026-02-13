@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import Nav from '../../../components/common/Nav'
 
 export default function Page() {

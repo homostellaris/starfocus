@@ -4,10 +4,8 @@ import {
 	IonContent,
 	IonHeader,
 	IonIcon,
-	IonImg,
 	IonInput,
 	IonItem,
-	IonLabel,
 	IonList,
 	IonPopover,
 	IonTitle,
@@ -33,7 +31,7 @@ import { LoginModal } from '../auth/dexie'
 
 export const Header = ({ title }: { title: string }) => {
 	const ui = useObservable(db.cloud.userInteraction)
-	const [present, dismiss] = useIonModal(LoginModal, {
+	const [, dismiss] = useIonModal(LoginModal, {
 		dismiss: (data: string, role: string) => dismiss(data, role),
 	})
 

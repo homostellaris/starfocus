@@ -1,4 +1,4 @@
-import { TodoInput, Todo } from '../../db'
+import { TodoInput } from '../../db'
 
 enum NoteProviders {
 	Stashpad = 'stashpad',

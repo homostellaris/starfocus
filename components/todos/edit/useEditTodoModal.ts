@@ -17,6 +17,7 @@ export function useEditTodoModal(): [
 		dismiss: (data: string, role: string) => dismiss(data, role),
 		title: 'Edit todo',
 		titleInput,
+		// eslint-disable-next-line react-hooks/refs -- Value is set before present() is called
 		todo: todoRef.current,
 	})
 

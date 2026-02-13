@@ -15,7 +15,7 @@ import { Todo } from '../../db'
 
 export default function SnoozeModal({
 	dismiss,
-	title,
+	title: _title,
 	todo,
 	...props
 }: {

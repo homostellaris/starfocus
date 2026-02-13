@@ -175,7 +175,7 @@ export const TodoLists = () => {
 	// Creating todo stuff
 	const fab = useRef<HTMLIonFabElement>(null)
 	const { focusedStarRole } = useView()
-	const [presentCreateTodoModal, _dismiss] = useCreateTodoModal()
+	const [presentCreateTodoModal] = useCreateTodoModal()
 	const openCreateTodoModal = useCallback(() => {
 		presentCreateTodoModal({
 			onWillDismiss: () => {
@@ -331,14 +331,6 @@ export const TodoLists = () => {
 
 	const loading = data === undefined
 
-	const todosCount = useMemo(
-		() =>
-			loading
-				? 0
-				: Object.values(data).reduce((acc, todos) => acc + todos.length, 0),
-		[loading, data],
-	)
-
 	const [logGroups, todayGroup] = useCompletedTodoGroups(
 		data?.log || [],
 		data?.visits || [],
@@ -413,7 +405,7 @@ export const TodoLists = () => {
 		return () => {
 			document.removeEventListener('keydown', handleKeyDown)
 		}
-	}, [contentRef, fab, nextTodoPosition, openCreateTodoModal])
+	}, [contentRef, fab, nextTodoPosition, openCreateTodoModal, posthog])
 
 	const [presentTodoActionSheet] = useTodoActionSheet()
 	const [presentSnoozeTodoModal] = useSnoozeTodoModal()
@@ -912,7 +904,7 @@ export const TodoLists = () => {
 																	},
 																})
 															}}
-															onClick={event => {
+															onClick={() => {
 																presentTodoActionSheet(todo, {
 																	buttons: [
 																		{
@@ -1168,7 +1160,7 @@ function useGlobalKeyboardShortcuts() {
 		return () => {
 			document.removeEventListener('keydown', handleKeyDown)
 		}
-	}, [])
+	}, [posthog])
 }
 
 /**
