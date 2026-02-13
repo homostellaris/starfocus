@@ -19,7 +19,7 @@
 		"prepare": "husky",
 		"dev": "next dev --webpack -p 6603",
 		"android:dev": "next build --webpack && cap sync android && mv out/home.html out/index.html && cap run android",
-		"typecheck": "tsc",
+		"typecheck": "tsc && tsc --project scripts/tsconfig.json",
 		"lint": "eslint .",
 		"format": "prettier --write components/ interfaces/ pages/ public/ styles/ utils/",
 		"unit": "bun test",
