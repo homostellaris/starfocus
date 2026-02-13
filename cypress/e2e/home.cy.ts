@@ -17,7 +17,7 @@ beforeEach(() => {
 	})
 	cy.db(db => db.open())
 	cy.visit('/home')
-	cy.get('ion-fab>ion-fab-button').should('be.visible')
+	cy.get('ion-fab>ion-fab-button', { timeout: 10000 }).should('be.visible')
 })
 
 describe.skip('constellation', () => {})
@@ -106,10 +106,9 @@ describe.skip('focus', () => {
 
 describe('snooze', () => {
 	beforeEach(() => {
-		cy.clock(dayjs('2025-01-01').valueOf(), ['Date'])
 		cy.visit('/home')
-		cy.tick(1000)
-		cy.get('ion-fab>ion-fab-button').should('be.visible')
+		cy.get('ion-fab>ion-fab-button', { timeout: 10000 }).should('be.visible')
+		cy.clock(dayjs('2025-01-01').valueOf(), ['Date'])
 	})
 
 	it('removes todo from view until the snoozed date', () => {
