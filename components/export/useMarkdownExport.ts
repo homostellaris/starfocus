@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useLiveQuery } from 'dexie-react-hooks'
+import { useLiveQuery, useObservable } from 'dexie-react-hooks'
 import debounce from 'debounce'
 import posthog from 'posthog-js'
 import { db, Todo, StarRole, StarRoleGroup } from '../db'
@@ -74,6 +74,29 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 			})
 		}
 	}, [])
+
+	// Clear directory handle on logout to prevent syncing a new account's data
+	// into the previous account's export directory
+	const currentUser = useObservable(db.cloud.currentUser)
+	const wasLoggedInRef = useRef<boolean | null>(null)
+
+	useEffect(() => {
+		const isLoggedIn = currentUser?.isLoggedIn ?? false
+
+		if (wasLoggedInRef.current === true && !isLoggedIn) {
+			clearStoredDirectoryHandle()
+			syncEnabledRef.current = false
+			setStatus(s => ({
+				...s,
+				isEnabled: false,
+				directoryName: null,
+				lastSyncAt: null,
+				lastSyncResult: null,
+			}))
+		}
+
+		wasLoggedInRef.current = isLoggedIn
+	}, [currentUser?.isLoggedIn])
 
 	// Subscribe to database changes
 	const todos = useLiveQuery(() => db.todos.toArray(), [], [])
