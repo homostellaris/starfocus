@@ -200,7 +200,7 @@ export const TodoLists = () => {
 		})
 	}, [fab, focusedStarRole, presentCreateTodoModal])
 
-	const wayfinderOrderMode = useSettings('#wayfinderOrderMode')
+	const wayfinderOrderMode = 'manual' as string // TODO: Re-enable useSettings('#wayfinderOrderMode')
 	const { inActiveStarRoles, query } = useView()
 
 	const data = useLiveQuery<{
@@ -274,9 +274,6 @@ export const TodoLists = () => {
 											.reverse()
 											.limit(1)
 											.sortBy('starPoints'),
-									// .then(rankedStarRoleTodos =>
-									// 	rankedStarRoleTodos.slice(0, 2),
-									// ),
 								),
 							),
 						)
