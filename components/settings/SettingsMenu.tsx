@@ -19,7 +19,6 @@ import { starMudder } from '../common/order'
 import Title from '../common/Title'
 import { db } from '../db'
 import ExportSettings from '../export/ExportSettings'
-import NoteProviders from '../notes/providers'
 import useSettings from './useSettings'
 
 export const SettingsMenu = () => {
@@ -90,24 +89,7 @@ export const SettingsMenu = () => {
 							<IonSelectOption value={null}>None</IonSelectOption>
 							<IonSelectOption value="obsidian">Obsidian</IonSelectOption>
 						</IonSelect>
-						{noteProvider.type === NoteProviders.Stashpad && (
-							<IonInput
-								fill="outline"
-								helperText="Notes are created with public permissions. API key is stored unencrypted in your database which is synced to our servers if you enable it."
-								label="API key"
-								labelPlacement="floating"
-								onIonChange={event => {
-									setNoteProvider(noteProvider => ({
-										...noteProvider,
-										apiKey: event.detail.value?.toString(),
-									}))
-								}}
-								placeholder="Enter text"
-								required
-								value={noteProvider?.apiKey}
-							></IonInput>
-						)}
-						{noteProvider.type === NoteProviders.Obsidian && (
+						{noteProvider.type === 'obsidian' && (
 							<>
 								<IonInput
 									fill="outline"
