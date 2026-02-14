@@ -1,7 +1,6 @@
 import { TodoInput } from '../../db'
 
 enum NoteProviders {
-	Stashpad = 'stashpad',
 	Obsidian = 'obsidian',
 }
 
