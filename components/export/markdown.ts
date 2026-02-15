@@ -1,3 +1,4 @@
+import matter from 'gray-matter'
 import { Todo, StarRole, StarRoleGroup } from '../db'
 
 export interface TodoWithRelations extends Todo {
@@ -6,47 +7,46 @@ export interface TodoWithRelations extends Todo {
 }
 
 export function todoToMarkdown(todo: TodoWithRelations): string {
-	const frontMatter = buildFrontMatter(todo)
-	return `---\n${frontMatter}---`
+	return matter.stringify('', buildFrontMatterData(todo))
 }
 
-function buildFrontMatter(todo: TodoWithRelations): string {
-	const lines: string[] = []
-
-	lines.push(`id: "${todo.id}"`)
-	lines.push(`title: "${escapeYamlString(todo.title)}"`)
+export function buildFrontMatterData(
+	todo: TodoWithRelations,
+): Record<string, unknown> {
+	const data: Record<string, unknown> = {
+		id: todo.id,
+		title: todo.title,
+	}
 
 	if (todo.starPoints !== undefined) {
-		lines.push(`starPoints: ${todo.starPoints}`)
+		data.starPoints = todo.starPoints
 	}
 
 	if (todo.starRoleData) {
-		lines.push(`starRole: "${escapeYamlString(todo.starRoleData.title)}"`)
+		data.starRole = todo.starRoleData.title
 		if (todo.starRoleGroupData) {
-			lines.push(
-				`starRoleGroup: "${escapeYamlString(todo.starRoleGroupData.title)}"`,
-			)
+			data.starRoleGroup = todo.starRoleGroupData.title
 		}
 	}
 
 	if (todo.completedAt) {
-		lines.push(`completedAt: ${todo.completedAt.toISOString()}`)
+		data.completedAt = todo.completedAt.toISOString()
 	}
 
-	lines.push(`exportedAt: ${new Date().toISOString()}`)
+	data.exportedAt = new Date().toISOString()
 
-	return lines.join('\n') + '\n'
+	return data
 }
 
-function escapeYamlString(str: string): string {
-	return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n')
+export function updateFrontMatter(
+	existingContent: string,
+	todo: TodoWithRelations,
+): string {
+	const { content: body } = matter(existingContent)
+	return matter.stringify(body, buildFrontMatterData(todo))
 }
 
-/**
- * Generates a safe filename from a todo title
- */
 export function generateFilename(todo: Todo): string {
-	// Create a safe filename from the title
 	const safeTitle = todo.title
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, '-')
@@ -54,16 +54,13 @@ export function generateFilename(todo: Todo): string {
 		.slice(0, 50)
 
 	const shortId = todo.id
+		.replace(/[^a-z0-9]/gi, '')
+		.toLowerCase()
 		.slice(-8)
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/^-|-$/g, '')
 
-	return `${safeTitle}-${shortId}.md`
+	return `${safeTitle}_${shortId}.md`
 }
 
-/**
- * Creates a manifest file with metadata about the export
- */
 export function createManifest(
 	todos: TodoWithRelations[],
 	starRoles: StarRole[],

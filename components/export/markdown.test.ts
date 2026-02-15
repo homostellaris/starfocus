@@ -6,7 +6,12 @@ import {
 	afterEach,
 	setSystemTime,
 } from 'bun:test'
-import { generateFilename, todoToMarkdown, TodoWithRelations } from './markdown'
+import {
+	generateFilename,
+	todoToMarkdown,
+	updateFrontMatter,
+	TodoWithRelations,
+} from './markdown'
 
 beforeEach(() => {
 	setSystemTime(new Date('2025-06-15T12:00:00.000Z'))
@@ -26,143 +31,215 @@ function makeTodo(
 	}
 }
 
-test('converts a minimal todo to markdown with front matter', () => {
-	const result = todoToMarkdown(makeTodo())
+describe('todoToMarkdown', () => {
+	test('converts a minimal todo to markdown with front matter', () => {
+		const result = todoToMarkdown(makeTodo())
 
-	expect(result.split('\n')).toEqual([
-		'---',
-		'id: "todo-abc12345"',
-		'title: "Buy groceries"',
-		'exportedAt: 2025-06-15T12:00:00.000Z',
-		'---',
-	])
+		expect(result.split('\n')).toEqual([
+			'---',
+			'id: todo-abc12345',
+			'title: Buy groceries',
+			"exportedAt: '2025-06-15T12:00:00.000Z'",
+			'---',
+			'',
+			'',
+		])
+	})
+
+	test('includes starPoints in front matter', () => {
+		const result = todoToMarkdown(makeTodo({ starPoints: 5 }))
+
+		expect(result.split('\n')).toEqual([
+			'---',
+			'id: todo-abc12345',
+			'title: Buy groceries',
+			'starPoints: 5',
+			"exportedAt: '2025-06-15T12:00:00.000Z'",
+			'---',
+			'',
+			'',
+		])
+	})
+
+	test('includes star role in front matter', () => {
+		const result = todoToMarkdown(
+			makeTodo({
+				starRoleData: {
+					id: 'role-1',
+					title: 'Developer',
+					icon: { type: 'ionicon', name: 'code-outline' },
+				},
+			}),
+		)
+
+		expect(result.split('\n')).toEqual([
+			'---',
+			'id: todo-abc12345',
+			'title: Buy groceries',
+			'starRole: Developer',
+			"exportedAt: '2025-06-15T12:00:00.000Z'",
+			'---',
+			'',
+			'',
+		])
+	})
+
+	test('includes star role group in front matter', () => {
+		const result = todoToMarkdown(
+			makeTodo({
+				starRoleData: {
+					id: 'role-1',
+					title: 'Developer',
+					icon: { type: 'ionicon', name: 'code-outline' },
+					starRoleGroupId: 'group-1',
+				},
+				starRoleGroupData: { id: 'group-1', title: 'Work' },
+			}),
+		)
+
+		expect(result.split('\n')).toEqual([
+			'---',
+			'id: todo-abc12345',
+			'title: Buy groceries',
+			'starRole: Developer',
+			'starRoleGroup: Work',
+			"exportedAt: '2025-06-15T12:00:00.000Z'",
+			'---',
+			'',
+			'',
+		])
+	})
+
+	test('includes completedAt when todo is completed', () => {
+		const result = todoToMarkdown(
+			makeTodo({ completedAt: new Date('2025-03-01T10:00:00.000Z') }),
+		)
+
+		expect(result.split('\n')).toEqual([
+			'---',
+			'id: todo-abc12345',
+			'title: Buy groceries',
+			"completedAt: '2025-03-01T10:00:00.000Z'",
+			"exportedAt: '2025-06-15T12:00:00.000Z'",
+			'---',
+			'',
+			'',
+		])
+	})
+
+	test('does not include completedAt when todo is not completed', () => {
+		const result = todoToMarkdown(makeTodo())
+
+		expect(result).not.toContain('completedAt:')
+	})
 })
 
-test('includes starPoints in front matter and content', () => {
-	const result = todoToMarkdown(makeTodo({ starPoints: 5 }))
+describe('updateFrontMatter', () => {
+	test('preserves body content when updating front matter', () => {
+		const existing =
+			'---\nid: todo-abc12345\ntitle: Buy groceries\n---\nMy shopping notes\n'
+		const result = updateFrontMatter(existing, makeTodo())
 
-	expect(result.split('\n')).toEqual([
-		'---',
-		'id: "todo-abc12345"',
-		'title: "Buy groceries"',
-		'starPoints: 5',
-		'exportedAt: 2025-06-15T12:00:00.000Z',
-		'---',
-	])
-})
+		expect(result.split('\n')).toEqual([
+			'---',
+			'id: todo-abc12345',
+			'title: Buy groceries',
+			"exportedAt: '2025-06-15T12:00:00.000Z'",
+			'---',
+			'My shopping notes',
+			'',
+		])
+	})
 
-test('includes star role in front matter and content', () => {
-	const result = todoToMarkdown(
-		makeTodo({
-			starRoleData: {
-				id: 'role-1',
-				title: 'Developer',
-				icon: { type: 'ionicon', name: 'code-outline' },
-			},
-		}),
-	)
+	test('updates star role in front matter, preserves body', () => {
+		const existing =
+			'---\nid: todo-abc12345\ntitle: Buy groceries\n---\nBody content here\n'
+		const result = updateFrontMatter(
+			existing,
+			makeTodo({
+				starRoleData: {
+					id: 'role-1',
+					title: 'Chef',
+					icon: { type: 'ionicon', name: 'restaurant-outline' },
+				},
+			}),
+		)
 
-	expect(result.split('\n')).toEqual([
-		'---',
-		'id: "todo-abc12345"',
-		'title: "Buy groceries"',
-		'starRole: "Developer"',
-		'exportedAt: 2025-06-15T12:00:00.000Z',
-		'---',
-	])
-})
+		expect(result.split('\n')).toEqual([
+			'---',
+			'id: todo-abc12345',
+			'title: Buy groceries',
+			'starRole: Chef',
+			"exportedAt: '2025-06-15T12:00:00.000Z'",
+			'---',
+			'Body content here',
+			'',
+		])
+	})
 
-test('includes star role group in front matter and content', () => {
-	const result = todoToMarkdown(
-		makeTodo({
-			starRoleData: {
-				id: 'role-1',
-				title: 'Developer',
-				icon: { type: 'ionicon', name: 'code-outline' },
-				starRoleGroupId: 'group-1',
-			},
-			starRoleGroupData: { id: 'group-1', title: 'Work' },
-		}),
-	)
+	test('updates star points in front matter, preserves body', () => {
+		const existing =
+			'---\nid: todo-abc12345\ntitle: Buy groceries\nstarPoints: 3\n---\nBody content\n'
+		const result = updateFrontMatter(existing, makeTodo({ starPoints: 7 }))
 
-	expect(result.split('\n')).toEqual([
-		'---',
-		'id: "todo-abc12345"',
-		'title: "Buy groceries"',
-		'starRole: "Developer"',
-		'starRoleGroup: "Work"',
-		'exportedAt: 2025-06-15T12:00:00.000Z',
-		'---',
-	])
-})
+		expect(result.split('\n')).toEqual([
+			'---',
+			'id: todo-abc12345',
+			'title: Buy groceries',
+			'starPoints: 7',
+			"exportedAt: '2025-06-15T12:00:00.000Z'",
+			'---',
+			'Body content',
+			'',
+		])
+	})
 
-test('includes completedAt when todo is completed', () => {
-	const completedAt = new Date('2025-03-01T10:00:00.000Z')
-	const result = todoToMarkdown(makeTodo({ completedAt }))
+	test('handles file with front matter only (no body)', () => {
+		const existing = '---\nid: todo-abc12345\ntitle: Old title\n---\n'
+		const result = updateFrontMatter(existing, makeTodo({ title: 'New title' }))
 
-	expect(result.split('\n')).toEqual([
-		'---',
-		'id: "todo-abc12345"',
-		'title: "Buy groceries"',
-		'completedAt: 2025-03-01T10:00:00.000Z',
-		'exportedAt: 2025-06-15T12:00:00.000Z',
-		'---',
-	])
-})
+		expect(result.split('\n')).toEqual([
+			'---',
+			'id: todo-abc12345',
+			'title: New title',
+			"exportedAt: '2025-06-15T12:00:00.000Z'",
+			'---',
+			'',
+			'',
+		])
+	})
 
-test('does not include completedAt when todo is not completed', () => {
-	const result = todoToMarkdown(makeTodo())
+	test('handles file with front matter and multi-line body content', () => {
+		const existing =
+			'---\nid: todo-abc12345\ntitle: Buy groceries\n---\n## Notes\n\n- Milk\n- Bread\n- Eggs\n'
+		const result = updateFrontMatter(existing, makeTodo({ starPoints: 2 }))
 
-	expect(result).not.toContain('completedAt:')
+		expect(result.split('\n')).toEqual([
+			'---',
+			'id: todo-abc12345',
+			'title: Buy groceries',
+			'starPoints: 2',
+			"exportedAt: '2025-06-15T12:00:00.000Z'",
+			'---',
+			'## Notes',
+			'',
+			'- Milk',
+			'- Bread',
+			'- Eggs',
+			'',
+		])
+	})
 })
 
 describe('generateFilename', () => {
 	test('generates a filename from title and ID suffix', () => {
-		expect(generateFilename(makeTodo())).toBe('buy-groceries-abc12345.md')
+		expect(generateFilename(makeTodo())).toBe('buy-groceries_abc12345.md')
 	})
 
 	test('sanitizes slash characters from Dexie Cloud realm IDs', () => {
 		const filename = generateFilename(makeTodo({ id: 'todABC/rlm1234' }))
 
-		expect(filename).toBe('buy-groceries-rlm1234.md')
+		expect(filename).toBe('buy-groceries_crlm1234.md')
 		expect(filename).not.toContain('/')
-	})
-})
-
-describe('YAML escaping', () => {
-	test('escapes double quotes in title', () => {
-		const result = todoToMarkdown(makeTodo({ title: 'Read "Dune"' }))
-
-		expect(result.split('\n')).toEqual([
-			'---',
-			'id: "todo-abc12345"',
-			'title: "Read \\"Dune\\""',
-			'exportedAt: 2025-06-15T12:00:00.000Z',
-			'---',
-		])
-	})
-
-	test('escapes backslashes in title', () => {
-		const result = todoToMarkdown(makeTodo({ title: 'path\\to\\thing' }))
-
-		expect(result.split('\n')).toEqual([
-			'---',
-			'id: "todo-abc12345"',
-			'title: "path\\\\to\\\\thing"',
-			'exportedAt: 2025-06-15T12:00:00.000Z',
-			'---',
-		])
-	})
-
-	test('escapes newlines in title', () => {
-		const result = todoToMarkdown(makeTodo({ title: 'line1\nline2' }))
-
-		expect(result.split('\n')).toEqual([
-			'---',
-			'id: "todo-abc12345"',
-			'title: "line1\\nline2"',
-			'exportedAt: 2025-06-15T12:00:00.000Z',
-			'---',
-		])
 	})
 })

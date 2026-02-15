@@ -1,3 +1,5 @@
+import { FileOperations } from './sync'
+
 /**
  * File System Access API service for managing markdown export directory
  */
@@ -7,10 +9,7 @@ export interface FileSystemService {
 	hasDirectoryHandle: () => Promise<boolean>
 	requestDirectory: () => Promise<FileSystemDirectoryHandle | null>
 	getStoredDirectory: () => Promise<FileSystemDirectoryHandle | null>
-	writeFile: (
-		filename: string,
-		content: string,
-	) => Promise<boolean>
+	writeFile: (filename: string, content: string) => Promise<boolean>
 	deleteFile: (filename: string) => Promise<boolean>
 	listFiles: () => Promise<string[]>
 	clearStoredDirectory: () => Promise<void>
@@ -340,4 +339,27 @@ export async function syncFiles(
 	}
 
 	return { written, deleted, failed }
+}
+
+export async function readFile(filename: string): Promise<string | null> {
+	const handle = await getStoredDirectoryHandle()
+	if (!handle) {
+		return null
+	}
+
+	try {
+		const fileHandle = await handle.getFileHandle(filename)
+		const file = await fileHandle.getFile()
+		return await file.text()
+	} catch (error) {
+		if ((error as Error).name === 'NotFoundError') {
+			return null
+		}
+		console.error('Error reading file:', error)
+		return null
+	}
+}
+
+export function createFileOperations(): FileOperations {
+	return { readFile, writeFile, deleteFile, listFiles }
 }
