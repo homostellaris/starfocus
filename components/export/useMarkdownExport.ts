@@ -1,21 +1,22 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useLiveQuery, useObservable } from 'dexie-react-hooks'
-import debounce from 'debounce'
-import posthog from 'posthog-js'
-import { db, Todo, StarRole, StarRoleGroup } from '../db'
 import {
-	todoToMarkdown,
-	generateFilename,
-	createManifest,
-	TodoWithRelations,
-} from './markdown'
+	useCallback,
+	useEffect,
+	useState,
+	Dispatch,
+	SetStateAction,
+} from 'react'
+import { useObservable } from 'dexie-react-hooks'
+import posthog from 'posthog-js'
+import { db } from '../db'
 import {
 	isFileSystemAccessSupported,
 	requestDirectory,
 	getStoredDirectoryHandle,
 	clearStoredDirectoryHandle,
-	syncFiles,
+	createFileOperations,
+	writeFile,
 } from './fileSystem'
+import { createSyncEngine, SyncEngine, SyncEngineStatus } from './syncEngine'
 
 export interface ExportStatus {
 	isSupported: boolean
@@ -23,7 +24,8 @@ export interface ExportStatus {
 	isSyncing: boolean
 	lastSyncAt: Date | null
 	lastSyncResult: {
-		written: number
+		created: number
+		updated: number
 		deleted: number
 		failed: number
 	} | null
@@ -39,208 +41,148 @@ export interface UseMarkdownExportReturn {
 	exportOnce: () => Promise<void>
 }
 
-const SYNC_DEBOUNCE_MS = 2000
+interface UiStatus {
+	isSupported: boolean
+	isEnabled: boolean
+	directoryName: string | null
+}
+
+function makeWriteManifest(): (content: string) => Promise<void> {
+	return (content: string) => writeFile('_manifest.md', content).then(() => {})
+}
+
+function startEngine(engine: SyncEngine) {
+	engine.start(createFileOperations(), makeWriteManifest())
+}
+
+async function runSync(engine: SyncEngine) {
+	await engine.syncNow(createFileOperations(), makeWriteManifest())
+}
+
+function useSyncLifecycle(
+	engine: SyncEngine,
+	isSupported: boolean,
+	setUiStatus: Dispatch<SetStateAction<UiStatus>>,
+) {
+	useEffect(() => {
+		if (!isSupported) return
+
+		getStoredDirectoryHandle().then(handle => {
+			if (handle) {
+				setUiStatus(s => ({
+					...s,
+					isEnabled: true,
+					directoryName: handle.name,
+				}))
+				startEngine(engine)
+			}
+		})
+
+		let wasLoggedIn = db.cloud.currentUser.value?.isLoggedIn ?? false
+		const subscription = db.cloud.currentUser.subscribe(user => {
+			const isLoggedIn = user?.isLoggedIn ?? false
+			if (wasLoggedIn && !isLoggedIn) {
+				engine.stop()
+				clearStoredDirectoryHandle()
+				setUiStatus(s => ({
+					...s,
+					isEnabled: false,
+					directoryName: null,
+				}))
+			}
+			wasLoggedIn = isLoggedIn
+		})
+
+		return () => {
+			subscription.unsubscribe()
+			engine.stop()
+		}
+	}, [engine, isSupported, setUiStatus])
+}
 
 export default function useMarkdownExport(): UseMarkdownExportReturn {
-	const [status, setStatus] = useState<ExportStatus>({
-		isSupported: false,
-		isEnabled: false,
+	const [engine] = useState(() => createSyncEngine())
+
+	const engineStatus = useObservable(() => engine.status, [engine], {
 		isSyncing: false,
 		lastSyncAt: null,
 		lastSyncResult: null,
 		error: null,
+	} as SyncEngineStatus)
+
+	const [uiStatus, setUiStatus] = useState<UiStatus>(() => ({
+		isSupported: isFileSystemAccessSupported(),
+		isEnabled: false,
 		directoryName: null,
-	})
+	}))
 
-	// Track if sync is enabled via ref to avoid stale closures
-	const syncEnabledRef = useRef(false)
+	useSyncLifecycle(engine, uiStatus.isSupported, setUiStatus)
 
-	// Check for File System Access API support on mount
-	useEffect(() => {
-		const supported = isFileSystemAccessSupported()
-		setStatus(s => ({ ...s, isSupported: supported }))
-
-		// Check if we have a stored directory handle
-		if (supported) {
-			getStoredDirectoryHandle().then(handle => {
-				if (handle) {
-					setStatus(s => ({
-						...s,
-						isEnabled: true,
-						directoryName: handle.name,
-					}))
-					syncEnabledRef.current = true
-				}
-			})
-		}
-	}, [])
-
-	// Clear directory handle on logout to prevent syncing a new account's data
-	// into the previous account's export directory
-	const currentUser = useObservable(db.cloud.currentUser)
-	const wasLoggedInRef = useRef<boolean | null>(null)
-
-	useEffect(() => {
-		const isLoggedIn = currentUser?.isLoggedIn ?? false
-
-		if (wasLoggedInRef.current === true && !isLoggedIn) {
-			clearStoredDirectoryHandle()
-			syncEnabledRef.current = false
-			setStatus(s => ({
-				...s,
-				isEnabled: false,
-				directoryName: null,
-				lastSyncAt: null,
-				lastSyncResult: null,
-			}))
-		}
-
-		wasLoggedInRef.current = isLoggedIn
-	}, [currentUser?.isLoggedIn])
-
-	// Subscribe to database changes
-	const todos = useLiveQuery(() => db.todos.toArray(), [], [])
-	const starRoles = useLiveQuery(() => db.starRoles.toArray(), [], [])
-	const starRoleGroups = useLiveQuery(() => db.starRoleGroups.toArray(), [], [])
-	// Debounced sync function
-	const debouncedSync = useRef(
-		debounce(
-			async (
-				todos: Todo[],
-				starRoles: StarRole[],
-				starRoleGroups: StarRoleGroup[],
-			) => {
-				if (!syncEnabledRef.current) return
-
-				setStatus(s => ({ ...s, isSyncing: true, error: null }))
-
-				try {
-					const result = await performSync(todos, starRoles, starRoleGroups)
-
-					setStatus(s => ({
-						...s,
-						isSyncing: false,
-						lastSyncAt: new Date(),
-						lastSyncResult: result,
-					}))
-				} catch (error) {
-					setStatus(s => ({
-						...s,
-						isSyncing: false,
-						error: (error as Error).message,
-					}))
-				}
-			},
-			SYNC_DEBOUNCE_MS,
-		),
-	)
-
-	// Trigger sync when data changes
-	useEffect(() => {
-		if (syncEnabledRef.current && todos.length > 0) {
-			debouncedSync.current(todos, starRoles, starRoleGroups)
-		}
-	}, [todos, starRoles, starRoleGroups])
+	const status: ExportStatus = {
+		...uiStatus,
+		isSyncing: engineStatus.isSyncing,
+		lastSyncAt: engineStatus.lastSyncAt,
+		lastSyncResult: engineStatus.lastSyncResult,
+		error: engineStatus.error,
+	}
 
 	const enable = useCallback(async (): Promise<boolean> => {
 		const handle = await requestDirectory()
 		if (handle) {
-			setStatus(s => ({
+			setUiStatus(s => ({
 				...s,
 				isEnabled: true,
 				directoryName: handle.name,
-				error: null,
 			}))
-			syncEnabledRef.current = true
 
 			posthog.capture('markdown_export_enabled')
-
-			// Perform initial sync
-			if (todos.length > 0) {
-				debouncedSync.current(todos, starRoles, starRoleGroups)
-			}
+			startEngine(engine)
 
 			return true
 		}
 		return false
-	}, [todos, starRoles, starRoleGroups])
+	}, [engine])
 
 	const disable = useCallback(async (): Promise<void> => {
+		engine.stop()
 		await clearStoredDirectoryHandle()
-		syncEnabledRef.current = false
-		setStatus(s => ({
+		setUiStatus(s => ({
 			...s,
 			isEnabled: false,
 			directoryName: null,
-			lastSyncAt: null,
-			lastSyncResult: null,
 		}))
 		posthog.capture('markdown_export_disabled')
-	}, [])
+	}, [engine])
 
 	const syncNow = useCallback(async (): Promise<void> => {
-		if (!syncEnabledRef.current) {
+		if (!uiStatus.isEnabled) {
 			throw new Error('Export is not enabled')
 		}
 
-		setStatus(s => ({ ...s, isSyncing: true, error: null }))
-
-		try {
-			const result = await performSync(todos, starRoles, starRoleGroups)
-
-			setStatus(s => ({
-				...s,
-				isSyncing: false,
-				lastSyncAt: new Date(),
-				lastSyncResult: result,
-			}))
-		} catch (error) {
-			setStatus(s => ({
-				...s,
-				isSyncing: false,
-				error: (error as Error).message,
-			}))
-			throw error
-		}
-	}, [todos, starRoles, starRoleGroups])
+		await runSync(engine)
+	}, [engine, uiStatus.isEnabled])
 
 	const exportOnce = useCallback(async (): Promise<void> => {
-		// Request a directory just for this export
 		const handle = await requestDirectory()
 		if (!handle) {
 			throw new Error('No directory selected')
 		}
 
-		setStatus(s => ({ ...s, isSyncing: true, error: null }))
+		await runSync(engine)
 
-		try {
-			const result = await performSync(todos, starRoles, starRoleGroups)
-
-			setStatus(s => ({
-				...s,
-				isSyncing: false,
-				lastSyncAt: new Date(),
-				lastSyncResult: result,
-			}))
-
+		const result = engine.status.value.lastSyncResult
+		if (result) {
 			posthog.capture('markdown_exported', {
-				files_written: result.written,
+				files_created: result.created,
+				files_updated: result.updated,
 				files_deleted: result.deleted,
 				files_failed: result.failed,
 			})
-
-			// Don't keep the directory for ongoing sync
-			await clearStoredDirectoryHandle()
-			setStatus(s => ({ ...s, isEnabled: false, directoryName: null }))
-		} catch (error) {
-			setStatus(s => ({
-				...s,
-				isSyncing: false,
-				error: (error as Error).message,
-			}))
-			throw error
 		}
-	}, [todos, starRoles, starRoleGroups])
+
+		await clearStoredDirectoryHandle()
+		setUiStatus(s => ({ ...s, isEnabled: false, directoryName: null }))
+	}, [engine])
 
 	return {
 		status,
@@ -249,47 +191,4 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 		syncNow,
 		exportOnce,
 	}
-}
-
-async function performSync(
-	todos: Todo[],
-	starRoles: StarRole[],
-	starRoleGroups: StarRoleGroup[],
-): Promise<{ written: number; deleted: number; failed: number }> {
-	const starRolesById = new Map(starRoles.map(sr => [sr.id, sr]))
-	const starRoleGroupsById = new Map(starRoleGroups.map(g => [g.id, g]))
-
-	const enrichedTodos: TodoWithRelations[] = todos.map(todo => {
-		const starRoleData = todo.starRole
-			? starRolesById.get(todo.starRole)
-			: undefined
-		const starRoleGroupData = starRoleData?.starRoleGroupId
-			? starRoleGroupsById.get(starRoleData.starRoleGroupId)
-			: undefined
-
-		return {
-			...todo,
-			starRoleData,
-			starRoleGroupData,
-		}
-	})
-
-	const files = enrichedTodos.map(todo => ({
-		filename: generateFilename(todo),
-		content: todoToMarkdown(todo),
-	}))
-
-	// Add manifest file
-	const manifest = createManifest(enrichedTodos, starRoles, starRoleGroups)
-	files.push({
-		filename: '_manifest.md',
-		content: manifest,
-	})
-
-	// Sync files to directory
-	const result = await syncFiles(files, true)
-
-	console.debug('Markdown export sync completed:', result)
-
-	return result
 }
