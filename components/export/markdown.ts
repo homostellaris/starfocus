@@ -30,10 +30,10 @@ export function buildFrontMatterData(
 	}
 
 	if (todo.completedAt) {
-		data.completedAt = todo.completedAt.toISOString()
+		data.completedAt = todo.completedAt
 	}
 
-	data.exportedAt = new Date().toISOString()
+	data.exportedAt = new Date()
 
 	return data
 }
