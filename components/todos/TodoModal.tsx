@@ -4,17 +4,14 @@ import {
 	IonContent,
 	IonFooter,
 	IonHeader,
-	IonIcon,
 	IonInput,
 	IonPage,
 	IonSelect,
 	IonSelectOption,
-	IonTextarea,
 	IonTitle,
 	IonToolbar,
 } from '@ionic/react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { openOutline } from 'ionicons/icons'
 import {
 	ComponentProps,
 	MutableRefObject,
@@ -25,7 +22,6 @@ import {
 } from 'react'
 import { cn } from '../common/cn'
 import { db, ListType, Todo } from '../db'
-import useNoteProvider from '../notes/useNoteProvider'
 
 export default function TodoModal({
 	dismiss,
@@ -43,7 +39,6 @@ export default function TodoModal({
 	const [title, setTitle] = useState(todo?.title)
 	const [titleIsTouched, setTitleIsTouched] = useState(false)
 	const [titleIsValid, setTitleIsValid] = useState<boolean>(!!todo?.title)
-	const noteInput = useRef<HTMLIonTextareaElement>(null)
 	const [starPoints, setStarPoints] = useState(todo?.starPoints)
 	const [starRole, setStarRole] = useState(todo?.starRole)
 	const locationSelect = useRef<HTMLIonSelectElement>(null)
@@ -51,13 +46,11 @@ export default function TodoModal({
 
 	const starRoles = useLiveQuery(() => db.starRoles.toArray(), [], [])
 
-	const noteProvider = useNoteProvider()
 	const emitTodo = useCallback(() => {
 		dismiss(
 			{
 				todo: {
 					...todo,
-					noteInitialContent: noteInput.current?.value,
 					starPoints,
 					starRole,
 					title,
@@ -151,33 +144,6 @@ export default function TodoModal({
 					<IonSelectOption value={8}>8</IonSelectOption>
 					<IonSelectOption value={13}>13</IonSelectOption>
 				</IonSelect>
-				{todo?.note ? (
-					<div>
-						<a
-							className="space-x-1"
-							href={todo?.note?.uri}
-							target="_blank"
-							rel="noreferrer"
-						>
-							<span>Open note</span>
-							<IonIcon icon={openOutline} />
-						</a>
-					</div>
-				) : (
-					<IonTextarea
-						disabled={!noteProvider}
-						helperText={
-							noteProvider
-								? 'A note with this initial content will be created with your note provider and linked to this todo'
-								: 'Set a note provider in settings to enable this feature'
-						}
-						fill="outline"
-						label="Note"
-						labelPlacement="floating"
-						placeholder="Write markdown here..."
-						ref={noteInput}
-					/>
-				)}
 			</IonContent>
 			<IonFooter>
 				<IonToolbar>

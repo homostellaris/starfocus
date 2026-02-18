@@ -1,7 +1,9 @@
-# Notes
+# Markdown Export
 
 Inline with the "do one thing well" tenet of our [philosophy](../../concepts/philosophy) we do not want to become yet another place you store notes.
 
-Note-taking is incredibly specific to individual preferences so we will aim to provide ways to integrate with your provider of choice.
+Instead, Starfocus syncs your todos as markdown files with YAML front matter to a local directory on your device. Each file includes the todo's title, star points, star role, and other metadata.
 
-Currently we only integrate with Obsidian but we will add more and make it possible to write your own adapters if you know basic scripting.
+Filenames are derived from the todo title plus a short ID, making them easy to find and reference.
+
+You can use this to integrate with external tools like Obsidian, feed context to LLMs, or build your own workflows on top of the exported data. Auto-sync keeps the files up to date, or you can trigger a one-time export from settings.

@@ -11,7 +11,7 @@ import {
 	isPlatform,
 } from '@ionic/react'
 import dayjs from 'dayjs'
-import { calendarSharp, documentText, timeSharp } from 'ionicons/icons'
+import { calendarSharp, timeSharp } from 'ionicons/icons'
 import {
 	type ComponentProps,
 	forwardRef,
@@ -110,24 +110,6 @@ export const TodoListItem = forwardRef<
 					)}
 					{children}
 				</div>
-				{todo.note ? (
-					<a
-						className={cn('ion-hide-sm-down', isPlatform('ios') && 'ml-4')}
-						href={todo.note.uri}
-						slot="end"
-						target="_blank"
-						rel="noreferrer"
-					>
-						<IonIcon icon={documentText}></IonIcon>
-					</a>
-				) : (
-					<IonIcon
-						className={cn('ion-hide-sm-down', isPlatform('ios') && 'ml-4')}
-						color="light"
-						icon={documentText}
-						slot="end"
-					></IonIcon>
-				)}
 				<SnoozeIcon
 					className={cn('ion-hide-sm-down', isPlatform('ios') && 'ml-4')}
 					slot="end"
