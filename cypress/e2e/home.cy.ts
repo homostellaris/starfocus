@@ -170,8 +170,6 @@ describe('setting', () => {
 	})
 })
 
-describe.skip('notes', () => {})
-
 it('works', () => {
 	cy.get('ion-fab>ion-fab-button').click()
 	cy.get('#create-todo-modal')

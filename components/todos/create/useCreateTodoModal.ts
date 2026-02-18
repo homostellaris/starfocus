@@ -3,7 +3,6 @@ import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOpt
 import { useCallback, useRef } from 'react'
 import order from '../../common/order'
 import { db, ListType, Todo, TodoInput } from '../../db'
-import useNoteProvider from '../../notes/useNoteProvider'
 import { CreateTodoModal } from './modal'
 import { usePostHog } from 'posthog-js/react'
 
@@ -28,29 +27,21 @@ export function useCreateTodoModal(): [
 		todo: todoRef.current,
 	})
 
-	const noteProvider = useNoteProvider()
 	const createTodo = useCallback(
 		async (todo: TodoInput, location: ListType) => {
 			if (!todo.title) throw new TypeError('Title is required')
 
-			let uri
 			await db.transaction(
 				'rw',
 				db.asteroidFieldOrder,
 				db.wayfinderOrder,
 				db.todos,
 				async () => {
-					if (todo.noteInitialContent && noteProvider) {
-						uri = await noteProvider.create({
-							todo,
-						})
-					}
 					const createdTodoId = await db.todos.add({
 						createdAt: new Date(),
 						starPoints: todo.starPoints,
 						starRole: todo.starRole,
 						title: todo.title,
-						...(uri && { note: { uri } }),
 					})
 					if (location === ListType.asteroidField) {
 						const asteroidFieldOrder = await db.asteroidFieldOrder
@@ -74,7 +65,7 @@ export function useCreateTodoModal(): [
 				},
 			)
 		},
-		[noteProvider],
+		[],
 	)
 
 	return [
@@ -92,7 +83,6 @@ export function useCreateTodoModal(): [
 							location,
 							has_star_role: !!todo.starRole,
 							star_points: todo.starPoints,
-							has_note: !!todo.noteInitialContent,
 						})
 					}
 					onWillDismiss?.(event)

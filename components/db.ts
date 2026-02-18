@@ -12,16 +12,14 @@ export interface Potodo {
 
 export interface Todo {
 	completedAt?: Date
+	createdAt?: Date
 	id: string
-	note?: Note
 	starRole?: StarRole['id'] // TODO: How do we delete this when the star role is deleted? Need to add associative table and compute ID of association from todo ID and starRoleID, then delete entries when star roles gets deleted.
 	starPoints?: number
 	title: string
 }
 
-export type TodoInput = Pick<Todo, 'title' | 'starRole' | 'starPoints'> & {
-	noteInitialContent?: string
-}
+export type TodoInput = Pick<Todo, 'title' | 'starRole' | 'starPoints'>
 
 export type AsteroidFieldOrder = {
 	todoId: string
@@ -48,10 +46,6 @@ export type LogTodoListItem = TodoListItemBase
 export type AsteroidFieldTodoListItem = TodoListItemBase & WayfinderMeta
 
 export type WayfinderTodoListItem = TodoListItemBase & WayfinderMeta
-
-export interface Note {
-	uri: string
-}
 
 export interface StarRole {
 	id: string
@@ -194,8 +188,7 @@ export class DexieStarfocus extends Dexie {
 		this.cloud.configure({
 			customLoginGui: true,
 			databaseUrl:
-				process.env.NEXT_PUBLIC_DATABASE_URL ||
-				'https://z0vnq74nz.dexie.cloud', // Necessary because can't figure out how to set this in Cypress test
+				process.env.NEXT_PUBLIC_DATABASE_URL || 'https://z0vnq74nz.dexie.cloud', // Necessary because can't figure out how to set this in Cypress test
 			requireAuth: false,
 		})
 	}

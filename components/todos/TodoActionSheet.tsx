@@ -2,8 +2,9 @@ import { ActionSheetOptions, useIonActionSheet } from '@ionic/react'
 import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
 import { Todo, db } from '../db'
 import { useEditTodoModal } from './edit/useEditTodoModal'
-import { createSharp, openSharp, trashSharp } from 'ionicons/icons'
+import { clipboardSharp, createSharp, trashSharp } from 'ionicons/icons'
 import { usePostHog } from 'posthog-js/react'
+import { generateFilename } from '../export/markdown'
 
 // TODO: Make this so that todo is never null, action sheet doesn't make sense to be open if its null
 export function useTodoActionSheet() {
@@ -17,26 +18,17 @@ export function useTodoActionSheet() {
 		(todo: Todo, options?: ActionSheetOptions & HookOverlayOptions) => {
 			presentActionSheet({
 				buttons: [
-					...(todo.note?.uri
-						? [
-								{
-									icon: openSharp,
-									text: 'Open note',
-									data: {
-										action: 'open-note',
-									},
-									handler: async () => {
-										open(todo.note?.uri)
-										posthog.capture('todo_note_opened', {
-											has_note: !!todo.note,
-											note_provider: todo.note?.uri
-												? new URL(todo.note.uri).protocol.replace(':', '')
-												: undefined,
-										})
-									},
-								},
-							]
-						: []),
+					{
+						icon: clipboardSharp,
+						text: 'Copy filename',
+						data: {
+							action: 'copy-filename',
+						},
+						handler: async () => {
+							const filename = generateFilename(todo)
+							await navigator.clipboard.writeText(filename)
+						},
+					},
 					{
 						icon: createSharp,
 						text: 'Edit',
@@ -73,7 +65,6 @@ export function useTodoActionSheet() {
 							posthog.capture('todo_deleted', {
 								has_star_role: !!todo.starRole,
 								star_points: todo.starPoints,
-								has_note: !!todo.note,
 							})
 						},
 					},
