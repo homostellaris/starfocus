@@ -343,7 +343,7 @@ export const TodoLists = () => {
 	// Consider using a callback ref instead: https://stackoverflow.com/questions/60881446/receive-dimensions-of-element-via-getboundingclientrect-in-react
 	const nextUrgentTodo = useRef<HTMLIonItemElement>(null)
 	const nextImportantTodo = useRef<HTMLIonItemElement>(null)
-	const nextTodo = nextUrgentTodo || nextImportantTodo
+	const nextTodo = data?.asteroidField.length ? nextUrgentTodo : nextImportantTodo
 	const {
 		nextTodo: {
 			position: [nextTodoPosition, setNextTodoPosition],
