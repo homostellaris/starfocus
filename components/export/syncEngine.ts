@@ -8,6 +8,8 @@ import {
 	buildFrontMatterData,
 	generateFilename,
 	createManifest,
+	createAsteroidFieldFile,
+	createWayfinderFile,
 	TodoWithRelations,
 } from './markdown'
 import { FileOperations, TodoFile, upsertTodoFiles } from './sync'
@@ -71,11 +73,14 @@ async function performSync(
 	ops: FileOperations,
 	writeManifest: (content: string) => Promise<void>,
 ): Promise<SyncEngineStatus['lastSyncResult']> {
-	const [todos, starRoles, starRoleGroups] = await Promise.all([
-		db.todos.toArray(),
-		db.starRoles.toArray(),
-		db.starRoleGroups.toArray(),
-	])
+	const [todos, starRoles, starRoleGroups, asteroidFieldOrder, wayfinderOrder] =
+		await Promise.all([
+			db.todos.toArray(),
+			db.starRoles.toArray(),
+			db.starRoleGroups.toArray(),
+			db.asteroidFieldOrder.orderBy('order').toArray(),
+			db.wayfinderOrder.orderBy('order').toArray(),
+		])
 
 	const { todoFiles, enrichedTodos } = buildTodoFiles(
 		todos,
@@ -87,6 +92,15 @@ async function performSync(
 
 	const manifest = createManifest(enrichedTodos, starRoles, starRoleGroups)
 	await writeManifest(manifest)
+
+	await ops.writeFile(
+		'_asteroid-field.md',
+		createAsteroidFieldFile(asteroidFieldOrder, todos),
+	)
+	await ops.writeFile(
+		'_wayfinder.md',
+		createWayfinderFile(wayfinderOrder, todos),
+	)
 
 	console.debug('Markdown export sync completed:', result)
 	return result
@@ -183,6 +197,8 @@ export function createSyncEngine(): SyncEngine {
 				db.todos.toArray(),
 				db.starRoles.toArray(),
 				db.starRoleGroups.toArray(),
+				db.asteroidFieldOrder.toArray(),
+				db.wayfinderOrder.toArray(),
 			]),
 		)
 
