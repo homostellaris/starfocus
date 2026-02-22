@@ -1,5 +1,11 @@
 import matter from 'gray-matter'
-import { Todo, StarRole, StarRoleGroup } from '../db'
+import {
+	Todo,
+	StarRole,
+	StarRoleGroup,
+	AsteroidFieldOrder,
+	WayfinderOrder,
+} from '../db'
 
 export interface TodoWithRelations extends Todo {
 	starRoleData?: StarRole
@@ -126,4 +132,59 @@ ${starRoleGroups.map(g => `- **${g.title}**`).join('\n')}
 `
 
 	return frontMatter + content
+}
+
+interface OrderEntry {
+	todoId: string
+	order: string
+	snoozedUntil?: Date
+}
+
+function createOrderListMarkdown(
+	title: string,
+	orderEntries: OrderEntry[],
+	todosById: Map<string, Todo>,
+): string {
+	const sorted = [...orderEntries].sort((a, b) =>
+		a.order.localeCompare(b.order),
+	)
+
+	const items = sorted
+		.map(entry => {
+			const todo = todosById.get(entry.todoId)
+			if (!todo) return null
+			const filename = generateFilename(todo)
+			const link = `[${todo.title}](${filename})`
+			const snoozeNote = entry.snoozedUntil
+				? ` *(snoozed until ${entry.snoozedUntil.toISOString().split('T')[0]})*`
+				: ''
+			return `${link}${snoozeNote}`
+		})
+		.filter((item): item is string => item !== null)
+
+	const frontMatter = `---
+type: order-list
+exportedAt: ${new Date().toISOString()}
+---
+
+`
+
+	const numberedList = items.map((item, i) => `${i + 1}. ${item}`).join('\n')
+	return frontMatter + `# ${title}\n\n${numberedList}\n`
+}
+
+export function createAsteroidFieldFile(
+	orderEntries: AsteroidFieldOrder[],
+	todos: Todo[],
+): string {
+	const todosById = new Map(todos.map(t => [t.id, t]))
+	return createOrderListMarkdown('Asteroid Field', orderEntries, todosById)
+}
+
+export function createWayfinderFile(
+	orderEntries: WayfinderOrder[],
+	todos: Todo[],
+): string {
+	const todosById = new Map(todos.map(t => [t.id, t]))
+	return createOrderListMarkdown('Wayfinder', orderEntries, todosById)
 }
