@@ -25,7 +25,7 @@ export function useTodoActionSheet() {
 							action: 'copy-filename',
 						},
 						handler: async () => {
-							const filename = generateFilename(todo)
+							const filename = generateFilename(todo).replace(/\.md$/, '')
 							await navigator.clipboard.writeText(filename)
 						},
 					},
