@@ -7,7 +7,12 @@ import {
 	setSystemTime,
 } from 'bun:test'
 import matter from 'gray-matter'
-import { upsertTodoFiles, FileOperations, TodoFile } from './sync'
+import {
+	upsertTodoFiles,
+	writeFileIfChanged,
+	FileOperations,
+	TodoFile,
+} from './sync'
 
 beforeEach(() => {
 	setSystemTime(new Date('2025-06-15T12:00:00.000Z'))
@@ -189,6 +194,33 @@ describe('updating files', () => {
 		expect(result.updated).toBe(0)
 		expect(ops.files['buy-groceries_todo-1.md']).toBeDefined()
 	})
+
+	test('skips write when only exportedAt changes', async () => {
+		const existingContent = matter.stringify('My notes', {
+			id: 'todo-1',
+			title: 'Buy groceries',
+			starPoints: 3,
+			exportedAt: '2025-01-01T00:00:00.000Z',
+		})
+		const ops = createInMemoryFileOps({
+			'buy-groceries_todo-1.md': existingContent,
+		})
+
+		const todoFile = makeTodoFile({
+			frontMatterData: {
+				id: 'todo-1',
+				title: 'Buy groceries',
+				starPoints: 3,
+				exportedAt: '2025-06-15T12:00:00.000Z',
+			},
+		})
+
+		const result = await upsertTodoFiles([todoFile], ops)
+
+		expect(result.updated).toBe(0)
+		expect(result.created).toBe(0)
+		expect(ops.files['buy-groceries_todo-1.md']).toBe(existingContent)
+	})
 })
 
 describe('deleting files', () => {
@@ -291,6 +323,55 @@ describe('renames', () => {
 		const written = ops.files['new-title-todo-1.md']
 		expect(written).toContain('title: New title')
 		expect(written).toContain('Important notes')
+	})
+})
+
+describe('writeFileIfChanged', () => {
+	test('writes when file does not exist', async () => {
+		const ops = createInMemoryFileOps()
+		const content = matter.stringify('body', {
+			id: 'x',
+			exportedAt: '2025-06-15T12:00:00.000Z',
+		})
+
+		const written = await writeFileIfChanged('order.md', content, ops)
+
+		expect(written).toBe(true)
+		expect(ops.files['order.md']).toBe(content)
+	})
+
+	test('writes when content has meaningfully changed', async () => {
+		const oldContent = matter.stringify('body', {
+			title: 'Old',
+			exportedAt: '2025-01-01T00:00:00.000Z',
+		})
+		const ops = createInMemoryFileOps({ 'order.md': oldContent })
+		const newContent = matter.stringify('body', {
+			title: 'New',
+			exportedAt: '2025-06-15T12:00:00.000Z',
+		})
+
+		const written = await writeFileIfChanged('order.md', newContent, ops)
+
+		expect(written).toBe(true)
+		expect(ops.files['order.md']).toBe(newContent)
+	})
+
+	test('skips write when only exportedAt differs', async () => {
+		const oldContent = matter.stringify('body', {
+			title: 'Same',
+			exportedAt: '2025-01-01T00:00:00.000Z',
+		})
+		const ops = createInMemoryFileOps({ 'order.md': oldContent })
+		const newContent = matter.stringify('body', {
+			title: 'Same',
+			exportedAt: '2025-06-15T12:00:00.000Z',
+		})
+
+		const written = await writeFileIfChanged('order.md', newContent, ops)
+
+		expect(written).toBe(false)
+		expect(ops.files['order.md']).toBe(oldContent)
 	})
 })
 

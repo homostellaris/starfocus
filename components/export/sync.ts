@@ -21,6 +21,39 @@ export interface UpsertResult {
 	failed: number
 }
 
+export async function writeFileIfChanged(
+	filename: string,
+	newContent: string,
+	ops: FileOperations,
+): Promise<boolean> {
+	const existingContent = await ops.readFile(filename)
+	if (existingContent === null) {
+		return ops.writeFile(filename, newContent)
+	}
+	if (meaningfulContentIsUnchanged(existingContent, newContent)) {
+		return false
+	}
+	return ops.writeFile(filename, newContent)
+}
+
+function meaningfulContentIsUnchanged(
+	existing: string,
+	newContent: string,
+): boolean {
+	try {
+		const { content: existingBody, data: existingData } = matter(existing)
+		const { content: newBody, data: newData } = matter(newContent)
+		const { exportedAt: _a, ...existingMeaningful } = existingData
+		const { exportedAt: _b, ...newMeaningful } = newData
+		return (
+			existingBody === newBody &&
+			JSON.stringify(existingMeaningful) === JSON.stringify(newMeaningful)
+		)
+	} catch {
+		return false
+	}
+}
+
 export async function upsertTodoFiles(
 	currentTodos: TodoFile[],
 	ops: FileOperations,
@@ -60,7 +93,16 @@ export async function upsertTodoFiles(
 		const existingContent = await ops.readFile(todo.filename)
 
 		if (existingContent !== null) {
-			const { content: body } = matter(existingContent)
+			const { content: body, data: existingData } = matter(existingContent)
+			const { exportedAt: _a, ...existingMeaningful } = existingData
+			const { exportedAt: _b, ...newMeaningful } = todo.frontMatterData
+
+			if (
+				JSON.stringify(existingMeaningful) === JSON.stringify(newMeaningful)
+			) {
+				continue
+			}
+
 			const updatedContent = matter.stringify(body, todo.frontMatterData)
 			const success = await ops.writeFile(todo.filename, updatedContent)
 			if (success) {

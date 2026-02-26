@@ -12,7 +12,12 @@ import {
 	createWayfinderFile,
 	TodoWithRelations,
 } from './markdown'
-import { FileOperations, TodoFile, upsertTodoFiles } from './sync'
+import {
+	FileOperations,
+	TodoFile,
+	upsertTodoFiles,
+	writeFileIfChanged,
+} from './sync'
 
 export interface SyncEngineStatus {
 	isSyncing: boolean
@@ -93,13 +98,15 @@ async function performSync(
 	const manifest = createManifest(enrichedTodos, starRoles, starRoleGroups)
 	await writeManifest(manifest)
 
-	await ops.writeFile(
+	await writeFileIfChanged(
 		'_asteroid-field.md',
 		createAsteroidFieldFile(asteroidFieldOrder, todos),
+		ops,
 	)
-	await ops.writeFile(
+	await writeFileIfChanged(
 		'_wayfinder.md',
 		createWayfinderFile(wayfinderOrder, todos),
+		ops,
 	)
 
 	console.debug('Markdown export sync completed:', result)
