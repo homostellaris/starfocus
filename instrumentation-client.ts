@@ -1,6 +1,8 @@
 import posthog from 'posthog-js'
 import identifyOnLoad from './app/identify'
 
+export const POSTHOG_CONSENT_KEY = 'starfocus_posthog_consent'
+
 const originalConsoleMethods = {
 	debug: console.debug.bind(console),
 	log: console.log.bind(console),
@@ -9,16 +11,22 @@ const originalConsoleMethods = {
 	info: console.info.bind(console),
 } as const
 
+const hasConsent = localStorage.getItem(POSTHOG_CONSENT_KEY) === 'granted'
+
 posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
 	capture_exceptions: true,
 	capture_performance: {
 		web_vitals: false, // Doesn't work with cookieless mode
 	},
-	cookieless_mode: 'always',
+	cookieless_mode: hasConsent ? 'on_reject' : 'always',
 	api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
 	defaults: '2025-11-30',
 	debug: process.env.NODE_ENV === 'development',
 })
+
+if (hasConsent) {
+	posthog.opt_in_capturing()
+}
 
 // PostHog's remote config can enable log capture which wraps console methods
 // with JSON.stringify. This breaks Dexie Cloud sync because it logs objects

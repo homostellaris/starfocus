@@ -19,6 +19,7 @@ import {
 } from 'dexie-cloud-addon'
 import {
 	alertCircleSharp,
+	analyticsSharp,
 	cloudDoneSharp,
 	cloudOfflineSharp,
 } from 'ionicons/icons'
@@ -159,6 +160,16 @@ export function LoginModal({ ui }: { ui?: DXCUserInteraction }) {
 													After syncing, the current data becomes associated
 													with your email address. Unsyncing will clear all data
 													on this device until you log in again.
+												</IonText>
+											</li>
+											<li className="flex items-start gap-4">
+												<IonIcon
+													className="shrink-0 pt-[0.2lh] h-5 w-5"
+													icon={analyticsSharp}
+												/>
+												<IonText color="medium">
+													By syncing you accept analytics cookies that help us
+													improve Starfocus.
 												</IonText>
 											</li>
 										</ul>

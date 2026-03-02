@@ -9,13 +9,19 @@ import {
 	IonToast,
 	IonToolbar,
 } from '@ionic/react'
+import { useObservable } from 'dexie-react-hooks'
 import _ from 'lodash'
+import { DisplaySurveyType } from 'posthog-js'
+import { usePostHog } from 'posthog-js/react'
 import { starMudder } from '../common/order'
 import Title from '../common/Title'
 import { db } from '../db'
 import ExportSettings from '../export/ExportSettings'
 
 export const SettingsMenu = () => {
+	const posthog = usePostHog()
+	const user = useObservable(db.cloud.currentUser)
+
 	return (
 		<IonMenu
 			contentId="main-content"
@@ -30,6 +36,20 @@ export const SettingsMenu = () => {
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
 				<ExportSettings />
+				{user?.isLoggedIn && (
+					<IonButton
+						onClick={async () => {
+							await menuController.close('settings-menu')
+							posthog.displaySurvey('019c2fed-d45c-0000-8e90-9ededf867e7c', {
+								displayType: DisplaySurveyType.Popover,
+								ignoreConditions: true,
+								ignoreDelay: true,
+							})
+						}}
+					>
+						Send feedback
+					</IonButton>
+				)}
 				<IonButton
 					id="clean-database"
 					className="hidden"
