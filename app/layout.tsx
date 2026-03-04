@@ -33,9 +33,29 @@ import '../styles/globals.css'
 import '../styles/theme.css'
 
 export const metadata: Metadata = {
-	title: 'Starfocus',
-	description: 'Self-defined productivity',
-	keywords: ['productivity', 'self-improvement', 'space'],
+	title: 'StarFocus – Gamified Space Productivity App',
+	description:
+		'StarFocus is a free, gamified productivity app with a space theme. Define star roles, earn star points for completing tasks, and stay focused on what matters — no signup required.',
+	keywords: ['productivity', 'gamified productivity', 'todo app', 'focus app', 'star points', 'space theme', 'self-improvement'],
+	alternates: {
+		canonical: 'https://starfocus.app',
+	},
+	openGraph: {
+		url: 'https://starfocus.app',
+		type: 'website',
+		locale: 'en_US',
+		title: 'StarFocus – Gamified Space Productivity App',
+		description:
+			'StarFocus is a free, gamified productivity app with a space theme. Define star roles, earn star points for completing tasks, and stay focused on what matters — no signup required.',
+		images: [
+			{
+				url: 'https://starfocus.app/og-image.png',
+				width: 2400,
+				height: 1264,
+				alt: 'StarFocus – Self-Defined Productivity App',
+			},
+		],
+	},
 }
 
 export const viewport: Viewport = {
@@ -82,6 +102,22 @@ export default function RootLayout({
 			<body>
 				{children}
 				<Analytics />
+				<script
+					type="application/ld+json"
+					dangerouslySetInnerHTML={{
+						__html: JSON.stringify({
+							'@context': 'https://schema.org',
+							'@type': 'SoftwareApplication',
+							name: 'StarFocus',
+							applicationCategory: 'ProductivityApplication',
+							operatingSystem: 'Web, iOS, Android',
+							offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+							description:
+								'A free, gamified productivity app with a space theme. Earn star points by completing your self-defined goals.',
+							url: 'https://starfocus.app',
+						}),
+					}}
+				/>
 			</body>
 			<Script
 				type="module"
