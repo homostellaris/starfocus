@@ -33,9 +33,9 @@ import '../styles/globals.css'
 import '../styles/theme.css'
 
 export const metadata: Metadata = {
-	title: 'StarFocus – Gamified Space Productivity App',
+	title: 'Starfocus – Gamified Space Productivity App',
 	description:
-		'StarFocus is a free, gamified productivity app with a space theme. Define star roles, earn star points for completing tasks, and stay focused on what matters — no signup required.',
+		'Starfocus is a free, gamified productivity app with a space theme. Define star roles, earn star points for completing tasks, and stay focused on what matters — no signup required.',
 	keywords: ['productivity', 'gamified productivity', 'todo app', 'focus app', 'star points', 'space theme', 'self-improvement'],
 	alternates: {
 		canonical: 'https://starfocus.app',
@@ -44,15 +44,15 @@ export const metadata: Metadata = {
 		url: 'https://starfocus.app',
 		type: 'website',
 		locale: 'en_US',
-		title: 'StarFocus – Gamified Space Productivity App',
+		title: 'Starfocus – Gamified Space Productivity App',
 		description:
-			'StarFocus is a free, gamified productivity app with a space theme. Define star roles, earn star points for completing tasks, and stay focused on what matters — no signup required.',
+			'Starfocus is a free, gamified productivity app with a space theme. Define star roles, earn star points for completing tasks, and stay focused on what matters — no signup required.',
 		images: [
 			{
 				url: 'https://starfocus.app/og-image.png',
 				width: 2400,
 				height: 1264,
-				alt: 'StarFocus – Self-Defined Productivity App',
+				alt: 'Starfocus – Self-Defined Productivity App',
 			},
 		],
 	},
@@ -109,7 +109,7 @@ export default function RootLayout({
 						__html: JSON.stringify({
 							'@context': 'https://schema.org',
 							'@type': 'SoftwareApplication',
-							name: 'StarFocus',
+							name: 'Starfocus',
 							applicationCategory: 'ProductivityApplication',
 							operatingSystem: 'Web, iOS, Android',
 							offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
