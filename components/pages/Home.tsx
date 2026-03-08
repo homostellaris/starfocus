@@ -65,7 +65,6 @@ import useView, { ViewProvider } from '../focus/view'
 import Mood from '../mood'
 import { MoodProvider } from '../mood/MoodContext'
 import { matchesQuery } from '../search/matchesQuery'
-import { GameCanvas, GameProvider, useGameContext } from '../game'
 import { TodoCard, TodoListItem } from '../todos'
 import PulseGraph from '../todos/PulseGraph'
 import { useTodoActionSheet } from '../todos/TodoActionSheet'
@@ -104,12 +103,10 @@ const Home = () => {
 		<>
 			<MarkdownExportProvider>
 				<MoodProvider>
-					<GameProvider>
 						<ViewProvider>
 						<TodoContextProvider>
 							<ViewMenu searchbarRef={searchbarRef} />
 							<SettingsMenu />
-							<GameModeOverlay />
 							<IonPage id="main-content">
 								<Header title="Home"></Header>
 								<TodoLists />
@@ -157,7 +154,6 @@ const Home = () => {
 							</IonPage>
 						</TodoContextProvider>
 					</ViewProvider>
-				</GameProvider>
 			</MoodProvider>
 		</MarkdownExportProvider>
 		</>
@@ -165,57 +161,6 @@ const Home = () => {
 }
 
 export default Home
-
-/**
- * GameModeOverlay - Renders the full-screen game canvas when in game mode
- * Press 'G' to enter game mode, 'Escape' to exit
- */
-const GameModeOverlay = () => {
-	const { isGameMode, enterGameMode, exitGameMode, isTransitioning } =
-		useGameContext()
-
-	// Keyboard shortcut to enter game mode
-	useEffect(() => {
-		const handleKeyDown = (e: KeyboardEvent) => {
-			// Don't trigger if typing in an input
-			if (
-				e.target instanceof HTMLInputElement ||
-				e.target instanceof HTMLTextAreaElement
-			) {
-				return
-			}
-
-			if (e.key.toLowerCase() === 'g' && !isGameMode && !isTransitioning) {
-				enterGameMode()
-			}
-		}
-
-		window.addEventListener('keydown', handleKeyDown)
-		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [isGameMode, isTransitioning, enterGameMode])
-
-	if (!isGameMode && !isTransitioning) return null
-
-	return (
-		<div
-			className={cn(
-				'fixed inset-0 z-50 bg-black transition-opacity duration-500',
-				isGameMode ? 'opacity-100' : 'opacity-0 pointer-events-none',
-			)}
-		>
-			<GameCanvas className="w-full h-full" />
-			<button
-				onClick={exitGameMode}
-				className="absolute top-4 right-4 px-4 py-2 bg-rose-500/20 hover:bg-rose-500/40 text-rose-300 rounded-lg border border-rose-500/50 transition-colors font-mono text-sm"
-			>
-				ESC to Exit
-			</button>
-			<div className="absolute bottom-4 left-4 text-white/50 font-mono text-xs">
-				WASD or Arrow Keys to move
-			</div>
-		</div>
-	)
-}
 
 export const TodoLists = () => {
 	const posthog = usePostHog()

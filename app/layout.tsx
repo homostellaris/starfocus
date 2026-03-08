@@ -31,6 +31,7 @@ import '@ionic/react/css/palettes/dark.always.css'
 /* Theme variables */
 import '../styles/globals.css'
 import '../styles/theme.css'
+import GameCanvas from '../components/game/GameCanvas'
 
 export const metadata: Metadata = {
 	title: 'Starfocus – Gamified Space Productivity App',
@@ -100,7 +101,10 @@ export default function RootLayout({
 			className={`${funnelDisplay.variable} ${honk.variable} ${jura.variable} ${kode.variable}`}
 		>
 			<body>
-				{children}
+				<GameCanvas />
+				<div className="ui-layer">
+					{children}
+				</div>
 				<Analytics />
 				<Script
 					id="json-ld"

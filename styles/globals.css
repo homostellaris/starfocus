@@ -151,3 +151,12 @@ body::-webkit-scrollbar {
 	backface-visibility: hidden;
 	-webkit-backface-visibility: hidden;
 }
+
+.ui-layer {
+	transition: opacity 0.5s ease;
+}
+
+html.game-mode .ui-layer {
+	opacity: 0;
+	pointer-events: none;
+}
