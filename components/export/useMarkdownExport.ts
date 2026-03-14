@@ -1,6 +1,7 @@
 import {
 	useCallback,
 	useEffect,
+	useRef,
 	useState,
 	Dispatch,
 	SetStateAction,
@@ -11,10 +12,10 @@ import { db } from '../db'
 import {
 	isFileSystemAccessSupported,
 	requestDirectory,
-	getStoredDirectoryHandle,
+	getHandleFromStorage,
+	checkPermission,
 	clearStoredDirectoryHandle,
 	createFileOperations,
-	writeFile,
 } from './fileSystem'
 import { createSyncEngine, SyncEngine, SyncEngineStatus } from './syncEngine'
 
@@ -22,6 +23,7 @@ export interface ExportStatus {
 	isSupported: boolean
 	isEnabled: boolean
 	isSyncing: boolean
+	needsReconnect: boolean
 	lastSyncAt: Date | null
 	lastSyncResult: {
 		created: number
@@ -39,42 +41,67 @@ export interface UseMarkdownExportReturn {
 	disable: () => Promise<void>
 	syncNow: () => Promise<void>
 	exportOnce: () => Promise<void>
+	reconnect: () => Promise<void>
 }
 
 interface UiStatus {
 	isSupported: boolean
 	isEnabled: boolean
+	needsReconnect: boolean
 	directoryName: string | null
 }
 
-function makeWriteManifest(): (content: string) => Promise<void> {
-	return (content: string) => writeFile('_manifest.md', content).then(() => {})
+function makeWriteManifest(
+	handle: FileSystemDirectoryHandle,
+): (content: string) => Promise<void> {
+	return async (content: string) => {
+		const ops = createFileOperations(handle)
+		await ops.writeFile('_manifest.md', content)
+	}
 }
 
-function startEngine(engine: SyncEngine) {
-	engine.start(createFileOperations(), makeWriteManifest())
+function startEngine(engine: SyncEngine, handle: FileSystemDirectoryHandle) {
+	engine.start(createFileOperations(handle), makeWriteManifest(handle))
 }
 
-async function runSync(engine: SyncEngine) {
-	await engine.syncNow(createFileOperations(), makeWriteManifest())
+async function runSync(engine: SyncEngine, handle: FileSystemDirectoryHandle) {
+	await engine.syncNow(createFileOperations(handle), makeWriteManifest(handle))
 }
 
 function useSyncLifecycle(
 	engine: SyncEngine,
+	handleRef: React.MutableRefObject<FileSystemDirectoryHandle | null>,
 	isSupported: boolean,
 	setUiStatus: Dispatch<SetStateAction<UiStatus>>,
 ) {
 	useEffect(() => {
 		if (!isSupported) return
 
-		getStoredDirectoryHandle().then(handle => {
-			if (handle) {
+		getHandleFromStorage().then(async handle => {
+			if (!handle) return
+
+			const permission = await checkPermission(handle, {
+				allowRequest: false,
+			})
+
+			if (permission === 'granted') {
+				handleRef.current = handle
 				setUiStatus(s => ({
 					...s,
 					isEnabled: true,
+					needsReconnect: false,
 					directoryName: handle.name,
 				}))
-				startEngine(engine)
+				startEngine(engine, handle)
+			} else if (permission === 'prompt') {
+				setUiStatus(s => ({
+					...s,
+					isEnabled: true,
+					needsReconnect: true,
+					directoryName: handle.name,
+				}))
+			} else {
+				await clearStoredDirectoryHandle()
 			}
 		})
 
@@ -83,10 +110,12 @@ function useSyncLifecycle(
 			const isLoggedIn = user?.isLoggedIn ?? false
 			if (wasLoggedIn && !isLoggedIn) {
 				engine.stop()
+				handleRef.current = null
 				clearStoredDirectoryHandle()
 				setUiStatus(s => ({
 					...s,
 					isEnabled: false,
+					needsReconnect: false,
 					directoryName: null,
 				}))
 			}
@@ -97,11 +126,12 @@ function useSyncLifecycle(
 			subscription.unsubscribe()
 			engine.stop()
 		}
-	}, [engine, isSupported, setUiStatus])
+	}, [engine, handleRef, isSupported, setUiStatus])
 }
 
 export default function useMarkdownExport(): UseMarkdownExportReturn {
 	const [engine] = useState(() => createSyncEngine())
+	const handleRef = useRef<FileSystemDirectoryHandle | null>(null)
 
 	const engineStatus = useObservable(() => engine.status, [engine], {
 		isSyncing: false,
@@ -113,10 +143,11 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 	const [uiStatus, setUiStatus] = useState<UiStatus>(() => ({
 		isSupported: isFileSystemAccessSupported(),
 		isEnabled: false,
+		needsReconnect: false,
 		directoryName: null,
 	}))
 
-	useSyncLifecycle(engine, uiStatus.isSupported, setUiStatus)
+	useSyncLifecycle(engine, handleRef, uiStatus.isSupported, setUiStatus)
 
 	const status: ExportStatus = {
 		...uiStatus,
@@ -129,14 +160,16 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 	const enable = useCallback(async (): Promise<boolean> => {
 		const handle = await requestDirectory()
 		if (handle) {
+			handleRef.current = handle
 			setUiStatus(s => ({
 				...s,
 				isEnabled: true,
+				needsReconnect: false,
 				directoryName: handle.name,
 			}))
 
 			posthog.capture('markdown_export_enabled')
-			startEngine(engine)
+			startEngine(engine, handle)
 
 			return true
 		}
@@ -145,10 +178,12 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 
 	const disable = useCallback(async (): Promise<void> => {
 		engine.stop()
+		handleRef.current = null
 		await clearStoredDirectoryHandle()
 		setUiStatus(s => ({
 			...s,
 			isEnabled: false,
+			needsReconnect: false,
 			directoryName: null,
 		}))
 		posthog.capture('markdown_export_disabled')
@@ -158,9 +193,25 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 		if (!uiStatus.isEnabled) {
 			throw new Error('Export is not enabled')
 		}
+		if (uiStatus.needsReconnect || !handleRef.current) {
+			throw new Error('Folder access needs re-granting. Tap Reconnect first.')
+		}
 
-		await runSync(engine)
-	}, [engine, uiStatus.isEnabled])
+		await runSync(engine, handleRef.current)
+	}, [engine, uiStatus.isEnabled, uiStatus.needsReconnect])
+
+	const reconnect = useCallback(async (): Promise<void> => {
+		const handle = await requestDirectory()
+		if (handle) {
+			handleRef.current = handle
+			setUiStatus(s => ({
+				...s,
+				needsReconnect: false,
+				directoryName: handle.name,
+			}))
+			startEngine(engine, handle)
+		}
+	}, [engine])
 
 	const exportOnce = useCallback(async (): Promise<void> => {
 		const handle = await requestDirectory()
@@ -168,7 +219,8 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 			throw new Error('No directory selected')
 		}
 
-		await runSync(engine)
+		handleRef.current = handle
+		await runSync(engine, handle)
 
 		const result = engine.status.value.lastSyncResult
 		if (result) {
@@ -180,8 +232,14 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 			})
 		}
 
+		handleRef.current = null
 		await clearStoredDirectoryHandle()
-		setUiStatus(s => ({ ...s, isEnabled: false, directoryName: null }))
+		setUiStatus(s => ({
+			...s,
+			isEnabled: false,
+			needsReconnect: false,
+			directoryName: null,
+		}))
 	}, [engine])
 
 	return {
@@ -190,5 +248,6 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 		disable,
 		syncNow,
 		exportOnce,
+		reconnect,
 	}
 }

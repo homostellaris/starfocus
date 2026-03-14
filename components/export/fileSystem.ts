@@ -94,15 +94,15 @@ async function storeDirectoryHandle(
 }
 
 /**
- * Retrieve stored directory handle from IndexedDB
+ * Retrieve stored directory handle from IndexedDB without any permission checks.
  */
-export async function getStoredDirectoryHandle(): Promise<FileSystemDirectoryHandle | null> {
+export async function getHandleFromStorage(): Promise<FileSystemDirectoryHandle | null> {
 	if (!isFileSystemAccessSupported()) {
 		return null
 	}
 
 	try {
-		const handle = await new Promise<FileSystemDirectoryHandle | null>(
+		return await new Promise<FileSystemDirectoryHandle | null>(
 			(resolve, reject) => {
 				const request = indexedDB.open(DB_NAME, 1)
 
@@ -132,28 +132,58 @@ export async function getStoredDirectoryHandle(): Promise<FileSystemDirectoryHan
 				}
 			},
 		)
+	} catch (error) {
+		console.error('Error retrieving stored directory handle:', error)
+		return null
+	}
+}
 
-		if (!handle) {
-			return null
-		}
+export type PermissionResult = 'granted' | 'denied' | 'prompt'
 
-		// Verify we still have permission
-		const permission = await handle.queryPermission({ mode: 'readwrite' })
-		if (permission === 'granted') {
-			return handle
-		}
+/**
+ * Check permission on a handle. When allowRequest is false, returns 'prompt'
+ * instead of calling requestPermission (which hangs without a user gesture on
+ * Android Chrome). When allowRequest is true, wraps requestPermission in a
+ * 5-second timeout.
+ */
+export async function checkPermission(
+	handle: FileSystemDirectoryHandle,
+	{ allowRequest }: { allowRequest: boolean },
+): Promise<PermissionResult> {
+	const current = await handle.queryPermission({ mode: 'readwrite' })
+	if (current === 'granted') return 'granted'
+	if (current === 'denied') return 'denied'
 
-		// Try to request permission again
-		const newPermission = await handle.requestPermission({ mode: 'readwrite' })
-		if (newPermission === 'granted') {
-			return handle
-		}
+	if (!allowRequest) return 'prompt'
 
-		// Permission denied, clear the stored handle
+	const TIMEOUT_MS = 5_000
+	const result = await Promise.race([
+		handle.requestPermission({ mode: 'readwrite' }),
+		new Promise<'prompt'>(resolve =>
+			setTimeout(() => resolve('prompt'), TIMEOUT_MS),
+		),
+	])
+
+	return result as PermissionResult
+}
+
+/**
+ * Retrieve stored directory handle from IndexedDB and verify permission.
+ * Kept for any remaining callers — prefers the split getHandleFromStorage +
+ * checkPermission flow for new code.
+ */
+export async function getStoredDirectoryHandle(): Promise<FileSystemDirectoryHandle | null> {
+	const handle = await getHandleFromStorage()
+	if (!handle) return null
+
+	try {
+		const permission = await checkPermission(handle, { allowRequest: true })
+		if (permission === 'granted') return handle
+
 		await clearStoredDirectoryHandle()
 		return null
 	} catch (error) {
-		console.error('Error retrieving stored directory handle:', error)
+		console.error('Error verifying directory handle permission:', error)
 		return null
 	}
 }
@@ -360,6 +390,58 @@ export async function readFile(filename: string): Promise<string | null> {
 	}
 }
 
-export function createFileOperations(): FileOperations {
-	return { readFile, writeFile, deleteFile, listFiles }
+export function createFileOperations(
+	handle: FileSystemDirectoryHandle,
+): FileOperations {
+	return {
+		async readFile(filename: string): Promise<string | null> {
+			try {
+				const fileHandle = await handle.getFileHandle(filename)
+				const file = await fileHandle.getFile()
+				return await file.text()
+			} catch (error) {
+				if ((error as Error).name === 'NotFoundError') return null
+				console.error('Error reading file:', error)
+				return null
+			}
+		},
+		async writeFile(filename: string, content: string): Promise<boolean> {
+			try {
+				const fileHandle = await handle.getFileHandle(filename, {
+					create: true,
+				})
+				const writable = await fileHandle.createWritable()
+				await writable.write(content)
+				await writable.close()
+				return true
+			} catch (error) {
+				console.error('Error writing file:', error)
+				return false
+			}
+		},
+		async deleteFile(filename: string): Promise<boolean> {
+			try {
+				await handle.removeEntry(filename)
+				return true
+			} catch (error) {
+				if ((error as Error).name === 'NotFoundError') return true
+				console.error('Error deleting file:', error)
+				return false
+			}
+		},
+		async listFiles(): Promise<string[]> {
+			try {
+				const files: string[] = []
+				for await (const entry of handle.values()) {
+					if (entry.kind === 'file' && entry.name.endsWith('.md')) {
+						files.push(entry.name)
+					}
+				}
+				return files
+			} catch (error) {
+				console.error('Error listing files:', error)
+				return []
+			}
+		},
+	}
 }

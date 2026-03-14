@@ -17,7 +17,7 @@ import {
 import { useMarkdownExportContext } from './MarkdownExportContext'
 
 export default function ExportSettings() {
-	const { status, enable, disable, syncNow, exportOnce } =
+	const { status, enable, disable, syncNow, exportOnce, reconnect } =
 		useMarkdownExportContext()
 
 	if (!status.isSupported) {
@@ -66,24 +66,44 @@ export default function ExportSettings() {
 
 					<IonItem>
 						<IonLabel>
-							<IonButton
-								expand="block"
-								fill="outline"
-								onClick={syncNow}
-								disabled={status.isSyncing}
-							>
-								{status.isSyncing ? (
-									<IonSpinner name="crescent" />
-								) : (
-									<>
+							{status.needsReconnect ? (
+								<>
+									<IonButton
+										expand="block"
+										fill="outline"
+										color="warning"
+										onClick={reconnect}
+									>
 										<IonIcon
-											icon={syncSharp}
+											icon={folderOpenSharp}
 											slot="start"
 										/>
-										Sync Now
-									</>
-								)}
-							</IonButton>
+										Reconnect
+									</IonButton>
+									<IonNote className="ion-text-wrap ion-padding-top">
+										Folder access needs to be re-granted.
+									</IonNote>
+								</>
+							) : (
+								<IonButton
+									expand="block"
+									fill="outline"
+									onClick={syncNow}
+									disabled={status.isSyncing}
+								>
+									{status.isSyncing ? (
+										<IonSpinner name="crescent" />
+									) : (
+										<>
+											<IonIcon
+												icon={syncSharp}
+												slot="start"
+											/>
+											Sync Now
+										</>
+									)}
+								</IonButton>
+							)}
 						</IonLabel>
 					</IonItem>
 
