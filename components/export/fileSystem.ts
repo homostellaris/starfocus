@@ -1,5 +1,26 @@
 import { FileOperations } from './sync'
 
+const FS_TIMEOUT_MS = 10_000
+
+class FileSystemTimeoutError extends Error {
+	constructor(operation: string) {
+		super(`File system operation timed out: ${operation}`)
+		this.name = 'FileSystemTimeoutError'
+	}
+}
+
+function withTimeout<T>(promise: Promise<T>, operation: string): Promise<T> {
+	return Promise.race([
+		promise,
+		new Promise<never>((_, reject) =>
+			setTimeout(
+				() => reject(new FileSystemTimeoutError(operation)),
+				FS_TIMEOUT_MS,
+			),
+		),
+	])
+}
+
 /**
  * File System Access API service for managing markdown export directory
  */
@@ -396,9 +417,18 @@ export function createFileOperations(
 	return {
 		async readFile(filename: string): Promise<string | null> {
 			try {
-				const fileHandle = await handle.getFileHandle(filename)
-				const file = await fileHandle.getFile()
-				return await file.text()
+				console.debug('[FS] readFile: getFileHandle', filename)
+				const fileHandle = await withTimeout(
+					handle.getFileHandle(filename),
+					`readFile.getFileHandle(${filename})`,
+				)
+				console.debug('[FS] readFile: getFile', filename)
+				const file = await withTimeout(
+					fileHandle.getFile(),
+					`readFile.getFile(${filename})`,
+				)
+				console.debug('[FS] readFile: text', filename)
+				return await withTimeout(file.text(), `readFile.text(${filename})`)
 			} catch (error) {
 				if ((error as Error).name === 'NotFoundError') return null
 				console.error('Error reading file:', error)
@@ -407,12 +437,23 @@ export function createFileOperations(
 		},
 		async writeFile(filename: string, content: string): Promise<boolean> {
 			try {
-				const fileHandle = await handle.getFileHandle(filename, {
-					create: true,
-				})
-				const writable = await fileHandle.createWritable()
-				await writable.write(content)
-				await writable.close()
+				console.debug('[FS] writeFile: getFileHandle', filename)
+				const fileHandle = await withTimeout(
+					handle.getFileHandle(filename, { create: true }),
+					`writeFile.getFileHandle(${filename})`,
+				)
+				console.debug('[FS] writeFile: createWritable', filename)
+				const writable = await withTimeout(
+					fileHandle.createWritable(),
+					`writeFile.createWritable(${filename})`,
+				)
+				console.debug('[FS] writeFile: write', filename)
+				await withTimeout(
+					writable.write(content),
+					`writeFile.write(${filename})`,
+				)
+				console.debug('[FS] writeFile: close', filename)
+				await withTimeout(writable.close(), `writeFile.close(${filename})`)
 				return true
 			} catch (error) {
 				console.error('Error writing file:', error)
@@ -421,7 +462,11 @@ export function createFileOperations(
 		},
 		async deleteFile(filename: string): Promise<boolean> {
 			try {
-				await handle.removeEntry(filename)
+				console.debug('[FS] deleteFile: removeEntry', filename)
+				await withTimeout(
+					handle.removeEntry(filename),
+					`deleteFile.removeEntry(${filename})`,
+				)
 				return true
 			} catch (error) {
 				if ((error as Error).name === 'NotFoundError') return true
@@ -431,10 +476,20 @@ export function createFileOperations(
 		},
 		async listFiles(): Promise<string[]> {
 			try {
+				console.debug('[FS] listFiles: iterating handle.values()')
 				const files: string[] = []
-				for await (const entry of handle.values()) {
-					if (entry.kind === 'file' && entry.name.endsWith('.md')) {
-						files.push(entry.name)
+				const iterator = handle.values()
+				let done = false
+				while (!done) {
+					const result = await withTimeout(iterator.next(), 'listFiles.next()')
+					if (result.done) {
+						done = true
+					} else {
+						const entry = result.value
+						console.debug('[FS] listFiles: entry', entry.name)
+						if (entry.kind === 'file' && entry.name.endsWith('.md')) {
+							files.push(entry.name)
+						}
 					}
 				}
 				return files
