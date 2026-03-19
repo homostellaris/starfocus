@@ -7,6 +7,26 @@ export interface FileOperations {
 	listFiles(): Promise<string[]>
 }
 
+const CONCURRENCY = 6
+
+async function mapConcurrent<T, R>(
+	items: T[],
+	fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+	const results: R[] = new Array(items.length)
+	let nextIndex = 0
+
+	async function worker() {
+		while (nextIndex < items.length) {
+			const index = nextIndex++
+			results[index] = await fn(items[index])
+		}
+	}
+
+	await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()))
+	return results
+}
+
 export interface TodoFile {
 	todoId: string
 	filename: string
@@ -72,11 +92,10 @@ export async function upsertTodoFiles(
 		string,
 		{ filename: string; body: string }
 	>()
-	for (const filename of diskFiles) {
-		if (expectedFilenames.has(filename)) continue
-
+	const unexpectedDiskFiles = diskFiles.filter(f => !expectedFilenames.has(f))
+	await mapConcurrent(unexpectedDiskFiles, async filename => {
 		const content = await ops.readFile(filename)
-		if (!content) continue
+		if (!content) return
 
 		try {
 			const parsed = matter(content)
@@ -87,10 +106,15 @@ export async function upsertTodoFiles(
 		} catch {
 			// Not a valid front matter file — skip
 		}
-	}
+	})
 
-	for (const todo of currentTodos) {
-		const existingContent = await ops.readFile(todo.filename)
+	const existingContents = await mapConcurrent(currentTodos, async todo =>
+		ops.readFile(todo.filename),
+	)
+
+	for (let i = 0; i < currentTodos.length; i++) {
+		const todo = currentTodos[i]
+		const existingContent = existingContents[i]
 
 		if (existingContent !== null) {
 			const { content: body, data: existingData } = matter(existingContent)
