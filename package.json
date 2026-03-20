@@ -16,7 +16,7 @@
 		"future"
 	],
 	"scripts": {
-		"prepare": "husky",
+		"prepare": "husky; bun vercel env pull",
 		"dev": "next dev --webpack -p 6603",
 		"android:dev": "next build --webpack && cap sync android && mv out/home.html out/index.html && cap run android",
 		"typecheck": "tsc && tsc --project scripts/tsconfig.json",
@@ -83,7 +83,8 @@
 		"prettier-plugin-tailwindcss": "^0.1.13",
 		"serve": "^14.2.4",
 		"tailwindcss": "^3.4.17",
-		"typescript": "5.4.5"
+		"typescript": "5.4.5",
+		"vercel": "^50.34.3"
 	},
 	"engines": {
 		"node": "20.x"
