@@ -8,6 +8,7 @@ import {
 	IonItem,
 	IonList,
 	IonPopover,
+	IonSpinner,
 	IonTitle,
 	IonToolbar,
 	useIonModal,
@@ -39,7 +40,7 @@ export const Header = ({ title }: { title: string }) => {
 	const isLoggedIn = user?.isLoggedIn
 	const syncState = useObservable(db.cloud.syncState)
 
-	const { status: exportStatus } = useMarkdownExportContext()
+	const { status: exportStatus, runFullSync } = useMarkdownExportContext()
 
 	return (
 		<>
@@ -78,7 +79,7 @@ export const Header = ({ title }: { title: string }) => {
 												? 'warning'
 												: exportStatus.isSyncing
 													? 'medium'
-													: 'success'
+													: 'default'
 										}
 										slot="icon-only"
 									/>
@@ -87,23 +88,64 @@ export const Header = ({ title }: { title: string }) => {
 									trigger="markdown-export-status"
 									triggerAction="click"
 								>
+									<IonHeader>
+										<IonToolbar>
+											<IonTitle
+												className="text-base font-semibold"
+												slot="start"
+											>
+												Local markdown sync
+											</IonTitle>
+										</IonToolbar>
+									</IonHeader>
 									<IonContent class="ion-padding">
-										<p className="font-semibold">Markdown Export</p>
 										<p className="text-sm text-gray-500">
 											{exportStatus.directoryName}
 										</p>
-										{exportStatus.isSyncing ? (
-											<p className="text-sm">Syncing...</p>
-										) : exportStatus.lastSyncAt ? (
-											<p className="text-sm">
-												Last synced: {exportStatus.lastSyncAt.toLocaleTimeString()}
-											</p>
-										) : (
-											<p className="text-sm">Not synced yet</p>
-										)}
+										<p className="text-sm">
+											{exportStatus.totalFiles ?? 0} files synced
+											{exportStatus.lastSyncAt &&
+												` \u00b7 ${exportStatus.lastSyncAt.toLocaleTimeString()}`}
+										</p>
+										{exportStatus.fullSync.phase === 'in-progress' &&
+											exportStatus.fullSync.progress && (
+												<p className="text-sm">
+													Full sync: {exportStatus.fullSync.progress.completed}/
+													{exportStatus.fullSync.progress.total} files
+												</p>
+											)}
+										{exportStatus.isSyncing &&
+											exportStatus.fullSync.phase !== 'in-progress' && (
+												<p className="text-sm">Syncing...</p>
+											)}
 										{exportStatus.error && (
-											<p className="text-sm text-red-500">{exportStatus.error}</p>
+											<p className="text-sm text-red-500">
+												{exportStatus.error}
+											</p>
 										)}
+										<IonButton
+											expand="block"
+											fill="outline"
+											size="small"
+											className="mt-2"
+											onClick={runFullSync}
+											disabled={
+												exportStatus.needsReconnect ||
+												exportStatus.fullSync.phase === 'in-progress'
+											}
+										>
+											{exportStatus.fullSync.phase === 'in-progress' ? (
+												<IonSpinner name="crescent" />
+											) : (
+												<>
+													<IonIcon
+														icon={syncSharp}
+														slot="start"
+													/>
+													Full Sync
+												</>
+											)}
+										</IonButton>
 									</IonContent>
 								</IonPopover>
 							</>
@@ -131,10 +173,10 @@ export const Header = ({ title }: { title: string }) => {
 										<IonHeader>
 											<IonToolbar>
 												<IonTitle
-													className="text-xl font-bold capitalize"
+													className="text-base font-semibold"
 													slot="start"
 												>
-													{syncState?.status}
+													Cloud database sync
 												</IonTitle>
 												<IonButtons slot="end">
 													<IonButton
@@ -216,6 +258,16 @@ export const Header = ({ title }: { title: string }) => {
 										trigger="sync-status"
 										triggerAction="click"
 									>
+										<IonHeader>
+											<IonToolbar>
+												<IonTitle
+													className="text-base font-semibold"
+													slot="start"
+												>
+													Cloud database sync
+												</IonTitle>
+											</IonToolbar>
+										</IonHeader>
 										<IonContent class="ion-padding">
 											Not synced. Your data is stored locally only.
 										</IonContent>

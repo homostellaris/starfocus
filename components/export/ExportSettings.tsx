@@ -6,7 +6,6 @@ import {
 	IonList,
 	IonListHeader,
 	IonNote,
-	IonSpinner,
 } from '@ionic/react'
 import {
 	cloudOfflineSharp,
@@ -17,7 +16,7 @@ import {
 import { useMarkdownExportContext } from './MarkdownExportContext'
 
 export default function ExportSettings() {
-	const { status, enable, disable, syncNow, exportOnce, reconnect } =
+	const { status, enable, disable, exportOnce, reconnect } =
 		useMarkdownExportContext()
 
 	if (!status.isSupported) {
@@ -64,48 +63,27 @@ export default function ExportSettings() {
 						</IonLabel>
 					</IonItem>
 
-					<IonItem>
-						<IonLabel>
-							{status.needsReconnect ? (
-								<>
-									<IonButton
-										expand="block"
-										fill="outline"
-										color="warning"
-										onClick={reconnect}
-									>
-										<IonIcon
-											icon={folderOpenSharp}
-											slot="start"
-										/>
-										Reconnect
-									</IonButton>
-									<IonNote className="ion-text-wrap ion-padding-top">
-										Folder access needs to be re-granted.
-									</IonNote>
-								</>
-							) : (
+					{status.needsReconnect && (
+						<IonItem>
+							<IonLabel>
 								<IonButton
 									expand="block"
 									fill="outline"
-									onClick={syncNow}
-									disabled={status.isSyncing}
+									color="warning"
+									onClick={reconnect}
 								>
-									{status.isSyncing ? (
-										<IonSpinner name="crescent" />
-									) : (
-										<>
-											<IonIcon
-												icon={syncSharp}
-												slot="start"
-											/>
-											Sync Now
-										</>
-									)}
+									<IonIcon
+										icon={folderOpenSharp}
+										slot="start"
+									/>
+									Reconnect
 								</IonButton>
-							)}
-						</IonLabel>
-					</IonItem>
+								<IonNote className="ion-text-wrap ion-padding-top">
+									Folder access needs to be re-granted.
+								</IonNote>
+							</IonLabel>
+						</IonItem>
+					)}
 
 					<IonItem>
 						<IonLabel>
