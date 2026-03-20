@@ -16,7 +16,7 @@
 		"future"
 	],
 	"scripts": {
-		"prepare": "husky; bun vercel env pull",
+		"prepare": "husky; if [ -z \"$CI\" ]; then bun vercel env pull; fi",
 		"dev": "next dev --webpack -p 6603",
 		"android:dev": "next build --webpack && cap sync android && mv out/home.html out/index.html && cap run android",
 		"typecheck": "tsc && tsc --project scripts/tsconfig.json",
