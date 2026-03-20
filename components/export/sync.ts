@@ -56,7 +56,7 @@ export async function writeFileIfChanged(
 	return ops.writeFile(filename, newContent)
 }
 
-function meaningfulContentIsUnchanged(
+export function meaningfulContentIsUnchanged(
 	existing: string,
 	newContent: string,
 ): boolean {

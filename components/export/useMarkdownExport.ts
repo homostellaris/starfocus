@@ -17,7 +17,14 @@ import {
 	clearStoredDirectoryHandle,
 	createFileOperations,
 } from './fileSystem'
-import { createSyncEngine, SyncEngine, SyncEngineStatus } from './syncEngine'
+import {
+	createSyncEngine,
+	SyncEngine,
+	SyncEngineStatus,
+	IncrementalSyncStatus,
+	FullSyncStatus,
+	initialSyncEngineStatus,
+} from './syncEngine'
 
 export interface ExportStatus {
 	isSupported: boolean
@@ -25,14 +32,11 @@ export interface ExportStatus {
 	isSyncing: boolean
 	needsReconnect: boolean
 	lastSyncAt: Date | null
-	lastSyncResult: {
-		created: number
-		updated: number
-		deleted: number
-		failed: number
-	} | null
+	lastSyncResult: IncrementalSyncStatus['lastSyncResult']
 	error: string | null
 	directoryName: string | null
+	fullSync: FullSyncStatus
+	totalFiles: number | null
 }
 
 export interface UseMarkdownExportReturn {
@@ -42,6 +46,7 @@ export interface UseMarkdownExportReturn {
 	syncNow: () => Promise<void>
 	exportOnce: () => Promise<void>
 	reconnect: () => Promise<void>
+	runFullSync: () => Promise<void>
 }
 
 interface UiStatus {
@@ -129,16 +134,17 @@ function useSyncLifecycle(
 	}, [engine, handleRef, isSupported, setUiStatus])
 }
 
+const defaultEngineStatus: SyncEngineStatus = initialSyncEngineStatus
+
 export default function useMarkdownExport(): UseMarkdownExportReturn {
 	const [engine] = useState(() => createSyncEngine())
 	const handleRef = useRef<FileSystemDirectoryHandle | null>(null)
 
-	const engineStatus = useObservable(() => engine.status, [engine], {
-		isSyncing: false,
-		lastSyncAt: null,
-		lastSyncResult: null,
-		error: null,
-	} as SyncEngineStatus)
+	const engineStatus = useObservable(
+		() => engine.status,
+		[engine],
+		defaultEngineStatus,
+	)
 
 	const [uiStatus, setUiStatus] = useState<UiStatus>(() => ({
 		isSupported: isFileSystemAccessSupported(),
@@ -149,12 +155,23 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 
 	useSyncLifecycle(engine, handleRef, uiStatus.isSupported, setUiStatus)
 
+	const incrementalError = engineStatus.incremental.error
+	const fullError = engineStatus.full.error
+	const combinedError =
+		incrementalError || fullError
+			? [incrementalError, fullError].filter(Boolean).join('; ')
+			: null
+
 	const status: ExportStatus = {
 		...uiStatus,
-		isSyncing: engineStatus.isSyncing,
+		isSyncing:
+			engineStatus.incremental.isSyncing ||
+			engineStatus.full.phase === 'in-progress',
 		lastSyncAt: engineStatus.lastSyncAt,
-		lastSyncResult: engineStatus.lastSyncResult,
-		error: engineStatus.error,
+		lastSyncResult: engineStatus.incremental.lastSyncResult,
+		error: combinedError,
+		fullSync: engineStatus.full,
+		totalFiles: engineStatus.totalFiles,
 	}
 
 	const enable = useCallback(async (): Promise<boolean> => {
@@ -222,7 +239,7 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 		handleRef.current = handle
 		await runSync(engine, handle)
 
-		const result = engine.status.value.lastSyncResult
+		const result = engine.status.value.incremental.lastSyncResult
 		if (result) {
 			posthog.capture('markdown_exported', {
 				files_created: result.created,
@@ -242,6 +259,20 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 		}))
 	}, [engine])
 
+	const runFullSync = useCallback(async (): Promise<void> => {
+		if (!uiStatus.isEnabled) {
+			throw new Error('Export is not enabled')
+		}
+		if (uiStatus.needsReconnect || !handleRef.current) {
+			throw new Error('Folder access needs re-granting. Tap Reconnect first.')
+		}
+
+		await engine.runFullSync(
+			createFileOperations(handleRef.current),
+			makeWriteManifest(handleRef.current),
+		)
+	}, [engine, uiStatus.isEnabled, uiStatus.needsReconnect])
+
 	return {
 		status,
 		enable,
@@ -249,5 +280,6 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 		syncNow,
 		exportOnce,
 		reconnect,
+		runFullSync,
 	}
 }
