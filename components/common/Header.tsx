@@ -103,17 +103,12 @@ export const Header = ({ title }: { title: string }) => {
 											{exportStatus.directoryName}
 										</p>
 										<p className="text-sm">
-											{exportStatus.totalFiles ?? 0} files synced
+											{exportStatus.fullSync.phase === 'in-progress' && exportStatus.fullSync.progress
+												? `${exportStatus.fullSync.progress.completed} of ${exportStatus.fullSync.progress.total} files synced`
+												: `${exportStatus.totalFiles ?? 0} files synced`}
 											{exportStatus.lastSyncAt &&
 												` \u00b7 ${exportStatus.lastSyncAt.toLocaleTimeString()}`}
 										</p>
-										{exportStatus.fullSync.phase === 'in-progress' &&
-											exportStatus.fullSync.progress && (
-												<p className="text-sm">
-													Full sync: {exportStatus.fullSync.progress.completed}/
-													{exportStatus.fullSync.progress.total} files
-												</p>
-											)}
 										{exportStatus.isSyncing &&
 											exportStatus.fullSync.phase !== 'in-progress' && (
 												<p className="text-sm">Syncing...</p>
