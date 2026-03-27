@@ -18,6 +18,7 @@ import { add, layersSharp, starHalfSharp, starOutline } from 'ionicons/icons'
 import posthog from 'posthog-js'
 import { RefObject, useCallback, useEffect, useRef } from 'react'
 import { Header } from '../common/Header'
+import { ConstellationSigil } from '../constellation/ConstellationSigil'
 import { db, StarRole, StarRoleGroup } from '../db'
 import { MarkdownExportProvider } from '../export/MarkdownExportContext'
 import { useCreateStarRoleGroupModal } from '../starRoleGroups/create/useCreateStarRoleGroupModal'
@@ -71,22 +72,30 @@ export default function Constellation() {
 								name="dots"
 							/>
 						</div>
-					) : data[0].length === 0 ? (
-						<div className="flex flex-col items-center justify-center h-full gap-5">
-							<IonIcon
-								icon={starOutline}
-								size="large"
-							/>
-							<p>
-								Create some roles to focus on what matters in different areas of
-								your life
-							</p>
-						</div>
 					) : (
-						<StarRolesList
-							starRoles={data[0]}
-							starRoleGroups={data[1]}
-						/>
+						<>
+							<ConstellationSigil
+								starRoles={data[0]}
+								starRoleGroups={data[1]}
+							/>
+							{data[0].length === 0 ? (
+								<div className="flex flex-col items-center gap-3 px-6 pb-6 text-center">
+									<IonIcon
+										icon={starOutline}
+										size="large"
+									/>
+									<p>
+										Create some roles to focus on what matters in different areas
+										of your life
+									</p>
+								</div>
+							) : (
+								<StarRolesList
+									starRoles={data[0]}
+									starRoleGroups={data[1]}
+								/>
+							)}
+						</>
 					)}
 					<IonFab
 						ref={fab}

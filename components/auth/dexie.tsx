@@ -17,6 +17,7 @@ import {
 	DXCUserInteraction,
 	resolveText,
 } from 'dexie-cloud-addon'
+import { useLiveQuery } from 'dexie-react-hooks'
 import {
 	alertCircleSharp,
 	analyticsSharp,
@@ -25,6 +26,7 @@ import {
 } from 'ionicons/icons'
 import posthog from 'posthog-js'
 import { useEffect, useRef, useState } from 'react'
+import { db } from '../db'
 
 /**
  * This component showcases how to provide a custom login GUI for login dialog.
@@ -49,6 +51,14 @@ export function LoginModal({ ui }: { ui?: DXCUserInteraction }) {
 	const [params, setParams] = useState<{ [param: string]: string }>({})
 	const textInput = useRef<HTMLIonInputElement>(null)
 	const otpInput = useRef<HTMLIonInputOtpElement>(null)
+
+	const storedEmail = useLiveQuery(
+		() =>
+			db.settings
+				.get('constellationEmail')
+				.then(s => (s?.value as string | undefined) ?? undefined),
+		[],
+	)
 
 	useEffect(() => {
 		if (ui?.type === 'email') {
@@ -118,6 +128,7 @@ export function LoginModal({ ui }: { ui?: DXCUserInteraction }) {
 											labelPlacement="floating"
 											placeholder={placeholder}
 											type={type}
+											value={params[fieldName] ?? (type === 'email' ? (storedEmail ?? '') : '')}
 											onIonChange={event => {
 												const value = event.target.value
 												const updatedParams = {
@@ -190,7 +201,11 @@ export function LoginModal({ ui }: { ui?: DXCUserInteraction }) {
 							<IonButtons slot="primary">
 								<IonButton
 									onClick={() => {
-										ui.onSubmit(params)
+										const submitParams =
+											ui.type === 'email' && storedEmail && !params.email
+												? { ...params, email: storedEmail }
+												: params
+										ui.onSubmit(submitParams)
 									}}
 									strong={true}
 								>
