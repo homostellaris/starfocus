@@ -51,6 +51,25 @@ describe('asteroid field', () => {
 			{ title: 'be silly together', starRole: 'Father' },
 		])
 	})
+
+	it('can move a todo to the database via edit modal', () => {
+		createTodo({ title: 'take the bins out' })
+		assertList('asteroid-field', ['take the bins out'])
+
+		cy.get('[data-class="todo"]').click()
+		cy.get('#todo-action-sheet').contains('Edit').click()
+
+		cy.get('#edit-todo-modal ion-footer ion-select').click()
+		cy.get('ion-alert').within(() => {
+			cy.contains('Database').click()
+			cy.contains('OK').click()
+		})
+		cy.get('#edit-todo-modal').contains('Confirm').click()
+		cy.get('#edit-todo-modal').should('not.exist')
+
+		cy.get('#asteroid-field [data-class="todo"]').should('not.exist')
+		cy.get('#database').contains('take the bins out')
+	})
 })
 
 describe('wayfinder', () => {
