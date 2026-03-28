@@ -52,8 +52,16 @@ export function updateFrontMatter(
 		const { content: body } = matter(existingContent)
 		return matter.stringify(body, buildFrontMatterData(todo))
 	} catch {
-		return todoToMarkdown(todo)
+		// Frontmatter has invalid YAML (e.g. duplicate keys from a partial
+		// overwrite). Extract the body via regex to preserve user notes.
+		const body = extractBodyContent(existingContent)
+		return matter.stringify(body, buildFrontMatterData(todo))
 	}
+}
+
+function extractBodyContent(content: string): string {
+	const match = content.match(/^---\n[\s\S]*?\n---\n?([\s\S]*)/)
+	return match ? match[1] : ''
 }
 
 export function generateFilename(todo: Todo): string {

@@ -212,7 +212,7 @@ describe('updateFrontMatter', () => {
 		])
 	})
 
-	test('falls back to fresh markdown when existing content has duplicate YAML keys', () => {
+	test('preserves body when existing content has duplicate YAML keys', () => {
 		const existing =
 			'---\nid: todo-abc12345\ntitle: Buy groceries\nstarPoints: 1\nstarPoints: 1\n---\nMy notes\n'
 		const result = updateFrontMatter(existing, makeTodo({ starPoints: 1 }))
@@ -224,7 +224,7 @@ describe('updateFrontMatter', () => {
 			'starPoints: 1',
 			'exportedAt: 2025-06-15T12:00:00.000Z',
 			'---',
-			'',
+			'My notes',
 			'',
 		])
 	})

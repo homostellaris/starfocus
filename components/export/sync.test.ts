@@ -89,7 +89,7 @@ describe('creating files', () => {
 })
 
 describe('updating files', () => {
-	test('overwrites file with duplicate YAML keys with fresh content', async () => {
+	test('fixes duplicate YAML keys and preserves body content', async () => {
 		const corruptContent = [
 			'---',
 			'id: todo-1',
@@ -120,6 +120,8 @@ describe('updating files', () => {
 		expect(written).toContain('starPoints: 1')
 		// Should only appear once
 		expect(written.match(/starPoints:/g)).toHaveLength(1)
+		// Body must be preserved
+		expect(written).toContain('My notes')
 	})
 
 	test('updates front matter of existing file, preserves user-added body content', async () => {
