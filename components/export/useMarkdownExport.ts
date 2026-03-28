@@ -47,6 +47,7 @@ export interface UseMarkdownExportReturn {
 	exportOnce: () => Promise<void>
 	reconnect: () => Promise<void>
 	runFullSync: () => Promise<void>
+	requestPermissionIfNeeded: () => Promise<void>
 }
 
 interface UiStatus {
@@ -155,31 +156,22 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 
 	useSyncLifecycle(engine, handleRef, uiStatus.isSupported, setUiStatus)
 
-	// On Android, permissions don't persist across sessions. Auto-reconnect on
-	// the first user interaction so they never have to tap "Reconnect" manually.
-	useEffect(() => {
+	const requestPermissionIfNeeded = useCallback(async (): Promise<void> => {
 		if (!uiStatus.needsReconnect) return
 
-		const attemptAutoReconnect = async () => {
-			const storedHandle = await getHandleFromStorage()
-			if (!storedHandle) return
+		const storedHandle = await getHandleFromStorage()
+		if (!storedHandle) return
 
-			const permission = await checkPermission(storedHandle, {
-				allowRequest: true,
-			})
-			if (permission === 'granted') {
-				handleRef.current = storedHandle
-				setUiStatus(s => ({
-					...s,
-					needsReconnect: false,
-					directoryName: storedHandle.name,
-				}))
-				startEngine(engine, storedHandle)
-			}
+		const permission = await checkPermission(storedHandle, { allowRequest: true })
+		if (permission === 'granted') {
+			handleRef.current = storedHandle
+			setUiStatus(s => ({
+				...s,
+				needsReconnect: false,
+				directoryName: storedHandle.name,
+			}))
+			startEngine(engine, storedHandle)
 		}
-
-		document.addEventListener('click', attemptAutoReconnect, { once: true })
-		return () => document.removeEventListener('click', attemptAutoReconnect)
 	}, [engine, uiStatus.needsReconnect])
 
 	const incrementalError = engineStatus.incremental.error
@@ -327,5 +319,6 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 		exportOnce,
 		reconnect,
 		runFullSync,
+		requestPermissionIfNeeded,
 	}
 }

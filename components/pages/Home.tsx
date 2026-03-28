@@ -59,7 +59,7 @@ import {
 	TodoListItemBase,
 	WayfinderTodoListItem,
 } from '../db'
-import { MarkdownExportProvider } from '../export/MarkdownExportContext'
+import { MarkdownExportProvider, useMarkdownExportContext } from '../export/MarkdownExportContext'
 import { ViewMenu } from '../focus/ViewMenu'
 import useView, { ViewProvider } from '../focus/view'
 import Mood from '../mood'
@@ -187,6 +187,7 @@ export const TodoLists = () => {
 		})
 	}, [fab, focusedStarRole, presentCreateTodoModal])
 
+	const { requestPermissionIfNeeded } = useMarkdownExportContext()
 	const wayfinderOrderMode = 'manual' as string // TODO: Re-enable useSettings('#wayfinderOrderMode')
 	const { inActiveStarRoles, query } = useView()
 
@@ -544,6 +545,7 @@ export const TodoLists = () => {
 																		'Deletion of visits not implemented yet',
 																	)
 																} else {
+																	await requestPermissionIfNeeded()
 																	await todoRepository.uncomplete(todo)
 																	setLogLimit(limit => limit - 1)
 																	posthog.capture('todo_uncompleted', {
@@ -596,6 +598,7 @@ export const TodoLists = () => {
 														if (todo.visits) {
 															alert('Deletion of visits not implemented yet')
 														} else {
+															await requestPermissionIfNeeded()
 															await todoRepository.uncomplete(todo)
 															setLogLimit(limit => limit - 1)
 															posthog.capture('todo_uncompleted', {
@@ -687,6 +690,7 @@ export const TodoLists = () => {
 															data-next-todo={index === 0}
 															onCompletionChange={async event => {
 																if (event.detail.checked) {
+																	await requestPermissionIfNeeded()
 																	await todoRepository.complete(todo)
 																	setLogLimit(limit => limit + 1)
 																	posthog.capture('todo_completed', {
@@ -695,6 +699,7 @@ export const TodoLists = () => {
 																		star_points: todo.starPoints,
 																	})
 																} else {
+																	await requestPermissionIfNeeded()
 																	await todoRepository.uncomplete(todo)
 																	setLogLimit(limit => limit - 1)
 																	posthog.capture('todo_uncompleted', {
@@ -885,6 +890,7 @@ export const TodoLists = () => {
 																			overlayEvent.detail.role === 'complete'
 																		) {
 																			if (checkboxEvent.detail.checked) {
+																				await requestPermissionIfNeeded()
 																				await todoRepository.complete(todo)
 																				setLogLimit(limit => limit + 1)
 																				posthog.capture('todo_completed', {
@@ -893,6 +899,7 @@ export const TodoLists = () => {
 																					star_points: todo.starPoints,
 																				})
 																			} else {
+																				await requestPermissionIfNeeded()
 																				await todoRepository.uncomplete(todo)
 																				setLogLimit(limit => limit - 1)
 																				posthog.capture('todo_uncompleted', {
@@ -1037,6 +1044,7 @@ export const TodoLists = () => {
 
 export const Database = ({ todos }: { todos: Todo[] }) => {
 	const posthog = usePostHog()
+	const { requestPermissionIfNeeded } = useMarkdownExportContext()
 	const [present] = useTodoActionSheet()
 	const onClick = useCallback(
 		todo => {
@@ -1074,6 +1082,7 @@ export const Database = ({ todos }: { todos: Todo[] }) => {
 							action: 'complete',
 						},
 						handler: async () => {
+							await requestPermissionIfNeeded()
 							await db.todos.update(todo.id, {
 								completedAt: new Date(),
 							})
@@ -1082,7 +1091,7 @@ export const Database = ({ todos }: { todos: Todo[] }) => {
 				],
 			})
 		},
-		[present, posthog],
+		[present, posthog, requestPermissionIfNeeded],
 	)
 
 	if (todos === undefined) return null
