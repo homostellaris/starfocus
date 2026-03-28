@@ -48,8 +48,12 @@ export function updateFrontMatter(
 	existingContent: string,
 	todo: TodoWithRelations,
 ): string {
-	const { content: body } = matter(existingContent)
-	return matter.stringify(body, buildFrontMatterData(todo))
+	try {
+		const { content: body } = matter(existingContent)
+		return matter.stringify(body, buildFrontMatterData(todo))
+	} catch {
+		return todoToMarkdown(todo)
+	}
 }
 
 export function generateFilename(todo: Todo): string {

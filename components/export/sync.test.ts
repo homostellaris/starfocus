@@ -89,6 +89,39 @@ describe('creating files', () => {
 })
 
 describe('updating files', () => {
+	test('overwrites file with duplicate YAML keys with fresh content', async () => {
+		const corruptContent = [
+			'---',
+			'id: todo-1',
+			'title: Buy groceries',
+			'starPoints: 1',
+			'starPoints: 1',
+			'---',
+			'My notes',
+			'',
+		].join('\n')
+		const ops = createInMemoryFileOps({
+			'buy-groceries_todo-1.md': corruptContent,
+		})
+
+		const todoFile = makeTodoFile({
+			frontMatterData: {
+				id: 'todo-1',
+				title: 'Buy groceries',
+				starPoints: 1,
+				exportedAt: '2025-06-15T12:00:00.000Z',
+			},
+		})
+
+		const result = await upsertTodoFiles([todoFile], ops)
+
+		expect(result.updated).toBe(1)
+		const written = ops.files['buy-groceries_todo-1.md']
+		expect(written).toContain('starPoints: 1')
+		// Should only appear once
+		expect(written.match(/starPoints:/g)).toHaveLength(1)
+	})
+
 	test('updates front matter of existing file, preserves user-added body content', async () => {
 		const existingContent = [
 			'---',
