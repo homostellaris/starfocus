@@ -1,6 +1,7 @@
 import { ActionSheetOptions, useIonActionSheet } from '@ionic/react'
 import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
 import { Todo, db } from '../db'
+import { useMarkdownExportContext } from '../export/MarkdownExportContext'
 import { useEditTodoModal } from './edit/useEditTodoModal'
 import { clipboardSharp, createSharp, trashSharp } from 'ionicons/icons'
 import { usePostHog } from 'posthog-js/react'
@@ -9,6 +10,7 @@ import { generateFilename } from '../export/markdown'
 // TODO: Make this so that todo is never null, action sheet doesn't make sense to be open if its null
 export function useTodoActionSheet() {
 	const posthog = usePostHog()
+	const { requestPermissionIfNeeded } = useMarkdownExportContext()
 	// Using controller action sheet rather than inline because I was re-inventing what it was doing allowing dynamic options to be passed easily
 	const [presentActionSheet, dismissActionSheet] = useIonActionSheet()
 	// Using controller modal rather than inline because the trigger prop doesn't work with an ID on a controller-based action sheet button
@@ -47,6 +49,7 @@ export function useTodoActionSheet() {
 							action: 'delete',
 						},
 						handler: async () => {
+							await requestPermissionIfNeeded()
 							db.transaction(
 								'rw',
 								db.visits,
