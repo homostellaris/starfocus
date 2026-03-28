@@ -1,6 +1,7 @@
 import { useIonModal } from '@ionic/react'
 import { useCallback, useRef } from 'react'
 import { ListType, Todo, db } from '../../db'
+import { useMarkdownExportContext } from '../../export/MarkdownExportContext'
 import { EditTodoModal } from './modal'
 import order from '../../common/order'
 import { usePostHog } from 'posthog-js/react'
@@ -10,6 +11,7 @@ export function useEditTodoModal(): [
 	(data?: any, role?: string) => void,
 ] {
 	const posthog = usePostHog()
+	const { requestPermissionIfNeeded } = useMarkdownExportContext()
 	const titleInput = useRef<HTMLIonInputElement>(null)
 	const todoRef = useRef<Todo>(undefined)
 	const [present, dismiss] = useIonModal(EditTodoModal, {
@@ -23,6 +25,7 @@ export function useEditTodoModal(): [
 	const editTodo = useCallback(async (updatedTodo: any, location: ListType) => {
 		if (!updatedTodo.title) throw new TypeError('Title is required')
 
+		await requestPermissionIfNeeded()
 		await db.transaction(
 			'rw',
 			db.asteroidFieldOrder,
@@ -63,7 +66,7 @@ export function useEditTodoModal(): [
 				}
 			},
 		)
-	}, [])
+	}, [requestPermissionIfNeeded])
 
 	return [
 		(todo: Todo) => {
