@@ -55,6 +55,11 @@ export function useEditTodoModal(): [
 						}),
 						db.asteroidFieldOrder.where({ todoId: updatedTodo.id }).delete(),
 					])
+				} else if (location === ListType.database) {
+					await Promise.all([
+						db.asteroidFieldOrder.where({ todoId: updatedTodo.id }).delete(),
+						db.wayfinderOrder.where({ todoId: updatedTodo.id }).delete(),
+					])
 				}
 			},
 		)
