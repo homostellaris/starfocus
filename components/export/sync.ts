@@ -117,7 +117,18 @@ export async function upsertTodoFiles(
 		const existingContent = existingContents[i]
 
 		if (existingContent !== null) {
-			const { content: body, data: existingData } = matter(existingContent)
+			let body = ''
+			let existingData: Record<string, unknown> = {}
+			try {
+				const parsed = matter(existingContent)
+				body = parsed.content
+				existingData = parsed.data
+			} catch {
+				// Invalid YAML (e.g. duplicate keys from a partial overwrite).
+				// Extract body via regex to preserve user notes.
+				const match = existingContent.match(/^---\n[\s\S]*?\n---\n?([\s\S]*)/)
+				body = match ? match[1] : ''
+			}
 			const { exportedAt: _a, ...existingMeaningful } = existingData
 			const { exportedAt: _b, ...newMeaningful } = todo.frontMatterData
 

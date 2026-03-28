@@ -212,6 +212,23 @@ describe('updateFrontMatter', () => {
 		])
 	})
 
+	test('preserves body when existing content has duplicate YAML keys', () => {
+		const existing =
+			'---\nid: todo-abc12345\ntitle: Buy groceries\nstarPoints: 1\nstarPoints: 1\n---\nMy notes\n'
+		const result = updateFrontMatter(existing, makeTodo({ starPoints: 1 }))
+
+		expect(result.split('\n')).toEqual([
+			'---',
+			'id: todo-abc12345',
+			'title: Buy groceries',
+			'starPoints: 1',
+			'exportedAt: 2025-06-15T12:00:00.000Z',
+			'---',
+			'My notes',
+			'',
+		])
+	})
+
 	test('handles file with front matter and multi-line body content', () => {
 		const existing =
 			'---\nid: todo-abc12345\ntitle: Buy groceries\n---\n## Notes\n\n- Milk\n- Bread\n- Eggs\n'
