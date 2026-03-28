@@ -48,15 +48,8 @@ export function updateFrontMatter(
 	existingContent: string,
 	todo: TodoWithRelations,
 ): string {
-	try {
-		const { content: body } = matter(existingContent)
-		return matter.stringify(body, buildFrontMatterData(todo))
-	} catch {
-		// Frontmatter has invalid YAML (e.g. duplicate keys from a partial
-		// overwrite). Extract the body via regex to preserve user notes.
-		const body = extractBodyContent(existingContent)
-		return matter.stringify(body, buildFrontMatterData(todo))
-	}
+	const body = extractBodyContent(existingContent)
+	return matter.stringify(body, buildFrontMatterData(todo))
 }
 
 function extractBodyContent(content: string): string {
