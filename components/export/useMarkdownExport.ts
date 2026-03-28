@@ -218,6 +218,25 @@ export default function useMarkdownExport(): UseMarkdownExportReturn {
 	}, [engine, uiStatus.isEnabled, uiStatus.needsReconnect])
 
 	const reconnect = useCallback(async (): Promise<void> => {
+		// Try to re-use the stored handle first (avoids full picker on Android)
+		const storedHandle = await getHandleFromStorage()
+		if (storedHandle) {
+			const permission = await checkPermission(storedHandle, {
+				allowRequest: true,
+			})
+			if (permission === 'granted') {
+				handleRef.current = storedHandle
+				setUiStatus(s => ({
+					...s,
+					needsReconnect: false,
+					directoryName: storedHandle.name,
+				}))
+				startEngine(engine, storedHandle)
+				return
+			}
+		}
+
+		// Fall back to full folder picker if no handle or permission denied
 		const handle = await requestDirectory()
 		if (handle) {
 			handleRef.current = handle
