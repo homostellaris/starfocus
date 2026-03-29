@@ -9,6 +9,8 @@ import {
 	IonLabel,
 	IonList,
 	IonMenu,
+	IonSegment,
+	IonSegmentButton,
 	IonSpinner,
 	IonToggle,
 	IonToolbar,
@@ -18,7 +20,9 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import {
 	layersSharp,
 	locateOutline,
+	reorderThreeSharp,
 	rocketSharp,
+	sparklesSharp,
 	timeSharp,
 } from 'ionicons/icons'
 import { RefObject } from 'react'
@@ -71,8 +75,7 @@ export const ViewMenu = ({
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
-				{/* Disabled until star sort is fixed */}
-				{/* <IonSegment
+				<IonSegment
 					onIonChange={event => {
 						db.settings.put({
 							key: '#wayfinderOrderMode',
@@ -99,7 +102,7 @@ export const ViewMenu = ({
 							icon={sparklesSharp}
 						></IonIcon>
 					</IonSegmentButton>
-				</IonSegment> */}
+				</IonSegment>
 				<IonButton
 					color="warning"
 					expand="block"

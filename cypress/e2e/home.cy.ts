@@ -28,7 +28,63 @@ describe.skip('star roles groups', () => {})
 
 describe.skip('star points', () => {})
 
-describe.skip('star sort', () => {})
+describe('star sort', () => {
+	it('sorts all three lists by star points desc, ties broken by star role order, no points last', () => {
+		cy.get('#view-menu-button').click()
+		cy.get('#view-menu ion-segment').should('be.visible')
+		cy.get('#view-menu ion-segment-button[value="star"]').click({ force: true })
+		// Ionic menu animation must complete before toggle() will close it
+		cy.wait(500)
+		cy.get('#view-menu-button').click({ force: true })
+		cy.get('ion-fab>ion-fab-button').should('be.visible')
+
+		cy.db(async db => {
+			const fatherId = await db.starRoles.add({
+				title: 'Father',
+				icon: { type: 'ionicon', name: 'maleSharp' },
+			})
+			const partnerId = await db.starRoles.add({
+				title: 'Partner',
+				icon: { type: 'ionicon', name: 'heartSharp' },
+			})
+			// Father (order 1) beats Partner (order 2) on tie-break
+			await db.starRolesOrder.bulkAdd([
+				{ starRoleId: fatherId as string, order: 1 },
+				{ starRoleId: partnerId as string, order: 2 },
+			])
+		})
+
+		// Asteroid field: no star points, sorted by role order
+		createTodo({ title: 'partner chore', starRole: 'Partner' })
+		createTodo({ title: 'father chore', starRole: 'Father' })
+
+		// Wayfinder: mixed star points, ties, and no-role
+		createTodo({ title: 'low points', starPoints: 1 })
+		createTodo({ title: 'partner tied', starPoints: 5, starRole: 'Partner' })
+		createTodo({ title: 'high points', starPoints: 8 })
+		createTodo({ title: 'no role tied', starPoints: 5 })
+		createTodo({ title: 'father tied', starPoints: 5, starRole: 'Father' })
+
+		// Database: seed directly
+		cy.db(db =>
+			db.todos.bulkAdd([
+				{ title: 'db low', starPoints: 1 },
+				{ title: 'db high', starPoints: 8 },
+				{ title: 'db mid', starPoints: 3 },
+			]),
+		)
+
+		assertList('asteroid-field', ['father chore', 'partner chore'])
+		assertList('wayfinder', [
+			'high points',
+			'father tied',
+			'partner tied',
+			'no role tied',
+			'low points',
+		])
+		assertList('database', ['db high', 'db mid', 'db low'])
+	})
+})
 
 describe('asteroid field', () => {
 	it('stores todos with no star points', () => {
@@ -355,7 +411,7 @@ function createTodo({
 		cy.get('ion-alert')
 			.should('be.visible')
 			.within(() => {
-				cy.contains('Father').click()
+				cy.contains(starRole).click()
 				cy.contains('OK').click()
 			})
 	}
