@@ -61,8 +61,8 @@ export function meaningfulContentIsUnchanged(
 	newContent: string,
 ): boolean {
 	try {
-		const { content: existingBody, data: existingData } = matter(existing)
-		const { content: newBody, data: newData } = matter(newContent)
+		const { content: existingBody, data: existingData } = matter(existing, {})
+		const { content: newBody, data: newData } = matter(newContent, {})
 		const { exportedAt: _a, ...existingMeaningful } = existingData
 		const { exportedAt: _b, ...newMeaningful } = newData
 		return (
@@ -98,7 +98,7 @@ export async function upsertTodoFiles(
 		if (!content) return
 
 		try {
-			const parsed = matter(content)
+			const parsed = matter(content, {})
 			const id = parsed.data?.id
 			if (typeof id === 'string') {
 				diskFilesByTodoId.set(id, { filename, body: parsed.content })
@@ -117,18 +117,25 @@ export async function upsertTodoFiles(
 		const existingContent = existingContents[i]
 
 		if (existingContent !== null) {
-			let body = ''
 			let existingData: Record<string, unknown> = {}
 			try {
-				const parsed = matter(existingContent)
-				body = parsed.content
+				// Pass {} to bypass gray-matter's module-level cache. When a
+				// parse previously threw (duplicate YAML keys), the cache stores
+				// an incomplete entry that is returned on subsequent calls
+				// without throwing, leaving data={} and content=<full input>.
+				// Bypassing the cache ensures we always get a real throw for
+				// corrupt content so the catch block runs correctly.
+				const parsed = matter(existingContent, {})
 				existingData = parsed.data
 			} catch {
 				// Invalid YAML (e.g. duplicate keys from a partial overwrite).
-				// Extract body via regex to preserve user notes.
-				const match = existingContent.match(/^---\n[\s\S]*?\n---\n?([\s\S]*)/)
-				body = match ? match[1] : ''
+				// existingData stays as {} — the comparison below will differ
+				// from the current todo data, triggering a corrective write.
 			}
+			// Always extract body via regex rather than relying on matter().content,
+			// which may be the full raw input when a stale cache entry is returned.
+			const match = existingContent.match(/^---\n[\s\S]*?\n---\n?([\s\S]*)/)
+			const body = match ? match[1] : ''
 			const { exportedAt: _a, ...existingMeaningful } = existingData
 			const { exportedAt: _b, ...newMeaningful } = todo.frontMatterData
 
