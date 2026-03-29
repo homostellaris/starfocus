@@ -452,6 +452,16 @@ export function createFileOperations(
 					writable.write(content),
 					`writeFile.write(${filename})`,
 				)
+				// Explicitly truncate to the written byte length.
+				// createWritable() is supposed to truncate by default but
+				// Capacitor's implementation may not, leaving trailing bytes
+				// from a previous longer write which causes duplicate YAML keys.
+				console.debug('[FS] writeFile: truncate', filename)
+				const byteLength = new TextEncoder().encode(content).length
+				await withTimeout(
+					writable.truncate(byteLength),
+					`writeFile.truncate(${filename})`,
+				)
 				console.debug('[FS] writeFile: close', filename)
 				await withTimeout(writable.close(), `writeFile.close(${filename})`)
 				return true
