@@ -124,6 +124,49 @@ describe('updating files', () => {
 		expect(written).toContain('My notes')
 	})
 
+	test('does not embed corrupt content in body when same file is processed twice', async () => {
+		// gray-matter caches failed parses. Without cache bypass, the second call
+		// returns {content: fullCorruptInput, data: {}} instead of throwing, causing
+		// the corrupt content to be written as the file body.
+		const corruptContent = [
+			'---',
+			'id: todo-1',
+			'title: Buy groceries',
+			'starPoints: 1',
+			'starPoints: 1',
+			'---',
+			'My notes',
+			'',
+		].join('\n')
+
+		const todoFile = makeTodoFile({
+			frontMatterData: {
+				id: 'todo-1',
+				title: 'Buy groceries',
+				starPoints: 1,
+				exportedAt: '2025-06-15T12:00:00.000Z',
+			},
+		})
+
+		// First sync — encounters corrupt file, should fix it
+		const ops1 = createInMemoryFileOps({
+			'buy-groceries_todo-1.md': corruptContent,
+		})
+		await upsertTodoFiles([todoFile], ops1)
+
+		// Second sync — same corrupt content string (simulates cache hit scenario)
+		const ops2 = createInMemoryFileOps({
+			'buy-groceries_todo-1.md': corruptContent,
+		})
+		await upsertTodoFiles([todoFile], ops2)
+
+		const written = ops2.files['buy-groceries_todo-1.md']
+		// Body must not contain the raw corrupt YAML — it should only have user notes
+		expect(written.match(/starPoints:/g)).toHaveLength(1)
+		expect(written).toContain('My notes')
+		expect(written).not.toContain('starPoints: 1\nstarPoints: 1')
+	})
+
 	test('updates front matter of existing file, preserves user-added body content', async () => {
 		const existingContent = [
 			'---',
