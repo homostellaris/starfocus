@@ -549,21 +549,28 @@ export function createSyncEngine(): SyncEngine {
 			const filename = generateFilename(todo)
 			deleteFilenames.delete(filename)
 
-			const existingContent = await ops.readFile(filename)
-			if (existingContent !== null) {
-				const newContent = todoToMarkdown(enrichedTodo)
-				if (meaningfulContentIsUnchanged(existingContent, newContent)) {
-					continue
+			try {
+				const existingContent = await ops.readFile(filename)
+				if (existingContent !== null) {
+					const newContent = todoToMarkdown(enrichedTodo)
+					if (meaningfulContentIsUnchanged(existingContent, newContent)) {
+						continue
+					}
+					const updatedContent = updateFrontMatter(existingContent, enrichedTodo)
+					const success = await ops.writeFile(filename, updatedContent)
+					if (success) updated++
+					else failed++
+				} else {
+					const content = todoToMarkdown(enrichedTodo)
+					const success = await ops.writeFile(filename, content)
+					if (success) created++
+					else failed++
 				}
-				const updatedContent = updateFrontMatter(existingContent, enrichedTodo)
-				const success = await ops.writeFile(filename, updatedContent)
-				if (success) updated++
-				else failed++
-			} else {
-				const content = todoToMarkdown(enrichedTodo)
-				const success = await ops.writeFile(filename, content)
-				if (success) created++
-				else failed++
+			} catch (error) {
+				const message = error instanceof Error ? error.message : String(error)
+				throw new Error(
+					`todo ${todoId} (${filename}): ${message}`,
+				)
 			}
 		}
 
@@ -637,18 +644,25 @@ export function createSyncEngine(): SyncEngine {
 			if (todo) {
 				const enrichedTodo = enrichTodo(todo, starRolesById, starRoleGroupsById)
 				const filename = generateFilename(todo)
-				const existingContent = await ops.readFile(filename)
-				if (existingContent !== null) {
-					const newContent = todoToMarkdown(enrichedTodo)
-					if (!meaningfulContentIsUnchanged(existingContent, newContent)) {
-						const updatedContent = updateFrontMatter(
-							existingContent,
-							enrichedTodo,
-						)
-						await ops.writeFile(filename, updatedContent)
+				try {
+					const existingContent = await ops.readFile(filename)
+					if (existingContent !== null) {
+						const newContent = todoToMarkdown(enrichedTodo)
+						if (!meaningfulContentIsUnchanged(existingContent, newContent)) {
+							const updatedContent = updateFrontMatter(
+								existingContent,
+								enrichedTodo,
+							)
+							await ops.writeFile(filename, updatedContent)
+						}
+					} else {
+						await ops.writeFile(filename, todoToMarkdown(enrichedTodo))
 					}
-				} else {
-					await ops.writeFile(filename, todoToMarkdown(enrichedTodo))
+				} catch (error) {
+					const message = error instanceof Error ? error.message : String(error)
+					throw new Error(
+						`todo ${todoId} (${filename}): ${message}`,
+					)
 				}
 			}
 
