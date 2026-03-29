@@ -72,9 +72,11 @@ import useTodoContext, { TodoContextProvider } from '../todos/TodoContext'
 import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
 import { groupByCompletedAt } from '../todos/groupTodosByCompletedAt'
 import todoRepository from '../todos/repository'
+import { starSort, StarRoleOrderMap } from '../todos/starSort'
 import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
 import { useTodoPopover } from '../todos/useTodoPopover'
 import { SettingsMenu } from '../settings/SettingsMenu'
+import useSettings from '../settings/useSettings'
 import { Searchbar } from '../search/Searchbar'
 import { Journey } from '../starship/Journey'
 
@@ -188,7 +190,7 @@ export const TodoLists = () => {
 	}, [fab, focusedStarRole, presentCreateTodoModal])
 
 	const { requestPermissionIfNeeded } = useMarkdownExportContext()
-	const wayfinderOrderMode = 'manual' as string // TODO: Re-enable useSettings('#wayfinderOrderMode')
+	const wayfinderOrderMode = useSettings('#wayfinderOrderMode')
 	const { inActiveStarRoles, query } = useView()
 
 	const data = useLiveQuery<{
@@ -230,58 +232,62 @@ export const TodoLists = () => {
 				})
 			})
 
+		const starRoleOrderMap: StarRoleOrderMap = new Map()
+		if (wayfinderOrderMode === 'star') {
+			const starRolesOrder = await db.starRolesOrder.toArray()
+			starRolesOrder.forEach(({ starRoleId, order: o }) => {
+				starRoleOrderMap.set(starRoleId, o)
+			})
+		}
+
 		const asteroidFieldOrder = await db.asteroidFieldOrder
 			.orderBy('order')
 			.toArray()
 		const asteroidFieldTodoIds = asteroidFieldOrder.map(({ todoId }) => todoId)
 		const asteroidFieldTodosPromise = db.todos
 			.bulkGet(asteroidFieldTodoIds)
-			.then(todos =>
-				todos
+			.then(todos => {
+				const mapped = todos
 					.map((todo, index) => ({
 						...todo!,
 						order: asteroidFieldOrder[index].order,
 						snoozedUntil: asteroidFieldOrder[index].snoozedUntil,
 					}))
-					.filter(todo => matchesQuery(query, todo) && inActiveStarRoles(todo)),
-			)
+					.filter(todo => matchesQuery(query, todo) && inActiveStarRoles(todo))
+
+				if (wayfinderOrderMode === 'star') {
+					return starSort(mapped, starRoleOrderMap).map((todo, index) => ({
+						...todo,
+						order: index.toString(),
+					}))
+				}
+				return mapped
+			})
 
 		const wayfinderOrder = await db.wayfinderOrder.orderBy('order').toArray()
 		const wayfinderTodoIds = wayfinderOrder.map(({ todoId }) => todoId)
 		const wayfinderTodosPromise =
 			wayfinderOrderMode === 'star'
-				? db.starRoles
-						.toArray()
-						.then(starRoles =>
-							Promise.all(
-								starRoles.map(starRole =>
-									db.todos
-										.where('starRole')
-										.equals(starRole.id)
-										.reverse()
-										.limit(1)
-										.sortBy('starPoints'),
-								),
-							),
-						)
-						.then(todos =>
-							todos
-								.filter(todo => !!todo)
-								.reduce((acc, curr) => acc.concat(curr), []),
-						)
-						.then(async starSortTodos => {
-							const visits = await db.visits
-								.where('todoId')
-								.anyOf(wayfinderTodoIds)
-								.toArray()
-							const visitsByTodoId = _.groupBy(visits, 'todoId')
-							return starSortTodos.map((todo, index) => ({
+				? Promise.all([
+						db.todos.bulkGet(wayfinderTodoIds),
+						db.visits.where('todoId').anyOf(wayfinderTodoIds).toArray(),
+					]).then(([wayfinderTodos, visits]) => {
+						const visitsByTodoId = _.groupBy(visits, 'todoId')
+						const filtered = wayfinderTodos
+							.map((todo, index) => ({
 								...todo!,
 								visits: visitsByTodoId[todo!.id],
-								order: index.toString(),
+								order: wayfinderOrder[index].order,
 								snoozedUntil: wayfinderOrder[index].snoozedUntil,
 							}))
-						})
+							.filter(
+								todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
+							)
+						return starSort(filtered, starRoleOrderMap).map((todo, index) => ({
+							...todo,
+							order: index.toString(),
+						}))
+					})
 				: Promise.all([
 						db.todos.bulkGet(wayfinderTodoIds),
 						db.visits.where('todoId').anyOf(wayfinderTodoIds).toArray(),
@@ -299,18 +305,31 @@ export const TodoLists = () => {
 							)
 					})
 
-		const databaseTodosPromise = db.todos
-			.where('id')
-			.noneOf([...asteroidFieldTodoIds, ...wayfinderTodoIds])
-			.and(
-				todo =>
-					todo.completedAt === undefined &&
-					matchesQuery(query, todo) &&
-					inActiveStarRoles(todo),
-			)
-			.reverse()
-			.limit(databaseLimit)
-			.toArray()
+		const databaseTodosPromise =
+			wayfinderOrderMode === 'star'
+				? db.todos
+						.where('id')
+						.noneOf([...asteroidFieldTodoIds, ...wayfinderTodoIds])
+						.and(
+							todo =>
+								todo.completedAt === undefined &&
+								matchesQuery(query, todo) &&
+								inActiveStarRoles(todo),
+						)
+						.toArray()
+						.then(todos => starSort(todos, starRoleOrderMap).slice(0, databaseLimit))
+				: db.todos
+						.where('id')
+						.noneOf([...asteroidFieldTodoIds, ...wayfinderTodoIds])
+						.and(
+							todo =>
+								todo.completedAt === undefined &&
+								matchesQuery(query, todo) &&
+								inActiveStarRoles(todo),
+						)
+						.reverse()
+						.limit(databaseLimit)
+						.toArray()
 
 		const [log, visits, asteroidField, wayfinder, database] = await Promise.all(
 			[
