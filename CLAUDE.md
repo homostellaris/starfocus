@@ -101,6 +101,16 @@ The build workflow (`.github/workflows/build.yml`) runs:
 - App Router: Next.js App Router in `/app/`
 - Database schema: `/components/db.ts`
 
-## Deploynent
+## Deployment
 
-Vercel is used as the deployment platform. The Vercel CLI is available for tailing logs and other operations.
+Vercel is used as the deployment platform. Deployments happen automatically via GitHub Actions when changes are pushed — **do not deploy manually**.
+
+### Vercel CLI — read-only use only
+
+The Vercel CLI may be used to tail logs or inspect deployments. **Never** use it to:
+- Deploy (`vercel`, `vercel --prod`)
+- Delete deployments or projects
+- Modify environment variables
+- Change domain or project settings
+
+If the CLI prompts for authentication, **do not authenticate**. Use `gh` to inspect CI runs instead.
