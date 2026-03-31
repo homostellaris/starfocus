@@ -9,6 +9,7 @@
 #   TODOS_DIR         Path to StarFocus todos folder (default: first argument)
 #   STAR_ROLE         Star role to filter todos by (default: Starfocuser)
 #   ACPX              Path to acpx binary (default: acpx on PATH)
+#   ACPX_WORKSPACE    Path to acpx workspace dir (default: ~/.openclaw/workspace)
 
 set -euo pipefail
 
@@ -21,6 +22,8 @@ if [ -z "$ACPX" ]; then
   echo "Error: acpx not found. Install it or set the ACPX environment variable." >&2
   exit 1
 fi
+
+ACPX_WORKSPACE="${ACPX_WORKSPACE:-$HOME/.openclaw/workspace}"
 
 if [ -z "${TELEGRAM_TARGET:-}" ]; then
   echo "Error: TELEGRAM_TARGET is not set. Export your Telegram user ID." >&2
@@ -54,10 +57,20 @@ while true; do
       SESSION_NAME="${TODO_FILE%.md}"
       log "Completed: $TODO_FILE — steering acpx session '$SESSION_NAME'"
 
-      # Steer the running Claude Code ACP session to wrap up
-      "$ACPX" claude -s "$SESSION_NAME" \
-        "The user has marked the current todo complete in their StarFocus app. Please finish any in-progress work, commit if needed, then exit cleanly." \
-        2>&1 | log "acpx steer: $(cat)" || log "acpx steer failed (session may not exist)"
+      # Try to steer the running session; if dead, resume it first
+      STEER_MSG="The user has marked the current todo complete in their StarFocus app. Please finish any in-progress work, raise a PR if not already done, then exit cleanly."
+      if ! "$ACPX" claude -s "$SESSION_NAME" "$STEER_MSG" 2>&1 | log "acpx steer: $(cat)"; then
+        log "Session appears dead — attempting resume"
+        SESSION_ID=$(cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions show "$SESSION_NAME" 2>/dev/null | awk '/^sessionId:/ {print $2}')
+        if [ -n "$SESSION_ID" ]; then
+          log "Resuming Claude Code session $SESSION_ID"
+          (cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions new --name "$SESSION_NAME" --resume-session "$SESSION_ID" 2>&1) | log "acpx resume: $(cat)"
+          sleep 5
+          (cd "$ACPX_WORKSPACE" && "$ACPX" claude -s "$SESSION_NAME" "$STEER_MSG" 2>&1) | log "acpx steer (resumed): $(cat)" || log "acpx steer failed after resume"
+        else
+          log "Could not retrieve session ID for $SESSION_NAME — skipping resume"
+        fi
+      fi
 
       # Give it 60s to wrap up, then close
       sleep 60
