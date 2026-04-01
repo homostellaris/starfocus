@@ -49,3 +49,7 @@ Reply **go** for the top pick, **1** or **2** for an alternative, or name a diff
 ```
 
 Return the message text and the filename for each option so the caller knows which file to pass to Claude Code.
+
+## Important: filenames contain a unique ID suffix
+
+Todo filenames follow the pattern `[title]_[id].md` where `[id]` is a short unique identifier (e.g. `star-role-descriptions_dfif0com.md`). The ID suffix is not decorative — it is the primary key that links the file to the database record and to the ACP session. It must never be omitted or shortened. Always reference todos by their full filename including the ID suffix.
