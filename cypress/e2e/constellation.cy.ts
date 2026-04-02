@@ -8,7 +8,11 @@ beforeEach(() => {
 			request.onblocked = () => resolve(null)
 		})
 	})
-	cy.visit('/home')
+	cy.visit('/home', {
+		onBeforeLoad(win) {
+			win.localStorage.setItem('help-enabled', 'true')
+		},
+	})
 	cy.get('ion-fab>ion-fab-button').should('be.visible')
 })
 

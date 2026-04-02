@@ -16,7 +16,11 @@ beforeEach(() => {
 		})
 	})
 	cy.db(db => db.open())
-	cy.visit('/home')
+	cy.visit('/home', {
+		onBeforeLoad(win) {
+			win.localStorage.setItem('help-enabled', 'true')
+		},
+	})
 	cy.get('ion-fab>ion-fab-button', { timeout: 10000 }).should('be.visible')
 })
 
@@ -181,7 +185,11 @@ describe.skip('focus', () => {
 
 describe('snooze', () => {
 	beforeEach(() => {
-		cy.visit('/home')
+		cy.visit('/home', {
+		onBeforeLoad(win) {
+			win.localStorage.setItem('help-enabled', 'true')
+		},
+	})
 		cy.get('ion-fab>ion-fab-button', { timeout: 10000 }).should('be.visible')
 		cy.clock(dayjs('2025-01-01').valueOf(), ['Date'])
 	})
@@ -218,7 +226,11 @@ describe('search', () => {
 				},
 			]),
 		)
-		cy.visit('/home')
+		cy.visit('/home', {
+		onBeforeLoad(win) {
+			win.localStorage.setItem('help-enabled', 'true')
+		},
+	})
 		cy.get('ion-fab>ion-fab-button').should('be.visible')
 	})
 
