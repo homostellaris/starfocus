@@ -6,10 +6,12 @@ import {
 	IonIcon,
 	IonInput,
 	IonItem,
+	IonLabel,
 	IonList,
 	IonPopover,
 	IonSpinner,
 	IonTitle,
+	IonToggle,
 	IonToolbar,
 	useIonModal,
 } from '@ionic/react'
@@ -20,15 +22,19 @@ import {
 	cloudOfflineSharp,
 	cloudUploadSharp,
 	documentTextSharp,
+	helpCircleSharp,
 	syncSharp,
 	thunderstormSharp,
 	warningSharp,
 } from 'ionicons/icons'
+import { DisplaySurveyType } from 'posthog-js'
+import { usePostHog } from 'posthog-js/react'
 import { useMarkdownExportContext } from '../export/MarkdownExportContext'
 import { db } from '../db'
 import StarPoints from './StarPoints'
 import Title from './Title'
 import { LoginModal } from '../auth/dexie'
+import { useHelp } from './HelpContext'
 
 export const Header = ({ title }: { title: string }) => {
 	const ui = useObservable(db.cloud.userInteraction)
@@ -41,6 +47,8 @@ export const Header = ({ title }: { title: string }) => {
 	const syncState = useObservable(db.cloud.syncState)
 
 	const { status: exportStatus, runFullSync } = useMarkdownExportContext()
+	const posthog = usePostHog()
+	const { helpEnabled, toggleHelp } = useHelp()
 
 	return (
 		<>
@@ -63,6 +71,52 @@ export const Header = ({ title }: { title: string }) => {
 						className="mx-2"
 						slot="end"
 					>
+						<IonButton id="help-popover">
+							<IonIcon
+								icon={helpCircleSharp}
+								slot="icon-only"
+							/>
+						</IonButton>
+						<IonPopover
+							trigger="help-popover"
+							triggerAction="click"
+						>
+							<IonContent class="ion-padding">
+								<IonItem lines="none">
+									<IonLabel>Help hints</IonLabel>
+									<IonToggle
+										aria-label="Toggle help"
+										checked={helpEnabled}
+										onIonChange={toggleHelp}
+									/>
+								</IonItem>
+								<IonButton
+									expand="block"
+									fill="clear"
+									href="/docs/get-started/quickstart"
+								>
+									Documentation
+								</IonButton>
+								{isLoggedIn && (
+									<IonButton
+										expand="block"
+										fill="clear"
+										onClick={() => {
+											posthog.displaySurvey(
+												'019c2fed-d45c-0000-8e90-9ededf867e7c',
+												{
+													displayType: DisplaySurveyType.Popover,
+													ignoreConditions: true,
+													ignoreDelay: true,
+												},
+											)
+										}}
+									>
+										Send feedback
+									</IonButton>
+								)}
+							</IonContent>
+						</IonPopover>
 						{exportStatus.isEnabled && (
 							<>
 								<IonButton id="markdown-export-status">
@@ -282,6 +336,7 @@ export const Header = ({ title }: { title: string }) => {
 					</IonButtons>
 				</IonToolbar>
 			</IonHeader>
+
 		</>
 	)
 }

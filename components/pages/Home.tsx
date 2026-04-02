@@ -79,6 +79,7 @@ import { SettingsMenu } from '../settings/SettingsMenu'
 import useSettings from '../settings/useSettings'
 import { Searchbar } from '../search/Searchbar'
 import { Journey } from '../starship/Journey'
+import { useHelp } from '../common/HelpContext'
 
 const Home = () => {
 	const posthog = usePostHog()
@@ -430,6 +431,7 @@ export const TodoLists = () => {
 	const [presentTodoActionSheet] = useTodoActionSheet()
 	const [presentSnoozeTodoModal] = useSnoozeTodoModal()
 	const [presentCompletionPopover] = useTodoPopover()
+	const { helpEnabled } = useHelp()
 
 	return (
 		<IonContent
@@ -523,14 +525,14 @@ export const TodoLists = () => {
 									className="relative mr-1 [contain:none] ion-no-padding"
 									id="log-and-wayfinder"
 								>
-									{data.log.length === 0 ? (
+									{(data.log.length === 0 || helpEnabled) && (
 										<Placeholder heading="Log">
 											A chronological list of your completed objectives. It
 											represents your journey up until today and makes it is
 											easy to remind yourself what you did in the past.
 										</Placeholder>
-									) : (
-										logGroups.map(group => (
+									)}
+									{data.log.length > 0 && logGroups.map(group => (
 											<IonItemGroup key={group.shortLabel}>
 												<JourneyLabel>
 													<TimeInfo
@@ -583,8 +585,7 @@ export const TodoLists = () => {
 													))}
 												</div>
 											</IonItemGroup>
-										))
-									)}
+										))}
 									<IonItemGroup>
 										<JourneyLabel>
 											<TimeInfo
@@ -691,7 +692,7 @@ export const TodoLists = () => {
 													})
 												}}
 											>
-												{data.asteroidField.length === 0 ? (
+												{(data.asteroidField.length === 0 || helpEnabled) && (
 													<Placeholder heading="Asteroid Field">
 														Tasks which demand immediate attention. They will
 														try to feign &apos;urgency&apos; but are usually
@@ -701,8 +702,8 @@ export const TodoLists = () => {
 														move on to the mission-critical objectives in your
 														Wayfinder.
 													</Placeholder>
-												) : (
-													data.asteroidField.map((todo, index) => (
+												)}
+												{data.asteroidField.length > 0 && data.asteroidField.map((todo, index) => (
 														<TodoListItem
 															key={todo.id}
 															data-id={todo.id}
@@ -806,7 +807,7 @@ export const TodoLists = () => {
 															<VisitInfo todo={todo} />
 														</TodoListItem>
 													))
-												)}
+												}
 											</IonReorderGroup>
 											<div className="mx-auto w-full h-[1px] bg-[linear-gradient(to_right,transparent,theme(colors.rose.400),theme(colors.pink.400),theme(colors.fuchsia.400),theme(colors.violet.400),theme(colors.indigo.400),theme(colors.blue.400),transparent)] z-10 absolute"></div>
 											<IonReorderGroup
@@ -864,14 +865,14 @@ export const TodoLists = () => {
 													})
 												}}
 											>
-												{data.wayfinder.length === 0 ? (
+												{(data.wayfinder.length === 0 || helpEnabled) && (
 													<Placeholder heading="Wayfinder">
 														Mission-critical objectives. You should aim to do
 														these next. Order them manually or use{' '}
 														<em>star sort</em> to order them for you ✨
 													</Placeholder>
-												) : (
-													data.wayfinder.map((todo, index) => (
+												)}
+												{data.wayfinder.length > 0 && data.wayfinder.map((todo, index) => (
 														<TodoListItem
 															key={todo.id}
 															data-id={todo.id}
@@ -1009,12 +1010,12 @@ export const TodoLists = () => {
 															<VisitInfo todo={todo} />
 														</TodoListItem>
 													))
-												)}
+												}
 											</IonReorderGroup>
 										</div>
 									</IonItemGroup>
 								</IonList>
-								{data.database.length === 0 ? (
+								{(data.database.length === 0 || helpEnabled) && (
 									<div className="bg-[--ion-item-background]">
 										<Placeholder heading="Database">
 											A searchable database of future possible objectives, as
@@ -1022,9 +1023,8 @@ export const TodoLists = () => {
 											them all.
 										</Placeholder>
 									</div>
-								) : (
-									<Database todos={data.database} />
 								)}
+								{data.database.length > 0 && <Database todos={data.database} />}
 								<IonButton
 									aria-label="Load more database todos"
 									color="medium"

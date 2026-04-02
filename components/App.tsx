@@ -10,6 +10,7 @@ import Test from './pages/Test'
 import { db } from './db'
 import { useEffect } from 'react'
 import todoRepository from './todos/repository'
+import { HelpProvider } from './common/HelpContext'
 
 setupIonicReact({})
 
@@ -29,6 +30,7 @@ const App = () => {
 		window.todoRepository = todoRepository
 	}, [])
 	return (
+		<HelpProvider>
 		<IonApp>
 			<IonReactRouter>
 				<IonRouterOutlet id="main">
@@ -61,6 +63,7 @@ const App = () => {
 				</IonRouterOutlet>
 			</IonReactRouter>
 		</IonApp>
+		</HelpProvider>
 	)
 }
 
