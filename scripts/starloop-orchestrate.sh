@@ -92,11 +92,18 @@ else
     log "  $name"
   done
 
-  # Wrap up any session whose todo is complete, serially to respect concurrency
+  # Wrap up completed todos or close dead sessions
   while IFS=$'\t' read -r _id name _rest; do
     if todo_is_complete "$name"; then
       log "Todo complete for session '$name' — wrapping up"
       steer_and_close "$name"
+    else
+      # Check if the process has died (disconnectReason: process_exit means acpx lost the process)
+      disconnect_reason=$(cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions show "$name" 2>/dev/null | awk '/^disconnectReason:/ {print $2}')
+      if [ "$disconnect_reason" = "process_exit" ]; then
+        log "Session '$name' process has died (disconnectReason: process_exit) — closing stale record"
+        (cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions close "$name" 2>&1) || true
+      fi
     fi
   done <<< "$active_sessions"
 
@@ -111,7 +118,7 @@ log "Active sessions after cleanup: $active_count / $MAX_CONCURRENCY"
 if [ "$active_count" -lt "$MAX_CONCURRENCY" ]; then
   log "Capacity available — handing off to OpenClaw"
   openclaw agent --agent main \
-    --message "Run /starloop $TODOS_DIR $STAR_ROLE and send the result via: openclaw message send --channel telegram --target $TELEGRAM_TARGET --message '[message]'. When the user replies with go, a number, or a task name: spawn a Claude Code ACP session by running: acpx claude sessions new --name [session-name] (cwd: $ACPX_WORKSPACE). The session name MUST be the full todo filename including the ID suffix, minus .md — e.g. for 'fix-long-order-properties_0fc3acom.md' use 'fix-long-order-properties_0fc3acom'. Then send the task via: acpx claude -s [session-name] \"Read $TODOS_DIR/[chosen-filename] and execute the task. If you need input, send: openclaw message send --channel telegram --target $TELEGRAM_TARGET --message YOUR_QUESTION and pause.\". Do NOT discuss the task or ask any questions — just spawn, then confirm to the user via Telegram: '🚀 Started session [session-name]. I will update you when done or if Claude needs input.'"
+    --message "Run /starloop $TODOS_DIR $STAR_ROLE and send the result via: openclaw message send --channel telegram --target $TELEGRAM_TARGET --message '[message]'. When the user replies with go, a number, or a task name: spawn a Claude Code ACP session by running: acpx claude sessions new --name [session-name] (cwd: $ACPX_WORKSPACE). The session name MUST be the full todo filename including the ID suffix, minus .md — e.g. for 'fix-long-order-properties_0fc3acom.md' use 'fix-long-order-properties_0fc3acom'. Then send the initial task prompt in the background so it does not block: nohup acpx claude -s [session-name] \"Read $TODOS_DIR/[chosen-filename] and execute the task. If you need input, send: openclaw message send --channel telegram --target $TELEGRAM_TARGET --message YOUR_QUESTION and pause.\" > /tmp/acpx-[session-name].log 2>&1 & disown. Do NOT discuss the task or ask any questions — just spawn, then confirm to the user via Telegram: '🚀 Started session [session-name]. I will update you when done or if Claude needs input.'"
 else
   log "At capacity ($active_count/$MAX_CONCURRENCY) — nothing to do"
 fi
