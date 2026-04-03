@@ -49,6 +49,7 @@ export type WayfinderTodoListItem = TodoListItemBase & WayfinderMeta
 
 export interface StarRole {
 	id: string
+	description?: string
 	icon: Icon
 	starRoleGroupId?: string
 	title: string
@@ -184,7 +185,6 @@ export class DexieStarfocus extends Dexie {
 			todos: '@id, createdAt, completedAt, starRole, title',
 			visits: '@id, todoId, date',
 		})
-
 		this.cloud.configure({
 			customLoginGui: true,
 			databaseUrl:

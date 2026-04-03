@@ -7,6 +7,8 @@ import {
 	todoToMarkdown,
 	buildFrontMatterData,
 	generateFilename,
+	generateStarRoleFilename,
+	createStarRoleFile,
 	createManifest,
 	createAsteroidFieldFile,
 	createWayfinderFile,
@@ -348,6 +350,17 @@ async function writeAggregateFiles(
 		createWayfinderFile(wayfinderOrder, todos),
 		ops,
 	)
+
+	for (const starRole of starRoles) {
+		const group = starRole.starRoleGroupId
+			? starRoleGroupsById.get(starRole.starRoleGroupId)
+			: undefined
+		await writeFileIfChanged(
+			`star-roles/${generateStarRoleFilename(starRole)}`,
+			createStarRoleFile(starRole, group),
+			ops,
+		)
+	}
 }
 
 function waitForCloudReady(): Promise<void> {

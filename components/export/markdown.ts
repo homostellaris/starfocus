@@ -72,6 +72,39 @@ export function generateFilename(todo: Todo): string {
 	return `${safeTitle}_${shortId}.md`
 }
 
+export function generateStarRoleFilename(starRole: StarRole): string {
+	const safeTitle = starRole.title
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-|-$/g, '')
+		.slice(0, 50)
+
+	const shortId = starRole.id
+		.replace(/[^a-z0-9]/gi, '')
+		.toLowerCase()
+		.slice(-8)
+
+	return `${safeTitle}_${shortId}.md`
+}
+
+export function createStarRoleFile(
+	starRole: StarRole,
+	starRoleGroup?: StarRoleGroup,
+): string {
+	const data: Record<string, unknown> = {
+		id: starRole.id,
+		title: starRole.title,
+		icon: starRole.icon.name,
+	}
+
+	if (starRoleGroup) {
+		data.group = starRoleGroup.title
+	}
+
+	const body = starRole.description ? `\n${starRole.description}\n` : ''
+	return matter.stringify(body, data)
+}
+
 export function createManifest(
 	todos: TodoWithRelations[],
 	starRoles: StarRole[],
@@ -90,6 +123,7 @@ export function createManifest(
 		starRoles: starRoles.map(sr => ({
 			id: sr.id,
 			title: sr.title,
+			description: sr.description,
 			group: starRoleGroups.find(g => g.id === sr.starRoleGroupId)?.title,
 		})),
 		starRoleGroups: starRoleGroups.map(g => ({
@@ -123,7 +157,9 @@ version: ${manifest.version}
 ${starRoles
 	.map(sr => {
 		const group = starRoleGroups.find(g => g.id === sr.starRoleGroupId)
-		return `- **${sr.title}**${group ? ` (${group.title})` : ''}`
+		const meta = [group ? group.title : null].filter(Boolean).join(', ')
+		const description = sr.description ? `: ${sr.description}` : ''
+		return `- **${sr.title}**${meta ? ` (${meta})` : ''}${description}`
 	})
 	.join('\n')}
 
