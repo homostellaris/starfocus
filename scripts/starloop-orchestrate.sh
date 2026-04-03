@@ -11,7 +11,7 @@
 # Environment variables:
 #   TODOS_DIR         Path to StarFocus todos folder (required)
 #   TELEGRAM_TARGET   Your Telegram user ID (required)
-#   STAR_ROLES        Space-separated star roles to filter todos by (optional — omit to include any role)
+#   STAR_ROLES        Comma-separated star roles to filter todos by (optional — omit to include any role)
 #   MAX_CONCURRENCY   Max simultaneous Claude Code sessions (default: 1)
 #   ACPX              Path to acpx binary (default: acpx on PATH)
 #   ACPX_WORKSPACE    Path to acpx workspace dir (default: ~/.openclaw/workspace)

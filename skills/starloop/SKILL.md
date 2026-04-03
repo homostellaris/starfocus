@@ -5,7 +5,7 @@ Read a StarFocus todo folder and produce a ranked recommendation for the next ta
 ## Arguments
 
 - `$ARGUMENTS[0]` — path to the todos folder (e.g. `/mnt/d/Philomath/todos`)
-- `$ARGUMENTS[1]`, `$ARGUMENTS[2]`, … — star roles to filter by (e.g. `Starfocuser`). If no star roles are provided, include todos with any star role.
+- `$ARGUMENTS[1]` — comma-separated star roles to filter by (e.g. `Starfocuser,Autism helper`). If omitted or empty, include todos with any star role.
 
 ## Steps
 
@@ -17,7 +17,7 @@ Read all `.md` files in `$ARGUMENTS[0]`. Skip:
 - `_wayfinder.md`
 - Any file with `completedAt` set in its frontmatter
 
-If star role arguments were provided, filter to todos where `starRole` matches any of `$ARGUMENTS[1..n]`. If no star role arguments were provided, include all todos regardless of star role.
+If `$ARGUMENTS[1]` was provided, filter to todos where `starRole` matches any value in the comma-separated list. If omitted or empty, include all todos regardless of star role.
 
 ### 2. Read context files
 
