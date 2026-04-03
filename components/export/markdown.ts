@@ -30,9 +30,6 @@ export function buildFrontMatterData(
 
 	if (todo.starRoleData) {
 		data.starRole = todo.starRoleData.title
-		if (todo.starRoleData.description) {
-			data.starRoleDescription = todo.starRoleData.description
-		}
 		if (todo.starRoleGroupData) {
 			data.starRoleGroup = todo.starRoleGroupData.title
 		}
@@ -73,6 +70,39 @@ export function generateFilename(todo: Todo): string {
 		.slice(-8)
 
 	return `${safeTitle}_${shortId}.md`
+}
+
+export function generateStarRoleFilename(starRole: StarRole): string {
+	const safeTitle = starRole.title
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-|-$/g, '')
+		.slice(0, 50)
+
+	const shortId = starRole.id
+		.replace(/[^a-z0-9]/gi, '')
+		.toLowerCase()
+		.slice(-8)
+
+	return `${safeTitle}_${shortId}.md`
+}
+
+export function createStarRoleFile(
+	starRole: StarRole,
+	starRoleGroup?: StarRoleGroup,
+): string {
+	const data: Record<string, unknown> = {
+		id: starRole.id,
+		title: starRole.title,
+		icon: starRole.icon.name,
+	}
+
+	if (starRoleGroup) {
+		data.group = starRoleGroup.title
+	}
+
+	const body = starRole.description ? `\n${starRole.description}\n` : ''
+	return matter.stringify(body, data)
 }
 
 export function createManifest(

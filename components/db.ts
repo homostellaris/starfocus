@@ -185,18 +185,6 @@ export class DexieStarfocus extends Dexie {
 			todos: '@id, createdAt, completedAt, starRole, title',
 			visits: '@id, todoId, date',
 		})
-		this.version(11).stores({
-			asteroidFieldOrder: '&todoId, order, snoozedUntil',
-			lists: 'type',
-			wayfinderOrder: '&todoId, order, snoozedUntil',
-			settings: '&key',
-			starRoles: '@id, starRoleGroupId, title',
-			starRoleGroups: '@id, title',
-			starRolesOrder: '&starRoleId, order',
-			todos: '@id, createdAt, completedAt, starRole, title',
-			visits: '@id, todoId, date',
-		})
-
 		this.cloud.configure({
 			customLoginGui: true,
 			databaseUrl:
