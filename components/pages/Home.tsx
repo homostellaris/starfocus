@@ -48,6 +48,7 @@ import {
 } from 'react'
 import { Header } from '../common/Header'
 import Placeholder from '../common/Placeholder'
+import { StarRoleIcon } from '../common/StarRoleIcon'
 import { cn } from '../common/cn'
 import order, { calculateReorderIndices } from '../common/order'
 import {
@@ -55,6 +56,7 @@ import {
 	db,
 	ListType,
 	LogTodoListItem,
+	StarRole,
 	Todo,
 	TodoListItemBase,
 	WayfinderTodoListItem,
@@ -1053,11 +1055,35 @@ export const TodoLists = () => {
 						size="0"
 						sizeLg="3"
 					>
-						<div></div>
+						{focusedStarRole && (
+							<FocusedStarRolePanel
+								starRole={starRoles?.find(sr => sr.id === focusedStarRole)}
+							/>
+						)}
 					</IonCol>
 				</IonRow>
 			</IonGrid>
 		</IonContent>
+	)
+}
+
+function FocusedStarRolePanel({
+	starRole,
+}: {
+	starRole: StarRole | undefined
+}) {
+	if (!starRole) return null
+	return (
+		<div className="flex flex-col items-center gap-4 p-6 pt-12 text-center">
+			<StarRoleIcon
+				className="text-5xl"
+				starRole={starRole}
+			/>
+			<h2 className="text-xl font-semibold">{starRole.title}</h2>
+			{starRole.description && (
+				<p className="text-sm text-gray-500">{starRole.description}</p>
+			)}
+		</div>
 	)
 }
 
