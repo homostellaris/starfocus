@@ -411,6 +411,23 @@ export async function readFile(filename: string): Promise<string | null> {
 	}
 }
 
+async function resolveDir(
+	root: FileSystemDirectoryHandle,
+	filepath: string,
+	create: boolean,
+): Promise<{ dir: FileSystemDirectoryHandle; name: string }> {
+	const parts = filepath.split('/')
+	const name = parts.pop()!
+	let dir = root
+	for (const part of parts) {
+		dir = await withTimeout(
+			dir.getDirectoryHandle(part, { create }),
+			`resolveDir.getDirectoryHandle(${part})`,
+		)
+	}
+	return { dir, name }
+}
+
 export function createFileOperations(
 	handle: FileSystemDirectoryHandle,
 ): FileOperations {
@@ -418,8 +435,9 @@ export function createFileOperations(
 		async readFile(filename: string): Promise<string | null> {
 			try {
 				console.debug('[FS] readFile: getFileHandle', filename)
+				const { dir, name } = await resolveDir(handle, filename, false)
 				const fileHandle = await withTimeout(
-					handle.getFileHandle(filename),
+					dir.getFileHandle(name),
 					`readFile.getFileHandle(${filename})`,
 				)
 				console.debug('[FS] readFile: getFile', filename)
@@ -438,8 +456,9 @@ export function createFileOperations(
 		async writeFile(filename: string, content: string): Promise<boolean> {
 			try {
 				console.debug('[FS] writeFile: getFileHandle', filename)
+				const { dir, name } = await resolveDir(handle, filename, true)
 				const fileHandle = await withTimeout(
-					handle.getFileHandle(filename, { create: true }),
+					dir.getFileHandle(name, { create: true }),
 					`writeFile.getFileHandle(${filename})`,
 				)
 				console.debug('[FS] writeFile: createWritable', filename)
@@ -473,8 +492,9 @@ export function createFileOperations(
 		async deleteFile(filename: string): Promise<boolean> {
 			try {
 				console.debug('[FS] deleteFile: removeEntry', filename)
+				const { dir, name } = await resolveDir(handle, filename, false)
 				await withTimeout(
-					handle.removeEntry(filename),
+					dir.removeEntry(name),
 					`deleteFile.removeEntry(${filename})`,
 				)
 				return true

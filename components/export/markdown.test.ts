@@ -8,13 +8,15 @@ import {
 } from 'bun:test'
 import {
 	generateFilename,
+	generateStarRoleFilename,
+	createStarRoleFile,
 	todoToMarkdown,
 	updateFrontMatter,
 	createAsteroidFieldFile,
 	createWayfinderFile,
 	TodoWithRelations,
 } from './markdown'
-import { Todo, AsteroidFieldOrder, WayfinderOrder } from '../db'
+import { Todo, StarRole, AsteroidFieldOrder, WayfinderOrder } from '../db'
 
 beforeEach(() => {
 	setSystemTime(new Date('2025-06-15T12:00:00.000Z'))
@@ -335,5 +337,56 @@ describe('createWayfinderFile', () => {
 
 		expect(result).toContain('# Wayfinder')
 		expect(result).toContain('1. [Buy groceries](buy-groceries_abc12345.md)')
+	})
+})
+
+describe('generateStarRoleFilename', () => {
+	test('generates filename from title and ID suffix', () => {
+		const starRole: StarRole = {
+			id: 'roleABC/rlm12345',
+			title: 'Developer',
+			icon: { type: 'ionicon', name: 'code-outline' },
+		}
+		expect(generateStarRoleFilename(starRole)).toBe('developer_rlm12345.md')
+	})
+})
+
+describe('createStarRoleFile', () => {
+	const starRole: StarRole = {
+		id: 'role-abc12345',
+		title: 'Developer',
+		icon: { type: 'ionicon', name: 'code-outline' },
+	}
+
+	test('generates frontmatter with id, title, icon', () => {
+		const result = createStarRoleFile(starRole)
+
+		expect(result).toContain('id: role-abc12345')
+		expect(result).toContain('title: Developer')
+		expect(result).toContain('icon: code-outline')
+	})
+
+	test('includes group when provided', () => {
+		const result = createStarRoleFile(starRole, { id: 'grp-1', title: 'Work' })
+
+		expect(result).toContain('group: Work')
+	})
+
+	test('uses description as body', () => {
+		const result = createStarRoleFile({
+			...starRole,
+			description: 'Software development and code review tasks',
+		})
+
+		expect(result).toContain('Software development and code review tasks')
+		// description should be in body, not frontmatter
+		const frontMatterMatch = result.match(/^---\n([\s\S]*?)\n---/)
+		expect(frontMatterMatch?.[1]).not.toContain('description')
+	})
+
+	test('produces empty body when no description', () => {
+		const result = createStarRoleFile(starRole)
+		const bodyMatch = result.match(/^---\n[\s\S]*?\n---\n([\s\S]*)/)
+		expect(bodyMatch?.[1].trim()).toBe('')
 	})
 })
