@@ -87,6 +87,31 @@ describe('todoToMarkdown', () => {
 		])
 	})
 
+	test('includes star role description in front matter', () => {
+		const result = todoToMarkdown(
+			makeTodo({
+				starRoleData: {
+					id: 'role-1',
+					title: 'Developer',
+					description: 'Software development tasks including coding and code review',
+					icon: { type: 'ionicon', name: 'code-outline' },
+				},
+			}),
+		)
+
+		expect(result.split('\n')).toEqual([
+			'---',
+			'id: todo-abc12345',
+			'title: Buy groceries',
+			'starRole: Developer',
+			'starRoleDescription: Software development tasks including coding and code review',
+			'exportedAt: 2025-06-15T12:00:00.000Z',
+			'---',
+			'',
+			'',
+		])
+	})
+
 	test('includes star role group in front matter', () => {
 		const result = todoToMarkdown(
 			makeTodo({

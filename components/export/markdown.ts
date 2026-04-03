@@ -30,6 +30,9 @@ export function buildFrontMatterData(
 
 	if (todo.starRoleData) {
 		data.starRole = todo.starRoleData.title
+		if (todo.starRoleData.description) {
+			data.starRoleDescription = todo.starRoleData.description
+		}
 		if (todo.starRoleGroupData) {
 			data.starRoleGroup = todo.starRoleGroupData.title
 		}
@@ -90,6 +93,7 @@ export function createManifest(
 		starRoles: starRoles.map(sr => ({
 			id: sr.id,
 			title: sr.title,
+			description: sr.description,
 			group: starRoleGroups.find(g => g.id === sr.starRoleGroupId)?.title,
 		})),
 		starRoleGroups: starRoleGroups.map(g => ({
@@ -123,7 +127,9 @@ version: ${manifest.version}
 ${starRoles
 	.map(sr => {
 		const group = starRoleGroups.find(g => g.id === sr.starRoleGroupId)
-		return `- **${sr.title}**${group ? ` (${group.title})` : ''}`
+		const meta = [group ? group.title : null].filter(Boolean).join(', ')
+		const description = sr.description ? `: ${sr.description}` : ''
+		return `- **${sr.title}**${meta ? ` (${meta})` : ''}${description}`
 	})
 	.join('\n')}
 

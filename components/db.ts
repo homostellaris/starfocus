@@ -49,6 +49,7 @@ export type WayfinderTodoListItem = TodoListItemBase & WayfinderMeta
 
 export interface StarRole {
 	id: string
+	description?: string
 	icon: Icon
 	starRoleGroupId?: string
 	title: string
@@ -174,6 +175,17 @@ export class DexieStarfocus extends Dexie {
 			visits: '@id, todoId, date',
 		})
 		this.version(10).stores({
+			asteroidFieldOrder: '&todoId, order, snoozedUntil',
+			lists: 'type',
+			wayfinderOrder: '&todoId, order, snoozedUntil',
+			settings: '&key',
+			starRoles: '@id, starRoleGroupId, title',
+			starRoleGroups: '@id, title',
+			starRolesOrder: '&starRoleId, order',
+			todos: '@id, createdAt, completedAt, starRole, title',
+			visits: '@id, todoId, date',
+		})
+		this.version(11).stores({
 			asteroidFieldOrder: '&todoId, order, snoozedUntil',
 			lists: 'type',
 			wayfinderOrder: '&todoId, order, snoozedUntil',

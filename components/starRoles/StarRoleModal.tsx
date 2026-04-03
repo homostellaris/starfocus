@@ -9,6 +9,7 @@ import {
 	IonPage,
 	IonSelect,
 	IonSelectOption,
+	IonTextarea,
 	IonTitle,
 	IonToolbar,
 } from '@ionic/react'
@@ -45,6 +46,9 @@ export default function StarRoleModal({
 	const [starRoleGroupId, setStarRoleGroupId] = useState<string | null>(
 		starRole?.starRoleGroupId ?? null,
 	)
+	const [descriptionInput, setDescriptionInput] = useState<string>(
+		starRole?.description || '',
+	)
 	const [iconInput, setIconInput] = useState<{
 		name: string
 		value: string
@@ -63,6 +67,7 @@ export default function StarRoleModal({
 		}
 		dismiss(
 			{
+				description: descriptionInput || undefined,
 				icon: {
 					type: 'ionicon',
 					name: icon.name,
@@ -72,7 +77,7 @@ export default function StarRoleModal({
 			},
 			'confirm',
 		)
-	}, [dismiss, icon, starRoleGroupId, starRoleTitle])
+	}, [descriptionInput, dismiss, icon, starRoleGroupId, starRoleTitle])
 
 	return (
 		<IonPage
@@ -122,6 +127,18 @@ export default function StarRoleModal({
 						</IonSelectOption>
 					))}
 				</IonSelect>
+				<IonTextarea
+					autocapitalize="sentences"
+					fill="outline"
+					helperText="Describe the kinds of tasks in this role to help AI tools understand the context"
+					label="Description"
+					labelPlacement="floating"
+					onIonInput={event => {
+						setDescriptionInput(event.detail.value || '')
+					}}
+					rows={3}
+					value={descriptionInput || starRole?.description}
+				/>
 				<IonInput
 					debounce={200}
 					fill="outline"
