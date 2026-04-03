@@ -101,6 +101,10 @@ The build workflow (`.github/workflows/build.yml`) runs:
 - App Router: Next.js App Router in `/app/`
 - Database schema: `/components/db.ts`
 
+## Workflow
+
+Always raise a pull request for the user to review before merging, unless explicitly told otherwise. Do not push directly to master.
+
 ## Deployment
 
 Vercel is used as the deployment platform. Deployments happen automatically via GitHub Actions when changes are pushed — **do not deploy manually**.
