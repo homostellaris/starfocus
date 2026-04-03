@@ -11,7 +11,7 @@
 # Environment variables:
 #   TODOS_DIR         Path to StarFocus todos folder (required)
 #   TELEGRAM_TARGET   Your Telegram user ID (required)
-#   STAR_ROLE         Star role to filter todos by (default: Starfocuser)
+#   STAR_ROLES        Space-separated star roles to filter todos by (optional — omit to include any role)
 #   MAX_CONCURRENCY   Max simultaneous Claude Code sessions (default: 1)
 #   ACPX              Path to acpx binary (default: acpx on PATH)
 #   ACPX_WORKSPACE    Path to acpx workspace dir (default: ~/.openclaw/workspace)
@@ -20,7 +20,7 @@ set -euo pipefail
 
 TODOS_DIR="${TODOS_DIR:-}"
 TELEGRAM_TARGET="${TELEGRAM_TARGET:-}"
-STAR_ROLE="${STAR_ROLE:-Starfocuser}"
+STAR_ROLES="${STAR_ROLES:-}"
 MAX_CONCURRENCY="${MAX_CONCURRENCY:-1}"
 ACPX="${ACPX:-$(command -v acpx 2>/dev/null || echo "")}"
 ACPX_WORKSPACE="${ACPX_WORKSPACE:-$HOME/.openclaw/workspace}"
@@ -118,7 +118,7 @@ log "Active sessions after cleanup: $active_count / $MAX_CONCURRENCY"
 if [ "$active_count" -lt "$MAX_CONCURRENCY" ]; then
   log "Capacity available — handing off to OpenClaw"
   openclaw agent --agent main \
-    --message "Run /starloop $TODOS_DIR $STAR_ROLE and send the result via: openclaw message send --channel telegram --target $TELEGRAM_TARGET --message '[message]'. When the user replies with go, a number, or a task name: spawn a Claude Code ACP session by running: acpx claude sessions new --name [session-name] (cwd: $ACPX_WORKSPACE). The session name MUST be the full todo filename including the ID suffix, minus .md — e.g. for 'fix-long-order-properties_0fc3acom.md' use 'fix-long-order-properties_0fc3acom'. Then set bypass permissions mode: acpx claude set-mode -s [session-name] bypassPermissions (cwd: $ACPX_WORKSPACE). Then send the initial task prompt in the background so it does not block: nohup acpx claude -s [session-name] \"Read $TODOS_DIR/[chosen-filename] and execute the task. If you need input, send: openclaw message send --channel telegram --target $TELEGRAM_TARGET --message YOUR_QUESTION and pause.\" > /tmp/acpx-[session-name].log 2>&1 & disown. Do NOT discuss the task or ask any questions — just spawn, then confirm to the user via Telegram: '🚀 Started session [session-name]. I will update you when done or if Claude needs input.'"
+    --message "Run /starloop $TODOS_DIR $STAR_ROLES and send the result via: openclaw message send --channel telegram --target $TELEGRAM_TARGET --message '[message]'. When the user replies with go, a number, or a task name: spawn a Claude Code ACP session by running: acpx claude sessions new --name [session-name] (cwd: $ACPX_WORKSPACE). The session name MUST be the full todo filename including the ID suffix, minus .md — e.g. for 'fix-long-order-properties_0fc3acom.md' use 'fix-long-order-properties_0fc3acom'. Then set bypass permissions mode: acpx claude set-mode -s [session-name] bypassPermissions (cwd: $ACPX_WORKSPACE). Then send the initial task prompt in the background so it does not block: nohup acpx claude -s [session-name] \"Read $TODOS_DIR/[chosen-filename] and execute the task. If you need input, send: openclaw message send --channel telegram --target $TELEGRAM_TARGET --message YOUR_QUESTION and pause.\" > /tmp/acpx-[session-name].log 2>&1 & disown. Do NOT discuss the task or ask any questions — just spawn, then confirm to the user via Telegram: '🚀 Started session [session-name]. I will update you when done or if Claude needs input.'"
 else
   log "At capacity ($active_count/$MAX_CONCURRENCY) — nothing to do"
 fi
