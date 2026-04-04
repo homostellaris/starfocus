@@ -14,6 +14,7 @@ on:
 jobs:
   whitelist:
     runs-on: ubuntu-latest
+    if: (github.event.deployment.environment == 'Preview' && github.event.deployment_status.state == 'success') || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
 
@@ -23,6 +24,8 @@ jobs:
           echo '${{ secrets.DEXIE_CLOUD_KEY }}' > dexie-cloud.key
 
       - name: Whitelist origin
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           if [ -n "${{ github.event.client_payload.url }}" ]; then
             URL="${{ github.event.client_payload.url }}"
@@ -33,5 +36,14 @@ jobs:
           if [[ ! "$URL" =~ ^https?:// ]]; then
             URL="https://$URL"
           fi
-          echo "Whitelisting origin: $URL"
-          npx dexie-cloud whitelist "$URL"
+          # Whitelist the PR alias
+          HOSTNAME=$(echo "$URL" | sed 's|https://||')
+          PR_ALIAS=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v13/deployments/$HOSTNAME" \
+            | jq -r '.meta.branchAlias // empty')
+          if [ -n "$PR_ALIAS" ]; then
+            echo "Whitelisting PR alias: https://$PR_ALIAS"
+            npx dexie-cloud whitelist "https://$PR_ALIAS"
+          else
+            echo "No PR alias found"
+          fi
