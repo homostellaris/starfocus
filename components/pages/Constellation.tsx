@@ -69,7 +69,7 @@ export default function Constellation() {
 	return (
 		<MarkdownExportProvider>
 			<IonPage>
-				<Header title="Constellation" />
+				<Header title="Constellation" backHref="/home" />
 				<IonContent fullscreen>
 					{isLoading ? (
 						<div className="flex items-center justify-center h-full">

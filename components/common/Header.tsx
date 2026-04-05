@@ -1,4 +1,5 @@
 import {
+	IonBackButton,
 	IonButton,
 	IonButtons,
 	IonContent,
@@ -36,7 +37,7 @@ import Title from './Title'
 import { LoginModal } from '../auth/dexie'
 import { useHelp } from './HelpContext'
 
-export const Header = ({ title }: { title: string }) => {
+export const Header = ({ title, backHref }: { title: string; backHref?: string }) => {
 	const ui = useObservable(db.cloud.userInteraction)
 	const [, dismiss] = useIonModal(LoginModal, {
 		dismiss: (data: string, role: string) => dismiss(data, role),
@@ -59,7 +60,13 @@ export const Header = ({ title }: { title: string }) => {
 						className="ml-1"
 						slot="start"
 					>
-						<StarPoints />
+						{backHref ? (
+							<IonButtons>
+								<IonBackButton defaultHref={backHref} />
+							</IonButtons>
+						) : (
+							<StarPoints />
+						)}
 					</div>
 					<Title
 						className="font-display [font-palette:--redshift] text-3xl"
