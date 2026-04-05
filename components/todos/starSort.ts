@@ -33,7 +33,10 @@ function starRoleOrder<T extends Pick<Todo, 'starRole'>>(
 	b: T,
 	starRoleOrderMap: StarRoleOrderMap,
 ): number {
-	const aOrder = a.starRole ? (starRoleOrderMap.get(a.starRole) ?? Infinity) : Infinity
-	const bOrder = b.starRole ? (starRoleOrderMap.get(b.starRole) ?? Infinity) : Infinity
+	const aOrder = a.starRole ? starRoleOrderMap.get(a.starRole) : undefined
+	const bOrder = b.starRole ? starRoleOrderMap.get(b.starRole) : undefined
+	if (aOrder === undefined && bOrder === undefined) return 0
+	if (aOrder === undefined) return 1
+	if (bOrder === undefined) return -1
 	return aOrder - bOrder
 }

@@ -9,10 +9,7 @@ function todo(id: string, starPoints?: number, starRole?: string): Todo {
 describe('starSort', () => {
 	it('sorts by star points descending', () => {
 		const map: StarRoleOrderMap = new Map()
-		const result = starSort(
-			[todo('a', 1), todo('b', 8), todo('c', 3)],
-			map,
-		)
+		const result = starSort([todo('a', 1), todo('b', 8), todo('c', 3)], map)
 		expect(result.map(t => t.id)).toEqual(['b', 'c', 'a'])
 	})
 
@@ -22,7 +19,11 @@ describe('starSort', () => {
 			[todo('no-points'), todo('has-points', 5), todo('also-no-points')],
 			map,
 		)
-		expect(result.map(t => t.id)).toEqual(['has-points', 'no-points', 'also-no-points'])
+		expect(result.map(t => t.id)).toEqual([
+			'has-points',
+			'no-points',
+			'also-no-points',
+		])
 	})
 
 	it('puts todos with zero star points last', () => {
@@ -68,10 +69,22 @@ describe('starSort', () => {
 	it('handles todos with unknown star role as lowest priority in a tie', () => {
 		const map: StarRoleOrderMap = new Map([['role-1', 1]])
 		const result = starSort(
-			[todo('unknown-role', 5, 'role-unknown'), todo('known-role', 5, 'role-1')],
+			[
+				todo('unknown-role', 5, 'role-unknown'),
+				todo('known-role', 5, 'role-1'),
+			],
 			map,
 		)
 		expect(result.map(t => t.id)).toEqual(['known-role', 'unknown-role'])
+	})
+
+	it('preserves input order when both todos have roles absent from the map (no NaN)', () => {
+		const map: StarRoleOrderMap = new Map()
+		const result = starSort(
+			[todo('a', 5, 'role-x'), todo('b', 5, 'role-y')],
+			map,
+		)
+		expect(result.map(t => t.id)).toEqual(['a', 'b'])
 	})
 
 	it('does not mutate the input array', () => {

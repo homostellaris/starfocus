@@ -11,6 +11,7 @@ import {
 	IonList,
 	IonPage,
 	IonReorder,
+	IonReorderGroup,
 	IonSpinner,
 } from '@ionic/react'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -29,7 +30,11 @@ import { useStarRoleActionSheet } from '../starRoles/StarRoleActionSheet'
 
 export default function Constellation() {
 	const data = useLiveQuery(() =>
-		Promise.all([db.starRoles.toArray(), db.starRoleGroups.toArray()]),
+		Promise.all([
+			db.starRoles.toArray(),
+			db.starRoleGroups.toArray(),
+			db.starRolesOrder.toArray(),
+		]),
 	)
 	const isLoading = data === undefined
 
@@ -59,6 +64,8 @@ export default function Constellation() {
 		posthog.capture('constellation_viewed')
 	}, [])
 
+	useSeedMissingStarRoleOrders(data)
+
 	return (
 		<MarkdownExportProvider>
 			<IonPage>
@@ -83,10 +90,13 @@ export default function Constellation() {
 							</p>
 						</div>
 					) : (
-						<StarRolesList
-							starRoles={data[0]}
-							starRoleGroups={data[1]}
-						/>
+						<div className="max-w-2xl mx-auto">
+							<StarRolesList
+								starRoles={data[0]}
+								starRoleGroups={data[1]}
+								starRolesOrder={data[2]}
+							/>
+						</div>
 					)}
 					<IonFab
 						ref={fab}
@@ -121,66 +131,100 @@ export default function Constellation() {
 function StarRolesList({
 	starRoles,
 	starRoleGroups,
+	starRolesOrder,
 }: {
 	starRoles: StarRole[]
 	starRoleGroups: StarRoleGroup[]
+	starRolesOrder: { starRoleId: string; order: number }[]
 }) {
 	const starRolesByGroup = useGroupedStarRoles(starRoles, starRoleGroups)
 	const [presentStarRoleActionSheet] = useStarRoleActionSheet()
 	const [presentStarRoleGroupActionSheet] = useStarRoleGroupActionSheet()
+
+	const orderByRoleId = new Map(starRolesOrder.map(({ starRoleId, order }) => [starRoleId, order]))
+
 	return (
 		<IonList inset>
-			{/* <IonReorderGroup
-							disabled={false}
-							onIonItemReorder={handleReorder}
-						> */}
-			{starRolesByGroup.map(starRoleGroup => (
-				<IonItemGroup key={starRoleGroup.title}>
-					<IonItemDivider
-						className="[--background:transparent] cursor-pointer"
-						onClick={() => {
-							presentStarRoleGroupActionSheet(starRoleGroup)
-						}}
-					>
-						<IonLabel>{starRoleGroup.title}</IonLabel>
-					</IonItemDivider>
-					{starRoleGroup.starRoles.length === 0 ? (
-						<div className="flex items-center justify-center gap-5 m-4 h-fit">
-							<IonIcon
-								color="medium"
-								icon={starHalfSharp}
-								size="small"
-							/>
-							<IonLabel color="medium">
-								<span className="text-sm">No star roles in this group yet</span>
-							</IonLabel>
-						</div>
-					) : (
-						starRoleGroup.starRoles.map(starRole => (
-							<IonItem
-								button
-								className="ml-2"
-								key={starRole.id}
-								onClick={() => {
-									presentStarRoleActionSheet(starRole)
+			{starRolesByGroup.map(starRoleGroup => {
+				const sortedRoles = [...starRoleGroup.starRoles].sort(
+					(a, b) => (orderByRoleId.get(a.id) ?? Infinity) - (orderByRoleId.get(b.id) ?? Infinity),
+				)
+				return (
+					<IonItemGroup key={starRoleGroup.title}>
+						<IonItemDivider
+							className="[--background:transparent] cursor-pointer"
+							onClick={() => {
+								presentStarRoleGroupActionSheet(starRoleGroup)
+							}}
+						>
+							<IonLabel>{starRoleGroup.title}</IonLabel>
+						</IonItemDivider>
+						{sortedRoles.length === 0 ? (
+							<div className="flex items-center justify-center gap-5 m-4 h-fit">
+								<IonIcon
+									color="medium"
+									icon={starHalfSharp}
+									size="small"
+								/>
+								<IonLabel color="medium">
+									<span className="text-sm">No star roles in this group yet</span>
+								</IonLabel>
+							</div>
+						) : (
+							<IonReorderGroup
+								disabled={false}
+								onIonItemReorder={async event => {
+									event.detail.complete()
+									const reordered = [...sortedRoles]
+									const [moved] = reordered.splice(event.detail.from, 1)
+									reordered.splice(event.detail.to, 0, moved)
+									await db.starRolesOrder.bulkPut(
+										reordered.map((role, i) => ({ starRoleId: role.id, order: i })),
+									)
 								}}
 							>
-								<IonLabel>{starRole?.title}</IonLabel>
-								{starRole?.icon && (
-									<IonIcon
-										icon={getIonIcon(starRole.icon.name)}
-										slot="end"
-									/>
-								)}
-								<IonReorder slot="end"></IonReorder>
-							</IonItem>
-						))
-					)}
-				</IonItemGroup>
-			))}
-			{/* </IonReorderGroup> */}
+								{sortedRoles.map(starRole => (
+									<IonItem
+										button
+										className="ml-2"
+										key={starRole.id}
+										onClick={() => {
+											presentStarRoleActionSheet(starRole)
+										}}
+									>
+										<IonLabel>{starRole?.title}</IonLabel>
+										{starRole?.icon && (
+											<IonIcon
+												icon={getIonIcon(starRole.icon.name)}
+												slot="end"
+											/>
+										)}
+										<IonReorder slot="end"></IonReorder>
+									</IonItem>
+								))}
+							</IonReorderGroup>
+						)}
+					</IonItemGroup>
+				)
+			})}
 		</IonList>
 	)
+}
+
+function useSeedMissingStarRoleOrders(
+	data: [StarRole[], StarRoleGroup[], { starRoleId: string; order: number }[]] | undefined,
+) {
+	useEffect(() => {
+		if (!data) return
+		const [starRoles, , starRolesOrder] = data
+		const orderedIds = new Set(starRolesOrder.map(o => o.starRoleId))
+		const unordered = starRoles.filter(r => !orderedIds.has(r.id))
+		if (unordered.length === 0) return
+		const maxOrder = starRolesOrder.reduce((max, o) => Math.max(max, o.order), -1)
+		db.starRolesOrder.bulkAdd(
+			unordered.map((role, i) => ({ starRoleId: role.id, order: maxOrder + 1 + i })),
+		)
+	}, [data])
 }
 
 function useGlobalKeyboardShortcuts(

@@ -25,6 +25,38 @@ it('navigates to constellation page via edit roles button', () => {
 	cy.get('ion-fab>ion-fab-button').should('exist')
 })
 
+describe('star role order', () => {
+	beforeEach(() => {
+		cy.get('#view-menu-button').click()
+		cy.get('#view-menu').contains('Edit roles').click()
+		cy.url().should('include', '/constellation')
+	})
+
+	it('displays star roles sorted by their order', () => {
+		cy.db(async db => {
+			const alphaId = await db.starRoles.add({
+				title: 'Alpha',
+				icon: { type: 'ionicon', name: 'starSharp' },
+			})
+			const betaId = await db.starRoles.add({
+				title: 'Beta',
+				icon: { type: 'ionicon', name: 'starSharp' },
+			})
+			// Beta (order 0) should appear before Alpha (order 1)
+			await db.starRolesOrder.bulkAdd([
+				{ starRoleId: betaId as string, order: 0 },
+				{ starRoleId: alphaId as string, order: 1 },
+			])
+		})
+		cy.reload()
+
+		cy.get('ion-item ion-label').then($labels => {
+			const titles = $labels.toArray().map(el => el.textContent)
+			expect(titles.indexOf('Beta')).to.be.lessThan(titles.indexOf('Alpha'))
+		})
+	})
+})
+
 describe('star role description', () => {
 	beforeEach(() => {
 		cy.get('#view-menu-button').click()

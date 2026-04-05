@@ -88,6 +88,18 @@ describe('star sort', () => {
 		])
 		assertList('database', ['db high', 'db mid', 'db low'])
 	})
+
+	it('disables reordering in the asteroid field and wayfinder', () => {
+		cy.get('#view-menu-button').click()
+		cy.get('#view-menu ion-segment').should('be.visible')
+		cy.get('#view-menu ion-segment-button[value="star"]').click({ force: true })
+		cy.wait(500)
+		cy.get('#view-menu-button').click({ force: true })
+		cy.get('ion-fab>ion-fab-button').should('be.visible')
+
+		cy.get('#asteroid-field').invoke('prop', 'disabled').should('eq', true)
+		cy.get('#wayfinder').invoke('prop', 'disabled').should('eq', true)
+	})
 })
 
 describe('asteroid field', () => {
@@ -186,10 +198,10 @@ describe.skip('focus', () => {
 describe('snooze', () => {
 	beforeEach(() => {
 		cy.visit('/home', {
-		onBeforeLoad(win) {
-			win.localStorage.setItem('help-enabled', 'true')
-		},
-	})
+			onBeforeLoad(win) {
+				win.localStorage.setItem('help-enabled', 'true')
+			},
+		})
 		cy.get('ion-fab>ion-fab-button', { timeout: 10000 }).should('be.visible')
 		cy.clock(dayjs('2025-01-01').valueOf(), ['Date'])
 	})
@@ -227,10 +239,10 @@ describe('search', () => {
 			]),
 		)
 		cy.visit('/home', {
-		onBeforeLoad(win) {
-			win.localStorage.setItem('help-enabled', 'true')
-		},
-	})
+			onBeforeLoad(win) {
+				win.localStorage.setItem('help-enabled', 'true')
+			},
+		})
 		cy.get('ion-fab>ion-fab-button').should('be.visible')
 	})
 
