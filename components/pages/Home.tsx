@@ -638,7 +638,7 @@ export const TodoLists = () => {
 												</TodoListItem>
 											))}
 											<IonReorderGroup
-												disabled={false}
+												disabled={wayfinderOrderMode === 'star'}
 												id="asteroid-field"
 												onIonItemReorder={async event => {
 													console.debug('reorder event', { event })
@@ -813,7 +813,7 @@ export const TodoLists = () => {
 											</IonReorderGroup>
 											<div className="mx-auto w-full h-[1px] bg-[linear-gradient(to_right,transparent,theme(colors.rose.400),theme(colors.pink.400),theme(colors.fuchsia.400),theme(colors.violet.400),theme(colors.indigo.400),theme(colors.blue.400),transparent)] z-10 absolute"></div>
 											<IonReorderGroup
-												disabled={false}
+												disabled={wayfinderOrderMode === 'star'}
 												id="wayfinder"
 												onIonItemReorder={async event => {
 													console.debug('reorder event', { event })
