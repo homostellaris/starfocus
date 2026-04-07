@@ -44,8 +44,6 @@ function formatIssueComment(payload: Record<string, unknown>): string | null {
   const repo = (payload.repository as Record<string, unknown>).full_name as string
   const prNumber = pr.number as number
   const prTitle = pr.title as string
-  const branch = ((pr.head ?? (pr as Record<string, unknown>)) as Record<string, unknown>)
-
   const body = comment.body as string
   const commentUrl = comment.html_url as string
 
