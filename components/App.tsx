@@ -11,6 +11,8 @@ import { db } from './db'
 import { useEffect } from 'react'
 import todoRepository from './todos/repository'
 import { HelpProvider } from './common/HelpContext'
+import { OnboardingProvider } from './onboarding/OnboardingContext'
+import { Onboarding } from './onboarding/Onboarding'
 
 setupIonicReact({})
 
@@ -31,8 +33,10 @@ const App = () => {
 	}, [])
 	return (
 		<HelpProvider>
+		<OnboardingProvider>
 		<IonApp>
 			<IonReactRouter>
+				<Onboarding />
 				<IonRouterOutlet id="main">
 					<ErrorBoundary>
 						<Route
@@ -63,6 +67,7 @@ const App = () => {
 				</IonRouterOutlet>
 			</IonReactRouter>
 		</IonApp>
+		</OnboardingProvider>
 		</HelpProvider>
 	)
 }
