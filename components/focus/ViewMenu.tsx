@@ -35,6 +35,8 @@ import useSettings from '../settings/useSettings'
 import useKeyboardShortcuts from '../common/useKeyboardShortcut'
 import { cn } from '../common/cn'
 import { usePostHog } from 'posthog-js/react'
+import { StarRoleOrderMap } from '../todos/starSort'
+import { computeVisibleStarSortUpdates } from './starSortToManualOrder'
 
 export const ViewMenu = ({
 	searchbarRef,
@@ -46,9 +48,10 @@ export const ViewMenu = ({
 		Promise.all([db.starRoles.toArray(), db.starRoleGroups.toArray()]),
 	)
 	const isLoading = queryResult === undefined
-	const { setQuery } = useView()
+	const { setQuery, inActiveStarRoles, query } = useView()
 
 	const wayfinderOrderMode = useSettings('#wayfinderOrderMode')
+
 	useKeyboardShortcuts(event => {
 		if (event.key === 'm') {
 			const newMode = wayfinderOrderMode === 'manual' ? 'star' : 'manual'
@@ -61,6 +64,28 @@ export const ViewMenu = ({
 			})
 		}
 	}, [])
+
+	async function copyStarSortToManualOrder() {
+		const starRolesOrder = await db.starRolesOrder.toArray()
+		const starRoleOrderMap: StarRoleOrderMap = new Map(
+			starRolesOrder.map(({ starRoleId, order: o }) => [starRoleId, o]),
+		)
+
+		for (const table of [db.asteroidFieldOrder, db.wayfinderOrder]) {
+			const entries = await table.orderBy('order').toArray()
+			const todos = await db.todos.bulkGet(entries.map(e => e.todoId))
+			const updates = computeVisibleStarSortUpdates(
+				entries,
+				todos,
+				starRoleOrderMap,
+				query,
+				inActiveStarRoles,
+			)
+			await table.bulkPut(updates)
+		}
+
+		await db.settings.put({ key: '#wayfinderOrderMode', value: 'manual' })
+	}
 
 	return (
 		<IonMenu
@@ -103,6 +128,19 @@ export const ViewMenu = ({
 						></IonIcon>
 					</IonSegmentButton>
 				</IonSegment>
+				{wayfinderOrderMode === 'star' && (
+					<IonButton
+						color="tertiary"
+						expand="block"
+						onClick={copyStarSortToManualOrder}
+					>
+						Copy to manual order
+						<IonIcon
+							slot="end"
+							icon={reorderThreeSharp}
+						></IonIcon>
+					</IonButton>
+				)}
 				<IonButton
 					color="warning"
 					expand="block"
