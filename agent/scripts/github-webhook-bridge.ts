@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Receives GitHub webhook events for PR comments and forwards them to
- * OpenClaw's /hooks/wake endpoint as readable text messages.
+ * OpenClaw's /hooks/agent endpoint for immediate isolated processing.
  *
  * Required env vars:
  *   GITHUB_WEBHOOK_SECRET  - shared secret configured in GitHub webhook settings
@@ -38,16 +38,15 @@ function formatIssueComment(payload: Record<string, unknown>): string | null {
   const issue = payload.issue as Record<string, unknown>
   if (!issue?.pull_request) return null
 
-  const pr = issue as Record<string, unknown>
   const comment = payload.comment as Record<string, unknown>
   const sender = (payload.sender as Record<string, unknown>).login as string
   const repo = (payload.repository as Record<string, unknown>).full_name as string
-  const prNumber = pr.number as number
-  const prTitle = pr.title as string
+  const prNumber = issue.number as number
+  const prTitle = issue.title as string
   const body = comment.body as string
   const commentUrl = comment.html_url as string
 
-  return `GitHub PR comment from @${sender} on ${repo}#${prNumber} "${prTitle}":\n\n${body}\n\n${commentUrl}`
+  return `GitHub PR comment from @${sender} on ${repo}#${prNumber} "${prTitle}":\n\n${body}\n\n${commentUrl}\n\nForward this comment to the active acpx Claude session working on this PR. Run: gh pr view ${prNumber} --repo ${repo} --json headRefName to get the branch name, then find the matching acpx session via: acpx --ttl 0 claude sessions list (cwd: /home/openclaw/.openclaw/workspace). Send the comment text to that session. If no active session exists, reply via Telegram that no session was found.`
 }
 
 function formatReviewComment(payload: Record<string, unknown>): string {
@@ -58,14 +57,13 @@ function formatReviewComment(payload: Record<string, unknown>): string {
   const prNumber = pr.number as number
   const prTitle = pr.title as string
   const branch = (pr.head as Record<string, unknown>).ref as string
-
   const body = comment.body as string
   const path = comment.path as string
   const line = comment.line as number | null
   const commentUrl = comment.html_url as string
 
   const location = line ? `${path} line ${line}` : path
-  return `GitHub inline comment from @${sender} on ${repo}#${prNumber} "${prTitle}" (branch: ${branch}) at ${location}:\n\n${body}\n\n${commentUrl}`
+  return `GitHub inline comment from @${sender} on ${repo}#${prNumber} "${prTitle}" (branch: ${branch}) at ${location}:\n\n${body}\n\n${commentUrl}\n\nForward this comment to the active acpx Claude session for branch "${branch}": acpx --ttl 0 claude sessions list (cwd: /home/openclaw/.openclaw/workspace). If no active session exists, reply via Telegram that no session was found.`
 }
 
 function formatReviewSubmitted(payload: Record<string, unknown>): string | null {
@@ -82,17 +80,17 @@ function formatReviewSubmitted(payload: Record<string, unknown>): string | null 
   const state = review.state as string
   const reviewUrl = review.html_url as string
 
-  return `GitHub review (${state}) from @${sender} on ${repo}#${prNumber} "${prTitle}" (branch: ${branch}):\n\n${body}\n\n${reviewUrl}`
+  return `GitHub review (${state}) from @${sender} on ${repo}#${prNumber} "${prTitle}" (branch: ${branch}):\n\n${body}\n\n${reviewUrl}\n\nForward this review to the active acpx Claude session for branch "${branch}": acpx --ttl 0 claude sessions list (cwd: /home/openclaw/.openclaw/workspace). If no active session exists, reply via Telegram that no session was found.`
 }
 
-async function forwardToOpenClaw(text: string): Promise<void> {
-  const response = await fetch(`${OPENCLAW_HOOKS_URL}/hooks/wake`, {
+async function forwardToOpenClaw(message: string): Promise<void> {
+  const response = await fetch(`${OPENCLAW_HOOKS_URL}/hooks/agent`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${OPENCLAW_HOOKS_TOKEN}`,
     },
-    body: JSON.stringify({ text, mode: 'now' }),
+    body: JSON.stringify({ message, name: 'GitHub PR comment' }),
   })
 
   if (!response.ok) {
@@ -119,24 +117,24 @@ Bun.serve({
     const payload = JSON.parse(body) as Record<string, unknown>
     const action = payload.action as string
 
-    let text: string | null = null
+    let message: string | null = null
 
     if (event === 'issue_comment' && action === 'created') {
-      text = formatIssueComment(payload)
+      message = formatIssueComment(payload)
     } else if (event === 'pull_request_review_comment' && action === 'created') {
-      text = formatReviewComment(payload)
+      message = formatReviewComment(payload)
     } else if (event === 'pull_request_review' && action === 'submitted') {
-      text = formatReviewSubmitted(payload)
+      message = formatReviewSubmitted(payload)
     }
 
-    if (!text) {
+    if (!message) {
       return new Response('Ignored', { status: 200 })
     }
 
-    console.log(`Forwarding ${event} to OpenClaw: ${text.slice(0, 80)}...`)
+    console.log(`Forwarding ${event} to OpenClaw: ${message.slice(0, 80)}...`)
 
     try {
-      await forwardToOpenClaw(text)
+      await forwardToOpenClaw(message)
       return new Response('OK', { status: 200 })
     } catch (error) {
       console.error('Failed to forward to OpenClaw:', error)
