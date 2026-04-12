@@ -7,6 +7,7 @@ import {
 	deduplicateQueue,
 	resolveCreatingTodoId,
 	waitForCloudReady,
+	CloudStateInterface,
 	QueueItem,
 	SyncEngineStatus,
 	initialSyncEngineStatus,
@@ -46,14 +47,11 @@ function makeStarRoleGroup(
 	}
 }
 
-function makeCloud(
-	isLoggedIn: boolean | null,
-	phase: string,
-): { currentUser: { value: { isLoggedIn: boolean } | null }; syncState: BehaviorSubject<{ phase: string }> } {
+function makeCloud(isLoggedIn: boolean | null, phase: string) {
 	return {
 		currentUser: { value: isLoggedIn === null ? null : { isLoggedIn } },
 		syncState: new BehaviorSubject({ phase }),
-	}
+	} as unknown as CloudStateInterface & { syncState: BehaviorSubject<{ phase: string }> }
 }
 
 describe('waitForCloudReady', () => {

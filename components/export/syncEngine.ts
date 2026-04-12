@@ -1,4 +1,4 @@
-import { BehaviorSubject, Observable } from 'rxjs'
+import { BehaviorSubject } from 'rxjs'
 import { filter, take } from 'rxjs/operators'
 import { Transaction } from 'dexie'
 import debounce from 'debounce'
@@ -364,10 +364,7 @@ async function writeAggregateFiles(
 	}
 }
 
-export interface CloudStateInterface {
-	currentUser: { value: { isLoggedIn?: boolean } | null | undefined }
-	syncState: Observable<{ phase: string }> & { value: { phase: string } }
-}
+export type CloudStateInterface = Pick<typeof db.cloud, 'currentUser' | 'syncState'>
 
 export function waitForCloudReady(
 	cloud: CloudStateInterface,
