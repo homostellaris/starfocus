@@ -43,7 +43,7 @@ describe('Onboarding', () => {
 		cy.contains('Get started').click()
 		cy.url().should('include', '/constellation')
 		cy.contains('Create your star roles').should('be.visible')
-		cy.contains('Start with one to three roles').should('be.visible')
+		cy.contains('You can always add more later').should('be.visible')
 	})
 
 	it('shows the star roles guidance when resuming mid-onboarding', () => {
