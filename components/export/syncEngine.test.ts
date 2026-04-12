@@ -1,10 +1,12 @@
 import { describe, expect, test } from 'bun:test'
+import { BehaviorSubject } from 'rxjs'
 import { Todo, StarRole, StarRoleGroup } from '../db'
 import {
 	enrichTodo,
 	buildTodoFiles,
 	deduplicateQueue,
 	resolveCreatingTodoId,
+	waitForCloudReady,
 	QueueItem,
 	SyncEngineStatus,
 	initialSyncEngineStatus,
@@ -43,6 +45,54 @@ function makeStarRoleGroup(
 		...overrides,
 	}
 }
+
+function makeCloud(
+	isLoggedIn: boolean | null,
+	phase: string,
+): { currentUser: { value: { isLoggedIn: boolean } | null }; syncState: BehaviorSubject<{ phase: string }> } {
+	return {
+		currentUser: { value: isLoggedIn === null ? null : { isLoggedIn } },
+		syncState: new BehaviorSubject({ phase }),
+	}
+}
+
+describe('waitForCloudReady', () => {
+	test('resolves immediately when not logged in', async () => {
+		const cloud = makeCloud(null, 'syncing')
+		await expect(waitForCloudReady(cloud)).resolves.toBeUndefined()
+	})
+
+	test('resolves immediately when already in-sync', async () => {
+		const cloud = makeCloud(true, 'in-sync')
+		await expect(waitForCloudReady(cloud)).resolves.toBeUndefined()
+	})
+
+	test('resolves when cloud reaches in-sync phase', async () => {
+		const cloud = makeCloud(true, 'syncing')
+		const promise = waitForCloudReady(cloud, 5000)
+		cloud.syncState.next({ phase: 'in-sync' })
+		await expect(promise).resolves.toBeUndefined()
+	})
+
+	test('resolves when cloud reaches error phase', async () => {
+		const cloud = makeCloud(true, 'syncing')
+		const promise = waitForCloudReady(cloud, 5000)
+		cloud.syncState.next({ phase: 'error' })
+		await expect(promise).resolves.toBeUndefined()
+	})
+
+	test('resolves when cloud reaches offline phase', async () => {
+		const cloud = makeCloud(true, 'syncing')
+		const promise = waitForCloudReady(cloud, 5000)
+		cloud.syncState.next({ phase: 'offline' })
+		await expect(promise).resolves.toBeUndefined()
+	})
+
+	test('resolves after timeout when cloud sync is stuck', async () => {
+		const cloud = makeCloud(true, 'syncing')
+		await expect(waitForCloudReady(cloud, 50)).resolves.toBeUndefined()
+	})
+})
 
 describe('enrichTodo', () => {
 	test('returns todo without relations when no star role is set', () => {
