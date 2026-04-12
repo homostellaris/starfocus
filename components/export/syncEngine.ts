@@ -1,4 +1,4 @@
-import { BehaviorSubject } from 'rxjs'
+import { BehaviorSubject, Observable } from 'rxjs'
 import { filter, take } from 'rxjs/operators'
 import { Transaction } from 'dexie'
 import debounce from 'debounce'
@@ -215,6 +215,7 @@ export interface SyncEngine {
 }
 
 const SYNC_DEBOUNCE_MS = 2000
+const CLOUD_SYNC_TIMEOUT_MS = 30000
 const FULL_SYNC_PROGRESS_KEY = 'starfocus-full-sync-progress'
 const PROGRESS_DB_NAME = 'starfocus-file-handles'
 const PROGRESS_STORE_NAME = 'handles'
@@ -363,16 +364,24 @@ async function writeAggregateFiles(
 	}
 }
 
-function waitForCloudReady(): Promise<void> {
+export interface CloudStateInterface {
+	currentUser: { value: { isLoggedIn?: boolean } | null | undefined }
+	syncState: Observable<{ phase: string }> & { value: { phase: string } }
+}
+
+export function waitForCloudReady(
+	cloud: CloudStateInterface,
+	timeoutMs: number = CLOUD_SYNC_TIMEOUT_MS,
+): Promise<void> {
 	return new Promise(resolve => {
-		const user = db.cloud.currentUser.value
+		const user = cloud.currentUser.value
 		if (!user?.isLoggedIn) {
 			console.debug('Sync engine: not logged in, proceeding immediately')
 			resolve()
 			return
 		}
 
-		const phase = db.cloud.syncState.value.phase
+		const phase = cloud.syncState.value.phase
 		if (phase === 'in-sync') {
 			console.debug('Sync engine: already in-sync, proceeding')
 			resolve()
@@ -380,7 +389,13 @@ function waitForCloudReady(): Promise<void> {
 		}
 
 		console.debug('Sync engine: waiting for cloud sync, current phase:', phase)
-		const subscription = db.cloud.syncState
+		const timeout = setTimeout(() => {
+			console.debug('Sync engine: cloud sync timeout, proceeding anyway')
+			subscription.unsubscribe()
+			resolve()
+		}, timeoutMs)
+
+		const subscription = cloud.syncState
 			.pipe(
 				filter(
 					state =>
@@ -392,6 +407,7 @@ function waitForCloudReady(): Promise<void> {
 			)
 			.subscribe(state => {
 				console.debug('Sync engine: cloud reached phase:', state.phase)
+				clearTimeout(timeout)
 				subscription.unsubscribe()
 				resolve()
 			})
@@ -732,7 +748,7 @@ export function createSyncEngine(): SyncEngine {
 		db.todos.hook('updating', onUpdating)
 		db.todos.hook('deleting', onDeleting)
 		;(async () => {
-			await waitForCloudReady()
+			await waitForCloudReady(db.cloud)
 			if (stopped) return
 			try {
 				await runResumableFullSync(ops, writeManifest)
