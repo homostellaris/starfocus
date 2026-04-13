@@ -1,22 +1,17 @@
 #!/usr/bin/env bun
 /**
  * Receives GitHub webhook events for PR comments and forwards them to
- * OpenClaw's /hooks/agent endpoint for immediate isolated processing.
+ * OpenClaw's main agent via CLI for immediate trusted processing.
  *
  * Required env vars:
  *   GITHUB_WEBHOOK_SECRET  - shared secret configured in GitHub webhook settings
- *   OPENCLAW_HOOKS_TOKEN   - token configured in OpenClaw hooks.token
- *   OPENCLAW_HOOKS_URL     - OpenClaw hooks base URL (default: http://127.0.0.1:18789)
  *   PORT                   - port to listen on (default: 18790)
  */
 
 const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET
-const OPENCLAW_HOOKS_TOKEN = process.env.OPENCLAW_HOOKS_TOKEN
-const OPENCLAW_HOOKS_URL = process.env.OPENCLAW_HOOKS_URL ?? 'http://127.0.0.1:18789'
 const PORT = parseInt(process.env.PORT ?? '18790')
 
 if (!GITHUB_WEBHOOK_SECRET) throw new Error('GITHUB_WEBHOOK_SECRET is required')
-if (!OPENCLAW_HOOKS_TOKEN) throw new Error('OPENCLAW_HOOKS_TOKEN is required')
 
 async function verifySignature(body: string, signature: string | null): Promise<boolean> {
   if (!signature?.startsWith('sha256=')) return false
@@ -46,7 +41,7 @@ function formatIssueComment(payload: Record<string, unknown>): string | null {
   const body = comment.body as string
   const commentUrl = comment.html_url as string
 
-  return `GitHub PR comment from @${sender} on ${repo}#${prNumber} "${prTitle}":\n\n${body}\n\n${commentUrl}\n\nForward this comment to the active acpx Claude session working on this PR. Run: gh pr view ${prNumber} --repo ${repo} --json headRefName to get the branch name, then find the matching acpx session via: acpx --ttl 0 claude sessions list (cwd: /home/openclaw/.openclaw/workspace). Send the comment text to that session. If no active session exists, reply via Telegram that no session was found.`
+  return `GitHub PR comment from @${sender} on ${repo}#${prNumber} "${prTitle}":\n\n${body}\n\n${commentUrl}`
 }
 
 function formatReviewComment(payload: Record<string, unknown>): string {
@@ -63,7 +58,7 @@ function formatReviewComment(payload: Record<string, unknown>): string {
   const commentUrl = comment.html_url as string
 
   const location = line ? `${path} line ${line}` : path
-  return `GitHub inline comment from @${sender} on ${repo}#${prNumber} "${prTitle}" (branch: ${branch}) at ${location}:\n\n${body}\n\n${commentUrl}\n\nForward this comment to the active acpx Claude session for branch "${branch}": acpx --ttl 0 claude sessions list (cwd: /home/openclaw/.openclaw/workspace). If no active session exists, reply via Telegram that no session was found.`
+  return `GitHub inline comment from @${sender} on ${repo}#${prNumber} "${prTitle}" (branch: ${branch}) at ${location}:\n\n${body}\n\n${commentUrl}`
 }
 
 function formatReviewSubmitted(payload: Record<string, unknown>): string | null {
@@ -80,21 +75,18 @@ function formatReviewSubmitted(payload: Record<string, unknown>): string | null 
   const state = review.state as string
   const reviewUrl = review.html_url as string
 
-  return `GitHub review (${state}) from @${sender} on ${repo}#${prNumber} "${prTitle}" (branch: ${branch}):\n\n${body}\n\n${reviewUrl}\n\nForward this review to the active acpx Claude session for branch "${branch}": acpx --ttl 0 claude sessions list (cwd: /home/openclaw/.openclaw/workspace). If no active session exists, reply via Telegram that no session was found.`
+  return `GitHub review (${state}) from @${sender} on ${repo}#${prNumber} "${prTitle}" (branch: ${branch}):\n\n${body}\n\n${reviewUrl}`
 }
 
 async function forwardToOpenClaw(message: string): Promise<void> {
-  const response = await fetch(`${OPENCLAW_HOOKS_URL}/hooks/agent`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENCLAW_HOOKS_TOKEN}`,
-    },
-    body: JSON.stringify({ message, name: 'GitHub PR comment' }),
-  })
-
-  if (!response.ok) {
-    throw new Error(`OpenClaw hooks returned ${response.status}: ${await response.text()}`)
+  const proc = Bun.spawn(
+    ['openclaw', 'agent', '--agent', 'main', '--message', message],
+    { stderr: 'pipe' },
+  )
+  const exitCode = await proc.exited
+  if (exitCode !== 0) {
+    const stderr = await new Response(proc.stderr).text()
+    throw new Error(`openclaw agent exited ${exitCode}: ${stderr}`)
   }
 }
 
