@@ -1,22 +1,17 @@
 #!/usr/bin/env bun
 /**
  * Receives GitHub webhook events for PR comments and forwards them to
- * OpenClaw's /hooks/wake endpoint as readable text messages.
+ * OpenClaw's main agent via CLI for immediate trusted processing.
  *
  * Required env vars:
  *   GITHUB_WEBHOOK_SECRET  - shared secret configured in GitHub webhook settings
- *   OPENCLAW_HOOKS_TOKEN   - token configured in OpenClaw hooks.token
- *   OPENCLAW_HOOKS_URL     - OpenClaw hooks base URL (default: http://127.0.0.1:18789)
  *   PORT                   - port to listen on (default: 18790)
  */
 
 const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET
-const OPENCLAW_HOOKS_TOKEN = process.env.OPENCLAW_HOOKS_TOKEN
-const OPENCLAW_HOOKS_URL = process.env.OPENCLAW_HOOKS_URL ?? 'http://127.0.0.1:18789'
 const PORT = parseInt(process.env.PORT ?? '18790')
 
 if (!GITHUB_WEBHOOK_SECRET) throw new Error('GITHUB_WEBHOOK_SECRET is required')
-if (!OPENCLAW_HOOKS_TOKEN) throw new Error('OPENCLAW_HOOKS_TOKEN is required')
 
 async function verifySignature(body: string, signature: string | null): Promise<boolean> {
   if (!signature?.startsWith('sha256=')) return false
@@ -38,12 +33,11 @@ function formatIssueComment(payload: Record<string, unknown>): string | null {
   const issue = payload.issue as Record<string, unknown>
   if (!issue?.pull_request) return null
 
-  const pr = issue as Record<string, unknown>
   const comment = payload.comment as Record<string, unknown>
   const sender = (payload.sender as Record<string, unknown>).login as string
   const repo = (payload.repository as Record<string, unknown>).full_name as string
-  const prNumber = pr.number as number
-  const prTitle = pr.title as string
+  const prNumber = issue.number as number
+  const prTitle = issue.title as string
   const body = comment.body as string
   const commentUrl = comment.html_url as string
 
@@ -58,7 +52,6 @@ function formatReviewComment(payload: Record<string, unknown>): string {
   const prNumber = pr.number as number
   const prTitle = pr.title as string
   const branch = (pr.head as Record<string, unknown>).ref as string
-
   const body = comment.body as string
   const path = comment.path as string
   const line = comment.line as number | null
@@ -85,18 +78,15 @@ function formatReviewSubmitted(payload: Record<string, unknown>): string | null 
   return `GitHub review (${state}) from @${sender} on ${repo}#${prNumber} "${prTitle}" (branch: ${branch}):\n\n${body}\n\n${reviewUrl}`
 }
 
-async function forwardToOpenClaw(text: string): Promise<void> {
-  const response = await fetch(`${OPENCLAW_HOOKS_URL}/hooks/wake`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENCLAW_HOOKS_TOKEN}`,
-    },
-    body: JSON.stringify({ text, mode: 'now' }),
-  })
-
-  if (!response.ok) {
-    throw new Error(`OpenClaw hooks returned ${response.status}: ${await response.text()}`)
+async function forwardToOpenClaw(message: string): Promise<void> {
+  const proc = Bun.spawn(
+    ['openclaw', 'agent', '--agent', 'main', '--message', message],
+    { stderr: 'pipe' },
+  )
+  const exitCode = await proc.exited
+  if (exitCode !== 0) {
+    const stderr = await new Response(proc.stderr).text()
+    throw new Error(`openclaw agent exited ${exitCode}: ${stderr}`)
   }
 }
 
@@ -119,24 +109,24 @@ Bun.serve({
     const payload = JSON.parse(body) as Record<string, unknown>
     const action = payload.action as string
 
-    let text: string | null = null
+    let message: string | null = null
 
     if (event === 'issue_comment' && action === 'created') {
-      text = formatIssueComment(payload)
+      message = formatIssueComment(payload)
     } else if (event === 'pull_request_review_comment' && action === 'created') {
-      text = formatReviewComment(payload)
+      message = formatReviewComment(payload)
     } else if (event === 'pull_request_review' && action === 'submitted') {
-      text = formatReviewSubmitted(payload)
+      message = formatReviewSubmitted(payload)
     }
 
-    if (!text) {
+    if (!message) {
       return new Response('Ignored', { status: 200 })
     }
 
-    console.log(`Forwarding ${event} to OpenClaw: ${text.slice(0, 80)}...`)
+    console.log(`Forwarding ${event} to OpenClaw: ${message.slice(0, 80)}...`)
 
     try {
-      await forwardToOpenClaw(text)
+      await forwardToOpenClaw(message)
       return new Response('OK', { status: 200 })
     } catch (error) {
       console.error('Failed to forward to OpenClaw:', error)

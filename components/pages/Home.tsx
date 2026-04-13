@@ -82,9 +82,12 @@ import useSettings from '../settings/useSettings'
 import { Searchbar } from '../search/Searchbar'
 import { Journey } from '../starship/Journey'
 import { useHelp } from '../common/HelpContext'
+import { useOnboarding } from '../onboarding/OnboardingContext'
 
 const Home = () => {
 	const posthog = usePostHog()
+	const { step, advanceStep, skipOnboarding } = useOnboarding()
+	const todoCount = useLiveQuery(() => db.todos.count()) ?? 0
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -122,6 +125,40 @@ const Home = () => {
 									className="lg:w-[calc(100vw/12*6+56*2px+10px)] lg:mx-auto lg:rounded-t-lg overflow-hidden"
 									translucent
 								>
+									{step === 'first-todo' && (
+										<IonToolbar>
+											<div className="px-4 py-3 space-y-2">
+												<p className="text-sm font-semibold">Create your first task</p>
+												<p className="text-xs text-gray-400">
+													Tap <strong>+</strong> to create a task. Assign{' '}
+													<strong>star points</strong> (1–13) for its impact, and choose where it lives:{' '}
+													<strong>Asteroid Field</strong> for urgent tasks,{' '}
+													<strong>Wayfinder</strong> for important ones, or{' '}
+													<strong>Database</strong> for later.
+												</p>
+												<div className="flex justify-between items-center">
+													<IonButton
+														fill="clear"
+														size="small"
+														color="medium"
+														onClick={skipOnboarding}
+													>
+														Skip setup
+													</IonButton>
+													{todoCount > 0 && (
+														<IonButton
+															fill="solid"
+															color="success"
+															size="small"
+															onClick={advanceStep}
+														>
+															Finish
+														</IonButton>
+													)}
+												</div>
+											</div>
+										</IonToolbar>
+									)}
 									<IonToolbar
 										className={cn(isPlatform('ios') && 'ion-padding-top')}
 									>

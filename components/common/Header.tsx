@@ -36,6 +36,7 @@ import StarPoints from './StarPoints'
 import Title from './Title'
 import { LoginModal } from '../auth/dexie'
 import { useHelp } from './HelpContext'
+import { useOnboarding } from '../onboarding/OnboardingContext'
 
 export const Header = ({ title, backHref }: { title: string; backHref?: string }) => {
 	const ui = useObservable(db.cloud.userInteraction)
@@ -50,6 +51,7 @@ export const Header = ({ title, backHref }: { title: string; backHref?: string }
 	const { status: exportStatus, runFullSync } = useMarkdownExportContext()
 	const posthog = usePostHog()
 	const { helpEnabled, toggleHelp } = useHelp()
+	const { startOnboarding } = useOnboarding()
 
 	return (
 		<>
@@ -97,6 +99,13 @@ export const Header = ({ title, backHref }: { title: string; backHref?: string }
 										onIonChange={toggleHelp}
 									/>
 								</IonItem>
+								<IonButton
+									expand="block"
+									fill="clear"
+									onClick={startOnboarding}
+								>
+									Start setup guide
+								</IonButton>
 								<IonButton
 									expand="block"
 									fill="clear"

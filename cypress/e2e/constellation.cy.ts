@@ -11,6 +11,7 @@ beforeEach(() => {
 	cy.visit('/home', {
 		onBeforeLoad(win) {
 			win.localStorage.setItem('help-enabled', 'true')
+			win.localStorage.setItem('onboarding-step', 'completed')
 		},
 	})
 	cy.get('ion-fab>ion-fab-button').should('be.visible')

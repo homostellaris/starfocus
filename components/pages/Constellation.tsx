@@ -1,8 +1,10 @@
 import {
+	IonButton,
 	IonContent,
 	IonFab,
 	IonFabButton,
 	IonFabList,
+	IonFooter,
 	IonIcon,
 	IonItem,
 	IonLabel,
@@ -11,6 +13,7 @@ import {
 	IonReorder,
 	IonReorderGroup,
 	IonSpinner,
+	IonToolbar,
 } from '@ionic/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { add, layersSharp, starHalfSharp, starOutline } from 'ionicons/icons'
@@ -19,6 +22,7 @@ import { RefObject, useCallback, useEffect, useRef } from 'react'
 import { Header } from '../common/Header'
 import { db, StarRole, StarRoleGroup } from '../db'
 import { MarkdownExportProvider } from '../export/MarkdownExportContext'
+import { useOnboarding } from '../onboarding/OnboardingContext'
 import { useCreateStarRoleGroupModal } from '../starRoleGroups/create/useCreateStarRoleGroupModal'
 import { useCreateStarRoleModal } from '../starRoles/create/useCreateStarRoleModal'
 import { getIonIcon } from '../starRoles/icons'
@@ -33,6 +37,9 @@ export default function Constellation() {
 		]),
 	)
 	const isLoading = data === undefined
+	const starRoleCount = data?.[0].length ?? 0
+
+	const { step, advanceStep, skipOnboarding } = useOnboarding()
 
 	const fab = useRef<HTMLIonFabElement>(null)
 
@@ -119,6 +126,40 @@ export default function Constellation() {
 						</IonFabList>
 					</IonFab>
 				</IonContent>
+				{step === 'star-roles' && (
+					<IonFooter>
+						<IonToolbar>
+							<div className="px-4 py-3 space-y-2">
+								<p className="text-sm font-semibold">Create your star roles</p>
+								<p className="text-xs text-gray-400">
+									Star roles are key areas of your life — like Health, Career, or Family. Add a{' '}
+									<strong>description</strong> with your vision for the role. Tap the{' '}
+									<strong>+</strong> button to get started. You can always add more later.
+								</p>
+								<div className="flex justify-between items-center">
+									<IonButton
+										fill="clear"
+										size="small"
+										color="medium"
+										onClick={skipOnboarding}
+									>
+										Skip setup
+									</IonButton>
+									{starRoleCount > 0 && (
+										<IonButton
+											fill="solid"
+											color="success"
+											size="small"
+											onClick={advanceStep}
+										>
+											Continue ({starRoleCount} created)
+										</IonButton>
+									)}
+								</div>
+							</div>
+						</IonToolbar>
+					</IonFooter>
+				)}
 			</IonPage>
 		</MarkdownExportProvider>
 	)
