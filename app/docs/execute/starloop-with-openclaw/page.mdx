@@ -161,6 +161,136 @@ Claude Code ACP sessions can die unexpectedly (process killed, machine rebooted,
 2. Calls `acpx claude sessions new --resume-session <id>` to reconnect to the existing conversation history
 3. Re-steers the resumed session to wrap up and raise a PR
 
+## GitHub PR integration
+
+OpenClaw can receive GitHub PR comments and route them to the active Claude Code session for that branch. This closes the review loop: you leave a comment on a PR in GitHub, and Claude picks it up and responds automatically.
+
+### How it works
+
+1. GitHub sends a webhook event to the **webhook bridge** whenever a PR comment, inline review comment, or review is submitted.
+2. The bridge (`agent/scripts/github-webhook-bridge.ts`) verifies the HMAC signature, formats the comment into a plain-text message, and forwards it to OpenClaw via `openclaw agent --agent main --message`.
+3. OpenClaw's main agent resolves the PR branch, finds the matching active ACP session, and steers it with the comment.
+
+```
+GitHub comment
+  └─▶ Webhook bridge (port 18790)
+        └─▶ openclaw agent main
+              └─▶ gh pr view → branch name
+                    └─▶ acpx claude -s <session> "<comment>"
+```
+
+### Components
+
+#### Webhook bridge service
+
+The bridge runs as a systemd user service, started from the script in the repo so it stays in sync with updates:
+
+```ini
+# ~/.config/systemd/user/github-webhook-bridge.service
+[Unit]
+Description=GitHub webhook bridge → OpenClaw
+After=network.target openclaw-gateway.service
+Wants=openclaw-gateway.service
+
+[Service]
+ExecStart=/home/<user>/.bun/bin/bun run /path/to/starfocus/agent/scripts/github-webhook-bridge.ts
+Restart=on-failure
+RestartSec=10
+Environment=PORT=18790
+Environment=PATH=/home/<user>/.bun/bin:/home/<user>/.npm-global/bin:/home/<user>/.local/bin:/usr/local/bin:/usr/bin:/bin
+EnvironmentFile=%h/.config/github-webhook-bridge.env
+
+[Install]
+WantedBy=default.target
+```
+
+Secrets are kept in a separate env file — do not commit this:
+
+```bash
+# ~/.config/github-webhook-bridge.env
+GITHUB_WEBHOOK_SECRET=<your-secret>
+```
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now github-webhook-bridge
+```
+
+#### Tailscale Funnel
+
+The bridge runs on port 18790 locally. To expose it publicly so GitHub can reach it, use [Tailscale Funnel](https://tailscale.com/kb/1223/funnel):
+
+```bash
+tailscale funnel --bg 18790
+```
+
+This gives you a stable public HTTPS URL at `https://<machine>.<tailnet>.ts.net` — no dynamic DNS or port forwarding required. The URL persists across reboots.
+
+Check the current funnel configuration:
+
+```bash
+tailscale funnel status
+```
+
+This URL is what you configure as the webhook delivery URL in GitHub.
+
+#### GitHub App
+
+Rather than using a personal access token, the integration is built on a **GitHub App**. This gives Claude Code a distinct bot identity (`<app-name>[bot]`) so its PR comments and commits are clearly distinguishable from your own activity. It also enables @mention filtering so OpenClaw only wakes up when explicitly addressed.
+
+**Creating the app:**
+
+1. Go to **GitHub → Settings → Developer settings → GitHub Apps → New GitHub App**
+2. Set the webhook URL to your Tailscale Funnel URL (e.g. `https://<machine>.<tailnet>.ts.net`)
+3. Set a webhook secret — store it in `~/.config/github-webhook-bridge.env` as `GITHUB_WEBHOOK_SECRET`
+4. Grant permissions: **Issues** (Read & Write), **Pull requests** (Read & Write), **Contents** (Read & Write)
+5. Subscribe to events: `Issue comment`, `Pull request review`, `Pull request review comment`
+6. Create the app, then generate a **Private Key** — save it to `~/.config/github-app.pem`
+7. Note the **App ID** from the app settings page
+8. Install the app on your repo(s) — note the **Installation ID** from the install URL
+
+**Credentials:**
+
+```bash
+# ~/.config/github-webhook-bridge.env
+GITHUB_WEBHOOK_SECRET=<your-webhook-secret>
+GITHUB_APP_ID=<your-app-id>
+GITHUB_APP_INSTALLATION_ID=<your-installation-id>
+GITHUB_APP_PRIVATE_KEY_PATH=/home/<user>/.config/github-app.pem
+```
+
+**Installation tokens:**
+
+GitHub Apps authenticate API calls using short-lived installation tokens (1 hour TTL). The flow is:
+
+```
+Private key + App ID → sign a JWT → POST /app/installations/<id>/access_tokens → token
+```
+
+The token is then passed to `gh` or the REST API in place of a personal access token. This means if a token is ever leaked it expires within the hour — unlike a personal token which is valid indefinitely until revoked.
+
+**@mention filtering:**
+
+The webhook bridge only forwards a comment to OpenClaw if it contains an @mention of the bot (e.g. `@openclaw-bot`). This prevents every PR comment from triggering a response — Claude only wakes up when you explicitly address it. The bridge also ignores comments from the bot itself to prevent feedback loops.
+
+### Configuring OpenClaw to post as the bot
+
+When Claude Code posts a PR comment (e.g. via `gh pr comment`), it should authenticate as the bot rather than your personal account. Generate an installation token and pass it via the `GH_TOKEN` environment variable:
+
+```bash
+GH_TOKEN=$(bun run /path/to/starfocus/agent/scripts/github-app-token.ts) \
+  gh pr comment <number> --body "..."
+```
+
+For git commits, set the bot's identity in the repo's git config:
+
+```bash
+git config user.name "openclaw-bot[bot]"
+git config user.email "<app-user-id>+openclaw-bot[bot]@users.noreply.github.com"
+```
+
+The `<app-user-id>` is the numeric GitHub user ID assigned to your app — find it by calling `GET /users/<app-name>[bot]` after installing the app.
+
 ## Caveats
 
 - **Session guard**: The cron checks for active ACP sessions before starting a new one. If a session is detected, the cycle is skipped silently.
