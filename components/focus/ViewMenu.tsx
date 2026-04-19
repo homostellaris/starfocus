@@ -39,9 +39,9 @@ import { StarRoleOrderMap } from '../todos/starSort'
 import { computeVisibleStarSortUpdates } from './starSortToManualOrder'
 
 export const ViewMenu = ({
-	searchbarRef,
+	searchModalRef,
 }: {
-	searchbarRef: RefObject<HTMLIonSearchbarElement | null>
+	searchModalRef: RefObject<HTMLIonModalElement | null>
 }) => {
 	const posthog = usePostHog()
 	const queryResult = useLiveQuery(() =>
@@ -145,11 +145,8 @@ export const ViewMenu = ({
 					color="warning"
 					expand="block"
 					onClick={() => {
-						if (searchbarRef.current) {
-							searchbarRef.current.value = 'is:snoozed'
-							// Setting the value doesn't trigger ionic searchbar events so need to also set query ourselves
-							setQuery('is:snoozed')
-						}
+						setQuery('is:snoozed')
+						searchModalRef.current?.present()
 					}}
 				>
 					View snoozed
