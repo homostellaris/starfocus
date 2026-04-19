@@ -1,12 +1,10 @@
 import { menuController } from '@ionic/core/components'
 import {
 	IonButton,
-	IonButtons,
 	IonCol,
 	IonContent,
 	IonFab,
 	IonFabButton,
-	IonFooter,
 	IonGrid,
 	IonIcon,
 	IonItemDivider,
@@ -18,8 +16,6 @@ import {
 	IonReorderGroup,
 	IonRow,
 	IonSpinner,
-	IonToolbar,
-	isPlatform,
 } from '@ionic/react'
 import dayjs from 'dayjs'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -31,15 +27,16 @@ import {
 	chevronUpOutline,
 	filterSharp,
 	rocketSharp,
-	settingsSharp,
+	searchSharp,
 	snowSharp,
 	timeSharp,
 } from 'ionicons/icons'
 import _ from 'lodash'
 import { usePostHog } from 'posthog-js/react'
-import {
+import React, {
 	ComponentProps,
 	PropsWithChildren,
+	RefObject,
 	useCallback,
 	useEffect,
 	useMemo,
@@ -49,7 +46,6 @@ import {
 import { Header } from '../common/Header'
 import Placeholder from '../common/Placeholder'
 import { StarRoleIcon } from '../common/StarRoleIcon'
-import { cn } from '../common/cn'
 import order, { calculateReorderIndices } from '../common/order'
 import {
 	AsteroidFieldTodoListItem,
@@ -61,7 +57,10 @@ import {
 	TodoListItemBase,
 	WayfinderTodoListItem,
 } from '../db'
-import { MarkdownExportProvider, useMarkdownExportContext } from '../export/MarkdownExportContext'
+import {
+	MarkdownExportProvider,
+	useMarkdownExportContext,
+} from '../export/MarkdownExportContext'
 import { ViewMenu } from '../focus/ViewMenu'
 import useView, { ViewProvider } from '../focus/view'
 import Mood from '../mood'
@@ -79,29 +78,12 @@ import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
 import { useTodoPopover } from '../todos/useTodoPopover'
 import { SettingsMenu } from '../settings/SettingsMenu'
 import useSettings from '../settings/useSettings'
-import { Searchbar } from '../search/Searchbar'
+import { Search } from '../search'
 import { Journey } from '../starship/Journey'
 import { useHelp } from '../common/HelpContext'
 
 const Home = () => {
-	const posthog = usePostHog()
-	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
-	useEffect(() => {
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === '/') {
-				event.preventDefault()
-				searchbarRef.current?.setFocus()
-				posthog.capture('keyboard_shortcut_used', {
-					shortcut_key: '/',
-					action: 'search_focus',
-				})
-			}
-		}
-		document.addEventListener('keydown', handleKeyDown)
-		return () => {
-			document.removeEventListener('keydown', handleKeyDown)
-		}
-	})
+	const searchModalRef = useRef<HTMLIonModalElement>(null)
 	useGlobalKeyboardShortcuts()
 
 	return (
@@ -110,52 +92,15 @@ const Home = () => {
 				<MoodProvider>
 					<ViewProvider>
 						<TodoContextProvider>
-							<ViewMenu searchbarRef={searchbarRef} />
+							<ViewMenu />
 							<SettingsMenu />
 							<IonPage id="main-content">
 								<Header title="Home"></Header>
-								<TodoLists />
+								<TodoLists searchModalRef={searchModalRef} />
 								<div className="absolute hidden xl:block bottom-4 left-4">
 									<Mood />
 								</div>
-								<IonFooter
-									className="lg:w-[calc(100vw/12*6+56*2px+10px)] lg:mx-auto lg:rounded-t-lg overflow-hidden"
-									translucent
-								>
-									<IonToolbar
-										className={cn(isPlatform('ios') && 'ion-padding-top')}
-									>
-										<IonButtons slot="start">
-											<IonButton
-												id="view-menu-button"
-												onClick={() => {
-													menuController.toggle('start')
-													posthog.capture('view_menu_opened')
-												}}
-											>
-												<IonIcon
-													icon={filterSharp}
-													slot="icon-only"
-												/>
-											</IonButton>
-										</IonButtons>
-										<Searchbar ref={searchbarRef} />
-										<IonButtons slot="end">
-											<IonButton
-												id="settings-menu-button"
-												onClick={() => {
-													menuController.toggle('end')
-													posthog.capture('settings_menu_opened')
-												}}
-											>
-												<IonIcon
-													icon={settingsSharp}
-													slot="icon-only"
-												/>
-											</IonButton>
-										</IonButtons>
-									</IonToolbar>
-								</IonFooter>
+								<Search modalRef={searchModalRef} />
 							</IonPage>
 						</TodoContextProvider>
 					</ViewProvider>
@@ -167,10 +112,17 @@ const Home = () => {
 
 export default Home
 
-export const TodoLists = () => {
+export const TodoLists = ({
+	searchModalRef,
+}: {
+	searchModalRef: RefObject<HTMLIonModalElement | null>
+}) => {
 	const posthog = usePostHog()
 	// Initial loading & scrolling stuff
 	const contentRef = useRef<HTMLIonContentElement>(null)
+
+	// Scroll-aware FAB state
+	const [isScrolling, setIsScrolling] = useState(false)
 
 	// Query stuff
 	const [logLimit, setLogLimit] = useState(3)
@@ -320,7 +272,9 @@ export const TodoLists = () => {
 								inActiveStarRoles(todo),
 						)
 						.toArray()
-						.then(todos => starSort(todos, starRoleOrderMap).slice(0, databaseLimit))
+						.then(todos =>
+							starSort(todos, starRoleOrderMap).slice(0, databaseLimit),
+						)
 				: db.todos
 						.where('id')
 						.noneOf([...asteroidFieldTodoIds, ...wayfinderTodoIds])
@@ -366,7 +320,9 @@ export const TodoLists = () => {
 	// Consider using a callback ref instead: https://stackoverflow.com/questions/60881446/receive-dimensions-of-element-via-getboundingclientrect-in-react
 	const nextUrgentTodo = useRef<HTMLIonItemElement>(null)
 	const nextImportantTodo = useRef<HTMLIonItemElement>(null)
-	const nextTodo = data?.asteroidField.length ? nextUrgentTodo : nextImportantTodo
+	const nextTodo = data?.asteroidField.length
+		? nextUrgentTodo
+		: nextImportantTodo
 	const {
 		nextTodo: {
 			position: [nextTodoPosition, setNextTodoPosition],
@@ -439,6 +395,10 @@ export const TodoLists = () => {
 		<IonContent
 			className="relative"
 			ref={contentRef}
+			style={{ '--padding-bottom': '80px' } as React.CSSProperties}
+			onIonScroll={() => setIsScrolling(true)}
+			onIonScrollEnd={() => setIsScrolling(false)}
+			scrollEvents={true}
 		>
 			<IonFab
 				className="left-0 lg:left-[calc((100vw/12*3)-56px)] bottom-0"
@@ -448,31 +408,38 @@ export const TodoLists = () => {
 			>
 				<div className="flex flex-col items-center">
 					<IonButton
-						onClick={() => {
-							const y = nextTodoPosition ? nextTodoPosition.top + 32 : 0
-							contentRef.current?.scrollToPoint(undefined, y, 500)
-						}}
+						onClick={
+							isScrolling
+								? () => {
+										const y = nextTodoPosition ? nextTodoPosition.top + 32 : 0
+										contentRef.current?.scrollToPoint(undefined, y, 500)
+									}
+								: () => searchModalRef.current?.present()
+						}
 						shape="round"
 						size="small"
 					>
 						<IonIcon
 							slot="icon-only"
-							icon={rocketSharp}
+							icon={isScrolling ? rocketSharp : searchSharp}
 						></IonIcon>
 					</IonButton>
 					<IonButton
-						onClick={() => {
-							document.getElementById('database')?.scrollIntoView({
-								behavior: 'smooth',
-							})
-						}}
+						onClick={
+							isScrolling
+								? () =>
+										document
+											.getElementById('database')
+											?.scrollIntoView({ behavior: 'smooth' })
+								: () => menuController.toggle('start')
+						}
 						shape="round"
 						size="small"
 						color="secondary"
 					>
 						<IonIcon
 							slot="icon-only"
-							icon={snowSharp}
+							icon={isScrolling ? snowSharp : filterSharp}
 						></IonIcon>
 					</IonButton>
 				</div>
@@ -534,7 +501,8 @@ export const TodoLists = () => {
 											easy to remind yourself what you did in the past.
 										</Placeholder>
 									)}
-									{data.log.length > 0 && logGroups.map(group => (
+									{data.log.length > 0 &&
+										logGroups.map(group => (
 											<IonItemGroup key={group.shortLabel}>
 												<JourneyLabel>
 													<TimeInfo
@@ -705,7 +673,8 @@ export const TodoLists = () => {
 														Wayfinder.
 													</Placeholder>
 												)}
-												{data.asteroidField.length > 0 && data.asteroidField.map((todo, index) => (
+												{data.asteroidField.length > 0 &&
+													data.asteroidField.map((todo, index) => (
 														<TodoListItem
 															key={todo.id}
 															data-id={todo.id}
@@ -808,8 +777,7 @@ export const TodoLists = () => {
 														>
 															<VisitInfo todo={todo} />
 														</TodoListItem>
-													))
-												}
+													))}
 											</IonReorderGroup>
 											<div className="mx-auto w-full h-[1px] bg-[linear-gradient(to_right,transparent,theme(colors.rose.400),theme(colors.pink.400),theme(colors.fuchsia.400),theme(colors.violet.400),theme(colors.indigo.400),theme(colors.blue.400),transparent)] z-10 absolute"></div>
 											<IonReorderGroup
@@ -874,7 +842,8 @@ export const TodoLists = () => {
 														<em>star sort</em> to order them for you ✨
 													</Placeholder>
 												)}
-												{data.wayfinder.length > 0 && data.wayfinder.map((todo, index) => (
+												{data.wayfinder.length > 0 &&
+													data.wayfinder.map((todo, index) => (
 														<TodoListItem
 															key={todo.id}
 															data-id={todo.id}
@@ -1011,8 +980,7 @@ export const TodoLists = () => {
 														>
 															<VisitInfo todo={todo} />
 														</TodoListItem>
-													))
-												}
+													))}
 											</IonReorderGroup>
 										</div>
 									</IonItemGroup>
