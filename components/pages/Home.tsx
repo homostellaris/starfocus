@@ -425,6 +425,7 @@ export const TodoLists = ({
 						></IonIcon>
 					</IonButton>
 					<IonButton
+						id="view-menu-button"
 						onClick={
 							isScrolling
 								? () =>

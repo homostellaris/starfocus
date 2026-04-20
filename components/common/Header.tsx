@@ -1,3 +1,4 @@
+import { menuController } from '@ionic/core/components'
 import {
 	IonBackButton,
 	IonButton,
@@ -24,6 +25,7 @@ import {
 	cloudUploadSharp,
 	documentTextSharp,
 	helpCircleSharp,
+	settingsSharp,
 	syncSharp,
 	thunderstormSharp,
 	warningSharp,
@@ -78,7 +80,16 @@ export const Header = ({ title, backHref }: { title: string; backHref?: string }
 						className="mx-2"
 						slot="end"
 					>
-						<IonButton id="help-popover">
+						<IonButton
+						id="settings-menu-button"
+						onClick={() => menuController.toggle('end')}
+					>
+						<IonIcon
+							icon={settingsSharp}
+							slot="icon-only"
+						/>
+					</IonButton>
+					<IonButton id="help-popover">
 							<IonIcon
 								icon={helpCircleSharp}
 								slot="icon-only"

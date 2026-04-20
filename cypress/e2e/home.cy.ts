@@ -248,7 +248,22 @@ describe('search', () => {
 
 	it('can search for a todo by title', () => {
 		assertLists([], ['eat a bin', 'walk the dog', 'take the bins out'])
-		cy.get('[role="search"] input').type('dog')
+		cy.document().trigger('keydown', { key: '/', code: 'Slash', bubbles: true })
+		cy.get('#search-modal ion-searchbar input').should('be.focused')
+		cy.window().then(win => {
+			const host = win.document.querySelector(
+				'#search-modal ion-searchbar',
+			) as HTMLIonSearchbarElement
+			host.value = 'dog'
+			host.dispatchEvent(
+				new win.CustomEvent('ionInput', {
+					bubbles: true,
+					composed: true,
+					detail: { value: 'dog', event: undefined },
+				}),
+			)
+		})
+		cy.get('#search-modal').should('have.attr', 'data-query', 'dog')
 		assertLists([], ['walk the dog'])
 	})
 
