@@ -14,8 +14,10 @@ const PEEK_BREAKPOINT = 52 / MODAL_HEIGHT // ≈ 0.1437
 
 export function Search({
 	modalRef,
+	openRef,
 }: {
 	modalRef: RefObject<HTMLIonModalElement | null>
+	openRef?: RefObject<(() => Promise<void>) | null>
 }) {
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
 	const { query, setQuery } = useView()
@@ -38,6 +40,32 @@ export function Search({
 	// after the snap is a spurious Stencil value-reset event — consuming it clears this flag.
 	// Subsequent ionInput('') events are real user clears and are handled normally.
 	const pendingPeekInputRef = useRef(false)
+
+	// Opens the modal, restoring the saved query if currently at peek.
+	const openModal = useCallback(async () => {
+		const modal = modalRef.current
+		if (!modal) return
+		const currentBreakpoint = await modal.getCurrentBreakpoint()
+		if (currentBreakpoint === PEEK_BREAKPOINT) {
+			const savedQuery = peekQueryRef.current
+			await modal.setCurrentBreakpoint(1)
+			queryRef.current = savedQuery
+			setQuery(savedQuery)
+			if (searchbarRef.current) searchbarRef.current.value = savedQuery
+			const input = await searchbarRef.current?.getInputElement()
+			if (input) {
+				input.value = savedQuery
+				input.focus()
+				requestAnimationFrame(() => input.setSelectionRange(0, savedQuery.length))
+			}
+		} else {
+			modal.present()
+		}
+	}, [modalRef, setQuery])
+
+	useLayoutEffect(() => {
+		if (openRef) openRef.current = openModal
+	}, [openModal, openRef])
 
 	// Clears query state and ref, saves it to peekQueryRef, then snaps to PEEK.
 	// Clearing query immediately (rather than relying on the spurious ionInput('') to clear it)
@@ -76,24 +104,7 @@ export function Search({
 
 			if (event.key === '/') {
 				event.preventDefault()
-				const currentBreakpoint = await modal?.getCurrentBreakpoint()
-				if (currentBreakpoint === PEEK_BREAKPOINT) {
-					const savedQuery = peekQueryRef.current
-					await modal?.setCurrentBreakpoint(1)
-					queryRef.current = savedQuery
-					setQuery(savedQuery)
-					if (searchbarRef.current) searchbarRef.current.value = savedQuery
-					const input = await searchbarRef.current?.getInputElement()
-					if (input) {
-						input.value = savedQuery
-						input.focus()
-						requestAnimationFrame(() =>
-							input.setSelectionRange(0, savedQuery.length),
-						)
-					}
-				} else {
-					modal?.present()
-				}
+				await openModal()
 				posthog.capture('keyboard_shortcut_used', {
 					shortcut_key: '/',
 					action: 'search_focus',
@@ -134,7 +145,7 @@ export function Search({
 		// Escape/Enter/ArrowDown before Ionic's searchbar processes them
 		document.addEventListener('keydown', handleKeyDown, true)
 		return () => document.removeEventListener('keydown', handleKeyDown, true)
-	}, [modalRef, posthog, setQuery, snapToPeek, snapToPeekOrDismiss])
+	}, [modalRef, openModal, posthog, setQuery, snapToPeek, snapToPeekOrDismiss])
 
 	return (
 		<IonModal

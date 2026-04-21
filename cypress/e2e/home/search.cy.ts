@@ -18,6 +18,12 @@ describe('closed', () => {
 		shouldHaveBreakpoint(1)
 		searchInput().should('be.focused')
 	})
+
+	it('opens to 100% and focuses the searchbar when the search FAB is clicked', () => {
+		searchFab().click()
+		shouldHaveBreakpoint(1)
+		searchInput().should('be.focused')
+	})
 })
 
 describe('peek (with active query)', () => {
@@ -40,6 +46,17 @@ describe('peek (with active query)', () => {
 		pressKey('Escape')
 		cy.wait(ANIMATION_MS)
 		shouldHaveBreakpoint(0)
+	})
+
+	it('fully reopens and restores query when the search FAB is clicked at peek', () => {
+		pressKey('Escape')
+		cy.wait(ANIMATION_MS)
+		shouldHaveBreakpoint(PEEK_BREAKPOINT)
+		searchFab().click()
+		cy.wait(ANIMATION_MS)
+		shouldHaveBreakpoint(1)
+		searchInput().should('be.focused')
+		searchModal().should('have.attr', 'data-query', 'test')
 	})
 
 	it('opens modal, focuses input and selects text when / is pressed again', () => {
@@ -209,6 +226,7 @@ const ANIMATION_MS = 600 // ionic sheet animation takes 500ms to update currentB
 const searchModal = () => cy.get('#search-modal')
 const searchInput = () => cy.get('#search-modal ion-searchbar input')
 const suggestions = () => cy.get('#search-modal ion-list ion-item')
+const searchFab = () => cy.get('ion-fab ion-button').first()
 
 const typeQuery = (value: string) => {
 	// @ionic/react registers addEventListener('ionInput', handler) on the host element.
