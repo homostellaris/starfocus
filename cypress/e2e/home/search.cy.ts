@@ -169,6 +169,39 @@ describe('open', () => {
 	})
 })
 
+describe('mobile scroll', () => {
+	it('main content area remains scrollable when search modal is at peek', () => {
+		cy.viewport(390, 844) // iPhone 14 dimensions
+
+		// Add enough todos to make the page scrollable
+		cy.window().then(win =>
+			(win as any).db.todos.bulkAdd(
+				Array.from({ length: 30 }, (_, i) => ({
+					id: `scroll-test-${i}`,
+					title: `Scroll test todo ${i}`,
+				})),
+			),
+		)
+		cy.get('#database').should('exist')
+
+		// Snap to peek — this is the state where the modal sits at the bottom as a
+		// passive query indicator and background scrolling should still work
+		openSearch()
+		typeQuery('test')
+		pressKey('Enter')
+		cy.wait(ANIMATION_MS)
+		shouldHaveBreakpoint(PEEK_BREAKPOINT)
+
+		cy.get('ion-content')
+			.then($el => ($el[0] as HTMLIonContentElement).getScrollElement())
+			.as('scrollEl')
+
+		cy.get('ion-content').realSwipe('toTop', { length: 300 })
+
+		cy.get('@scrollEl').its('scrollTop').should('be.greaterThan', 0)
+	})
+})
+
 const PEEK_BREAKPOINT = 52 / 362 // matches component: PEEK_HEIGHT / MODAL_HEIGHT
 const ANIMATION_MS = 600 // ionic sheet animation takes 500ms to update currentBreakpoint
 

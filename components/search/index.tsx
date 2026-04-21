@@ -142,7 +142,7 @@ export function Search({
 			ref={modalRef}
 			data-query={query}
 			breakpoints={[0, PEEK_BREAKPOINT, 1]}
-			backdropBreakpoint={0}
+			backdropBreakpoint={PEEK_BREAKPOINT}
 			canDismiss={canDismiss}
 			handle={true}
 			initialBreakpoint={1}
