@@ -246,8 +246,10 @@ const pressSlash = () =>
 
 const openSearch = () => {
 	pressSlash()
-	// Wait for the modal to reach full breakpoint after the enter animation.
-	shouldHaveBreakpoint(1)
+	// Wait for onDidPresent to fire (animation complete + Ionic internals ready).
+	// This is more reliable than shouldHaveBreakpoint(1) which can pass mid-animation
+	// before Ionic has mounted slot content (causing "Search host not found" in typeQuery).
+	searchModal().should('have.attr', 'data-presented')
 }
 
 const pressKey = (key: Parameters<(typeof cy)['realPress']>[0]) =>

@@ -155,6 +155,7 @@ export function Search({
 			onDidPresent={() => {
 				if (searchbarRef.current) searchbarRef.current.value = query
 				setFocusedSuggestionIndex(-1)
+				modalRef.current?.setAttribute('data-presented', '')
 			}}
 		>
 			<div>
