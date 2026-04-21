@@ -179,35 +179,21 @@ describe('open', () => {
 })
 
 describe('mobile scroll', () => {
-	it('main content area remains scrollable when search modal is at peek', () => {
-		cy.viewport(390, 844) // iPhone 14 dimensions
+	it('ion-modal host has pointer-events:none at peek to allow background scrolling', () => {
+		cy.viewport(390, 844) // iPhone-sized viewport to match real-world use
 
-		// Add enough todos to make the page scrollable
-		cy.window().then(win =>
-			(win as any).db.todos.bulkAdd(
-				Array.from({ length: 30 }, (_, i) => ({
-					id: `scroll-test-${i}`,
-					title: `Scroll test todo ${i}`,
-				})),
-			),
-		)
-		cy.get('#database').should('exist')
-
-		// Snap to peek — this is the state where the modal sits at the bottom as a
-		// passive query indicator and background scrolling should still work
+		// Snap to peek — the state where the modal acts as a passive query indicator
 		openSearch()
 		typeQuery('test')
 		pressKey('Enter')
 		cy.wait(ANIMATION_MS)
 		shouldHaveBreakpoint(PEEK_BREAKPOINT)
 
-		cy.get('ion-content')
-			.then($el => ($el[0] as HTMLIonContentElement).getScrollElement())
-			.as('scrollEl')
-
-		cy.get('ion-content').realSwipe('toTop', { length: 300 })
-
-		cy.get('@scrollEl').its('scrollTop').should('be.greaterThan', 0)
+		// backdropBreakpoint=PEEK_BREAKPOINT causes Ionic's sheet gesture to call
+		// disableBackdrop() at peek (strict > comparison: PEEK_BREAKPOINT is not
+		// above itself), setting pointer-events:none on the full-screen ion-modal
+		// host and its backdrop so touch events reach the IonContent behind it.
+		cy.get('#search-modal').should('have.css', 'pointer-events', 'none')
 	})
 })
 

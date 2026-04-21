@@ -97,7 +97,7 @@ const Home = () => {
 							<SettingsMenu />
 							<IonPage id="main-content">
 								<Header title="Home"></Header>
-								<TodoLists searchModalRef={searchModalRef} openSearchRef={openSearchRef} />
+								<TodoLists openSearchRef={openSearchRef} />
 								<div className="absolute hidden xl:block bottom-4 left-4">
 									<Mood />
 								</div>
@@ -114,10 +114,8 @@ const Home = () => {
 export default Home
 
 export const TodoLists = ({
-	searchModalRef,
 	openSearchRef,
 }: {
-	searchModalRef: RefObject<HTMLIonModalElement | null>
 	openSearchRef: RefObject<(() => Promise<void>) | null>
 }) => {
 	const posthog = usePostHog()
