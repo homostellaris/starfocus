@@ -52,12 +52,6 @@ export function Search({
 			queryRef.current = savedQuery
 			setQuery(savedQuery)
 			if (searchbarRef.current) searchbarRef.current.value = savedQuery
-			const input = await searchbarRef.current?.getInputElement()
-			if (input) {
-				input.value = savedQuery
-				input.focus()
-				requestAnimationFrame(() => input.setSelectionRange(0, savedQuery.length))
-			}
 		} else {
 			modal.present()
 		}
@@ -159,10 +153,7 @@ export function Search({
 			initialBreakpoint={1}
 			style={{ '--height': `${MODAL_HEIGHT}px` }}
 			onDidPresent={() => {
-				if (searchbarRef.current) {
-					searchbarRef.current.value = query
-					searchbarRef.current.setFocus()
-				}
+				if (searchbarRef.current) searchbarRef.current.value = query
 				setFocusedSuggestionIndex(-1)
 			}}
 		>
