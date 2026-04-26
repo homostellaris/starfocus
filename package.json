@@ -85,7 +85,7 @@
 		"serve": "^14.2.4",
 		"tailwindcss": "^3.4.17",
 		"typescript": "5.4.5",
-		"vercel": "^50.34.3"
+		"vercel": "^51.8.0"
 	},
 	"engines": {
 		"node": "20.x"
