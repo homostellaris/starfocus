@@ -92,7 +92,7 @@ const Home = () => {
 				<MoodProvider>
 					<ViewProvider>
 						<TodoContextProvider>
-							<ViewMenu searchModalRef={searchModalRef} />
+							<ViewMenu />
 							<SettingsMenu />
 							<IonPage id="main-content">
 								<Header title="Home"></Header>
