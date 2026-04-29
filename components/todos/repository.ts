@@ -1,9 +1,48 @@
-import { PromiseExtended } from 'dexie'
-import order from '../common/order'
+import order, { starMudder } from '../common/order'
 import { db, DexieStarfocus, Todo } from '../db'
 
 export class TodoRepository {
 	constructor(private readonly db: DexieStarfocus) {}
+
+	async addToTopOfAsteroidField(todoId: string): Promise<void> {
+		const firstItem = await db.asteroidFieldOrder.orderBy('order').first()
+		const newOrder = order(undefined, firstItem?.order)
+		await db.asteroidFieldOrder.put({ todoId, order: newOrder })
+		if (newOrder.length > 1) {
+			await this.rebalanceAsteroidFieldOrder()
+		}
+	}
+
+	async addToTopOfWayfinder(todoId: string): Promise<void> {
+		const firstItem = await db.wayfinderOrder.orderBy('order').first()
+		const newOrder = order(undefined, firstItem?.order)
+		await db.wayfinderOrder.put({ todoId, order: newOrder })
+		if (newOrder.length > 1) {
+			await this.rebalanceWayfinderOrder()
+		}
+	}
+
+	private async rebalanceAsteroidFieldOrder(): Promise<void> {
+		const items = await db.asteroidFieldOrder.orderBy('order').toArray()
+		if (items.length === 0) return
+		const newOrderKeys = starMudder(items.length)
+		await Promise.all(
+			items.map((item, index) =>
+				db.asteroidFieldOrder.update(item.todoId, { order: newOrderKeys[index] }),
+			),
+		)
+	}
+
+	private async rebalanceWayfinderOrder(): Promise<void> {
+		const items = await db.wayfinderOrder.orderBy('order').toArray()
+		if (items.length === 0) return
+		const newOrderKeys = starMudder(items.length)
+		await Promise.all(
+			items.map((item, index) =>
+				db.wayfinderOrder.update(item.todoId, { order: newOrderKeys[index] }),
+			),
+		)
+	}
 
 	async complete(todo: Todo): Promise<void> {
 		await db.transaction(
@@ -30,37 +69,13 @@ export class TodoRepository {
 			db.asteroidFieldOrder,
 			db.wayfinderOrder,
 			async () => {
-				const promises: PromiseExtended<number | string>[] = [
-					db.todos.update(todo.id, {
-						completedAt: undefined,
-					}),
-				]
+				await db.todos.update(todo.id, { completedAt: undefined })
 
 				if (todo.starPoints) {
-					const wayfinderOrder = await db.wayfinderOrder
-						.orderBy('order')
-						.limit(1)
-						.keys()
-					promises.push(
-						db.wayfinderOrder.put({
-							todoId: todo.id,
-							order: order(undefined, wayfinderOrder[0]?.toString()),
-						}),
-					)
+					await this.addToTopOfWayfinder(todo.id)
 				} else {
-					const asteroidFieldOrder = await db.asteroidFieldOrder
-						.orderBy('order')
-						.limit(1)
-						.keys()
-					promises.push(
-						db.asteroidFieldOrder.put({
-							todoId: todo.id,
-							order: order(undefined, asteroidFieldOrder[0]?.toString()),
-						}),
-					)
+					await this.addToTopOfAsteroidField(todo.id)
 				}
-
-				await Promise.all(promises)
 			},
 		)
 	}

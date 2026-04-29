@@ -3,7 +3,7 @@ import { useCallback, useRef } from 'react'
 import { ListType, Todo, db } from '../../db'
 import { useMarkdownExportContext } from '../../export/MarkdownExportContext'
 import { EditTodoModal } from './modal'
-import order from '../../common/order'
+import todoRepository from '../repository'
 import { usePostHog } from 'posthog-js/react'
 
 export function useEditTodoModal(): [
@@ -39,23 +39,13 @@ export function useEditTodoModal(): [
 					title: updatedTodo.title,
 				})
 				if (location === ListType.asteroidField) {
-					const asteroidFieldOrder = await db.asteroidFieldOrder
-						.orderBy('order')
-						.keys()
 					await Promise.all([
-						db.asteroidFieldOrder.put({
-							todoId: updatedTodo.id,
-							order: order(undefined, asteroidFieldOrder[0]?.toString()),
-						}),
+						todoRepository.addToTopOfAsteroidField(updatedTodo.id),
 						db.wayfinderOrder.where({ todoId: updatedTodo.id }).delete(),
 					])
 				} else if (location === ListType.wayfinder) {
-					const wayfinderOrder = await db.wayfinderOrder.orderBy('order').keys()
 					await Promise.all([
-						db.wayfinderOrder.put({
-							todoId: updatedTodo.id,
-							order: order(undefined, wayfinderOrder[0]?.toString()),
-						}),
+						todoRepository.addToTopOfWayfinder(updatedTodo.id),
 						db.asteroidFieldOrder.where({ todoId: updatedTodo.id }).delete(),
 					])
 				} else if (location === ListType.database) {

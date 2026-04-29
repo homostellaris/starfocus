@@ -1,9 +1,9 @@
 import { useIonModal } from '@ionic/react'
 import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
 import { useCallback, useRef } from 'react'
-import order from '../../common/order'
 import { db, ListType, Todo, TodoInput } from '../../db'
 import { useMarkdownExportContext } from '../../export/MarkdownExportContext'
+import todoRepository from '../repository'
 import { CreateTodoModal } from './modal'
 import { usePostHog } from 'posthog-js/react'
 
@@ -47,23 +47,9 @@ export function useCreateTodoModal(): [
 						title: todo.title,
 					})
 					if (location === ListType.asteroidField) {
-						const asteroidFieldOrder = await db.asteroidFieldOrder
-							.orderBy('order')
-							.keys()
-
-						await db.asteroidFieldOrder.add({
-							todoId: createdTodoId,
-							order: order(undefined, asteroidFieldOrder[0]?.toString()),
-						})
+						await todoRepository.addToTopOfAsteroidField(createdTodoId.toString())
 					} else if (location === ListType.wayfinder) {
-						const wayfinderOrder = await db.wayfinderOrder
-							.orderBy('order')
-							.keys()
-
-						await db.wayfinderOrder.add({
-							todoId: createdTodoId,
-							order: order(undefined, wayfinderOrder[0]?.toString()),
-						})
+						await todoRepository.addToTopOfWayfinder(createdTodoId.toString())
 					}
 				},
 			)
