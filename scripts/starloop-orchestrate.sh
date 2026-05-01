@@ -96,6 +96,8 @@ else
   while IFS=$'\t' read -r _id name _rest; do
     if todo_is_complete "$name"; then
       log "Todo complete for session '$name' — wrapping up"
+      openclaw message send --channel telegram --target "$TELEGRAM_TARGET" \
+        --message "✅ Todo complete: *${name}* — wrapping up Claude session and raising PR."
       steer_and_close "$name"
     else
       # Check if the process has died (disconnectReason: process_exit means acpx lost the process)

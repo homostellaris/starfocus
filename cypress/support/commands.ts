@@ -1,4 +1,5 @@
 /// <reference types="cypress" />
+/// <reference types="cypress-real-events" />
 
 import '@4tw/cypress-drag-drop'
 import { db, DexieStarfocus } from '../../components/db'
