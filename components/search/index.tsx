@@ -11,6 +11,8 @@ import { SearchSuggestions } from './SearchSuggestions'
 // PEEK_HEIGHT = handle area (10px) + searchbar (42px) = 52px
 const MODAL_HEIGHT = 362
 const PEEK_BREAKPOINT = 52 / MODAL_HEIGHT // ≈ 0.1437
+const isAtPeek = (bp: number | undefined) =>
+	bp !== undefined && Math.abs(bp - PEEK_BREAKPOINT) < 0.001
 
 export function Search({
 	modalRef,
@@ -77,7 +79,7 @@ export function Search({
 			if (event.key === '/') {
 				event.preventDefault()
 				const currentBreakpoint = await modal?.getCurrentBreakpoint()
-				if (currentBreakpoint === PEEK_BREAKPOINT) {
+				if (isAtPeek(currentBreakpoint)) {
 					const savedQuery = peekQueryRef.current
 					await modal?.setCurrentBreakpoint(1)
 					queryRef.current = savedQuery
@@ -141,7 +143,11 @@ export function Search({
 			id="search-modal"
 			ref={modalRef}
 			data-query={query}
+			data-breakpoint={1}
 			breakpoints={[0, PEEK_BREAKPOINT, 1]}
+			onIonBreakpointDidChange={e => {
+				if (modalRef.current) modalRef.current.dataset.breakpoint = String(e.detail.breakpoint)
+			}}
 			backdropBreakpoint={0}
 			canDismiss={canDismiss}
 			handle={true}
@@ -185,7 +191,7 @@ export function Search({
 						} else {
 							const currentBreakpoint =
 								await modalRef.current?.getCurrentBreakpoint()
-							if (currentBreakpoint === PEEK_BREAKPOINT) {
+							if (isAtPeek(currentBreakpoint)) {
 								await modalRef.current?.setCurrentBreakpoint(1)
 							}
 						}

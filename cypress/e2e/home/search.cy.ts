@@ -199,16 +199,14 @@ const typeQuery = (value: string) => {
 	searchModal().should('have.attr', 'data-query', value)
 }
 
-// getCurrentBreakpoint returns a Promise — resolve it via .then() so Cypress awaits it before asserting.
-// When the modal is fully dismissed (breakpoint 0) Ionic adds overlay-hidden and getCurrentBreakpoint
-// returns undefined, so check the class instead.
+// The component keeps data-breakpoint in sync via onIonBreakpointDidChange,
+// so Cypress can poll it natively. When fully dismissed Ionic adds overlay-hidden
+// and data-breakpoint is irrelevant, so check the class instead.
 const shouldHaveBreakpoint = (expected: number) => {
 	if (expected === 0) {
 		searchModal().should('have.class', 'overlay-hidden')
 	} else {
-		searchModal()
-			.then($modal => ($modal[0] as HTMLIonModalElement).getCurrentBreakpoint())
-			.should('equal', expected)
+		searchModal().should('have.attr', 'data-breakpoint', String(expected))
 	}
 }
 
