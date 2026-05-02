@@ -23,7 +23,6 @@ import {
 	reorderThreeSharp,
 	rocketSharp,
 	sparklesSharp,
-	timeSharp,
 } from 'ionicons/icons'
 import { RefObject } from 'react'
 import { StarRoleIcon } from '../common/StarRoleIcon'
@@ -141,20 +140,6 @@ export const ViewMenu = ({
 						></IonIcon>
 					</IonButton>
 				)}
-				<IonButton
-					color="warning"
-					expand="block"
-					onClick={() => {
-						setQuery('is:snoozed')
-						searchModalRef.current?.present()
-					}}
-				>
-					View snoozed
-					<IonIcon
-						slot="end"
-						icon={timeSharp}
-					></IonIcon>
-				</IonButton>
 				<IonButton
 					expand="block"
 					routerLink="/constellation"
