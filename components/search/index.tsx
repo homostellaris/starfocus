@@ -148,7 +148,7 @@ export function Search({
 			onIonBreakpointDidChange={e => {
 				if (modalRef.current) modalRef.current.dataset.breakpoint = String(e.detail.breakpoint)
 			}}
-			backdropBreakpoint={0}
+			backdropBreakpoint={PEEK_BREAKPOINT}
 			canDismiss={canDismiss}
 			handle={true}
 			initialBreakpoint={1}

@@ -137,6 +137,13 @@ describe('open', () => {
 		shouldHaveBreakpoint(PEEK_BREAKPOINT)
 	})
 
+	it('does not block main content after clicking a suggestion', () => {
+		suggestions().first().click()
+		cy.wait(ANIMATION_MS)
+		shouldHaveBreakpoint(PEEK_BREAKPOINT)
+		cy.get('#search-modal ion-backdrop').should('have.css', 'pointer-events', 'none')
+	})
+
 	it('stops at the last suggestion', () => {
 		pressKey('ArrowDown')
 		suggestions().each((_, index, list) => {
