@@ -141,7 +141,7 @@ describe('open', () => {
 		suggestions().first().click()
 		cy.wait(ANIMATION_MS)
 		shouldHaveBreakpoint(PEEK_BREAKPOINT)
-		cy.get('#search-modal ion-backdrop').should('have.css', 'pointer-events', 'none')
+		cy.get('#search-modal ion-backdrop').should('not.exist')
 	})
 
 	it('stops at the last suggestion', () => {
