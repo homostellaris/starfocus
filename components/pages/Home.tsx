@@ -84,6 +84,7 @@ import { useHelp } from '../common/HelpContext'
 
 const Home = () => {
 	const searchModalRef = useRef<HTMLIonModalElement>(null)
+	const openSearchRef = useRef<((focus?: boolean) => Promise<void>) | null>(null)
 	useGlobalKeyboardShortcuts()
 
 	return (
@@ -96,11 +97,11 @@ const Home = () => {
 							<SettingsMenu />
 							<IonPage id="main-content">
 								<Header title="Home"></Header>
-								<TodoLists searchModalRef={searchModalRef} />
+								<TodoLists openSearchRef={openSearchRef} />
 								<div className="absolute hidden xl:block bottom-4 left-4">
 									<Mood />
 								</div>
-								<Search modalRef={searchModalRef} />
+								<Search modalRef={searchModalRef} openRef={openSearchRef} />
 							</IonPage>
 						</TodoContextProvider>
 					</ViewProvider>
@@ -113,9 +114,9 @@ const Home = () => {
 export default Home
 
 export const TodoLists = ({
-	searchModalRef,
+	openSearchRef,
 }: {
-	searchModalRef: RefObject<HTMLIonModalElement | null>
+	openSearchRef: RefObject<((focus?: boolean) => Promise<void>) | null>
 }) => {
 	const posthog = usePostHog()
 	// Initial loading & scrolling stuff
@@ -414,15 +415,12 @@ export const TodoLists = ({
 										const y = nextTodoPosition ? nextTodoPosition.top + 32 : 0
 										contentRef.current?.scrollToPoint(undefined, y, 500)
 									}
-								: () => searchModalRef.current?.present()
+								: () => openSearchRef.current?.(false)
 						}
 						shape="round"
 						size="small"
 					>
-						<IonIcon
-							slot="icon-only"
-							icon={isScrolling ? rocketSharp : searchSharp}
-						></IonIcon>
+						<IonIcon slot="icon-only" icon={isScrolling ? rocketSharp : searchSharp} />
 					</IonButton>
 					<IonButton
 						id="view-menu-button"
