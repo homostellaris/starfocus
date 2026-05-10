@@ -76,25 +76,9 @@ describe('open', () => {
 		cy.focused().should('have.prop', 'tagName', 'ION-ITEM')
 	})
 
-	it('returns focus to searchbar on ArrowUp from first suggestion', () => {
-		pressKey('ArrowDown')
-		suggestions().first().trigger('keydown', { key: 'ArrowUp', bubbles: true })
-		searchInput().should('be.focused')
-	})
-
-	it('navigates down through multiple suggestions', () => {
-		pressKey('ArrowDown')
-		suggestions()
-			.first()
-			.trigger('keydown', { key: 'ArrowDown', bubbles: true })
-		suggestions()
-			.eq(1)
-			.then($second => {
-				cy.focused().should($focused => {
-					expect($focused[0]).to.equal($second[0])
-				})
-			})
-	})
+	// ArrowUp / ArrowDown within the suggestion list and stopping at boundaries are
+	// covered by cypress/component/SearchSuggestions.cy.tsx. The tests below cover
+	// only the integration concerns: modal breakpoint changes and query persistence.
 
 	it('selects a suggestion on Enter, keeps the query and snaps to peek', () => {
 		pressKey('ArrowDown')
@@ -111,31 +95,6 @@ describe('open', () => {
 		cy.wait(ANIMATION_MS)
 		shouldHaveBreakpoint(PEEK_BREAKPOINT)
 		searchModal().should('have.attr', 'data-query', 'is:snoozed')
-	})
-
-	it('stops at the last suggestion', () => {
-		pressKey('ArrowDown')
-		suggestions().each((_, index, list) => {
-			if (index < list.length - 1) {
-				cy.wrap(list[index]).trigger('keydown', {
-					key: 'ArrowDown',
-					bubbles: true,
-					force: true,
-				})
-			}
-		})
-		// One more ArrowDown on the last item — should stay on last
-		suggestions()
-			.last()
-			.trigger('keydown', { key: 'ArrowDown', bubbles: true, force: true })
-		suggestions()
-			.last()
-			.then($last => {
-				// Use .should() so Cypress retries until React settles after rapid triggers
-				cy.focused().should($focused => {
-					expect($focused[0]).to.equal($last[0])
-				})
-			})
 	})
 
 	it('opens to 100% when the suggestions are focused', () => {
