@@ -5,19 +5,18 @@ import { cn } from '../common/cn'
 import useView from '../focus/view'
 import { SearchSuggestions } from './SearchSuggestions'
 
-// Static heights measured from the rendered modal (browser inspection).
-// The content is static so these don't change at runtime.
+// Static height measured from the rendered modal (browser inspection).
 // MODAL_HEIGHT = handle area (10px) + searchbar (42px) + list (310px) = 362px
-// PEEK_HEIGHT = handle area (10px) + searchbar (42px) = 52px
 const MODAL_HEIGHT = 362
-const PEEK_BREAKPOINT = 52 / MODAL_HEIGHT // ≈ 0.1437
-const isAtPeek = (bp: number | undefined) =>
-	bp !== undefined && Math.abs(bp - PEEK_BREAKPOINT) < 0.001
+const PEEK_HEIGHT = 52 // handle (10px) + searchbar (42px)
+const PEEK_BREAKPOINT = parseFloat((PEEK_HEIGHT / MODAL_HEIGHT).toFixed(4))
 
 export function Search({
 	modalRef,
+	openRef,
 }: {
 	modalRef: RefObject<HTMLIonModalElement | null>
+	openRef?: RefObject<((focus?: boolean) => Promise<void>) | null>
 }) {
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
 	const { query, setQuery } = useView()
@@ -32,44 +31,61 @@ export function Search({
 		queryRef.current = query
 	})
 
-	// Saved synchronously before setCurrentBreakpoint(PEEK) because the Stencil animation
-	// resets the searchbar value and fires ionInput(''), wiping queryRef and React state.
-	const peekQueryRef = useRef('')
+	const blurSearchInput = useCallback(() => {
+		searchbarRef.current?.getInputElement().then(input => input?.blur())
+	}, [])
 
-	// Set to true before every programmatic snap to PEEK. The first ionInput('') that arrives
-	// after the snap is a spurious Stencil value-reset event — consuming it clears this flag.
-	// Subsequent ionInput('') events are real user clears and are handled normally.
-	const pendingPeekInputRef = useRef(false)
+	const focusAndRestore = useCallback(async () => {
+		const modal = modalRef.current
+		if (!searchbarRef.current) {
+			modal?.setAttribute('data-presented', '')
+			return
+		}
+		const currentQuery = queryRef.current
+		searchbarRef.current.value = currentQuery
+		searchbarRef.current.setFocus()
+		searchbarRef.current.getInputElement().then(input => {
+			if (input) {
+				input.value = currentQuery
+				input.focus()
+				if (currentQuery) input.setSelectionRange(0, currentQuery.length)
+			}
+			modal?.setAttribute('data-presented', '')
+		})
+	}, [modalRef])
 
-	// Clears query state and ref, saves it to peekQueryRef, then snaps to PEEK.
-	// Clearing query immediately (rather than relying on the spurious ionInput('') to clear it)
-	// ensures queryRef is '' at PEEK so a second Escape can dismiss.
-	const snapToPeek = useCallback(
-		(currentQuery: string) => {
-			peekQueryRef.current = currentQuery
-			pendingPeekInputRef.current = true
-			queryRef.current = ''
-			setQuery('')
-			modalRef.current?.setCurrentBreakpoint(PEEK_BREAKPOINT)
-		},
-		[modalRef, setQuery],
-	)
+	// Tracks whether the next onDidPresent should focus the searchbar.
+	// Set synchronously before modal.present() so onDidPresent reads the right value.
+	const shouldFocusOnPresentRef = useRef(true)
 
-	const snapToPeekOrDismiss = useCallback(async () => {
-		if (queryRef.current) {
-			snapToPeek(queryRef.current)
+	const openModal = useCallback(async (focus = true) => {
+		const modal = modalRef.current
+		if (!modal) return
+		if (modal.classList.contains('overlay-hidden')) {
+			shouldFocusOnPresentRef.current = focus
+			await modal.present()
+			// onDidPresent reads shouldFocusOnPresentRef
 		} else {
-			await modalRef.current?.dismiss()
+			const currentBreakpoint = parseFloat(modal.dataset.breakpoint ?? '0')
+			if (currentBreakpoint >= 1) return
+			setFocusedSuggestionIndex(-1)
+			await modal.setCurrentBreakpoint(1)
+			if (focus) {
+				await focusAndRestore()
+			} else {
+				modal.setAttribute('data-presented', '')
+			}
 		}
-	}, [modalRef, snapToPeek])
+	}, [focusAndRestore, modalRef])
 
-	const canDismiss = useCallback(async () => {
-		if (queryRef.current) {
-			snapToPeek(queryRef.current)
-			return false
-		}
-		return true
-	}, [snapToPeek])
+	useLayoutEffect(() => {
+		if (openRef) openRef.current = openModal
+	}, [openModal, openRef])
+
+	// canDismiss prevents the modal from fully dismissing when a query is active.
+	// When it returns false and the modal would go to breakpoint 0, Ionic snaps
+	// to the lowest non-zero breakpoint (PEEK_BREAKPOINT) instead.
+	const canDismiss = useCallback(async () => !queryRef.current, [])
 
 	useEffect(() => {
 		const handleKeyDown = async (event: KeyboardEvent) => {
@@ -78,24 +94,7 @@ export function Search({
 
 			if (event.key === '/') {
 				event.preventDefault()
-				const currentBreakpoint = await modal?.getCurrentBreakpoint()
-				if (isAtPeek(currentBreakpoint)) {
-					const savedQuery = peekQueryRef.current
-					await modal?.setCurrentBreakpoint(1)
-					queryRef.current = savedQuery
-					setQuery(savedQuery)
-					if (searchbarRef.current) searchbarRef.current.value = savedQuery
-					const input = await searchbarRef.current?.getInputElement()
-					if (input) {
-						input.value = savedQuery
-						input.focus()
-						requestAnimationFrame(() =>
-							input.setSelectionRange(0, savedQuery.length),
-						)
-					}
-				} else {
-					modal?.present()
-				}
+				await openModal()
 				posthog.capture('keyboard_shortcut_used', {
 					shortcut_key: '/',
 					action: 'search_focus',
@@ -108,7 +107,17 @@ export function Search({
 			if (event.key === 'Escape') {
 				event.stopPropagation()
 				event.stopImmediatePropagation()
-				snapToPeekOrDismiss()
+				const savedQuery = queryRef.current
+				if (savedQuery) {
+					await modal.setCurrentBreakpoint(PEEK_BREAKPOINT)
+					// IonSearchbar clears its value on Escape; restore the active filter
+					queryRef.current = savedQuery
+					setQuery(savedQuery)
+					if (searchbarRef.current) searchbarRef.current.value = savedQuery
+					blurSearchInput()
+				} else {
+					await modal.dismiss()
+				}
 				posthog.capture('keyboard_shortcut_used', {
 					shortcut_key: 'Escape',
 					action: 'dismiss_search',
@@ -119,7 +128,8 @@ export function Search({
 				if (document.activeElement?.tagName === 'ION-ITEM') return
 				event.stopPropagation()
 				event.stopImmediatePropagation()
-				snapToPeek(queryRef.current)
+				await modal.setCurrentBreakpoint(PEEK_BREAKPOINT)
+				blurSearchInput()
 			}
 
 			if (
@@ -136,7 +146,7 @@ export function Search({
 		// Escape/Enter/ArrowDown before Ionic's searchbar processes them
 		document.addEventListener('keydown', handleKeyDown, true)
 		return () => document.removeEventListener('keydown', handleKeyDown, true)
-	}, [modalRef, posthog, setQuery, snapToPeek, snapToPeekOrDismiss])
+	}, [blurSearchInput, modalRef, openModal, posthog, setQuery])
 
 	return (
 		<IonModal
@@ -145,68 +155,64 @@ export function Search({
 			data-query={query}
 			data-breakpoint={1}
 			breakpoints={[0, PEEK_BREAKPOINT, 1]}
-			onIonBreakpointDidChange={e => {
-				if (modalRef.current) modalRef.current.dataset.breakpoint = String(e.detail.breakpoint)
-			}}
 			backdropBreakpoint={PEEK_BREAKPOINT}
 			canDismiss={canDismiss}
 			handle={true}
 			initialBreakpoint={1}
-			style={{ '--height': `${MODAL_HEIGHT}px` }}
-			onDidPresent={() => {
-				if (searchbarRef.current) {
-					searchbarRef.current.value = query
-					searchbarRef.current.setFocus()
+			style={{ '--height': `calc(${MODAL_HEIGHT}px + env(safe-area-inset-bottom, 0px))` }}
+			onIonBreakpointDidChange={e => {
+				if (modalRef.current) {
+					modalRef.current.dataset.breakpoint = String(e.detail.breakpoint)
+					if (e.detail.breakpoint < 1) {
+						modalRef.current.removeAttribute('data-presented')
+					}
 				}
+			}}
+			onDidPresent={() => {
 				setFocusedSuggestionIndex(-1)
+				if (shouldFocusOnPresentRef.current) {
+					focusAndRestore()
+				} else {
+					modalRef.current?.setAttribute('data-presented', '')
+				}
 			}}
 		>
-			<div>
+			<div style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
 				<IonSearchbar
 					ref={searchbarRef}
 					className={cn(
 						'mx-auto [--background:#121212]',
 						!isPlatform('ios') && 'ion-no-padding',
 					)}
+					showCancelButton="always"
 					debounce={100}
-					onIonInput={async event => {
+					onIonCancel={async () => {
+						queryRef.current = ''
+						setQuery('')
+						await modalRef.current?.dismiss()
+					}}
+					onIonInput={event => {
 						const target = event.target as HTMLIonSearchbarElement
-						let newQuery = ''
-						if (target?.value) newQuery = target.value.toLowerCase()
-
-						// The first ionInput('') after a programmatic PEEK snap is a spurious
-						// Stencil value-reset — consume it without changing state (query was
-						// already cleared by snapToPeek before the animation started).
-						if (!newQuery && pendingPeekInputRef.current) {
-							pendingPeekInputRef.current = false
-							return
-						}
-
+						const newQuery = target?.value ? target.value.toLowerCase() : ''
+						// At peek the searchbar clears itself on Escape; ignore that to preserve the active filter.
+						const atPeek =
+							parseFloat(modalRef.current?.dataset.breakpoint ?? '1') <= PEEK_BREAKPOINT
+						if (!newQuery && atPeek) return
 						queryRef.current = newQuery
 						setQuery(newQuery)
 						if (newQuery) {
 							posthog.capture('search_performed', {
 								query_length: newQuery.length,
 							})
-						} else {
-							const currentBreakpoint =
-								await modalRef.current?.getCurrentBreakpoint()
-							if (isAtPeek(currentBreakpoint)) {
-								await modalRef.current?.setCurrentBreakpoint(1)
-							}
 						}
 					}}
 				/>
 				<SearchSuggestions
-					onClick={value => {
-						// Suggestion clicks keep the query active at PEEK (unlike Escape/Enter
-						// which clear it) so the filter remains applied while the modal is peeking.
+					onClick={async value => {
 						queryRef.current = value
-						peekQueryRef.current = value
-						pendingPeekInputRef.current = true
 						setQuery(value)
 						if (searchbarRef.current) searchbarRef.current.value = value
-						modalRef.current?.setCurrentBreakpoint(PEEK_BREAKPOINT)
+						await modalRef.current?.setCurrentBreakpoint(PEEK_BREAKPOINT)
 					}}
 					focusedIndex={focusedSuggestionIndex}
 					onFocusChange={index => {

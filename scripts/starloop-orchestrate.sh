@@ -13,6 +13,7 @@
 #   TELEGRAM_TARGET   Your Telegram user ID (required)
 #   STAR_ROLES        Comma-separated star roles to filter todos by (optional — omit to include any role)
 #   MAX_CONCURRENCY   Max simultaneous Claude Code sessions (default: 1)
+#   ACPX              Path to acpx binary (default: acpx on PATH)
 #   ACPX_WORKSPACE    Path to acpx workspace dir (default: ~/.openclaw/workspace)
 
 set -euo pipefail
@@ -21,6 +22,7 @@ TODOS_DIR="${TODOS_DIR:-}"
 TELEGRAM_TARGET="${TELEGRAM_TARGET:-}"
 STAR_ROLES="${STAR_ROLES:-}"
 MAX_CONCURRENCY="${MAX_CONCURRENCY:-1}"
+ACPX="${ACPX:-$(command -v acpx 2>/dev/null || echo "")}"
 ACPX_WORKSPACE="${ACPX_WORKSPACE:-$HOME/.openclaw/workspace}"
 
 # --- Validation ---------------------------------------------------------------
@@ -35,8 +37,8 @@ if [ -z "$TELEGRAM_TARGET" ]; then
   exit 1
 fi
 
-if ! command -v acpx &>/dev/null; then
-  echo "Error: acpx not found. Run: npm install -g acpx" >&2
+if [ -z "$ACPX" ]; then
+  echo "Error: acpx not found. Install it or set the ACPX environment variable." >&2
   exit 1
 fi
 
@@ -55,15 +57,15 @@ steer_and_close() {
   local steer_msg="The user has marked this todo complete. Please finish any in-progress work, raise a PR if not already done, then exit cleanly."
 
   log "Steering session '$session_name' to wrap up..."
-  if ! (cd "$ACPX_WORKSPACE" && acpx claude -s "$session_name" "$steer_msg" 2>&1) | log "acpx steer: $(cat)"; then
+  if ! (cd "$ACPX_WORKSPACE" && "$ACPX" claude -s "$session_name" "$steer_msg" 2>&1) | log "acpx steer: $(cat)"; then
     log "Steer failed — attempting session resume"
     local session_id
-    session_id=$(cd "$ACPX_WORKSPACE" && acpx claude sessions show "$session_name" 2>/dev/null | awk '/^sessionId:/ {print $2}')
+    session_id=$(cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions show "$session_name" 2>/dev/null | awk '/^sessionId:/ {print $2}')
     if [ -n "$session_id" ]; then
       log "Resuming Claude Code session $session_id"
-      (cd "$ACPX_WORKSPACE" && acpx claude sessions new --name "$session_name" --resume-session "$session_id" 2>&1) | log "acpx resume: $(cat)"
+      (cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions new --name "$session_name" --resume-session "$session_id" 2>&1) | log "acpx resume: $(cat)"
       sleep 5
-      (cd "$ACPX_WORKSPACE" && acpx claude -s "$session_name" "$steer_msg" 2>&1) | log "acpx steer (resumed): $(cat)" || log "acpx steer failed after resume"
+      (cd "$ACPX_WORKSPACE" && "$ACPX" claude -s "$session_name" "$steer_msg" 2>&1) | log "acpx steer (resumed): $(cat)" || log "acpx steer failed after resume"
     else
       log "Could not retrieve session ID for '$session_name' — skipping resume"
     fi
@@ -73,13 +75,13 @@ steer_and_close() {
   sleep 60
 
   log "Closing session '$session_name'"
-  (cd "$ACPX_WORKSPACE" && acpx claude sessions close "$session_name" 2>&1) | log "acpx close: $(cat)" || log "acpx close failed"
+  (cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions close "$session_name" 2>&1) | log "acpx close: $(cat)" || log "acpx close failed"
 }
 
 # --- Step 1: Check active sessions, wrap up completed todos -------------------
 
 log "Checking active ACP sessions..."
-active_sessions=$(cd "$ACPX_WORKSPACE" && acpx claude sessions list 2>/dev/null | grep -v '\[closed\]' || true)
+active_sessions=$(cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions list 2>/dev/null | grep -v '\[closed\]' || true)
 
 if [ -z "$active_sessions" ]; then
   log "No active sessions"
@@ -99,16 +101,16 @@ else
       steer_and_close "$name"
     else
       # Check if the process has died (disconnectReason: process_exit means acpx lost the process)
-      disconnect_reason=$(cd "$ACPX_WORKSPACE" && acpx claude sessions show "$name" 2>/dev/null | awk '/^disconnectReason:/ {print $2}')
+      disconnect_reason=$(cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions show "$name" 2>/dev/null | awk '/^disconnectReason:/ {print $2}')
       if [ "$disconnect_reason" = "process_exit" ]; then
         log "Session '$name' process has died (disconnectReason: process_exit) — closing stale record"
-        (cd "$ACPX_WORKSPACE" && acpx claude sessions close "$name" 2>&1) || true
+        (cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions close "$name" 2>&1) || true
       fi
     fi
   done <<< "$active_sessions"
 
   # Recount after closures
-  active_count=$(cd "$ACPX_WORKSPACE" && acpx claude sessions list 2>/dev/null | grep -vc '\[closed\]' || echo 0)
+  active_count=$(cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions list 2>/dev/null | grep -vc '\[closed\]' || echo 0)
 fi
 
 # --- Step 2: Hand off to OpenClaw if capacity is available -------------------
