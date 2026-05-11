@@ -10,16 +10,11 @@ jobs:
       - run: bun typecheck
       - run: bun lint
       - run: bun unit
-      - run: bun run build
       - uses: cypress-io/github-action@v6
         with:
           install: false
           component: true
-      - run: bun start &
-      - uses: cypress-io/github-action@v6
-        with:
-          install: false
-          wait-on: 'http://localhost:6603'
+      - run: bun integration
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

@@ -24,7 +24,7 @@
 		"format": "prettier --write components/ interfaces/ pages/ public/ styles/ utils/",
 		"unit": "bun test",
 		"component": "cypress run --component",
-		"integration": "cypress run",
+		"integration": "start-server-and-test 'bun run build && bun start' http-get://localhost:6603 'cypress run'",
 		"test": "bun typecheck && bun lint && bun unit && bun component && bun integration",
 		"build": "next build --webpack",
 		"start": "serve -p 6603 out"
@@ -84,6 +84,7 @@
 		"prettier": "3.2.5",
 		"prettier-plugin-tailwindcss": "^0.1.13",
 		"serve": "^14.2.4",
+		"start-server-and-test": "^3.0.4",
 		"tailwindcss": "^3.4.17",
 		"typescript": "5.4.5",
 		"vercel": "^51.8.0"
