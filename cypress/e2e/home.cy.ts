@@ -9,7 +9,7 @@ beforeEach(() => {
 	cy.window().then(win => {
 		if (win.db) win.db.close()
 		return new Cypress.Promise(resolve => {
-			const request = win.indexedDB.deleteDatabase('starfocus-z0vnq74nz')
+			const request = win.indexedDB.deleteDatabase('starfocus')
 			request.onsuccess = () => resolve(null)
 			request.onerror = () => resolve(null)
 			request.onblocked = () => resolve(null)

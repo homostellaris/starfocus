@@ -1,13 +1,18 @@
 beforeEach(() => {
+	cy.db(db => {
+		db.close()
+		return Promise.resolve()
+	})
 	cy.window().then(win => {
 		if (win.db) win.db.close()
 		return new Cypress.Promise(resolve => {
-			const request = win.indexedDB.deleteDatabase('starfocus-z0vnq74nz')
+			const request = win.indexedDB.deleteDatabase('starfocus')
 			request.onsuccess = () => resolve(null)
 			request.onerror = () => resolve(null)
 			request.onblocked = () => resolve(null)
 		})
 	})
+	cy.db(db => db.open())
 	cy.visit('/home', {
 		onBeforeLoad(win) {
 			win.localStorage.setItem('help-enabled', 'true')
