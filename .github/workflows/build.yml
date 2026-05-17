@@ -14,7 +14,12 @@ jobs:
         with:
           install: false
           component: true
-      - run: bun integration
+      - run: bun run build
+      - uses: cypress-io/github-action@v6
+        with:
+          install: false
+          start: bun start
+          wait-on: 'http://localhost:6603'
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
