@@ -185,18 +185,12 @@ export class DexieStarfocus extends Dexie {
 			todos: '@id, createdAt, completedAt, starRole, title',
 			visits: '@id, todoId, date',
 		})
-		const isTest =
-			typeof window !== 'undefined' && 'Cypress' in (window as unknown as Record<string, unknown>)
-		const databaseUrl = isTest
-			? ''
-			: (process.env.NEXT_PUBLIC_DATABASE_URL ?? 'https://z0vnq74nz.dexie.cloud')
-		if (databaseUrl) {
-			this.cloud.configure({
-				customLoginGui: true,
-				databaseUrl,
-				requireAuth: false,
-			})
-		}
+		this.cloud.configure({
+			customLoginGui: true,
+			databaseUrl:
+				process.env.NEXT_PUBLIC_DATABASE_URL || 'https://z0vnq74nz.dexie.cloud', // Necessary because can't figure out how to set this in Cypress test
+			requireAuth: false,
+		})
 	}
 }
 
