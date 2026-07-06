@@ -1,5 +1,6 @@
-import order, { starMudder } from '../common/order'
+import order, { starMudder, MAX_ORDER_KEY_LENGTH } from '../common/order'
 import { db, DexieStarfocus, Todo } from '../db'
+import posthog from 'posthog-js'
 
 export class TodoRepository {
 	constructor(private readonly db: DexieStarfocus) {}
@@ -8,8 +9,8 @@ export class TodoRepository {
 		const firstItem = await db.asteroidFieldOrder.orderBy('order').first()
 		const newOrder = order(undefined, firstItem?.order)
 		await db.asteroidFieldOrder.put({ todoId, order: newOrder })
-		if (newOrder.length > 1) {
-			await this.rebalanceAsteroidFieldOrder()
+		if (newOrder.length > MAX_ORDER_KEY_LENGTH) {
+			await this.rebalanceAsteroidFieldOrder(newOrder, 'add_to_top')
 		}
 	}
 
@@ -17,14 +18,23 @@ export class TodoRepository {
 		const firstItem = await db.wayfinderOrder.orderBy('order').first()
 		const newOrder = order(undefined, firstItem?.order)
 		await db.wayfinderOrder.put({ todoId, order: newOrder })
-		if (newOrder.length > 1) {
-			await this.rebalanceWayfinderOrder()
+		if (newOrder.length > MAX_ORDER_KEY_LENGTH) {
+			await this.rebalanceWayfinderOrder(newOrder, 'add_to_top')
 		}
 	}
 
-	private async rebalanceAsteroidFieldOrder(): Promise<void> {
+
+	async rebalanceAsteroidFieldOrder(triggerKey?: string, triggerSource?: string): Promise<void> {
 		const items = await db.asteroidFieldOrder.orderBy('order').toArray()
 		if (items.length === 0) return
+		console.info(`[TodoRepository] Rebalancing Asteroid Field order keys (Trigger key: "${triggerKey || ''}", source: ${triggerSource || 'unknown'}). Total items: ${items.length}`);
+		posthog.capture('todo_database_rebalanced', {
+			list_type: 'asteroid_field',
+			item_count: items.length,
+			trigger_key: triggerKey,
+			trigger_key_length: triggerKey?.length,
+			trigger_source: triggerSource,
+		})
 		const newOrderKeys = starMudder(items.length)
 		await Promise.all(
 			items.map((item, index) =>
@@ -33,9 +43,17 @@ export class TodoRepository {
 		)
 	}
 
-	private async rebalanceWayfinderOrder(): Promise<void> {
+	async rebalanceWayfinderOrder(triggerKey?: string, triggerSource?: string): Promise<void> {
 		const items = await db.wayfinderOrder.orderBy('order').toArray()
 		if (items.length === 0) return
+		console.info(`[TodoRepository] Rebalancing Wayfinder order keys (Trigger key: "${triggerKey || ''}", source: ${triggerSource || 'unknown'}). Total items: ${items.length}`);
+		posthog.capture('todo_database_rebalanced', {
+			list_type: 'wayfinder',
+			item_count: items.length,
+			trigger_key: triggerKey,
+			trigger_key_length: triggerKey?.length,
+			trigger_source: triggerSource,
+		})
 		const newOrderKeys = starMudder(items.length)
 		await Promise.all(
 			items.map((item, index) =>

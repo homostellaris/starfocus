@@ -4,6 +4,9 @@ function order(...args: MudderParameters) {
 	return starMudder(...args)[0]
 }
 
+export const MAX_ORDER_KEY_LENGTH = 8;
+
+
 /**
  * Its more elegant if the function doesn't care about returning an index that is out of bounds as this results in a
  * number which can be used by the caller more nicely in subsequent operations.
