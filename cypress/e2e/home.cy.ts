@@ -180,7 +180,57 @@ describe('wayfinder', () => {
 	})
 
 	it.skip('can edit todos')
-	it.skip('can reorder todos')
+	it('can reorder todos in asteroid field and triggers rebalancing when needed', () => {
+		createTodo({ title: 'todo A' })
+		createTodo({ title: 'todo B' })
+		createTodo({ title: 'todo C' })
+
+		// Manually set orders to adjacent very long keys to force next reorder to exceed MAX_ORDER_KEY_LENGTH and trigger rebalancing
+		cy.db(async db => {
+			const todos = await db.todos.toArray()
+			const idA = todos.find(t => t.title === 'todo A')?.id
+			const idB = todos.find(t => t.title === 'todo B')?.id
+			const idC = todos.find(t => t.title === 'todo C')?.id
+
+			if (idA) await db.asteroidFieldOrder.update(idA, { order: 'baaaaaaaaa' })
+			if (idB) await db.asteroidFieldOrder.update(idB, { order: 'baaaaaaaab' })
+			if (idC) await db.asteroidFieldOrder.update(idC, { order: 'z' })
+		})
+
+		cy.reload()
+
+		assertList('asteroid-field', ['todo A', 'todo B', 'todo C'])
+
+		// Trigger reordering event from the UI (drag todo C from index 2 to index 1)
+		cy.window().then(win => {
+			const reorderGroup = win.document.getElementById('asteroid-field')
+			if (!reorderGroup) throw new Error('Reorder group not found')
+			const event = new win.CustomEvent('ionItemReorder', {
+				detail: {
+					from: 2,
+					to: 1,
+					complete: () => {},
+				},
+				bubbles: true,
+				composed: true,
+			})
+			reorderGroup.dispatchEvent(event)
+		})
+
+		// Reordering 2 -> 1 moves todo C between todo A and todo B
+		cy.get('#asteroid-field [data-class="todo"]').eq(0).find('[data-class="title"]').should('have.text', 'todo A')
+		cy.get('#asteroid-field [data-class="todo"]').eq(1).find('[data-class="title"]').should('have.text', 'todo C')
+		cy.get('#asteroid-field [data-class="todo"]').eq(2).find('[data-class="title"]').should('have.text', 'todo B')
+
+		// Verify that all order strings in DB are rebalanced (length === 1)
+		cy.db(async db => {
+			const items = await db.asteroidFieldOrder.orderBy('order').toArray()
+			expect(items).to.have.length(3)
+			items.forEach(item => {
+				expect(item.order.length).to.eq(1)
+			})
+		})
+	})
 	it.skip('can move todos between lists')
 	it.skip('can complete todos')
 	it.skip('can log visits')

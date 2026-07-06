@@ -46,7 +46,7 @@ import React, {
 import { Header } from '../common/Header'
 import Placeholder from '../common/Placeholder'
 import { StarRoleIcon } from '../common/StarRoleIcon'
-import order, { calculateReorderIndices } from '../common/order'
+import order, { calculateReorderIndices, MAX_ORDER_KEY_LENGTH } from '../common/order'
 import {
 	AsteroidFieldTodoListItem,
 	db,
@@ -654,6 +654,9 @@ export const TodoLists = ({
 													await db.asteroidFieldOrder.update(fromTodo.id, {
 														order: newOrder,
 													})
+													if (newOrder.length > MAX_ORDER_KEY_LENGTH) {
+														await todoRepository.rebalanceAsteroidFieldOrder(newOrder, 'drag_and_drop')
+													}
 													posthog.capture('todo_reordered', {
 														location: 'asteroid_field',
 														from_index: event.detail.from,
@@ -827,6 +830,9 @@ export const TodoLists = ({
 													await db.wayfinderOrder.update(fromTodo.id, {
 														order: newOrder,
 													})
+													if (newOrder.length > MAX_ORDER_KEY_LENGTH) {
+														await todoRepository.rebalanceWayfinderOrder(newOrder, 'drag_and_drop')
+													}
 													posthog.capture('todo_reordered', {
 														location: 'wayfinder',
 														from_index: event.detail.from,
