@@ -10,7 +10,8 @@
 #
 # Environment variables:
 #   TODOS_DIR         Path to StarFocus todos folder (required)
-#   TELEGRAM_TARGET   Your Telegram user ID (required)
+#   OPENCLAW_CHANNEL  OpenClaw message channel (e.g. telegram, whatsapp) (optional)
+#   OPENCLAW_TARGET   OpenClaw target user ID/phone number (required)
 #   STAR_ROLES        Comma-separated star roles to filter todos by (optional — omit to include any role)
 #   MAX_CONCURRENCY   Max simultaneous Claude Code sessions (default: 1)
 #   ACPX              Path to acpx binary (default: acpx on PATH)
@@ -19,7 +20,8 @@
 set -euo pipefail
 
 TODOS_DIR="${TODOS_DIR:-}"
-TELEGRAM_TARGET="${TELEGRAM_TARGET:-}"
+OPENCLAW_CHANNEL="${OPENCLAW_CHANNEL:-}"
+OPENCLAW_TARGET="${OPENCLAW_TARGET:-}"
 STAR_ROLES="${STAR_ROLES:-}"
 MAX_CONCURRENCY="${MAX_CONCURRENCY:-1}"
 ACPX="${ACPX:-$(command -v acpx 2>/dev/null || echo "")}"
@@ -32,8 +34,17 @@ if [ -z "$TODOS_DIR" ]; then
   exit 1
 fi
 
-if [ -z "$TELEGRAM_TARGET" ]; then
-  echo "Error: TELEGRAM_TARGET is not set." >&2
+# Fallback compatibility check
+if [ -z "$OPENCLAW_TARGET" ] && [ -n "${TELEGRAM_TARGET:-}" ]; then
+  OPENCLAW_TARGET="$TELEGRAM_TARGET"
+  OPENCLAW_CHANNEL="${OPENCLAW_CHANNEL:-telegram}"
+elif [ -z "$OPENCLAW_TARGET" ] && [ -n "${WHATSAPP_TARGET:-}" ]; then
+  OPENCLAW_TARGET="$WHATSAPP_TARGET"
+  OPENCLAW_CHANNEL="${OPENCLAW_CHANNEL:-whatsapp}"
+fi
+
+if [ -z "$OPENCLAW_TARGET" ]; then
+  echo "Error: Neither OPENCLAW_TARGET, TELEGRAM_TARGET, nor WHATSAPP_TARGET is set." >&2
   exit 1
 fi
 
@@ -96,7 +107,9 @@ else
   while IFS=$'\t' read -r _id name _rest; do
     if todo_is_complete "$name"; then
       log "Todo complete for session '$name' — wrapping up"
-      openclaw message send --channel telegram --target "$TELEGRAM_TARGET" \
+      local channel_opt=""
+      [ -n "$OPENCLAW_CHANNEL" ] && channel_opt="--channel $OPENCLAW_CHANNEL"
+      openclaw message send $channel_opt --target "$OPENCLAW_TARGET" \
         --message "✅ Todo complete: *${name}* — wrapping up Claude session and raising PR."
       steer_and_close "$name"
     else
@@ -119,8 +132,16 @@ log "Active sessions after cleanup: $active_count / $MAX_CONCURRENCY"
 
 if [ "$active_count" -lt "$MAX_CONCURRENCY" ]; then
   log "Capacity available — handing off to OpenClaw"
+  
+  channel_part=""
+  via_part="the default channel"
+  if [ -n "$OPENCLAW_CHANNEL" ]; then
+    channel_part="--channel $OPENCLAW_CHANNEL "
+    via_part="$OPENCLAW_CHANNEL"
+  fi
+
   openclaw agent --agent main \
-    --message "Execute the starloop skill with arguments: todos-dir=$TODOS_DIR star-roles=$STAR_ROLES. Send the result via: openclaw message send --channel telegram --target $TELEGRAM_TARGET --message '[message]'. When the user replies with go, a number, or a task name: spawn a Claude Code ACP session by running: acpx --ttl 0 claude sessions new --name [session-name] (cwd: $ACPX_WORKSPACE). The session name MUST be the full todo filename including the ID suffix, minus .md — e.g. for 'fix-long-order-properties_0fc3acom.md' use 'fix-long-order-properties_0fc3acom'. Then set bypass permissions mode: acpx --ttl 0 claude set-mode -s [session-name] bypassPermissions (cwd: $ACPX_WORKSPACE). Then send the initial task prompt in the background so it does not block: nohup acpx --ttl 0 claude -s [session-name] \"Read $TODOS_DIR/[chosen-filename] and execute the task. If you need input, send: openclaw message send --channel telegram --target $TELEGRAM_TARGET --message YOUR_QUESTION and pause.\" > /tmp/acpx-[session-name].log 2>&1 & disown. Do NOT discuss the task or ask any questions — just spawn, then confirm to the user via Telegram: '🚀 Started session [session-name]. I will update you when done or if Claude needs input.'"
+    --message "Execute the starloop skill with arguments: todos-dir=$TODOS_DIR star-roles=$STAR_ROLES. Send the result via: openclaw message send ${channel_part}--target $OPENCLAW_TARGET --message '[message]'. When the user replies with go, a number, or a task name: spawn a Claude Code ACP session by running: acpx --ttl 0 claude sessions new --name [session-name] (cwd: $ACPX_WORKSPACE). The session name MUST be the full todo filename including the ID suffix, minus .md — e.g. for 'fix-long-order-properties_0fc3acom.md' use 'fix-long-order-properties_0fc3acom'. Then set bypass permissions mode: acpx --ttl 0 claude set-mode -s [session-name] bypassPermissions (cwd: $ACPX_WORKSPACE). Then send the initial task prompt in the background so it does not block: nohup acpx --ttl 0 claude -s [session-name] \"Read $TODOS_DIR/[chosen-filename] and execute the task. If you need input, send: openclaw message send ${channel_part}--target $OPENCLAW_TARGET --message YOUR_QUESTION and pause.\" > /tmp/acpx-[session-name].log 2>&1 & disown. Do NOT discuss the task or ask any questions — just spawn, then confirm to the user via ${via_part}: '🚀 Started session [session-name]. I will update you when done or if Claude needs input.'"
 else
   log "At capacity ($active_count/$MAX_CONCURRENCY) — nothing to do"
 fi
