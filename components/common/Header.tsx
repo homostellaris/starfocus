@@ -125,7 +125,10 @@ export const Header = ({
 								Sync
 							</IonButton>
 						)}
-						<IonButton onClick={() => menuController.toggle('end')}>
+						<IonButton
+							id="settings-menu-button"
+							onClick={() => menuController.toggle('end')}
+						>
 							<IonIcon
 								icon={settingsSharp}
 								slot="icon-only"
