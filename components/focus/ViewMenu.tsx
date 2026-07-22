@@ -24,7 +24,6 @@ import {
 	rocketSharp,
 	sparklesSharp,
 } from 'ionicons/icons'
-import { RefObject } from 'react'
 import { StarRoleIcon } from '../common/StarRoleIcon'
 import Title from '../common/Title'
 import { db, StarRole, StarRoleGroup } from '../db'
@@ -37,17 +36,13 @@ import { usePostHog } from 'posthog-js/react'
 import { StarRoleOrderMap } from '../todos/starSort'
 import { computeVisibleStarSortUpdates } from './starSortToManualOrder'
 
-export const ViewMenu = ({
-	searchModalRef,
-}: {
-	searchModalRef: RefObject<HTMLIonModalElement | null>
-}) => {
+export const ViewMenu = () => {
 	const posthog = usePostHog()
 	const queryResult = useLiveQuery(() =>
 		Promise.all([db.starRoles.toArray(), db.starRoleGroups.toArray()]),
 	)
 	const isLoading = queryResult === undefined
-	const { setQuery, inActiveStarRoles, query } = useView()
+	const { inActiveStarRoles, query } = useView()
 
 	const wayfinderOrderMode = useSettings('#wayfinderOrderMode')
 
