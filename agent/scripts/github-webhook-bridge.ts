@@ -95,6 +95,91 @@ function formatReviewSubmitted(payload: Record<string, unknown>): string | null 
   return `GitHub review (${state}) from @${sender} on ${repo}#${prNumber} "${prTitle}" (branch: ${branch}):\n\n${body}\n\n${reviewUrl}`
 }
 
+function formatPullRequestNotification(payload: Record<string, unknown>): string | null {
+  const pr = payload.pull_request as Record<string, unknown>
+  const action = payload.action as string
+  const sender = (payload.sender as Record<string, unknown>).login as string
+  if (sender === GITHUB_BOT_LOGIN) return null
+
+  const prNumber = pr.number as number
+  const prTitle = pr.title as string
+  const branch = (pr.head as Record<string, unknown>).ref as string
+  const prUrl = pr.html_url as string
+
+  if (action === 'opened') {
+    return `🆕 GitHub PR #${prNumber} "${prTitle}" opened by @${sender} (branch: ${branch}):\n\nLink: ${prUrl}`
+  } else if (action === 'synchronize') {
+    return `🔄 GitHub PR #${prNumber} "${prTitle}" updated (synchronized) by @${sender} (branch: ${branch}):\n\nLink: ${prUrl}`
+  } else if (action === 'review_requested') {
+    const requestedReviewer = (payload.requested_reviewer as Record<string, unknown>)?.login as string
+    return `👀 GitHub PR #${prNumber} "${prTitle}": review requested from @${requestedReviewer} by @${sender}:\n\nLink: ${prUrl}`
+  }
+
+  return null
+}
+
+function formatReviewNotification(payload: Record<string, unknown>): string | null {
+  const review = payload.review as Record<string, unknown>
+  const sender = (payload.sender as Record<string, unknown>).login as string
+  if (sender === GITHUB_BOT_LOGIN) return null
+
+  const pr = payload.pull_request as Record<string, unknown>
+  const prNumber = pr.number as number
+  const prTitle = pr.title as string
+  const state = review.state as string
+  const reviewUrl = review.html_url as string
+  const body = review.body as string | null
+
+  let msg = `💬 GitHub Review (${state.toUpperCase()}) by @${sender} on PR #${prNumber} "${prTitle}":\n`
+  if (body) {
+    msg += `\n"${body}"\n`
+  }
+  msg += `\nLink: ${reviewUrl}`
+  return msg
+}
+
+function formatWorkflowRunNotification(payload: Record<string, unknown>): string | null {
+  const action = payload.action as string
+  if (action !== 'completed') return null
+
+  const run = payload.workflow_run as Record<string, unknown>
+  const name = run.name as string
+  const conclusion = run.conclusion as string
+  const branch = run.head_branch as string
+  const repo = (payload.repository as Record<string, unknown>).full_name as string
+  const runUrl = run.html_url as string
+
+  const pullRequests = run.pull_requests as Array<Record<string, unknown>> | undefined
+  let prLink = ''
+  if (pullRequests && pullRequests.length > 0) {
+    const prNumber = pullRequests[0].number as number
+    prLink = `\nPR Link: https://github.com/${repo}/pull/${prNumber}`
+  }
+
+  const statusIcon = conclusion === 'success' ? '✅' : '❌'
+  return `${statusIcon} GitHub Actions: Workflow "${name}" ${conclusion.toUpperCase()} on ${repo} (branch: ${branch})${prLink}\n\nRun Details: ${runUrl}`
+}
+
+async function sendDirectNotification(message: string): Promise<void> {
+  const channel = process.env.OPENCLAW_CHANNEL || 'whatsapp'
+  const target = process.env.OPENCLAW_TARGET
+  if (!target) {
+    console.warn('Skipping direct notification: OPENCLAW_TARGET is not configured')
+    return
+  }
+
+  console.log(`Sending direct notification via ${channel} to ${target}...`)
+  const proc = Bun.spawn(
+    ['openclaw', 'message', 'send', '--channel', channel, '--target', target, '--message', message],
+    { stderr: 'pipe' },
+  )
+  const exitCode = await proc.exited
+  if (exitCode !== 0) {
+    const stderr = await new Response(proc.stderr).text()
+    throw new Error(`openclaw message send exited ${exitCode}: ${stderr}`)
+  }
+}
+
 async function forwardToOpenClaw(message: string): Promise<void> {
   const proc = Bun.spawn(
     ['openclaw', 'agent', '--agent', 'main', '--message', message],
@@ -126,6 +211,41 @@ Bun.serve({
     const payload = JSON.parse(body) as Record<string, unknown>
     const action = payload.action as string
 
+    // 1. Direct Notification check
+    if (event === 'pull_request') {
+      const notification = formatPullRequestNotification(payload)
+      if (notification) {
+        try {
+          await sendDirectNotification(notification)
+          return new Response('OK', { status: 200 })
+        } catch (error) {
+          console.error('Failed to send PR direct notification:', error)
+          return new Response('Internal server error', { status: 500 })
+        }
+      }
+    } else if (event === 'pull_request_review' && action === 'submitted') {
+      const notification = formatReviewNotification(payload)
+      if (notification) {
+        try {
+          await sendDirectNotification(notification)
+        } catch (error) {
+          console.error('Failed to send Review direct notification:', error)
+        }
+      }
+    } else if (event === 'workflow_run') {
+      const notification = formatWorkflowRunNotification(payload)
+      if (notification) {
+        try {
+          await sendDirectNotification(notification)
+          return new Response('OK', { status: 200 })
+        } catch (error) {
+          console.error('Failed to send workflow_run direct notification:', error)
+          return new Response('Internal server error', { status: 500 })
+        }
+      }
+    }
+
+    // 2. OpenClaw Agent Mention check (existing logic)
     let message: string | null = null
 
     if (event === 'issue_comment' && action === 'created') {
