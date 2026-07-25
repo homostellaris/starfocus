@@ -19,8 +19,7 @@
 set -euo pipefail
 
 TODOS_DIR="${TODOS_DIR:-/home/openclaw/obsidian/reality-sculptor/todos}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ORCHESTRATE="$SCRIPT_DIR/starloop-orchestrate.sh"
+CRON_JOB_ID="6bdc9802-39dd-4888-a6b4-efd3f240821c"
 
 # Fallback check
 if [ -z "${OPENCLAW_TARGET:-}" ] && [ -n "${TELEGRAM_TARGET:-}" ]; then
@@ -42,6 +41,6 @@ log "Watching $TODOS_DIR with inotify"
 
 inotifywait -m -e close_write,moved_to --format '%f' "$TODOS_DIR" 2>/dev/null | while read -r FILENAME; do
   [[ "$FILENAME" != *.md ]] && continue
-  log "Change detected: $FILENAME — running orchestrator"
-  "$ORCHESTRATE" 2>&1 | log "orchestrate: $(cat)" || log "orchestrator failed"
+  log "Change detected: $FILENAME — triggering OpenClaw cron"
+  openclaw cron run "$CRON_JOB_ID" || log "cron run failed"
 done
