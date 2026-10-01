@@ -24,7 +24,7 @@
 
 set -euo pipefail
 
-TODOS_DIR="${TODOS_DIR:-/home/openclaw/obsidian/reality-sculptor/todos}"
+TODOS_DIR="${TODOS_DIR:-}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ORCHESTRATE="$SCRIPT_DIR/starloop-orchestrate.sh"
 DEBOUNCE_SECONDS="${STARLOOP_DEBOUNCE_SECONDS:-25}"
@@ -44,6 +44,11 @@ if [ -z "${OPENCLAW_TARGET:-}" ]; then
 fi
 
 log() { echo "[$(date '+%H:%M:%S')] $*"; }
+
+if [ -z "$TODOS_DIR" ]; then
+  echo "Error: TODOS_DIR is not set." >&2
+  exit 1
+fi
 
 if [ ! -d "$TODOS_DIR" ]; then
   echo "Error: TODOS_DIR '$TODOS_DIR' does not exist or is not a directory." >&2
