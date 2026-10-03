@@ -17,8 +17,8 @@
 	],
 	"scripts": {
 		"prepare": "husky",
-		"dev": "next dev --webpack -p 6603",
-		"android:dev": "next build --webpack && cap sync android && mv out/home.html out/index.html && cap run android",
+		"dev": "bun --bun next dev --webpack -p 6603",
+		"android:dev": "bun --bun next build --webpack && cap sync android && mv out/home.html out/index.html && cap run android",
 		"typecheck": "tsc && tsc --project scripts/tsconfig.json",
 		"lint": "eslint .",
 		"format": "prettier --write components/ interfaces/ pages/ public/ styles/ utils/",
@@ -26,7 +26,7 @@
 		"component": "cypress run --component",
 		"integration": "start-server-and-test 'bun run build && bun start' http-get://localhost:6603 'cypress run'",
 		"test": "bun typecheck && bun lint && bun unit && bun component && bun integration",
-		"build": "next build --webpack",
+		"build": "bun --bun next build --webpack",
 		"start": "serve -p 6603 out"
 	},
 	"dependencies": {
@@ -91,6 +91,6 @@
 		"vercel": "^51.8.0"
 	},
 	"engines": {
-		"node": "20.x"
+		"bun": ">=1.0.0"
 	}
 }
