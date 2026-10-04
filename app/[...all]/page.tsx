@@ -6,6 +6,7 @@ export async function generateStaticParams() {
 		{ all: ['constellation'] },
 		{ all: ['settings'] },
 		{ all: ['test'] },
+		{ all: ['workbench'] },
 	]
 }
 

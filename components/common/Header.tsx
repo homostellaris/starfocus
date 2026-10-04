@@ -93,6 +93,13 @@ export const Header = ({
 								>
 									Documentation
 								</IonButton>
+								<IonButton
+									expand="block"
+									fill="clear"
+									href="/workbench"
+								>
+									Component Workbench
+								</IonButton>
 								{user?.isLoggedIn && (
 									<IonButton
 										expand="block"
