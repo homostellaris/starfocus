@@ -2,8 +2,15 @@ import { IonIcon } from '@ionic/react'
 import { warningSharp, syncSharp, documentTextSharp } from 'ionicons/icons'
 import { useMarkdownExportContext } from './MarkdownExportContext'
 
-export default function MarkdownSyncStatus() {
-	const { status: exportStatus } = useMarkdownExportContext()
+import type { ExportStatus } from './useMarkdownExport'
+
+export default function MarkdownSyncStatus({
+	exportStatus: overrideExportStatus,
+}: {
+	exportStatus?: ExportStatus
+} = {}) {
+	const context = useMarkdownExportContext()
+	const exportStatus = overrideExportStatus !== undefined ? overrideExportStatus : context.status
 
 	return (
 		<IonIcon

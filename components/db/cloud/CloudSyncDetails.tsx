@@ -12,9 +12,20 @@ import {
 import { useObservable } from 'dexie-react-hooks'
 import { db } from '../../db'
 
-export default function CloudSyncDetails() {
-	const user = useObservable(db.cloud.currentUser)
-	const syncState = useObservable(db.cloud.syncState)
+export default function CloudSyncDetails({
+	user: overrideUser,
+	syncState: overrideSyncState,
+	onLogout,
+}: {
+	user?: any
+	syncState?: any
+	onLogout?: () => void
+} = {}) {
+	const dbUser = useObservable(db.cloud.currentUser)
+	const dbSyncState = useObservable(db.cloud.syncState)
+
+	const user = overrideUser !== undefined ? overrideUser : dbUser
+	const syncState = overrideSyncState !== undefined ? overrideSyncState : dbSyncState
 
 	if (!user) {
 		return 'No user'
@@ -35,7 +46,8 @@ export default function CloudSyncDetails() {
 							color="danger"
 							fill="solid"
 							onClick={() => {
-								db.cloud.logout()
+								if (onLogout) onLogout()
+								else db.cloud.logout()
 							}}
 							size="small"
 						>

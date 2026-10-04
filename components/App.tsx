@@ -7,6 +7,7 @@ import Home from './pages/Home'
 import Constellation from './pages/Constellation'
 import ErrorBoundary from './ErrorBoundary'
 import Test from './pages/Test'
+import Workbench from './pages/Workbench'
 import { db } from './db'
 import { useEffect } from 'react'
 import todoRepository from './todos/repository'
@@ -52,6 +53,10 @@ const App = () => {
 						<Route
 							path="/test"
 							render={() => <Test />}
+						/>
+						<Route
+							path="/workbench"
+							render={() => <Workbench />}
 						/>
 						<Route
 							render={params => {

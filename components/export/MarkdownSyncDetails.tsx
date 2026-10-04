@@ -10,8 +10,18 @@ import {
 import { syncSharp } from 'ionicons/icons'
 import { useMarkdownExportContext } from './MarkdownExportContext'
 
-export default function MarkdownSyncDetails() {
-	const { status: exportStatus, runFullSync } = useMarkdownExportContext()
+import type { ExportStatus } from './useMarkdownExport'
+
+export default function MarkdownSyncDetails({
+	exportStatus: overrideExportStatus,
+	onRunFullSync,
+}: {
+	exportStatus?: ExportStatus
+	onRunFullSync?: () => void
+} = {}) {
+	const context = useMarkdownExportContext()
+	const exportStatus = overrideExportStatus !== undefined ? overrideExportStatus : context.status
+	const runFullSync = onRunFullSync || context.runFullSync
 
 	return (
 		<>
