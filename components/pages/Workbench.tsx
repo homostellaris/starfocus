@@ -19,7 +19,6 @@ import {
 	IonButton,
 	IonTitle,
 	IonModal,
-	IonActionSheet,
 	IonHeader,
 } from '@ionic/react'
 import {
@@ -82,7 +81,6 @@ function WorkbenchContent() {
 	const [fallbackComponent, setFallbackComponent] =
 		useState<ComponentKey>('sync-status')
 	const [mobileKnobsOpen, setMobileKnobsOpen] = useState(false)
-	const [actionSheetOpen, setActionSheetOpen] = useState(false)
 
 	const activeComponent: ComponentKey =
 		params.component &&
@@ -286,95 +284,154 @@ function WorkbenchContent() {
 		activeComponent === 'cloud-sync' ||
 		activeComponent === 'markdown-sync'
 
-	const actionSheetButtons = (() => {
+	const presetsForActiveComponent = (() => {
 		if (isSyncComponent) {
 			return [
-				{ text: '🟢 All Synced', handler: () => applyPreset('synced') },
-				{ text: '🔵 Cloud Uploading', handler: () => applyPreset('cloud-pushing') },
-				{ text: '🟣 Full MD Sync', handler: () => applyPreset('markdown-syncing') },
-				{ text: '🔴 Cloud Error', handler: () => applyPreset('cloud-error') },
-				{ text: '🟡 Reconnect Needed', handler: () => applyPreset('markdown-error') },
-				{ text: '⚪ Signed Out', handler: () => applyPreset('logged-out') },
-				{ text: 'Cancel', role: 'cancel' },
+				{
+					id: 'synced',
+					label: '🟢 All Synced',
+					action: () => applyPreset('synced'),
+					active:
+						cloudPhase === 'in-sync' &&
+						!cloudHasError &&
+						!markdownNeedsReconnect &&
+						!markdownHasError &&
+						!markdownIsSyncing &&
+						markdownFullSyncPhase === 'idle',
+				},
+				{
+					id: 'cloud-pushing',
+					label: '🔵 Cloud Uploading',
+					action: () => applyPreset('cloud-pushing'),
+					active: cloudPhase === 'pushing',
+				},
+				{
+					id: 'markdown-syncing',
+					label: '🟣 Full MD Sync',
+					action: () => applyPreset('markdown-syncing'),
+					active: markdownFullSyncPhase === 'in-progress',
+				},
+				{
+					id: 'cloud-error',
+					label: '🔴 Cloud Error',
+					action: () => applyPreset('cloud-error'),
+					active: cloudHasError,
+				},
+				{
+					id: 'markdown-error',
+					label: '🟡 Reconnect Needed',
+					action: () => applyPreset('markdown-error'),
+					active: markdownNeedsReconnect,
+				},
+				{
+					id: 'logged-out',
+					label: '⚪ Signed Out',
+					action: () => applyPreset('logged-out'),
+					active: !cloudLoggedIn,
+				},
 			]
 		}
 		if (activeComponent === 'starship-trajectory') {
 			return [
-				{ text: '🚀 Launch (Hype Warp)', handler: () => applyPreset('ship-launch') },
-				{ text: '🛸 Cruise (Sub-light)', handler: () => applyPreset('ship-cruise') },
-				{ text: '🎯 Docking Approach', handler: () => applyPreset('ship-dock') },
 				{
-					text: mode === 'chill' ? '⚡ Engage Warp Drive (Hype)' : '🌌 Cruise Drive (Chill)',
-					handler: () => setMode(mode === 'chill' ? 'hype' : 'chill'),
+					id: 'ship-launch',
+					label: '🚀 Launch',
+					action: () => applyPreset('ship-launch'),
+					active: starshipPosition === 260 && mode === 'hype',
 				},
-				{ text: 'Cancel', role: 'cancel' },
+				{
+					id: 'ship-cruise',
+					label: '🛸 Cruise',
+					action: () => applyPreset('ship-cruise'),
+					active: starshipPosition === 120 && mode === 'chill',
+				},
+				{
+					id: 'ship-dock',
+					label: '🎯 Dock',
+					action: () => applyPreset('ship-dock'),
+					active: starshipPosition === 15,
+				},
+				{
+					id: 'ship-warp',
+					label: mode === 'chill' ? '⚡ Warp Drive' : '🌌 Cruise Drive',
+					action: () => setMode(mode === 'chill' ? 'hype' : 'chill'),
+					active: mode === 'hype',
+				},
 			]
 		}
 		if (activeComponent === 'pulse-graph') {
 			return [
-				{ text: '🔥 14-Day Streak (Tier 13)', handler: () => applyPreset('pulse-streak') },
-				{ text: '⚡ Recent Surge (Tier 5)', handler: () => applyPreset('pulse-recent') },
-				{ text: '💤 Dormant / Inactive (Tier 1)', handler: () => applyPreset('pulse-cold') },
-				{ text: 'Cancel', role: 'cancel' },
+				{
+					id: 'pulse-streak',
+					label: '🔥 14d Streak',
+					action: () => applyPreset('pulse-streak'),
+					active: pulsePreset === 'streak',
+				},
+				{
+					id: 'pulse-recent',
+					label: '⚡ Recent Spark',
+					action: () => applyPreset('pulse-recent'),
+					active: pulsePreset === 'recent',
+				},
+				{
+					id: 'pulse-cold',
+					label: '💤 Inactive',
+					action: () => applyPreset('pulse-cold'),
+					active: pulsePreset === 'empty',
+				},
 			]
 		}
 		if (activeComponent === 'mood-player') {
 			return [
-				{ text: '🌌 Chill Mode (Melodysheep)', handler: () => applyPreset('mood-chill') },
-				{ text: '⚡ Hype Mode (Karl Casey)', handler: () => applyPreset('mood-hype') },
-				{ text: 'Cancel', role: 'cancel' },
+				{
+					id: 'mood-chill',
+					label: '🌌 Chill Ambient',
+					action: () => applyPreset('mood-chill'),
+					active: mode === 'chill',
+				},
+				{
+					id: 'mood-hype',
+					label: '⚡ Hype Synthwave',
+					action: () => applyPreset('mood-hype'),
+					active: mode === 'hype',
+				},
 			]
 		}
-		return [{ text: 'Cancel', role: 'cancel' }]
+		return []
 	})()
+
+	const presetsBar = presetsForActiveComponent.length > 0 && (
+		<div
+			data-testid="workbench-presets-bar"
+			className="shrink-0 flex items-center gap-2 overflow-x-auto border-b border-neutral-800 bg-neutral-900/60 px-4 py-2 backdrop-blur-md lg:px-6"
+		>
+			<span className="flex shrink-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400 mr-1">
+				<IonIcon icon={flashSharp} className="text-amber-400 text-sm" />
+				Presets
+			</span>
+			<div className="flex items-center gap-2">
+				{presetsForActiveComponent.map((p) => (
+					<button
+						key={p.id}
+						onClick={p.action}
+						className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 flex items-center gap-1.5 ${
+							p.active
+								? 'border-blue-500/70 bg-blue-950/60 text-blue-200 ring-1 ring-blue-500/50 shadow-sm'
+								: 'border-neutral-800 bg-neutral-900/80 text-neutral-300 hover:border-neutral-700 hover:bg-neutral-800/80'
+						}`}
+					>
+						{p.label}
+					</button>
+				))}
+			</div>
+		</div>
+	)
 
 	const knobsContent = (
 		<div className="space-y-5">
 			{/* Component-Specific Knobs */}
 			{isSyncComponent && (
 				<>
-					{/* Quick Presets for Sync */}
-					<div>
-						<span className="mb-2 block text-xs font-medium text-neutral-400">Quick Presets</span>
-						<div className="grid grid-cols-2 gap-2 text-xs">
-							<button
-								onClick={() => applyPreset('synced')}
-								className="rounded border border-emerald-800/40 bg-emerald-950/40 p-2 text-left text-emerald-300 hover:bg-emerald-900/50 transition active:scale-95"
-							>
-								🟢 All Synced
-							</button>
-							<button
-								onClick={() => applyPreset('cloud-pushing')}
-								className="rounded border border-blue-800/40 bg-blue-950/40 p-2 text-left text-blue-300 hover:bg-blue-900/50 transition active:scale-95"
-							>
-								🔵 Cloud Uploading
-							</button>
-							<button
-								onClick={() => applyPreset('markdown-syncing')}
-								className="rounded border border-purple-800/40 bg-purple-950/40 p-2 text-left text-purple-300 hover:bg-purple-900/50 transition active:scale-95"
-							>
-								🟣 Full MD Sync
-							</button>
-							<button
-								onClick={() => applyPreset('cloud-error')}
-								className="rounded border border-red-800/40 bg-red-950/40 p-2 text-left text-red-300 hover:bg-red-900/50 transition active:scale-95"
-							>
-								🔴 Cloud Error
-							</button>
-							<button
-								onClick={() => applyPreset('markdown-error')}
-								className="rounded border border-amber-800/40 bg-amber-950/40 p-2 text-left text-amber-300 hover:bg-amber-900/50 transition active:scale-95"
-							>
-								🟡 Reconnect Needed
-							</button>
-							<button
-								onClick={() => applyPreset('logged-out')}
-								className="rounded border border-neutral-700 bg-neutral-800 p-2 text-left text-neutral-300 hover:bg-neutral-700 transition active:scale-95"
-							>
-								⚪ Signed Out
-							</button>
-						</div>
-					</div>
 
 					{/* Cloud Sync Knobs */}
 					<div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
@@ -490,30 +547,6 @@ function WorkbenchContent() {
 			{/* Starship & Trajectory Knobs */}
 			{activeComponent === 'starship-trajectory' && (
 				<>
-					<div>
-						<span className="mb-2 block text-xs font-medium text-neutral-400">Quick Flight Presets</span>
-						<div className="grid grid-cols-3 gap-2 text-xs">
-							<button
-								onClick={() => applyPreset('ship-launch')}
-								className="rounded border border-red-800/40 bg-red-950/40 p-2 text-center text-red-300 hover:bg-red-900/50 transition active:scale-95"
-							>
-								🚀 Launch
-							</button>
-							<button
-								onClick={() => applyPreset('ship-cruise')}
-								className="rounded border border-blue-800/40 bg-blue-950/40 p-2 text-center text-blue-300 hover:bg-blue-900/50 transition active:scale-95"
-							>
-								🛸 Cruise
-							</button>
-							<button
-								onClick={() => applyPreset('ship-dock')}
-								className="rounded border border-emerald-800/40 bg-emerald-950/40 p-2 text-center text-emerald-300 hover:bg-emerald-900/50 transition active:scale-95"
-							>
-								🎯 Dock
-							</button>
-						</div>
-					</div>
-
 					<div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
 						<h4 className="font-semibold text-neutral-300">Flight Telemetry Controls</h4>
 
@@ -595,30 +628,6 @@ function WorkbenchContent() {
 			{/* Pulse Graph Knobs */}
 			{activeComponent === 'pulse-graph' && (
 				<>
-					<div>
-						<span className="mb-2 block text-xs font-medium text-neutral-400">Activity Presets</span>
-						<div className="grid grid-cols-3 gap-2 text-xs">
-							<button
-								onClick={() => applyPreset('pulse-streak')}
-								className="rounded border border-blue-800/40 bg-blue-950/40 p-2 text-center text-blue-300 hover:bg-blue-900/50 transition active:scale-95"
-							>
-								🔥 14d Streak
-							</button>
-							<button
-								onClick={() => applyPreset('pulse-recent')}
-								className="rounded border border-purple-800/40 bg-purple-950/40 p-2 text-center text-purple-300 hover:bg-purple-900/50 transition active:scale-95"
-							>
-								⚡ Recent Spark
-							</button>
-							<button
-								onClick={() => applyPreset('pulse-cold')}
-								className="rounded border border-rose-800/40 bg-rose-950/40 p-2 text-center text-rose-300 hover:bg-rose-900/50 transition active:scale-95"
-							>
-								💤 Inactive
-							</button>
-						</div>
-					</div>
-
 					<div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
 						<h4 className="font-semibold text-neutral-300">Fibonacci Star Points Tier</h4>
 						<div className="grid grid-cols-3 gap-1.5">
@@ -661,24 +670,6 @@ function WorkbenchContent() {
 			{/* Mood Player Knobs */}
 			{activeComponent === 'mood-player' && (
 				<>
-					<div>
-						<span className="mb-2 block text-xs font-medium text-neutral-400">Audio Mode Presets</span>
-						<div className="grid grid-cols-2 gap-2 text-xs">
-							<button
-								onClick={() => applyPreset('mood-chill')}
-								className="rounded border border-blue-800/40 bg-blue-950/40 p-2 text-center text-blue-300 hover:bg-blue-900/50 transition active:scale-95"
-							>
-								🌌 Chill Ambient
-							</button>
-							<button
-								onClick={() => applyPreset('mood-hype')}
-								className="rounded border border-red-800/40 bg-red-950/40 p-2 text-center text-red-300 hover:bg-red-900/50 transition active:scale-95"
-							>
-								⚡ Hype Synthwave
-							</button>
-						</div>
-					</div>
-
 					<div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
 						<h4 className="font-semibold text-neutral-300">Soundtrack Controls</h4>
 						<div className="flex items-center justify-between">
@@ -732,38 +723,39 @@ function WorkbenchContent() {
 				hideActions
 			/>
 
-			<IonContent className="bg-neutral-950 text-neutral-100">
-				{/* Subtitle / Breadcrumbs & Mobile Component Selector */}
-				<div className="flex flex-wrap items-center justify-between border-b border-neutral-800 bg-neutral-900/90 px-4 py-2.5">
-					<div className="flex items-center gap-2">
-						<span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
-							StarFocus Component Workbench
-						</span>
-						<IonBadge color="secondary" className="hidden sm:inline-block text-[10px]">
-							Interactive Stage
-						</IonBadge>
+			<IonContent scrollY={false} className="bg-neutral-950 text-neutral-100">
+				<div className="flex h-full flex-col">
+					{/* Subtitle / Breadcrumbs & Mobile Component Selector */}
+					<div className="shrink-0 flex flex-wrap items-center justify-between border-b border-neutral-800 bg-neutral-900/90 px-4 py-2.5">
+						<div className="flex items-center gap-2">
+							<span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
+								StarFocus Component Workbench
+							</span>
+							<IonBadge color="secondary" className="hidden sm:inline-block text-[10px]">
+								Interactive Stage
+							</IonBadge>
+						</div>
+						<div className="lg:hidden">
+							<select
+								value={activeComponent}
+								onChange={(e) => selectComponent(e.target.value as ComponentKey)}
+								className="rounded border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+								data-testid="mobile-component-select"
+							>
+								<option value="sync-status">Sync Status (Unified)</option>
+								<option value="cloud-sync">Cloud Sync Details</option>
+								<option value="markdown-sync">Markdown Sync Details</option>
+								<option value="star-roles">Star Role Icons</option>
+								<option value="star-points">Star Points</option>
+								<option value="starship-trajectory">Starship & Trajectory</option>
+								<option value="pulse-graph">Activity Pulse Graph</option>
+								<option value="mood-player">Mood Soundtrack Player</option>
+							</select>
+						</div>
 					</div>
-					<div className="lg:hidden">
-						<select
-							value={activeComponent}
-							onChange={(e) => selectComponent(e.target.value as ComponentKey)}
-							className="rounded border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-							data-testid="mobile-component-select"
-						>
-							<option value="sync-status">Sync Status (Unified)</option>
-							<option value="cloud-sync">Cloud Sync Details</option>
-							<option value="markdown-sync">Markdown Sync Details</option>
-							<option value="star-roles">Star Role Icons</option>
-							<option value="star-points">Star Points</option>
-							<option value="starship-trajectory">Starship & Trajectory</option>
-							<option value="pulse-graph">Activity Pulse Graph</option>
-							<option value="mood-player">Mood Soundtrack Player</option>
-						</select>
-					</div>
-				</div>
 
-				<div className="flex h-full flex-col lg:flex-row">
-					{/* Desktop Navigation Sidebar */}
+					<div className="flex flex-1 min-h-0 flex-col lg:flex-row">
+						{/* Desktop Navigation Sidebar */}
 					<div className="hidden w-64 shrink-0 border-r border-neutral-800 bg-neutral-900/60 p-4 lg:block overflow-y-auto">
 						<h2 className="mb-3 text-xs font-bold tracking-wider text-neutral-400 uppercase">
 							Components
@@ -867,9 +859,11 @@ function WorkbenchContent() {
 						</nav>
 					</div>
 
-					{/* Main Interactive Stage */}
-					<div className="flex-1 overflow-y-auto p-4 pb-28 lg:p-6 lg:pb-6">
-						{activeComponent === 'sync-status' && (
+					{/* Main Interactive Stage Column */}
+					<div className="flex flex-1 min-w-0 flex-col">
+						{presetsBar}
+						<div className="flex-1 overflow-y-auto p-4 pb-28 lg:p-6 lg:pb-6">
+							{activeComponent === 'sync-status' && (
 							<div className="space-y-6">
 								<div>
 									<h1 className="text-2xl font-bold tracking-tight text-white">
@@ -906,6 +900,10 @@ function WorkbenchContent() {
 															setMarkdownFullSyncPhase('in-progress')
 															setMarkdownCompletedFiles(1)
 														}}
+														onReconnect={() => {
+															setMarkdownNeedsReconnect(false)
+															setMarkdownHasError(false)
+														}}
 													/>
 												</div>
 											</div>
@@ -933,6 +931,10 @@ function WorkbenchContent() {
 												onRunFullSync={() => {
 													setMarkdownFullSyncPhase('in-progress')
 													setMarkdownCompletedFiles(1)
+												}}
+												onReconnect={() => {
+													setMarkdownNeedsReconnect(false)
+													setMarkdownHasError(false)
 												}}
 											/>
 										</div>
@@ -1029,6 +1031,10 @@ function WorkbenchContent() {
 													onRunFullSync={() => {
 														setMarkdownFullSyncPhase('in-progress')
 														setMarkdownCompletedFiles(1)
+													}}
+													onReconnect={() => {
+														setMarkdownNeedsReconnect(false)
+														setMarkdownHasError(false)
 													}}
 												/>
 											</div>
@@ -1451,6 +1457,7 @@ function WorkbenchContent() {
 							</div>
 						)}
 					</div>
+				</div>
 
 					{/* Desktop State Controls & Knobs Panel */}
 					<div className="hidden w-96 shrink-0 border-l border-neutral-800 bg-neutral-900/80 p-4 lg:block overflow-y-auto">
@@ -1463,46 +1470,29 @@ function WorkbenchContent() {
 						{knobsContent}
 					</div>
 				</div>
-			</IonContent>
+			</div>
+		</IonContent>
 
 			{/* Mobile Bottom Footer Bar (Safe Areas Handled by Ionic) */}
 			<IonFooter className="lg:hidden border-t border-neutral-800 bg-neutral-950">
 				<IonToolbar color="dark" className="ion-no-border px-2">
-					<div className="flex items-center justify-between gap-3 px-3 py-1.5">
+					<div className="px-3 py-1.5">
 						<IonButton
-							fill="outline"
-							color="light"
-							size="default"
-							onClick={() => setActionSheetOpen(true)}
-							id="mobile-presets-btn"
-							className="flex-1 font-semibold"
-						>
-							<IonIcon slot="start" icon={flashSharp} />
-							Presets
-						</IonButton>
-						<IonButton
+							expand="block"
 							fill="solid"
 							color="primary"
 							size="default"
 							onClick={() => setMobileKnobsOpen(true)}
 							id="mobile-knobs-toggle-btn"
-							className="flex-1 font-semibold"
+							data-testid="mobile-knobs-toggle-btn"
+							className="font-semibold text-xs"
 						>
 							<IonIcon slot="start" icon={optionsSharp} />
-							Knobs
+							Fine-Grained Knobs & Simulator Controls
 						</IonButton>
 					</div>
 				</IonToolbar>
 			</IonFooter>
-
-			{/* Presets Action Sheet for Mobile */}
-			<IonActionSheet
-				isOpen={actionSheetOpen}
-				onDidDismiss={() => setActionSheetOpen(false)}
-				header="Quick Presets"
-				subHeader={`Presets for ${activeComponent}`}
-				buttons={actionSheetButtons}
-			/>
 
 			{/* Knobs Sheet Modal for Mobile (Native Safe Areas & Drag to Dismiss) */}
 			<IonModal
