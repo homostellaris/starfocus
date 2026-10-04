@@ -27,8 +27,12 @@ export default function CloudSyncDetails({
 	const user = overrideUser !== undefined ? overrideUser : dbUser
 	const syncState = overrideSyncState !== undefined ? overrideSyncState : dbSyncState
 
-	if (!user) {
-		return 'No user'
+	if (!user || user.isLoggedIn === false) {
+		return (
+			<div className="p-4 text-center text-neutral-400">
+				<p>Not signed in to Dexie Cloud</p>
+			</div>
+		)
 	}
 
 	return (
