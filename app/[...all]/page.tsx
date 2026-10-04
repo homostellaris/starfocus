@@ -14,6 +14,9 @@ export async function generateStaticParams() {
 		{ all: ['dev', 'components', 'markdown-sync'] },
 		{ all: ['dev', 'components', 'star-roles'] },
 		{ all: ['dev', 'components', 'star-points'] },
+		{ all: ['dev', 'components', 'starship-trajectory'] },
+		{ all: ['dev', 'components', 'pulse-graph'] },
+		{ all: ['dev', 'components', 'mood-player'] },
 		{ all: ['dev', 'theme'] },
 	]
 }

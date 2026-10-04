@@ -16,9 +16,8 @@ import {
 	cubeSharp,
 	arrowForwardSharp,
 	syncSharp,
-	cloudDoneSharp,
-	documentTextSharp,
 	bookOutline,
+	sparklesSharp,
 } from 'ionicons/icons'
 import { Link } from 'react-router-dom'
 import { Header } from '../common/Header'
@@ -31,6 +30,7 @@ export default function DevHub() {
 				<Header
 					title="Developer Hub"
 					backHref="/home"
+					hideActions
 				/>
 				<IonContent fullscreen>
 					<div className="mx-auto max-w-4xl px-4 py-8">
@@ -83,7 +83,7 @@ export default function DevHub() {
 													className="text-xl"
 												/>
 											</div>
-											<IonBadge color="primary">5 Components</IonBadge>
+											<IonBadge color="primary">8 Components</IonBadge>
 										</div>
 										<IonCardTitle className="text-lg font-bold text-white">
 											Component Library
@@ -94,7 +94,7 @@ export default function DevHub() {
 									</IonCardHeader>
 									<IonCardContent>
 										<p className="mb-4 text-sm text-neutral-300">
-											Inspect and interact with StarFocus components in isolation. Test upload phases, network failures, and responsive layouts with dedicated controls.
+											Inspect and interact with StarFocus components in isolation. Test upload phases, network failures, motion trajectories, and responsive layouts with dedicated controls.
 										</p>
 										<div className="space-y-2 border-t border-neutral-800/80 pt-3">
 											<Link
@@ -108,22 +108,22 @@ export default function DevHub() {
 												<IonIcon icon={arrowForwardSharp} className="text-neutral-500" />
 											</Link>
 											<Link
-												to="/dev/components/cloud-sync"
+												to="/dev/components/starship-trajectory"
 												className="flex items-center justify-between rounded-md p-2 text-xs text-neutral-300 transition hover:bg-neutral-800 hover:text-white"
 											>
 												<span className="flex items-center gap-2">
-													<IonIcon icon={cloudDoneSharp} className="text-emerald-400" />
-													<span>Cloud Sync Details</span>
+													<IonIcon icon={cubeSharp} className="text-cyan-400" />
+													<span>Starship & Trajectory</span>
 												</span>
 												<IonIcon icon={arrowForwardSharp} className="text-neutral-500" />
 											</Link>
 											<Link
-												to="/dev/components/markdown-sync"
+												to="/dev/components/pulse-graph"
 												className="flex items-center justify-between rounded-md p-2 text-xs text-neutral-300 transition hover:bg-neutral-800 hover:text-white"
 											>
 												<span className="flex items-center gap-2">
-													<IonIcon icon={documentTextSharp} className="text-purple-400" />
-													<span>Markdown Sync Details</span>
+													<IonIcon icon={sparklesSharp} className="text-rose-400" />
+													<span>Activity Pulse Graph</span>
 												</span>
 												<IonIcon icon={arrowForwardSharp} className="text-neutral-500" />
 											</Link>

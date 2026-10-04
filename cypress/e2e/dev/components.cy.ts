@@ -13,6 +13,9 @@ describe('/dev/components - Component Catalog', () => {
 		cy.contains('Markdown Sync Details & Status').should('exist')
 		cy.contains('Star Role Icons & Badges').should('exist')
 		cy.contains('Star Points Progression').should('exist')
+		cy.contains('Starship & Trajectory Animation').should('exist')
+		cy.contains('Activity Pulse Graph').should('exist')
+		cy.contains('Mood Soundtrack Player').should('exist')
 
 		// Links point to /dev/components/[component]
 		cy.get('a[href="/dev/components/sync-status"]').should('exist')
@@ -20,6 +23,9 @@ describe('/dev/components - Component Catalog', () => {
 		cy.get('a[href="/dev/components/markdown-sync"]').should('exist')
 		cy.get('a[href="/dev/components/star-roles"]').should('exist')
 		cy.get('a[href="/dev/components/star-points"]').should('exist')
+		cy.get('a[href="/dev/components/starship-trajectory"]').should('exist')
+		cy.get('a[href="/dev/components/pulse-graph"]').should('exist')
+		cy.get('a[href="/dev/components/mood-player"]').should('exist')
 
 		cy.screenshot('dev-components')
 	})

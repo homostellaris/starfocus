@@ -19,6 +19,9 @@ import {
 	starSharp,
 	syncSharp,
 	cubeSharp,
+	rocketSharp,
+	pulseSharp,
+	musicalNotesSharp,
 } from 'ionicons/icons'
 import { Link } from 'react-router-dom'
 import { Header } from '../common/Header'
@@ -91,6 +94,39 @@ const CATALOG_ITEMS: ComponentCatalogItem[] = [
 		badge: 'Gamification',
 		tags: ['Fibonacci Points', 'Progression', 'Header Widget', 'Scores'],
 	},
+	{
+		key: 'starship-trajectory',
+		title: 'Starship & Trajectory Animation',
+		subtitle: 'Flight Corridor & Spacecraft Navigation',
+		description:
+			'Cosmic flight path visualizer and spacecraft position tracker. Simulates vertical and horizontal flight corridors with dynamic mood-based warp gradients (chill/hype) and responsive coordinates.',
+		icon: rocketSharp,
+		iconColor: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+		badge: 'Animation',
+		tags: ['Space Metaphor', 'CSS Gradients', 'Trajectory', 'Motion'],
+	},
+	{
+		key: 'pulse-graph',
+		title: 'Activity Pulse Graph',
+		subtitle: 'Task Visit Frequency & Streak Sparkline',
+		description:
+			'Compact 14-day activity pulse graph displaying task engagement magnitude (0, 1, 2 visits) with color-matched Fibonacci tier star points scaling.',
+		icon: pulseSharp,
+		iconColor: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
+		badge: 'Data Viz',
+		tags: ['Activity Sparkline', '14-Day History', 'Fibonacci Scale', 'Gamification'],
+	},
+	{
+		key: 'mood-player',
+		title: 'Mood Soundtrack Player',
+		subtitle: 'Ambient Space Audio & State Switcher',
+		description:
+			'Cosmic soundtrack audio player and theme mood controller. Toggles between Chill (Melodysheep ambient) and Hype (Karl Casey synthwave) modes with keyboard shortcuts (Z/X/Space).',
+		icon: musicalNotesSharp,
+		iconColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+		badge: 'Audio',
+		tags: ['Audio Player', 'Ambient Music', 'Chill / Hype', 'Keyboard Shortcuts'],
+	},
 ]
 
 export default function DevComponentsList() {
@@ -100,6 +136,7 @@ export default function DevComponentsList() {
 				<Header
 					title="Components"
 					backHref="/dev"
+					hideActions
 				/>
 				<IonContent fullscreen>
 					<div className="mx-auto max-w-4xl px-4 py-8">

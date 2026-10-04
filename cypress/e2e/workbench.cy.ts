@@ -66,23 +66,27 @@ describe('workbench', () => {
 		cy.contains('Unified Sync Status Popover').should('be.visible')
 		cy.get('#workbench-sync-status-btn').should('be.visible')
 
-		// Quick presets bar is visible at bottom
-		cy.contains('button', '🟢 Synced').should('be.visible')
-		cy.contains('button', '🔵 Uploading').should('be.visible')
+		// Presets button & Knobs button in IonFooter are visible on mobile
+		cy.get('#mobile-presets-btn').should('be.visible')
+		cy.get('#mobile-knobs-toggle-btn').should('be.visible')
+		cy.screenshot('mobile-footer-toolbar')
 
-		// Clicking a mobile preset updates state
-		cy.contains('button', '🔵 Uploading').click()
+		// Clicking Presets opens IonActionSheet
+		cy.get('#mobile-presets-btn').click()
+		cy.get('ion-action-sheet').should('be.visible')
+		cy.screenshot('mobile-action-sheet')
+		cy.contains('.action-sheet-button', '🔵 Cloud Uploading').click()
 		cy.get('#workbench-sync-status-btn').should('be.visible')
 
-		// Open mobile knobs drawer
+		// Open mobile knobs modal
 		cy.get('#mobile-knobs-toggle-btn').click()
 		cy.get('#mobile-knobs-drawer').should('be.visible')
 		cy.get('#mobile-knobs-drawer').contains('State Simulator & Knobs').should('be.visible')
 		cy.screenshot('mobile-drawer-open')
 
-		// Close mobile knobs drawer
-		cy.get('#mobile-knobs-drawer').contains('button', 'Done ✕').click()
-		cy.get('#mobile-knobs-drawer').should('not.exist')
+		// Close mobile knobs modal
+		cy.get('#mobile-knobs-drawer').contains('ion-button', 'Done').click()
+		cy.get('#mobile-knobs-drawer').should('not.be.visible')
 	})
 
 })
