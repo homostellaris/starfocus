@@ -40,6 +40,33 @@ describe('/dev/components/[component] - Dynamic Component Workbench', () => {
 		cy.get('h1').contains('Star Points').should('be.visible')
 	})
 
+	it('loads starship-trajectory component workbench directly via route', () => {
+		cy.visit('/dev/components/starship-trajectory')
+
+		cy.get('ion-toolbar', { timeout: 15000 }).should('be.visible')
+		cy.get('h1').contains('Starship & Trajectory Animation').should('be.visible')
+		cy.get('#workbench-starship').should('be.visible')
+		cy.screenshot('dev-workbench-starship-trajectory')
+	})
+
+	it('loads pulse-graph component workbench directly via route', () => {
+		cy.visit('/dev/components/pulse-graph')
+
+		cy.get('ion-toolbar', { timeout: 15000 }).should('be.visible')
+		cy.get('h1').contains('Activity Pulse Graph').should('be.visible')
+		cy.get('#workbench-pulse-graph').should('be.visible')
+		cy.screenshot('dev-workbench-pulse-graph')
+	})
+
+	it('loads mood-player component workbench directly via route', () => {
+		cy.visit('/dev/components/mood-player')
+
+		cy.get('ion-toolbar', { timeout: 15000 }).should('be.visible')
+		cy.get('h1').contains('Mood Soundtrack Player').should('be.visible')
+		cy.get('#workbench-mood-player').should('be.visible')
+		cy.screenshot('dev-workbench-mood-player')
+	})
+
 	it('updates route when switching components from sidebar', () => {
 		cy.visit('/dev/components/sync-status')
 

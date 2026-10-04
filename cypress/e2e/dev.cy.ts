@@ -2,9 +2,10 @@ describe('/dev - Developer Hub', () => {
 	it('loads the developer hub with app-bar and navigation cards', () => {
 		cy.visit('/dev')
 
-		// App-bar header check (consistent with /home)
+		// App-bar header check (consistent with /home, without help/sync buttons)
 		cy.get('ion-toolbar', { timeout: 15000 }).should('be.visible')
 		cy.contains('Developer Hub').should('be.visible')
+		cy.get('#help-popover').should('not.exist')
 
 		// Content sections
 		cy.contains('Developer Tools & Design System').should('be.visible')

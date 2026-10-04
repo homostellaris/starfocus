@@ -132,6 +132,7 @@ export default function DevTheme() {
 				<Header
 					title="Theme"
 					backHref="/dev"
+					hideActions
 				/>
 				<IonContent fullscreen>
 					<div className="mx-auto max-w-4xl px-4 py-8">

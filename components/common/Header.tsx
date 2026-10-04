@@ -27,9 +27,11 @@ import Title from './Title'
 export const Header = ({
 	title,
 	backHref,
+	hideActions = false,
 }: {
 	title: string
 	backHref?: string
+	hideActions?: boolean
 }) => {
 	const ui = useObservable(db.cloud.userInteraction)
 	const [, dismiss] = useIonModal(LoginModal, {
@@ -63,85 +65,87 @@ export const Header = ({
 					>
 						{title}
 					</Title>
-					<IonButtons
-						className="mx-2"
-						slot="end"
-					>
-						<IonButton id="help-popover">
-							<IonIcon
-								icon={helpCircleSharp}
-								slot="icon-only"
-							/>
-						</IonButton>
-						<IonPopover
-							trigger="help-popover"
-							triggerAction="click"
+					{!hideActions && (
+						<IonButtons
+							className="mx-2"
+							slot="end"
 						>
-							<IonContent class="ion-padding">
-								<IonItem lines="none">
-									<IonLabel>Help hints</IonLabel>
-									<IonToggle
-										aria-label="Toggle help"
-										checked={helpEnabled}
-										onIonChange={toggleHelp}
-									/>
-								</IonItem>
-								<IonButton
-									expand="block"
-									fill="clear"
-									href="/docs/get-started/quickstart"
-								>
-									Documentation
-								</IonButton>
-								<IonButton
-									expand="block"
-									fill="clear"
-									href="/dev"
-								>
-									Developer Hub
-								</IonButton>
-								{user?.isLoggedIn && (
+							<IonButton id="help-popover">
+								<IonIcon
+									icon={helpCircleSharp}
+									slot="icon-only"
+								/>
+							</IonButton>
+							<IonPopover
+								trigger="help-popover"
+								triggerAction="click"
+							>
+								<IonContent class="ion-padding">
+									<IonItem lines="none">
+										<IonLabel>Help hints</IonLabel>
+										<IonToggle
+											aria-label="Toggle help"
+											checked={helpEnabled}
+											onIonChange={toggleHelp}
+										/>
+									</IonItem>
 									<IonButton
 										expand="block"
 										fill="clear"
-										onClick={() => {
-											posthog.displaySurvey(
-												'019c2fed-d45c-0000-8e90-9ededf867e7c',
-												{
-													displayType: DisplaySurveyType.Popover,
-													ignoreConditions: true,
-													ignoreDelay: true,
-												},
-											)
-										}}
+										href="/docs/get-started/quickstart"
 									>
-										Send feedback
+										Documentation
 									</IonButton>
-								)}
-							</IonContent>
-						</IonPopover>
-						<SyncStatus />
-						{!user?.isLoggedIn && (
+									<IonButton
+										expand="block"
+										fill="clear"
+										href="/dev"
+									>
+										Developer Hub
+									</IonButton>
+									{user?.isLoggedIn && (
+										<IonButton
+											expand="block"
+											fill="clear"
+											onClick={() => {
+												posthog.displaySurvey(
+													'019c2fed-d45c-0000-8e90-9ededf867e7c',
+													{
+														displayType: DisplaySurveyType.Popover,
+														ignoreConditions: true,
+														ignoreDelay: true,
+													},
+												)
+											}}
+										>
+											Send feedback
+										</IonButton>
+									)}
+								</IonContent>
+							</IonPopover>
+							<SyncStatus />
+							{!user?.isLoggedIn && (
+								<IonButton
+									color="primary"
+									fill="solid"
+									onClick={() => {
+										db.cloud.login()
+									}}
+								>
+									Sync
+								</IonButton>
+							)}
 							<IonButton
-								color="primary"
-								fill="solid"
-								onClick={() => {
-									db.cloud.login()
-								}}
+								id="settings-menu-button"
+								onClick={() => menuController.toggle('end')}
 							>
-								Sync
+								<IonIcon
+									icon={settingsSharp}
+									slot="icon-only"
+								/>
 							</IonButton>
-						)}
-						<IonButton
-							id="settings-menu-button"
-							onClick={() => menuController.toggle('end')}
-						>
-							<IonIcon
-								icon={settingsSharp}
-								slot="icon-only"
-							/>
-						</IonButton>
-					</IonButtons>
+						</IonButtons>
+					)}
 				</IonToolbar>
 			</IonHeader>
 		</>
