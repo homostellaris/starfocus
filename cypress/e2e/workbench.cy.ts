@@ -35,7 +35,7 @@ describe('workbench', () => {
 		// Click Cloud Uploading preset
 		cy.contains('button', 'Cloud Uploading').click()
 		cy.contains('Replication Phase')
-		cy.get('select').first().should('have.value', 'pushing')
+		cy.get('#cloud-phase-select').should('have.value', 'pushing')
 
 		// Click Cloud Error preset
 		cy.contains('button', 'Cloud Error').click()
@@ -53,6 +53,36 @@ describe('workbench', () => {
 			.should('be.visible')
 			.and('contain.text', 'Cloud database sync')
 			.and('contain.text', 'Local markdown sync')
+	})
+
+	it('provides a mobile experience with quick presets and slide-up drawer without obscuring components', () => {
+		cy.viewport(390, 844)
+		cy.visit('/workbench')
+
+		// Component selector is visible on mobile
+		cy.get('[data-testid="mobile-component-select"]').should('be.visible')
+
+		// Component under test is visible and not squished
+		cy.contains('Unified Sync Status Popover').should('be.visible')
+		cy.get('#workbench-sync-status-btn').should('be.visible')
+
+		// Quick presets bar is visible at bottom
+		cy.contains('button', '🟢 Synced').should('be.visible')
+		cy.contains('button', '🔵 Uploading').should('be.visible')
+
+		// Clicking a mobile preset updates state
+		cy.contains('button', '🔵 Uploading').click()
+		cy.get('#workbench-sync-status-btn').should('be.visible')
+
+		// Open mobile knobs drawer
+		cy.get('#mobile-knobs-toggle-btn').click()
+		cy.get('#mobile-knobs-drawer').should('be.visible')
+		cy.get('#mobile-knobs-drawer').contains('State Simulator & Knobs').should('be.visible')
+		cy.screenshot('mobile-drawer-open')
+
+		// Close mobile knobs drawer
+		cy.get('#mobile-knobs-drawer').contains('button', 'Done ✕').click()
+		cy.get('#mobile-knobs-drawer').should('not.exist')
 	})
 
 })
