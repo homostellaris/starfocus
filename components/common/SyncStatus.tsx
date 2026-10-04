@@ -17,7 +17,7 @@ import CloudSyncStatus from '../db/cloud/CloudSyncStatus'
 import MarkdownSyncStatus from '../export/MarkdownSyncStatus'
 import { useObservable } from 'dexie-react-hooks'
 import { db } from '../db'
-import { useMarkdownExportContext } from '../export/MarkdownExportContext'
+import { useOptionalMarkdownExportContext } from '../export/MarkdownExportContext'
 import type { ExportStatus } from '../export/useMarkdownExport'
 
 export interface SyncStatusProps {
@@ -38,11 +38,12 @@ export default function SyncStatus({
 	inline = false,
 }: SyncStatusProps = {}) {
 	const dbSyncState = useObservable(db.cloud.syncState)
-	const markdownContext = useMarkdownExportContext()
+	const markdownContext = useOptionalMarkdownExportContext()
 
 	const syncState = overrideSyncState !== undefined ? overrideSyncState : dbSyncState
-	const exportStatus = overrideExportStatus !== undefined ? overrideExportStatus : markdownContext.status
-	const runFullSync = onRunFullSync || markdownContext.runFullSync
+	const exportStatus = overrideExportStatus !== undefined ? overrideExportStatus : markdownContext?.status
+	const runFullSync = onRunFullSync || markdownContext?.runFullSync
+
 
 	const [lastCloudSyncAt, setLastCloudSyncAt] = useState<Date | null>(null)
 	const prevCloudPhaseRef = useRef<string | undefined>(undefined)
