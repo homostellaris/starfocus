@@ -88,9 +88,15 @@ export default function SyncStatus({
 	}
 
 	const listContent = (
-		<IonList className="text-xs">
-			<IonItemGroup>
-				<IonItemDivider>
+		<IonList
+			className="text-xs !pt-0 !mt-0"
+			style={{ paddingTop: 0, marginTop: 0 }}
+		>
+			<IonItemGroup className="!pt-0 !mt-0">
+				<IonItemDivider
+					className="!border-t-0 !mt-0"
+					style={{ borderTop: 0, marginTop: 0 }}
+				>
 					<IonLabel>Cloud database sync</IonLabel>
 					<CloudSyncStatus
 						syncState={syncState}
@@ -192,7 +198,10 @@ export default function SyncStatus({
 				trigger={id}
 				triggerAction="click"
 			>
-				<IonContent className="text-xs">
+				<IonContent
+					className="text-xs !p-0"
+					style={{ '--padding-top': '0px', '--padding-bottom': '0px' } as React.CSSProperties}
+				>
 					{listContent}
 				</IonContent>
 			</IonPopover>
