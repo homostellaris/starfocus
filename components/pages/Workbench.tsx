@@ -17,21 +17,15 @@ import {
 	IonBadge,
 	IonRange,
 	IonToggle,
-	IonInput,
-	IonSelect,
-	IonSelectOption,
 } from '@ionic/react'
 import {
 	arrowBackSharp,
-	refreshSharp,
 	syncSharp,
 	cloudDoneSharp,
 	documentTextSharp,
 	starSharp,
-	searchSharp,
 	sparklesSharp,
 	optionsSharp,
-	closeSharp,
 } from 'ionicons/icons'
 import SyncStatus from '../common/SyncStatus'
 import CloudSyncDetails from '../db/cloud/CloudSyncDetails'
@@ -59,7 +53,7 @@ export default function Workbench() {
 	const [cloudProgress, setCloudProgress] = useState(0.65)
 	const [cloudHasError, setCloudHasError] = useState(false)
 	const [cloudErrorMessage, setCloudErrorMessage] = useState('Network request timed out')
-	const [userEmail, setUserEmail] = useState('astronomer@starfocus.app')
+	const [userEmail] = useState('astronomer@starfocus.app')
 
 	const [markdownEnabled, setMarkdownEnabled] = useState(true)
 	const [markdownNeedsReconnect, setMarkdownNeedsReconnect] = useState(false)
@@ -69,13 +63,13 @@ export default function Workbench() {
 	const [markdownTotalFiles, setMarkdownTotalFiles] = useState(38)
 	const [markdownHasError, setMarkdownHasError] = useState(false)
 	const [markdownErrorMessage, setMarkdownErrorMessage] = useState('File permission not granted')
-	const [createdCount, setCreatedCount] = useState(2)
-	const [updatedCount, setUpdatedCount] = useState(5)
-	const [deletedCount, setDeletedCount] = useState(0)
+	const [createdCount] = useState(2)
+	const [updatedCount] = useState(5)
+	const [deletedCount] = useState(0)
 
 	// --- Star Role Knobs ---
-	const [selectedIcon, setSelectedIcon] = useState('starSharp')
-	const [selectedColor, setSelectedColor] = useState('#f59e0b')
+	const [selectedIcon] = useState('starSharp')
+	const [selectedColor] = useState('#f59e0b')
 
 	// Construct simulated states
 	const simulatedUser = cloudLoggedIn
