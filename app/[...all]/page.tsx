@@ -7,6 +7,14 @@ export async function generateStaticParams() {
 		{ all: ['settings'] },
 		{ all: ['test'] },
 		{ all: ['workbench'] },
+		{ all: ['dev'] },
+		{ all: ['dev', 'components'] },
+		{ all: ['dev', 'components', 'sync-status'] },
+		{ all: ['dev', 'components', 'cloud-sync'] },
+		{ all: ['dev', 'components', 'markdown-sync'] },
+		{ all: ['dev', 'components', 'star-roles'] },
+		{ all: ['dev', 'components', 'star-points'] },
+		{ all: ['dev', 'theme'] },
 	]
 }
 

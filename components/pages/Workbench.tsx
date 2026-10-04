@@ -1,15 +1,11 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useParams, useHistory } from 'react-router-dom'
 import {
-	IonButton,
-	IonButtons,
 	IonContent,
-	IonHeader,
 	IonIcon,
 	IonPage,
-	IonTitle,
-	IonToolbar,
 	IonCard,
 	IonCardHeader,
 	IonCardTitle,
@@ -19,7 +15,6 @@ import {
 	IonToggle,
 } from '@ionic/react'
 import {
-	arrowBackSharp,
 	syncSharp,
 	cloudDoneSharp,
 	documentTextSharp,
@@ -27,6 +22,8 @@ import {
 	sparklesSharp,
 	optionsSharp,
 } from 'ionicons/icons'
+import { Header } from '../common/Header'
+import { MarkdownExportProvider } from '../export/MarkdownExportContext'
 import SyncStatus from '../common/SyncStatus'
 import CloudSyncDetails from '../db/cloud/CloudSyncDetails'
 import CloudSyncStatus from '../db/cloud/CloudSyncStatus'
@@ -43,9 +40,32 @@ type ComponentKey =
 	| 'star-roles'
 	| 'star-points'
 
+const VALID_COMPONENTS: ComponentKey[] = [
+	'sync-status',
+	'cloud-sync',
+	'markdown-sync',
+	'star-roles',
+	'star-points',
+]
+
 export default function Workbench() {
-	const [activeComponent, setActiveComponent] = useState<ComponentKey>('sync-status')
+	const params = useParams<{ component?: string }>()
+	const history = useHistory()
+
+	const [fallbackComponent, setFallbackComponent] =
+		useState<ComponentKey>('sync-status')
 	const [mobileKnobsOpen, setMobileKnobsOpen] = useState(false)
+
+	const activeComponent: ComponentKey =
+		params.component &&
+		VALID_COMPONENTS.includes(params.component as ComponentKey)
+			? (params.component as ComponentKey)
+			: fallbackComponent
+
+	const selectComponent = (key: ComponentKey) => {
+		setFallbackComponent(key)
+		history.push(`/dev/components/${key}`)
+	}
 
 	// --- State Simulator Knobs for Sync Menu ---
 	const [cloudLoggedIn, setCloudLoggedIn] = useState(true)
@@ -323,114 +343,108 @@ export default function Workbench() {
 	)
 
 	return (
+		<MarkdownExportProvider>
+			<IonPage id="main-content">
+				<Header
+					title="Workbench"
+					backHref="/dev/components"
+				/>
 
-		<IonPage>
-			<IonHeader>
-				<IonToolbar color="dark">
-					<IonButtons slot="start">
-						<IonButton href="/home">
-							<IonIcon
-								icon={arrowBackSharp}
-								slot="start"
-							/>
-							Back to App
-						</IonButton>
-					</IonButtons>
-					<IonTitle className="font-display [font-palette:--redshift] text-xl">
-						StarFocus Component Workbench
-					</IonTitle>
-					<IonButtons slot="end">
-						<IonBadge color="secondary" className="mr-2">Preview Mode</IonBadge>
-					</IonButtons>
-				</IonToolbar>
-			</IonHeader>
-
-			<IonContent className="bg-neutral-950 text-neutral-100">
-				{/* Mobile Component Selector Bar */}
-				<div className="flex items-center justify-between border-b border-neutral-800 bg-neutral-900/90 px-4 py-2.5 lg:hidden">
-					<span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Component</span>
-					<select
-						value={activeComponent}
-						onChange={(e) => setActiveComponent(e.target.value as ComponentKey)}
-						className="rounded border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-						data-testid="mobile-component-select"
-					>
-						<option value="sync-status">Sync Status (Unified)</option>
-						<option value="cloud-sync">Cloud Sync Details</option>
-						<option value="markdown-sync">Markdown Sync Details</option>
-						<option value="star-roles">Star Role Icons</option>
-						<option value="star-points">Star Points</option>
-					</select>
-				</div>
-
-				<div className="flex h-full flex-col lg:flex-row">
-					{/* Desktop Navigation Sidebar */}
-					<div className="hidden w-64 shrink-0 border-r border-neutral-800 bg-neutral-900/60 p-4 lg:block overflow-y-auto">
-						<h2 className="mb-3 text-xs font-bold tracking-wider text-neutral-400 uppercase">
-							Components
-						</h2>
-						<nav className="flex flex-col gap-1">
-							<button
-								onClick={() => setActiveComponent('sync-status')}
-								className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-									activeComponent === 'sync-status'
-										? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-										: 'text-neutral-300 hover:bg-neutral-800'
-								}`}
+				<IonContent className="bg-neutral-950 text-neutral-100">
+					{/* Subtitle / Breadcrumbs & Mobile Component Selector */}
+					<div className="flex flex-wrap items-center justify-between border-b border-neutral-800 bg-neutral-900/90 px-4 py-2.5">
+						<div className="flex items-center gap-2">
+							<span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
+								StarFocus Component Workbench
+							</span>
+							<IonBadge color="secondary" className="hidden sm:inline-block text-[10px]">
+								Interactive Stage
+							</IonBadge>
+						</div>
+						<div className="lg:hidden">
+							<select
+								value={activeComponent}
+								onChange={(e) => selectComponent(e.target.value as ComponentKey)}
+								className="rounded border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+								data-testid="mobile-component-select"
 							>
-								<IonIcon icon={syncSharp} />
-								<span>Sync Status (Unified)</span>
-							</button>
-
-							<button
-								onClick={() => setActiveComponent('cloud-sync')}
-								className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-									activeComponent === 'cloud-sync'
-										? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-										: 'text-neutral-300 hover:bg-neutral-800'
-								}`}
-							>
-								<IonIcon icon={cloudDoneSharp} />
-								<span>Cloud Sync Details</span>
-							</button>
-
-							<button
-								onClick={() => setActiveComponent('markdown-sync')}
-								className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-									activeComponent === 'markdown-sync'
-										? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-										: 'text-neutral-300 hover:bg-neutral-800'
-								}`}
-							>
-								<IonIcon icon={documentTextSharp} />
-								<span>Markdown Sync Details</span>
-							</button>
-
-							<button
-								onClick={() => setActiveComponent('star-roles')}
-								className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-									activeComponent === 'star-roles'
-										? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-										: 'text-neutral-300 hover:bg-neutral-800'
-								}`}
-							>
-								<IonIcon icon={starSharp} />
-								<span>Star Role Icons</span>
-							</button>
-
-							<button
-								onClick={() => setActiveComponent('star-points')}
-								className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-									activeComponent === 'star-points'
-										? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-										: 'text-neutral-300 hover:bg-neutral-800'
-								}`}
-							>
-								<IonIcon icon={sparklesSharp} />
-								<span>Star Points</span>
-							</button>
-						</nav>
+								<option value="sync-status">Sync Status (Unified)</option>
+								<option value="cloud-sync">Cloud Sync Details</option>
+								<option value="markdown-sync">Markdown Sync Details</option>
+								<option value="star-roles">Star Role Icons</option>
+								<option value="star-points">Star Points</option>
+							</select>
+						</div>
 					</div>
+
+					<div className="flex h-full flex-col lg:flex-row">
+						{/* Desktop Navigation Sidebar */}
+						<div className="hidden w-64 shrink-0 border-r border-neutral-800 bg-neutral-900/60 p-4 lg:block overflow-y-auto">
+							<h2 className="mb-3 text-xs font-bold tracking-wider text-neutral-400 uppercase">
+								Components
+							</h2>
+							<nav className="flex flex-col gap-1">
+								<button
+									onClick={() => selectComponent('sync-status')}
+									className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
+										activeComponent === 'sync-status'
+											? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+											: 'text-neutral-300 hover:bg-neutral-800'
+									}`}
+								>
+									<IonIcon icon={syncSharp} />
+									<span>Sync Status (Unified)</span>
+								</button>
+
+								<button
+									onClick={() => selectComponent('cloud-sync')}
+									className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
+										activeComponent === 'cloud-sync'
+											? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+											: 'text-neutral-300 hover:bg-neutral-800'
+									}`}
+								>
+									<IonIcon icon={cloudDoneSharp} />
+									<span>Cloud Sync Details</span>
+								</button>
+
+								<button
+									onClick={() => selectComponent('markdown-sync')}
+									className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
+										activeComponent === 'markdown-sync'
+											? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+											: 'text-neutral-300 hover:bg-neutral-800'
+									}`}
+								>
+									<IonIcon icon={documentTextSharp} />
+									<span>Markdown Sync Details</span>
+								</button>
+
+								<button
+									onClick={() => selectComponent('star-roles')}
+									className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
+										activeComponent === 'star-roles'
+											? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+											: 'text-neutral-300 hover:bg-neutral-800'
+									}`}
+								>
+									<IonIcon icon={starSharp} />
+									<span>Star Role Icons</span>
+								</button>
+
+								<button
+									onClick={() => selectComponent('star-points')}
+									className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
+										activeComponent === 'star-points'
+											? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+											: 'text-neutral-300 hover:bg-neutral-800'
+									}`}
+								>
+									<IonIcon icon={sparklesSharp} />
+									<span>Star Points</span>
+								</button>
+							</nav>
+						</div>
 
 					{/* Main Interactive Stage */}
 					<div className="flex-1 overflow-y-auto p-4 pb-28 lg:p-6 lg:pb-6">
@@ -489,7 +503,7 @@ export default function Workbench() {
 										</IonCardTitle>
 									</IonCardHeader>
 									<IonCardContent>
-										<div className="max-w-md rounded-lg border border-neutral-800 bg-neutral-950 p-2 shadow-lg">
+										<div className="max-w-md overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950 shadow-lg">
 											<SyncStatus
 												inline={true}
 												syncState={simulatedSyncState}
@@ -785,7 +799,7 @@ export default function Workbench() {
 				</>
 			)}
 		</IonPage>
-
+		</MarkdownExportProvider>
 	)
 }
 

@@ -96,9 +96,9 @@ export const Header = ({
 								<IonButton
 									expand="block"
 									fill="clear"
-									href="/workbench"
+									href="/dev"
 								>
-									Component Workbench
+									Developer Hub
 								</IonButton>
 								{user?.isLoggedIn && (
 									<IonButton
