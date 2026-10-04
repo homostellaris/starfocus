@@ -4,20 +4,20 @@ Read a StarFocus todo folder and produce a ranked recommendation for the next ta
 
 ## Arguments
 
-- `$ARGUMENTS[0]` — path to the todos folder (e.g. `/mnt/d/Philomath/todos`)
-- `$ARGUMENTS[1]` — comma-separated star roles to filter by (e.g. `Starfocuser,Autism helper`). If omitted or empty, include todos with any star role.
+- `todos-dir` / `$ARGUMENTS[0]` — path to the StarFocus todos folder (e.g. `/path/to/todos` or `$TODOS_DIR`)
+- `star-roles` / `$ARGUMENTS[1]` — optional comma-separated star roles to filter by (e.g. `Role1,Role2`). If omitted or empty, include todos with any star role.
 
 ## Steps
 
 ### 1. Read the todo folder
 
-Read all `.md` files in `$ARGUMENTS[0]`. Skip:
+Read all `.md` files in the todos directory. Skip:
 - `_manifest.md`
 - `_asteroid-field.md`
 - `_wayfinder.md`
 - Any file with `completedAt` set in its frontmatter
 
-If `$ARGUMENTS[1]` was provided, filter to todos where `starRole` matches any value in the comma-separated list. If omitted or empty, include all todos regardless of star role.
+If `star-roles` / `$ARGUMENTS[1]` was provided, filter to todos where `starRole` matches any value in the comma-separated list. If omitted or empty, include all todos regardless of star role.
 
 ### 2. Read context files
 
@@ -31,7 +31,7 @@ Sort all todos by:
 2. `starPoints` value
 3. Presence in `_asteroid-field.md` (urgency boost)
 
-Then walk down the ranked list. For each todo, read its full content and assess tractability: can Claude Code make concrete progress on this right now using the tools listed in `TOOLS.md`? If yes, add it to the candidates list. If no, it is blocked — note what capability is missing and continue down the list.
+Then walk down the ranked list. For each todo, read its full content and assess tractability: can the coding agent make concrete progress on this right now using available tools? If yes, add it to the candidates list. If no, it is blocked — note what capability is missing and continue down the list.
 
 Stop once you have 3 candidates, or have exhausted the list.
 
@@ -47,7 +47,7 @@ Note the top result slug and summary for inclusion in the output. Only do this f
 
 ### 4. Output a recommendation message
 
-Format using Telegram markdown. Example:
+Format using Telegram / WhatsApp markdown. Example:
 
 ```
 StarLoop 🔄 Top pick: **[title]**
@@ -68,7 +68,7 @@ If any high-priority todos were blocked, append:
 • **[title]** — blocked: [missing capability]. Possible fix: `openclaw skills install [slug]` — [one-line summary]
 ```
 
-Return the message text and the filename for each option so the caller knows which file to pass to Claude Code.
+Return the message text and the filename for each option so the caller knows which file to pass to the coding agent.
 
 ## Important: filenames contain a unique ID suffix
 
