@@ -1,7 +1,7 @@
 #!/bin/bash
 # starloop-orchestrate.sh — idempotent StarLoop orchestrator
 #
-# Checks active Claude Code ACP sessions, wraps up any whose todo is complete,
+# Checks active ACP sessions, wraps up any whose todo is complete,
 # then hands off to OpenClaw to pick and start a new task if capacity is free.
 #
 # Called by: OpenClaw cron job and todo-watcher.sh (on file events)
@@ -128,20 +128,35 @@ console.log(hash.digest("hex"));
 ' "$TODOS_DIR"
 }
 
+get_session_agent() {
+  local session_name="$1"
+  local agent_cmd
+  agent_cmd=$(jq -r --arg name "$session_name" '.entries[] | select(.name == $name) | .agentCommand' ~/.acpx/sessions/index.json 2>/dev/null || echo "")
+  if [[ "$agent_cmd" == *"claude"* ]]; then
+    echo "claude"
+  elif [[ "$agent_cmd" == *"openclaw"* || "$agent_cmd" == *"agy"* ]]; then
+    echo "openclaw"
+  else
+    echo "openclaw" # fallback
+  fi
+}
+
 steer_and_close() {
   local session_name="$1"
+  local agent
+  agent=$(get_session_agent "$session_name")
   local steer_msg="The user has marked this todo complete. Please finish any in-progress work, raise a PR if not already done, then exit cleanly."
 
-  log "Steering session '$session_name' to wrap up..."
-  if ! (cd "$ACPX_WORKSPACE" && "$ACPX" claude -s "$session_name" "$steer_msg" 2>&1) | while IFS= read -r line; do log "acpx steer: $line"; done; then
+  log "Steering session '$session_name' ($agent) to wrap up..."
+  if ! (cd "$ACPX_WORKSPACE" && "$ACPX" "$agent" -s "$session_name" "$steer_msg" 2>&1) | while IFS= read -r line; do log "acpx steer: $line"; done; then
     log "Steer failed — attempting session resume"
     local session_id
-    session_id=$(cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions show "$session_name" 2>/dev/null | awk '/^sessionId:/ {print $2}')
+    session_id=$(cd "$ACPX_WORKSPACE" && "$ACPX" "$agent" sessions show "$session_name" 2>/dev/null | awk '/^sessionId:/ {print $2}')
     if [ -n "$session_id" ]; then
-      log "Resuming Claude Code session $session_id"
-      (cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions new --name "$session_name" --resume-session "$session_id" 2>&1) | while IFS= read -r line; do log "acpx resume: $line"; done
+      log "Resuming $agent session $session_id"
+      (cd "$ACPX_WORKSPACE" && "$ACPX" "$agent" sessions new --name "$session_name" --resume-session "$session_id" 2>&1) | while IFS= read -r line; do log "acpx resume: $line"; done
       sleep 5
-      (cd "$ACPX_WORKSPACE" && "$ACPX" claude -s "$session_name" "$steer_msg" 2>&1) | while IFS= read -r line; do log "acpx steer (resumed): $line"; done || log "acpx steer failed after resume"
+      (cd "$ACPX_WORKSPACE" && "$ACPX" "$agent" -s "$session_name" "$steer_msg" 2>&1) | while IFS= read -r line; do log "acpx steer (resumed): $line"; done || log "acpx steer failed after resume"
     else
       log "Could not retrieve session ID for '$session_name' — skipping resume"
     fi
@@ -151,13 +166,13 @@ steer_and_close() {
   sleep 60
 
   log "Closing session '$session_name'"
-  (cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions close "$session_name" 2>&1) | while IFS= read -r line; do log "acpx close: $line"; done || log "acpx close failed"
+  (cd "$ACPX_WORKSPACE" && "$ACPX" "$agent" sessions close "$session_name" 2>&1) | while IFS= read -r line; do log "acpx close: $line"; done || log "acpx close failed"
 }
 
 # --- Step 1: Check active sessions, wrap up completed todos -------------------
 
 log "Checking active ACP sessions..."
-active_sessions=$(cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions list 2>/dev/null | grep -v '\[closed\]' || true)
+active_sessions=$(jq -r '.entries[] | select(.closed == false) | "\(.acpxRecordId)\t\(.name)"' ~/.acpx/sessions/index.json 2>/dev/null || true)
 session_wrapped_up=false
 
 if [ -z "$active_sessions" ]; then
@@ -173,8 +188,10 @@ else
   while IFS=$'\t' read -r _id name _rest; do
     [ -z "$name" ] && continue
 
-    session_pid=$(cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions show "$name" 2>/dev/null | awk '/^pid:/ {print $2}')
-    disconnect_reason=$(cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions show "$name" 2>/dev/null | awk '/^disconnectReason:/ {print $2}')
+    agent=$(get_session_agent "$name")
+
+    session_pid=$(cd "$ACPX_WORKSPACE" && "$ACPX" "$agent" sessions show "$name" 2>/dev/null | awk '/^pid:/ {print $2}')
+    disconnect_reason=$(cd "$ACPX_WORKSPACE" && "$ACPX" "$agent" sessions show "$name" 2>/dev/null | awk '/^disconnectReason:/ {print $2}')
 
     is_alive=false
     if [ -n "$session_pid" ] && [ "$session_pid" != "-" ] && kill -0 "$session_pid" 2>/dev/null; then
@@ -186,24 +203,24 @@ else
       channel_opt=""
       [ -n "$OPENCLAW_CHANNEL" ] && channel_opt="--channel $OPENCLAW_CHANNEL"
       openclaw message send $channel_opt --target "$OPENCLAW_TARGET" \
-        --message "✅ Todo complete: *${name}* — wrapping up Claude session and raising PR."
+        --message "✅ Todo complete: *${name}* — wrapping up session and raising PR."
       if [ "$is_alive" = "true" ]; then
         steer_and_close "$name"
       else
         log "Session '$name' process already terminated — closing record"
-        (cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions close "$name" 2>&1) || true
+        (cd "$ACPX_WORKSPACE" && "$ACPX" "$agent" sessions close "$name" 2>&1) || true
       fi
       session_wrapped_up=true
     else
       if [ "$is_alive" = "false" ] || [ "$disconnect_reason" = "process_exit" ]; then
         log "Session '$name' process has died (pid: ${session_pid:-none}, disconnectReason: ${disconnect_reason:--}) — closing stale record"
-        (cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions close "$name" 2>&1) || true
+        (cd "$ACPX_WORKSPACE" && "$ACPX" "$agent" sessions close "$name" 2>&1) || true
       fi
     fi
   done <<< "$active_sessions"
 
   # Recount after closures
-  active_count=$(cd "$ACPX_WORKSPACE" && "$ACPX" claude sessions list 2>/dev/null | grep -vc '\[closed\]' || echo 0)
+  active_count=$(jq -r '[.entries[] | select(.closed == false)] | length' ~/.acpx/sessions/index.json 2>/dev/null || echo 0)
 fi
 
 # --- Step 2: Hand off to OpenClaw if capacity is available -------------------
@@ -246,7 +263,7 @@ if [ "$active_count" -lt "$MAX_CONCURRENCY" ]; then
   fi
 
   openclaw agent --agent main \
-    --message "Execute the starloop skill with arguments: todos-dir=$TODOS_DIR star-roles=$STAR_ROLES. Send the result via: openclaw message send ${channel_part}--target $OPENCLAW_TARGET --message '[message]'. When the user replies with go, a number, or a task name: spawn a Claude Code ACP session by running: acpx --ttl 0 claude sessions new --name [session-name] (cwd: $ACPX_WORKSPACE). The session name MUST be the full todo filename including the ID suffix, minus .md — e.g. for 'fix-long-order-properties_0fc3acom.md' use 'fix-long-order-properties_0fc3acom'. Then set bypass permissions mode: acpx --ttl 0 claude set-mode -s [session-name] bypassPermissions (cwd: $ACPX_WORKSPACE). Then send the initial task prompt in the background so it does not block: nohup acpx --ttl 0 claude -s [session-name] \"Read $TODOS_DIR/[chosen-filename] and execute the task. If you need input, send: openclaw message send ${channel_part}--target $OPENCLAW_TARGET --message YOUR_QUESTION and pause.\" > /tmp/acpx-[session-name].log 2>&1 & disown. Do NOT discuss the task or ask any questions — just spawn, then confirm to the user via ${via_part}: '🚀 Started session [session-name]. I will update you when done or if Claude needs input.'"
+    --message "Execute the starloop skill with arguments: todos-dir=$TODOS_DIR star-roles=$STAR_ROLES. Send the result via: openclaw message send ${channel_part}--target $OPENCLAW_TARGET --message '[message]'. When the user replies with go, a number, or a task name: start a coding session for that task. The session name MUST be the full todo filename including the ID suffix, minus .md — e.g. for 'fix-long-order-properties_0fc3acom.md' use 'fix-long-order-properties_0fc3acom'. Decide how to code (e.g. using openclaw, agy, or another coding agent), start it in the background so it does not block, and notify the user via ${via_part}: '🚀 Started session [session-name]. I will update you when done or if input is needed.'"
 
   # Update state record
   cat > "$STATE_FILE" <<EOF
