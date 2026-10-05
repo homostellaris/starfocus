@@ -403,7 +403,7 @@ function WorkbenchContent() {
 	const presetsBar = presetsForActiveComponent.length > 0 && (
 		<div
 			data-testid="workbench-presets-bar"
-			className="shrink-0 flex items-center gap-2 overflow-x-auto border-b border-neutral-800 bg-neutral-900/60 px-4 py-2 backdrop-blur-md lg:px-6"
+			className="sticky top-0 z-20 flex items-center gap-2 overflow-x-auto border-b border-neutral-800 bg-neutral-950/95 px-4 py-2 backdrop-blur-md lg:px-6"
 		>
 			<span className="flex shrink-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400 mr-1">
 				<IonIcon icon={flashSharp} className="text-amber-400 text-sm" />
@@ -723,40 +723,39 @@ function WorkbenchContent() {
 				hideActions
 			/>
 
-			<IonContent scrollY={false} className="bg-neutral-950 text-neutral-100">
-				<div className="flex h-full flex-col">
-					{/* Subtitle / Breadcrumbs & Mobile Component Selector */}
-					<div className="shrink-0 flex flex-wrap items-center justify-between border-b border-neutral-800 bg-neutral-900/90 px-4 py-2.5">
-						<div className="flex items-center gap-2">
-							<span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
-								StarFocus Component Workbench
-							</span>
-							<IonBadge color="secondary" className="hidden sm:inline-block text-[10px]">
-								Interactive Stage
-							</IonBadge>
-						</div>
-						<div className="lg:hidden">
-							<select
-								value={activeComponent}
-								onChange={(e) => selectComponent(e.target.value as ComponentKey)}
-								className="rounded border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-								data-testid="mobile-component-select"
-							>
-								<option value="sync-status">Sync Status (Unified)</option>
-								<option value="cloud-sync">Cloud Sync Details</option>
-								<option value="markdown-sync">Markdown Sync Details</option>
-								<option value="star-roles">Star Role Icons</option>
-								<option value="star-points">Star Points</option>
-								<option value="starship-trajectory">Starship & Trajectory</option>
-								<option value="pulse-graph">Activity Pulse Graph</option>
-								<option value="mood-player">Mood Soundtrack Player</option>
-							</select>
-						</div>
+			<IonContent className="bg-neutral-950 text-neutral-100">
+				{/* Subtitle / Breadcrumbs & Mobile Component Selector */}
+				<div className="shrink-0 flex flex-wrap items-center justify-between border-b border-neutral-800 bg-neutral-900/90 px-4 py-2.5">
+					<div className="flex items-center gap-2">
+						<span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
+							StarFocus Component Workbench
+						</span>
+						<IonBadge color="secondary" className="hidden sm:inline-block text-[10px]">
+							Interactive Stage
+						</IonBadge>
 					</div>
+					<div className="lg:hidden">
+						<select
+							value={activeComponent}
+							onChange={(e) => selectComponent(e.target.value as ComponentKey)}
+							className="rounded border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+							data-testid="mobile-component-select"
+						>
+							<option value="sync-status">Sync Status (Unified)</option>
+							<option value="cloud-sync">Cloud Sync Details</option>
+							<option value="markdown-sync">Markdown Sync Details</option>
+							<option value="star-roles">Star Role Icons</option>
+							<option value="star-points">Star Points</option>
+							<option value="starship-trajectory">Starship & Trajectory</option>
+							<option value="pulse-graph">Activity Pulse Graph</option>
+							<option value="mood-player">Mood Soundtrack Player</option>
+						</select>
+					</div>
+				</div>
 
-					<div className="flex flex-1 min-h-0 flex-col lg:flex-row">
-						{/* Desktop Navigation Sidebar */}
-					<div className="hidden w-64 shrink-0 border-r border-neutral-800 bg-neutral-900/60 p-4 lg:block overflow-y-auto">
+				<div className="flex min-h-full flex-col lg:flex-row">
+					{/* Desktop Navigation Sidebar */}
+					<div className="hidden w-64 shrink-0 border-r border-neutral-800 bg-neutral-900/60 p-4 lg:block lg:sticky lg:top-0 lg:self-start lg:max-h-[calc(100vh-56px)] lg:overflow-y-auto">
 						<h2 className="mb-3 text-xs font-bold tracking-wider text-neutral-400 uppercase">
 							Components
 						</h2>
@@ -860,9 +859,9 @@ function WorkbenchContent() {
 					</div>
 
 					{/* Main Interactive Stage Column */}
-					<div className="flex flex-1 min-w-0 flex-col">
+					<div className="flex-1 min-w-0">
 						{presetsBar}
-						<div className="flex-1 overflow-y-auto p-4 pb-28 lg:p-6 lg:pb-6">
+						<div className="p-4 pb-28 lg:p-6 lg:pb-12">
 							{activeComponent === 'sync-status' && (
 							<div className="space-y-6">
 								<div>
@@ -1460,7 +1459,7 @@ function WorkbenchContent() {
 				</div>
 
 					{/* Desktop State Controls & Knobs Panel */}
-					<div className="hidden w-96 shrink-0 border-l border-neutral-800 bg-neutral-900/80 p-4 lg:block overflow-y-auto">
+					<div className="hidden w-96 shrink-0 border-l border-neutral-800 bg-neutral-900/80 p-4 lg:block lg:sticky lg:top-0 lg:self-start lg:max-h-[calc(100vh-56px)] lg:overflow-y-auto">
 						<div className="mb-4 flex items-center justify-between">
 							<h3 className="flex items-center gap-2 text-sm font-semibold text-white">
 								<IonIcon icon={optionsSharp} />
@@ -1470,7 +1469,6 @@ function WorkbenchContent() {
 						{knobsContent}
 					</div>
 				</div>
-			</div>
 		</IonContent>
 
 			{/* Mobile Bottom Footer Bar (Safe Areas Handled by Ionic) */}

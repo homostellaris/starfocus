@@ -195,6 +195,14 @@ describe('workbench', () => {
 		// Close mobile knobs modal
 		cy.get('#mobile-knobs-drawer').contains('ion-button', 'Done').click()
 		cy.get('#mobile-knobs-drawer').should('not.be.visible')
+
+		// Body of component is fully scrollable to inspect all cards
+		cy.get('ion-content').then(($el) => {
+			const inner = $el[0].shadowRoot?.querySelector('.inner-scroll') as HTMLElement
+			expect(inner.scrollHeight).to.be.greaterThan(inner.clientHeight)
+			inner.scrollTop = 300
+		})
+		cy.screenshot('mobile-scrolled-body-in-view')
 	})
 
 })
