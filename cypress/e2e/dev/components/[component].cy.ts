@@ -4,9 +4,8 @@ describe('/dev/components/[component] - Dynamic Component Workbench', () => {
 
 		// App-bar header
 		cy.get('ion-toolbar').should('be.visible')
-		cy.contains('Workbench').should('be.visible')
 
-		// Active component matches route
+		// Active component title in app bar and component on canvas
 		cy.contains('Unified Sync Status Popover').should('be.visible')
 		cy.get('#workbench-sync-status-btn').should('be.visible')
 
@@ -67,12 +66,12 @@ describe('/dev/components/[component] - Dynamic Component Workbench', () => {
 		cy.screenshot('dev-workbench-mood-player')
 	})
 
-	it('updates route when switching components from sidebar', () => {
+	it('navigates back to components catalog from app bar', () => {
 		cy.visit('/dev/components/sync-status')
 
 		cy.get('ion-toolbar', { timeout: 15000 }).should('be.visible')
-		cy.contains('button', 'Cloud Sync Details').click()
-		cy.url().should('include', '/dev/components/cloud-sync')
-		cy.contains('Cloud Sync Details & Status').should('be.visible')
+		cy.get('ion-back-button').click()
+		cy.url().should('include', '/dev/components')
+		cy.contains('Component Catalog').should('be.visible')
 	})
 })

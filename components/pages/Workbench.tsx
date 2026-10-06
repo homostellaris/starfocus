@@ -3,38 +3,38 @@
 import React, { useState, useMemo } from 'react'
 import { useParams, useHistory } from 'react-router-dom'
 import {
-	IonContent,
-	IonIcon,
-	IonPage,
-	IonCard,
-	IonCardHeader,
-	IonCardTitle,
-	IonCardContent,
+	IonBackButton,
 	IonBadge,
-	IonRange,
-	IonToggle,
-	IonFooter,
-	IonToolbar,
 	IonButtons,
-	IonButton,
-	IonTitle,
-	IonModal,
+	IonContent,
 	IonHeader,
+	IonIcon,
+	IonMenu,
+	IonMenuButton,
+	IonRange,
+	IonSplitPane,
+	IonTitle,
+	IonToggle,
+	IonToolbar,
 } from '@ionic/react'
+import { menuController } from '@ionic/core/components'
 import {
+	flashSharp,
+	optionsSharp,
+	chevronBackOutline,
+	chevronForwardOutline,
 	syncSharp,
 	cloudDoneSharp,
 	documentTextSharp,
 	starSharp,
 	sparklesSharp,
-	optionsSharp,
 	rocketSharp,
 	pulseSharp,
 	musicalNotesSharp,
-	flashSharp,
+	closeSharp,
+	layersSharp,
 } from 'ionicons/icons'
 import dayjs from 'dayjs'
-import { Header } from '../common/Header'
 import { MarkdownExportProvider } from '../export/MarkdownExportContext'
 import SyncStatus from '../common/SyncStatus'
 import CloudSyncDetails from '../db/cloud/CloudSyncDetails'
@@ -48,7 +48,6 @@ import Tracjectory from '../starship/Trajectory'
 import PulseGraph from '../todos/PulseGraph'
 import Mood from '../mood'
 import { MoodProvider, useMood } from '../mood/MoodContext'
-import starScale from '../common/starScale'
 import type { ExportStatus } from '../export/useMarkdownExport'
 import type { Visit } from '../db'
 
@@ -62,35 +61,125 @@ type ComponentKey =
 	| 'pulse-graph'
 	| 'mood-player'
 
-const VALID_COMPONENTS: ComponentKey[] = [
-	'sync-status',
-	'cloud-sync',
-	'markdown-sync',
-	'star-roles',
-	'star-points',
-	'starship-trajectory',
-	'pulse-graph',
-	'mood-player',
+interface CatalogItem {
+	key: ComponentKey
+	title: string
+	subtitle: string
+	description: string
+	icon: any
+	iconColor: string
+	badge: string
+}
+
+const CATALOG_ITEMS: CatalogItem[] = [
+	{
+		key: 'sync-status',
+		title: 'Unified Sync Status Popover',
+		subtitle: 'Header Popover & Combined Synchronization',
+		description:
+			'Consolidates Dexie Cloud database replication and local Markdown folder export into an interactive popover with live phase indicators, sync progress bars, and one-click triggers.',
+		icon: syncSharp,
+		iconColor: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+		badge: 'Core UI',
+	},
+	{
+		key: 'cloud-sync',
+		title: 'Cloud Sync Details & Status',
+		subtitle: 'Dexie Cloud Database Replication',
+		description:
+			'Detailed replication metrics and current sync indicators',
+		icon: cloudDoneSharp,
+		iconColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+		badge: 'Database',
+	},
+	{
+		key: 'markdown-sync',
+		title: 'Markdown Local Sync Details & Status',
+		subtitle: 'Local File System Folder Sync',
+		description:
+			'Detailed inspector for local Markdown backup and folder export. Displays file sync counters, reconnect states, and full export triggers.',
+		icon: documentTextSharp,
+		iconColor: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
+		badge: 'Storage',
+	},
+	{
+		key: 'star-roles',
+		title: 'Star Role Icons',
+		subtitle: 'Gamified Role Categories',
+		description:
+			'Visual representation of user-defined star roles (e.g. Captain, Engineer, Navigator, Botanist) with customized Ionic icon mapping, role groups, and color accents.',
+		icon: starSharp,
+		iconColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+		badge: 'Identity',
+	},
+	{
+		key: 'star-points',
+		title: 'Star Points',
+		subtitle: 'Gamified Score & Leveling',
+		description:
+			'Progression score indicator that displays the user’s accumulated star points. Supports Fibonacci score scaling (1, 2, 3, 5, 8, 13) with cosmic star styling.',
+		icon: sparklesSharp,
+		iconColor: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
+		badge: 'Progression',
+	},
+	{
+		key: 'starship-trajectory',
+		title: 'Starship & Trajectory Animation',
+		subtitle: 'Flight Corridor & Spacecraft Navigation',
+		description:
+			'Interactive spacecraft position, rotation, and hyperdrive visualization.',
+		icon: rocketSharp,
+		iconColor: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+		badge: 'Animation',
+	},
+	{
+		key: 'pulse-graph',
+		title: 'Activity Pulse Graph',
+		subtitle: '14-Day Activity Pulse Visualizer',
+		description:
+			'Inspects user daily task completion intensity and Fibonacci point distribution.',
+		icon: pulseSharp,
+		iconColor: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
+		badge: 'Analytics',
+	},
+	{
+		key: 'mood-player',
+		title: 'Mood Soundtrack Player',
+		subtitle: 'Dynamic Soundscapes & Audio Channels',
+		description:
+			'Ambient background audio stream with dual channels (Chill vs Hype).',
+		icon: musicalNotesSharp,
+		iconColor: 'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/20',
+		badge: 'Audio',
+	},
 ]
+
+const VALID_COMPONENTS: ComponentKey[] = CATALOG_ITEMS.map((item) => item.key)
+
+const COMPONENT_TITLES: Record<ComponentKey, string> = Object.fromEntries(
+	CATALOG_ITEMS.map((item) => [item.key, item.title])
+) as Record<ComponentKey, string>
+
+const COMPONENT_DESCRIPTIONS: Record<ComponentKey, string> = Object.fromEntries(
+	CATALOG_ITEMS.map((item) => [item.key, item.description])
+) as Record<ComponentKey, string>
 
 function WorkbenchContent() {
 	const params = useParams<{ component?: string }>()
 	const history = useHistory()
 	const { mode, setMode } = useMood()
 
-	const [fallbackComponent, setFallbackComponent] =
-		useState<ComponentKey>('sync-status')
-	const [mobileKnobsOpen, setMobileKnobsOpen] = useState(false)
-
 	const activeComponent: ComponentKey =
 		params.component &&
 		VALID_COMPONENTS.includes(params.component as ComponentKey)
 			? (params.component as ComponentKey)
-			: fallbackComponent
+			: 'sync-status'
 
-	const selectComponent = (key: ComponentKey) => {
-		setFallbackComponent(key)
+	const handleSelectComponent = (key: ComponentKey) => {
 		history.push(`/dev/components/${key}`)
+		menuController.close('components-menu')
+		menuController.close('start')
+		menuController.close()
 	}
 
 	// --- State Simulator Knobs for Sync Menu ---
@@ -119,7 +208,6 @@ function WorkbenchContent() {
 
 	// --- Starship & Trajectory Knobs ---
 	const [starshipPosition, setStarshipPosition] = useState(120)
-	const [starshipOrientation, setStarshipOrientation] = useState<'vertical' | 'horizontal'>('vertical')
 	const [starshipRotation, setStarshipRotation] = useState(180)
 
 	// --- Pulse Graph Knobs ---
@@ -209,7 +297,7 @@ function WorkbenchContent() {
 				setMarkdownEnabled(true)
 				setMarkdownNeedsReconnect(false)
 				setMarkdownIsSyncing(false)
-				setMarkdownFullSyncPhase('complete')
+				setMarkdownFullSyncPhase('idle')
 				setMarkdownHasError(false)
 				break
 			case 'cloud-pushing':
@@ -217,8 +305,15 @@ function WorkbenchContent() {
 				setCloudPhase('pushing')
 				setCloudProgress(0.72)
 				setCloudHasError(false)
+				setMarkdownFullSyncPhase('idle')
+				setMarkdownIsSyncing(false)
+				setMarkdownNeedsReconnect(false)
+				setMarkdownHasError(false)
 				break
 			case 'markdown-syncing':
+				setCloudLoggedIn(true)
+				setCloudPhase('in-sync')
+				setCloudHasError(false)
 				setMarkdownEnabled(true)
 				setMarkdownNeedsReconnect(false)
 				setMarkdownFullSyncPhase('in-progress')
@@ -231,10 +326,16 @@ function WorkbenchContent() {
 				setCloudPhase('error')
 				setCloudHasError(true)
 				setCloudErrorMessage('WebSocket connection closed unexpectedly (503)')
+				setMarkdownFullSyncPhase('idle')
+				setMarkdownHasError(false)
 				break
 			case 'markdown-error':
+				setCloudLoggedIn(true)
+				setCloudPhase('in-sync')
+				setCloudHasError(false)
 				setMarkdownEnabled(true)
 				setMarkdownNeedsReconnect(true)
+				setMarkdownFullSyncPhase('idle')
 				setMarkdownHasError(true)
 				setMarkdownErrorMessage('User denied directory handle permission')
 				break
@@ -242,6 +343,7 @@ function WorkbenchContent() {
 				setCloudLoggedIn(false)
 				setCloudPhase('offline')
 				setCloudHasError(false)
+				setMarkdownFullSyncPhase('idle')
 				break
 			case 'ship-launch':
 				setStarshipPosition(260)
@@ -400,39 +502,65 @@ function WorkbenchContent() {
 		return []
 	})()
 
-	const presetsBar = presetsForActiveComponent.length > 0 && (
-		<div
-			data-testid="workbench-presets-bar"
-			className="sticky top-0 z-20 flex items-center gap-2 overflow-x-auto border-b border-neutral-800 bg-neutral-950/95 px-4 py-2 backdrop-blur-md lg:px-6"
-		>
-			<span className="flex shrink-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400 mr-1">
-				<IonIcon icon={flashSharp} className="text-amber-400 text-sm" />
-				Presets
-			</span>
-			<div className="flex items-center gap-2">
-				{presetsForActiveComponent.map((p) => (
-					<button
-						key={p.id}
-						onClick={p.action}
-						className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 flex items-center gap-1.5 ${
-							p.active
-								? 'border-blue-500/70 bg-blue-950/60 text-blue-200 ring-1 ring-blue-500/50 shadow-sm'
-								: 'border-neutral-800 bg-neutral-900/80 text-neutral-300 hover:border-neutral-700 hover:bg-neutral-800/80'
-						}`}
-					>
-						{p.label}
-					</button>
-				))}
-			</div>
-		</div>
-	)
+	// Active Scenario tracking for Swiping & Indicators
+	const activePresetIndex = presetsForActiveComponent.findIndex((p) => p.active)
+	const currentScenarioIndex = activePresetIndex >= 0 ? activePresetIndex : 0
+	const currentScenario = presetsForActiveComponent[currentScenarioIndex]
+
+	const goToNextScenario = () => {
+		if (presetsForActiveComponent.length <= 1) return
+		const nextIndex = (currentScenarioIndex + 1) % presetsForActiveComponent.length
+		presetsForActiveComponent[nextIndex].action()
+	}
+
+	const goToPrevScenario = () => {
+		if (presetsForActiveComponent.length <= 1) return
+		const prevIndex =
+			(currentScenarioIndex - 1 + presetsForActiveComponent.length) %
+			presetsForActiveComponent.length
+		presetsForActiveComponent[prevIndex].action()
+	}
+
+	// Touch swipe tracking on the Canvas
+	const [touchStartX, setTouchStartX] = useState<number | null>(null)
+	const [touchEndX, setTouchEndX] = useState<number | null>(null)
+
+	const handleTouchStart = (e: React.TouchEvent) => {
+		setTouchEndX(null)
+		const touch = e.touches?.[0] || e.targetTouches?.[0] || (e as any).changedTouches?.[0]
+		if (touch) {
+			setTouchStartX(touch.clientX)
+		}
+	}
+
+	const handleTouchMove = (e: React.TouchEvent) => {
+		const touch = e.touches?.[0] || e.targetTouches?.[0] || (e as any).changedTouches?.[0]
+		if (touch) {
+			setTouchEndX(touch.clientX)
+		}
+	}
+
+	const handleTouchEnd = (e: React.TouchEvent) => {
+		const endX =
+			touchEndX !== null
+				? touchEndX
+				: (e as any).changedTouches?.[0]?.clientX ?? null
+		if (touchStartX === null || endX === null) return
+		const diff = touchStartX - endX
+		if (diff > 40) {
+			goToNextScenario()
+		} else if (diff < -40) {
+			goToPrevScenario()
+		}
+		setTouchStartX(null)
+		setTouchEndX(null)
+	}
 
 	const knobsContent = (
 		<div className="space-y-5">
 			{/* Component-Specific Knobs */}
 			{isSyncComponent && (
 				<>
-
 					{/* Cloud Sync Knobs */}
 					<div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
 						<h4 className="font-semibold text-neutral-300">Cloud Sync Controls</h4>
@@ -448,17 +576,27 @@ function WorkbenchContent() {
 							<select
 								id="cloud-phase-select"
 								value={cloudPhase}
-								onChange={(e) => setCloudPhase(e.target.value as any)}
-								className="w-full rounded border border-neutral-700 bg-neutral-900 p-1.5 text-xs text-white"
+								onChange={(e) =>
+									setCloudPhase(
+										e.target.value as
+											| 'in-sync'
+											| 'pushing'
+											| 'pulling'
+											| 'offline'
+											| 'error'
+									)
+								}
+								className="w-full rounded border border-neutral-700 bg-neutral-800 p-1.5 text-xs text-neutral-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
 							>
-								<option value="in-sync">in-sync</option>
-								<option value="pushing">pushing (upload)</option>
-								<option value="pulling">pulling (download)</option>
-								<option value="offline">offline</option>
-								<option value="error">error</option>
+								<option value="in-sync">In-Sync (Connected)</option>
+								<option value="pushing">Pushing (Uploading changes)</option>
+								<option value="pulling">Pulling (Downloading changes)</option>
+								<option value="offline">Offline</option>
+								<option value="error">Error</option>
 							</select>
 						</div>
-						{(cloudPhase === 'pushing' || cloudPhase === 'pulling') && (
+
+						{cloudPhase === 'pushing' && (
 							<div>
 								<div className="flex justify-between text-neutral-400">
 									<span>Progress</span>
@@ -473,18 +611,31 @@ function WorkbenchContent() {
 								/>
 							</div>
 						)}
+
 						<div className="flex items-center justify-between">
-							<span>Simulate Cloud Error</span>
+							<span>Simulate Error</span>
 							<IonToggle
 								checked={cloudHasError}
 								onIonChange={(e) => setCloudHasError(e.detail.checked)}
 							/>
 						</div>
+
+						{cloudHasError && (
+							<div>
+								<span className="block mb-1 text-neutral-400">Error Message</span>
+								<input
+									type="text"
+									value={cloudErrorMessage}
+									onChange={(e) => setCloudErrorMessage(e.target.value)}
+									className="w-full rounded border border-red-900/50 bg-neutral-900 p-1.5 text-xs text-red-200"
+								/>
+							</div>
+						)}
 					</div>
 
 					{/* Markdown Sync Knobs */}
 					<div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
-						<h4 className="font-semibold text-neutral-300">Local Markdown Controls</h4>
+						<h4 className="font-semibold text-neutral-300">Markdown Export Controls</h4>
 						<div className="flex items-center justify-between">
 							<span>Export Enabled</span>
 							<IonToggle
@@ -493,204 +644,214 @@ function WorkbenchContent() {
 							/>
 						</div>
 						<div className="flex items-center justify-between">
-							<span>Needs Reconnect</span>
+							<span>Directory Needs Reconnect</span>
 							<IonToggle
 								checked={markdownNeedsReconnect}
 								onIonChange={(e) => setMarkdownNeedsReconnect(e.detail.checked)}
 							/>
 						</div>
 						<div className="flex items-center justify-between">
-							<span>Incremental Syncing</span>
+							<span>Background Syncing</span>
 							<IonToggle
 								checked={markdownIsSyncing}
 								onIonChange={(e) => setMarkdownIsSyncing(e.detail.checked)}
 							/>
 						</div>
+
 						<div>
 							<span className="block mb-1 text-neutral-400">Full Sync Phase</span>
 							<select
 								value={markdownFullSyncPhase}
-								onChange={(e) => setMarkdownFullSyncPhase(e.target.value as any)}
-								className="w-full rounded border border-neutral-700 bg-neutral-900 p-1.5 text-xs text-white"
+								onChange={(e) =>
+									setMarkdownFullSyncPhase(
+										e.target.value as 'idle' | 'in-progress' | 'complete'
+									)
+								}
+								className="w-full rounded border border-neutral-700 bg-neutral-800 p-1.5 text-xs text-neutral-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
 							>
-								<option value="idle">idle</option>
-								<option value="in-progress">in-progress</option>
-								<option value="complete">complete</option>
+								<option value="idle">Idle</option>
+								<option value="in-progress">In-Progress</option>
+								<option value="complete">Complete</option>
 							</select>
 						</div>
+
 						{markdownFullSyncPhase === 'in-progress' && (
 							<div>
 								<div className="flex justify-between text-neutral-400">
-									<span>Files Synced</span>
-									<span>{markdownCompletedFiles} / {markdownTotalFiles}</span>
+									<span>Sync Progress</span>
+									<span>
+										{markdownCompletedFiles} / {markdownTotalFiles} files
+									</span>
 								</div>
 								<IonRange
 									min={0}
 									max={markdownTotalFiles}
-									step={1}
 									value={markdownCompletedFiles}
 									onIonChange={(e) => setMarkdownCompletedFiles(e.detail.value as number)}
 								/>
 							</div>
 						)}
+
 						<div className="flex items-center justify-between">
-							<span>Simulate Markdown Error</span>
+							<span>Simulate Error</span>
 							<IonToggle
 								checked={markdownHasError}
 								onIonChange={(e) => setMarkdownHasError(e.detail.checked)}
 							/>
 						</div>
+
+						{markdownHasError && (
+							<div>
+								<span className="block mb-1 text-neutral-400">Error Message</span>
+								<input
+									type="text"
+									value={markdownErrorMessage}
+									onChange={(e) => setMarkdownErrorMessage(e.target.value)}
+									className="w-full rounded border border-red-900/50 bg-neutral-900 p-1.5 text-xs text-red-200"
+								/>
+							</div>
+						)}
 					</div>
 				</>
 			)}
 
 			{/* Starship & Trajectory Knobs */}
 			{activeComponent === 'starship-trajectory' && (
-				<>
-					<div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
-						<h4 className="font-semibold text-neutral-300">Flight Telemetry Controls</h4>
-
-						<div>
-							<div className="flex justify-between text-neutral-400 mb-1">
-								<span>Trajectory Position</span>
-								<span className="font-mono text-cyan-400">{starshipPosition}px</span>
-							</div>
-							<IonRange
-								min={0}
-								max={280}
-								step={5}
-								value={starshipPosition}
-								onIonChange={(e) => setStarshipPosition(e.detail.value as number)}
-							/>
+				<div className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+					<h4 className="font-semibold text-neutral-300">Starship Flight Controls</h4>
+					<div>
+						<div className="flex justify-between text-neutral-400">
+							<span>Points / Distance</span>
+							<span>{starshipPosition} pts</span>
 						</div>
-
-						<div>
-							<span className="block mb-1 text-neutral-400">Flight Orientation</span>
-							<div className="grid grid-cols-2 gap-2">
-								<button
-									onClick={() => setStarshipOrientation('vertical')}
-									className={`rounded p-1.5 text-xs font-medium transition ${
-										starshipOrientation === 'vertical'
-											? 'bg-blue-600 text-white'
-											: 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
-									}`}
-								>
-									Vertical Corridor
-								</button>
-								<button
-									onClick={() => setStarshipOrientation('horizontal')}
-									className={`rounded p-1.5 text-xs font-medium transition ${
-										starshipOrientation === 'horizontal'
-											? 'bg-blue-600 text-white'
-											: 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
-									}`}
-								>
-									Horizontal Corridor
-								</button>
-							</div>
-						</div>
-
-						<div className="flex items-center justify-between">
-							<div>
-								<span className="block font-medium">Warp Drive Mode</span>
-								<span className="text-[11px] text-neutral-400">
-									{mode === 'hype' ? '⚡ Hype (Red Warp)' : '🌌 Chill (Cosmic Cyan)'}
-								</span>
-							</div>
-							<IonToggle
-								checked={mode === 'hype'}
-								onIonChange={(e) => setMode(e.detail.checked ? 'hype' : 'chill')}
-							/>
-						</div>
-
-						<div>
-							<span className="block mb-1 text-neutral-400">Sprite Rotation Angle</span>
-							<div className="grid grid-cols-4 gap-1.5">
-								{[0, 90, 180, 270].map((deg) => (
-									<button
-										key={deg}
-										onClick={() => setStarshipRotation(deg)}
-										className={`rounded py-1 text-xs font-mono transition ${
-											starshipRotation === deg
-												? 'bg-blue-600 text-white'
-												: 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
-										}`}
-									>
-										{deg}°
-									</button>
-								))}
-							</div>
-						</div>
+						<IonRange
+							min={0}
+							max={300}
+							value={starshipPosition}
+							onIonChange={(e) => setStarshipPosition(e.detail.value as number)}
+						/>
 					</div>
-				</>
+
+					<div>
+						<div className="flex justify-between text-neutral-400">
+							<span>Thruster Rotation</span>
+							<span>{starshipRotation}°</span>
+						</div>
+						<IonRange
+							min={0}
+							max={360}
+							value={starshipRotation}
+							onIonChange={(e) => setStarshipRotation(e.detail.value as number)}
+						/>
+					</div>
+
+					<div className="flex items-center justify-between">
+						<span>Drive Mode (Warp / Cruise)</span>
+						<button
+							onClick={() => setMode(mode === 'chill' ? 'hype' : 'chill')}
+							className={`rounded px-3 py-1 font-semibold text-xs transition ${
+								mode === 'hype'
+									? 'bg-red-500/20 text-red-400 border border-red-500/30'
+									: 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+							}`}
+						>
+							{mode.toUpperCase()}
+						</button>
+					</div>
+				</div>
 			)}
 
 			{/* Pulse Graph Knobs */}
 			{activeComponent === 'pulse-graph' && (
-				<>
-					<div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
-						<h4 className="font-semibold text-neutral-300">Fibonacci Star Points Tier</h4>
-						<div className="grid grid-cols-3 gap-1.5">
-							{[1, 2, 3, 5, 8, 13].map((pt) => {
-								const scale = starScale[pt as keyof typeof starScale]
-								return (
-									<button
-										key={pt}
-										onClick={() => setPulseStarPoints(pt)}
-										className={`flex flex-col items-center rounded border p-2 transition ${
-											pulseStarPoints === pt
-												? 'border-blue-500 bg-blue-500/10 font-bold'
-												: 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:border-neutral-700'
-										}`}
-									>
-										<span className={scale.textColor}>{pt}★</span>
-										<span className="text-[10px] text-neutral-500 capitalize">{scale.ionicColor}</span>
-									</button>
-								)
-							})}
+				<div className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+					<h4 className="font-semibold text-neutral-300">Pulse Activity Controls</h4>
+					<div>
+						<div className="flex justify-between text-neutral-400">
+							<span>Activity Pattern Preset</span>
+							<span className="capitalize">{pulsePreset}</span>
 						</div>
-
-						<div>
-							<span className="block mb-1 text-neutral-400">Streak Pattern</span>
-							<select
-								value={pulsePreset}
-								onChange={(e) => setPulsePreset(e.target.value as any)}
-								className="w-full rounded border border-neutral-700 bg-neutral-900 p-1.5 text-xs text-white"
+						<div className="grid grid-cols-2 gap-2 mt-2">
+							<button
+								onClick={() => setPulsePreset('streak')}
+								className={`rounded p-1.5 text-xs border ${
+									pulsePreset === 'streak'
+										? 'border-blue-500 bg-blue-950/40 text-blue-200'
+										: 'border-neutral-800 bg-neutral-900 text-neutral-300'
+								}`}
 							>
-								<option value="streak">Daily Consistent (2 visits/day)</option>
-								<option value="recent">Recent Surge (Past 4 days)</option>
-								<option value="sporadic">Sporadic (Every other day)</option>
-								<option value="empty">Inactive (0 visits)</option>
-							</select>
+								14d Streak
+							</button>
+							<button
+								onClick={() => setPulsePreset('recent')}
+								className={`rounded p-1.5 text-xs border ${
+									pulsePreset === 'recent'
+										? 'border-blue-500 bg-blue-950/40 text-blue-200'
+										: 'border-neutral-800 bg-neutral-900 text-neutral-300'
+								}`}
+							>
+								Recent Spark
+							</button>
+							<button
+								onClick={() => setPulsePreset('sporadic')}
+								className={`rounded p-1.5 text-xs border ${
+									pulsePreset === 'sporadic'
+										? 'border-blue-500 bg-blue-950/40 text-blue-200'
+										: 'border-neutral-800 bg-neutral-900 text-neutral-300'
+								}`}
+							>
+								Alternate Days
+							</button>
+							<button
+								onClick={() => setPulsePreset('empty')}
+								className={`rounded p-1.5 text-xs border ${
+									pulsePreset === 'empty'
+										? 'border-blue-500 bg-blue-950/40 text-blue-200'
+										: 'border-neutral-800 bg-neutral-900 text-neutral-300'
+								}`}
+							>
+								Empty
+							</button>
 						</div>
 					</div>
-				</>
+
+					<div>
+						<div className="flex justify-between text-neutral-400">
+							<span>Todo Star Points Value</span>
+							<span>{pulseStarPoints} pts</span>
+						</div>
+						<IonRange
+							min={1}
+							max={21}
+							value={pulseStarPoints}
+							onIonChange={(e) => setPulseStarPoints(e.detail.value as number)}
+						/>
+					</div>
+				</div>
 			)}
 
 			{/* Mood Player Knobs */}
 			{activeComponent === 'mood-player' && (
-				<>
-					<div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
-						<h4 className="font-semibold text-neutral-300">Soundtrack Controls</h4>
-						<div className="flex items-center justify-between">
-							<div>
-								<span className="block font-medium">Active Atmosphere</span>
-								<span className="text-[11px] text-neutral-400 capitalize">Mode: {mode}</span>
-							</div>
-							<IonToggle
-								checked={mode === 'hype'}
-								onIonChange={(e) => setMode(e.detail.checked ? 'hype' : 'chill')}
-							/>
-						</div>
-
-						<div className="rounded border border-neutral-800 bg-neutral-900/80 p-2 text-[11px] text-neutral-400 space-y-1">
-							<p className="font-semibold text-neutral-300">Keyboard Triggers:</p>
-							<p>• Press <kbd className="font-mono text-neutral-200">Z</kbd> for Chill Mode</p>
-							<p>• Press <kbd className="font-mono text-neutral-200">X</kbd> for Hype Mode</p>
-							<p>• Press <kbd className="font-mono text-neutral-200">Space</kbd> to Play / Pause</p>
-						</div>
+				<div className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+					<h4 className="font-semibold text-neutral-300">Soundtrack Stream Mode</h4>
+					<div className="flex items-center justify-between">
+						<span>Active Channel</span>
+						<button
+							onClick={() => setMode(mode === 'chill' ? 'hype' : 'chill')}
+							className={`rounded-full px-3 py-1 font-semibold text-xs border transition ${
+								mode === 'hype'
+									? 'bg-red-500/20 text-red-400 border-red-500/30'
+									: 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+							}`}
+						>
+							{mode === 'chill' ? '🌌 CHILL (Melodysheep)' : '⚡ HYPE (Karl Casey)'}
+						</button>
 					</div>
-				</>
+					<div className="text-[11px] text-neutral-400 space-y-1">
+						<p>• Press <kbd className="font-mono text-neutral-200">Z</kbd> for Chill Mode</p>
+						<p>• Press <kbd className="font-mono text-neutral-200">X</kbd> for Hype Mode</p>
+						<p>• Press <kbd className="font-mono text-neutral-200">Space</kbd> to Play / Pause</p>
+					</div>
+				</div>
 			)}
 
 			{/* Star Roles Knobs */}
@@ -716,172 +877,233 @@ function WorkbenchContent() {
 	)
 
 	return (
-		<IonPage id="main-content">
-			<Header
-				title="Workbench"
-				backHref="/dev/components"
-				hideActions
-			/>
-
-			<IonContent className="bg-neutral-950 text-neutral-100">
-				{/* Subtitle / Breadcrumbs & Mobile Component Selector */}
-				<div className="shrink-0 flex flex-wrap items-center justify-between border-b border-neutral-800 bg-neutral-900/90 px-4 py-2.5">
-					<div className="flex items-center gap-2">
-						<span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
-							StarFocus Component Workbench
-						</span>
-						<IonBadge color="secondary" className="hidden sm:inline-block text-[10px]">
-							Interactive Stage
-						</IonBadge>
-					</div>
-					<div className="lg:hidden">
-						<select
-							value={activeComponent}
-							onChange={(e) => selectComponent(e.target.value as ComponentKey)}
-							className="rounded border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-							data-testid="mobile-component-select"
+		<IonSplitPane
+			when="lg"
+			contentId="workbench-main"
+			style={
+				{
+					'--side-min-width': '270px',
+					'--side-max-width': '340px',
+				} as React.CSSProperties
+			}
+		>
+			{/* Left Pane: Component Catalog Menu */}
+			<IonMenu
+				contentId="workbench-main"
+				menuId="components-menu"
+				side="start"
+			>
+				<IonHeader>
+					<IonToolbar color="dark">
+						<div className="flex items-center gap-2 px-3 py-1">
+							<IonIcon
+								icon={layersSharp}
+								className="text-blue-400 text-lg"
+							/>
+							<IonTitle
+								size="small"
+								className="font-bold text-sm"
+							>
+								Components
+							</IonTitle>
+							<span className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400 font-mono">
+								{CATALOG_ITEMS.length}
+							</span>
+						</div>
+						<IonButtons
+							slot="end"
+							className="lg:hidden"
 						>
-							<option value="sync-status">Sync Status (Unified)</option>
-							<option value="cloud-sync">Cloud Sync Details</option>
-							<option value="markdown-sync">Markdown Sync Details</option>
-							<option value="star-roles">Star Role Icons</option>
-							<option value="star-points">Star Points</option>
-							<option value="starship-trajectory">Starship & Trajectory</option>
-							<option value="pulse-graph">Activity Pulse Graph</option>
-							<option value="mood-player">Mood Soundtrack Player</option>
-						</select>
+							<button
+								type="button"
+								id="close-components-btn"
+								aria-label="Close component catalog"
+								className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-neutral-800 text-neutral-400 hover:text-white transition mr-1"
+								onClick={async () => {
+									const menu = document.querySelector('ion-menu[menu-id="components-menu"]') as any
+									if (menu?.close) {
+										await menu.close()
+									} else {
+										await menuController.close('components-menu')
+									}
+								}}
+							>
+								<IonIcon icon={closeSharp} className="text-xl" />
+							</button>
+						</IonButtons>
+					</IonToolbar>
+				</IonHeader>
+				<IonContent className="bg-neutral-950 text-neutral-100">
+					<div className="p-3 space-y-1">
+						{CATALOG_ITEMS.map((item) => {
+							const isActive = activeComponent === item.key
+							return (
+								<button
+									key={item.key}
+									onClick={() => handleSelectComponent(item.key)}
+									className={`w-full text-left rounded-xl p-3 transition flex items-start gap-3 border ${
+										isActive
+											? 'border-blue-500/60 bg-blue-950/50 text-blue-100 shadow-sm'
+											: 'border-transparent hover:border-neutral-800 hover:bg-neutral-900/60 text-neutral-300'
+									}`}
+								>
+									<div
+										className={`p-2 rounded-lg border text-lg shrink-0 ${item.iconColor}`}
+									>
+										<IonIcon icon={item.icon} />
+									</div>
+									<div className="flex-1 min-w-0">
+										<div className="flex items-center justify-between gap-1">
+											<span className="font-semibold text-xs truncate text-white">
+												{item.title}
+											</span>
+											<span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400 font-mono shrink-0">
+												{item.badge}
+											</span>
+										</div>
+										<p className="text-[11px] text-neutral-400 truncate mt-0.5">
+											{item.subtitle}
+										</p>
+									</div>
+								</button>
+							)
+						})}
 					</div>
-				</div>
+				</IonContent>
+			</IonMenu>
 
-				<div className="flex min-h-full flex-col lg:flex-row">
-					{/* Desktop Navigation Sidebar */}
-					<div className="hidden w-64 shrink-0 border-r border-neutral-800 bg-neutral-900/60 p-4 lg:block lg:sticky lg:top-0 lg:self-start lg:max-h-[calc(100vh-56px)] lg:overflow-y-auto">
-						<h2 className="mb-3 text-xs font-bold tracking-wider text-neutral-400 uppercase">
-							Components
-						</h2>
-						<nav className="flex flex-col gap-1">
-							<button
-								onClick={() => selectComponent('sync-status')}
-								className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-									activeComponent === 'sync-status'
-										? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-										: 'text-neutral-300 hover:bg-neutral-800'
-								}`}
+			{/* Center Pane: Main Interactive Stage & Canvas */}
+			<div
+				className="ion-page"
+				id="workbench-main"
+			>
+				<IonHeader className="ion-no-border">
+					<IonToolbar color="dark">
+						<IonButtons slot="start">
+							<IonBackButton defaultHref="/dev/components" />
+							<IonMenuButton
+								menu="components-menu"
+								id="components-menu-btn"
+							/>
+						</IonButtons>
+						<IonTitle className="font-bold text-sm md:text-base">
+							{COMPONENT_TITLES[activeComponent] || 'Workbench'}
+						</IonTitle>
+						<IonButtons slot="end">
+							<IonMenuButton
+								menu="knobs-menu"
+								id="knobs-menu-btn"
 							>
-								<IonIcon icon={syncSharp} />
-								<span>Sync Status (Unified)</span>
-							</button>
+								<IonIcon icon={optionsSharp} />
+							</IonMenuButton>
+						</IonButtons>
+					</IonToolbar>
 
-							<button
-								onClick={() => selectComponent('cloud-sync')}
-								className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-									activeComponent === 'cloud-sync'
-										? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-										: 'text-neutral-300 hover:bg-neutral-800'
-								}`}
+					{/* Presets Bar in Sub-Toolbar: Always visible, never covered by sheets */}
+					{presetsForActiveComponent.length > 0 && (
+						<IonToolbar
+							color="dark"
+							className="border-t border-neutral-800"
+						>
+							<div
+								data-testid="workbench-presets-bar"
+								className="flex items-center gap-2 overflow-x-auto no-scrollbar px-3 py-1"
 							>
-								<IonIcon icon={cloudDoneSharp} />
-								<span>Cloud Sync Details</span>
-							</button>
+								<span className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-neutral-400 shrink-0 mr-1">
+									<IonIcon
+										icon={flashSharp}
+										className="text-amber-400"
+									/>
+									Scenarios:
+								</span>
+								{presetsForActiveComponent.map((p) => (
+									<button
+										key={p.id}
+										onClick={p.action}
+										className={`rounded-full border px-3 py-1 text-xs font-medium transition active:scale-95 shrink-0 flex items-center gap-1.5 ${
+											p.active
+												? 'border-blue-500/70 bg-blue-950/70 text-blue-200 ring-1 ring-blue-500/50 shadow-sm'
+												: 'border-neutral-800 bg-neutral-900/80 text-neutral-300 hover:border-neutral-700 hover:bg-neutral-800'
+										}`}
+									>
+										{p.label}
+									</button>
+								))}
+							</div>
+						</IonToolbar>
+					)}
+				</IonHeader>
 
-							<button
-								onClick={() => selectComponent('markdown-sync')}
-								className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-									activeComponent === 'markdown-sync'
-										? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-										: 'text-neutral-300 hover:bg-neutral-800'
-								}`}
-							>
-								<IonIcon icon={documentTextSharp} />
-								<span>Markdown Sync Details</span>
-							</button>
-
-							<button
-								onClick={() => selectComponent('star-roles')}
-								className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-									activeComponent === 'star-roles'
-										? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-										: 'text-neutral-300 hover:bg-neutral-800'
-								}`}
-							>
-								<IonIcon icon={starSharp} />
-								<span>Star Role Icons</span>
-							</button>
-
-							<button
-								onClick={() => selectComponent('star-points')}
-								className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-									activeComponent === 'star-points'
-										? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-										: 'text-neutral-300 hover:bg-neutral-800'
-								}`}
-							>
-								<IonIcon icon={sparklesSharp} />
-								<span>Star Points</span>
-							</button>
-
-							<button
-								onClick={() => selectComponent('starship-trajectory')}
-								className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-									activeComponent === 'starship-trajectory'
-										? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-										: 'text-neutral-300 hover:bg-neutral-800'
-								}`}
-							>
-								<IonIcon icon={rocketSharp} />
-								<span>Starship & Trajectory</span>
-							</button>
-
-							<button
-								onClick={() => selectComponent('pulse-graph')}
-								className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-									activeComponent === 'pulse-graph'
-										? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-										: 'text-neutral-300 hover:bg-neutral-800'
-								}`}
-							>
-								<IonIcon icon={pulseSharp} />
-								<span>Activity Pulse Graph</span>
-							</button>
-
-							<button
-								onClick={() => selectComponent('mood-player')}
-								className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-									activeComponent === 'mood-player'
-										? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-										: 'text-neutral-300 hover:bg-neutral-800'
-								}`}
-							>
-								<IonIcon icon={musicalNotesSharp} />
-								<span>Mood Soundtrack Player</span>
-							</button>
-						</nav>
+				<IonContent className="bg-neutral-950 text-neutral-100">
+					{/* Header / Description */}
+					<div className="px-4 py-2.5 md:px-6 md:py-3 border-b border-neutral-800/60 bg-neutral-950">
+						<h1 className="text-lg md:text-xl font-bold tracking-tight text-white">
+							{COMPONENT_TITLES[activeComponent]}
+						</h1>
+						<p className="text-xs text-neutral-400 mt-0.5 max-w-2xl">
+							{COMPONENT_DESCRIPTIONS[activeComponent]}
+						</p>
 					</div>
 
-					{/* Main Interactive Stage Column */}
-					<div className="flex-1 min-w-0">
-						{presetsBar}
-						<div className="p-4 pb-28 lg:p-6 lg:pb-12">
-							{activeComponent === 'sync-status' && (
-							<div className="space-y-6">
-								<div>
-									<h1 className="text-2xl font-bold tracking-tight text-white">
-										Unified Sync Status Popover
-									</h1>
-									<p className="text-sm text-neutral-400">
-										Consolidates Dexie Cloud database replication and local Markdown folder export into an interactive popover.
-									</p>
+					{/* Canvas Area: Centered with subtle dot-grid background and touch swipe navigation */}
+					<div className="p-3 md:p-6">
+						<div
+							data-testid="workbench-canvas"
+							className="relative min-h-[340px] rounded-2xl border border-neutral-800/80 p-4 md:p-8 flex flex-col items-center justify-center select-none shadow-2xl"
+							style={{
+								backgroundColor: '#09090b',
+								backgroundImage:
+									'radial-gradient(circle, rgba(255, 255, 255, 0.14) 1px, transparent 1px)',
+								backgroundSize: '22px 22px',
+							}}
+							onTouchStart={handleTouchStart}
+							onTouchMove={handleTouchMove}
+							onTouchEnd={handleTouchEnd}
+						>
+							{/* Floating Scenario Pill with Swipe Hint */}
+							{presetsForActiveComponent.length > 0 && (
+								<div
+									data-testid="canvas-scenario-pill"
+									className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full border border-neutral-800/90 bg-neutral-900/90 px-3 py-1.5 shadow-xl backdrop-blur-md text-xs transition"
+								>
+									<button
+										onClick={goToPrevScenario}
+										aria-label="Previous scenario"
+										className="text-neutral-400 hover:text-white px-1 text-sm font-bold active:scale-95"
+									>
+										<IonIcon
+											icon={chevronBackOutline}
+											className="align-middle"
+										/>
+									</button>
+									<span className="text-neutral-400 text-[11px] hidden sm:inline">
+										Story:
+									</span>
+									<span className="font-semibold text-white">
+										{currentScenario?.label || 'Custom'}
+									</span>
+									<span className="text-neutral-500 text-[10px]">
+										({currentScenarioIndex + 1}/{presetsForActiveComponent.length})
+									</span>
+									<button
+										onClick={goToNextScenario}
+										aria-label="Next scenario"
+										className="text-neutral-400 hover:text-white px-1 text-sm font-bold active:scale-95"
+									>
+										<IonIcon
+											icon={chevronForwardOutline}
+											className="align-middle"
+										/>
+									</button>
 								</div>
+							)}
 
-								{/* Toolbar Simulation */}
-								<IonCard className="m-0 border border-neutral-800 bg-neutral-900">
-									<IonCardHeader>
-										<IonCardTitle className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">
-											In-Header Appearance (Interactive Popover)
-										</IonCardTitle>
-									</IonCardHeader>
-									<IonCardContent>
-										<div className="rounded-lg border border-neutral-700 bg-neutral-950 p-3">
+							{/* Centered Element on Canvas */}
+							<div className="w-full flex items-center justify-center py-6">
+								{activeComponent === 'sync-status' && (
+									<div className="flex flex-col items-center gap-6 max-w-md w-full">
+										{/* Interactive Popover Header Trigger Bar */}
+										<div className="w-full rounded-xl border border-neutral-800/80 bg-neutral-900/90 p-3.5 shadow-2xl backdrop-blur-md">
 											<div className="flex items-center justify-between">
 												<div className="flex items-center gap-2">
 													<StarPoints />
@@ -907,21 +1129,9 @@ function WorkbenchContent() {
 												</div>
 											</div>
 										</div>
-										<p className="mt-2 text-xs text-neutral-500">
-											👉 Click the sync icon button above to trigger the live popover with simulated state.
-										</p>
-									</IonCardContent>
-								</IonCard>
 
-								{/* Inline Full View */}
-								<IonCard className="m-0 border border-neutral-800 bg-neutral-900">
-									<IonCardHeader>
-										<IonCardTitle className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">
-											Always-Expanded View (Direct Inspection)
-										</IonCardTitle>
-									</IonCardHeader>
-									<IonCardContent>
-										<div className="max-w-md overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950 shadow-lg">
+										{/* Inline Direct Inspection View */}
+										<div className="w-full overflow-hidden rounded-xl border border-neutral-800 bg-neutral-950/95 shadow-2xl">
 											<SyncStatus
 												inline={true}
 												syncState={simulatedSyncState}
@@ -937,125 +1147,60 @@ function WorkbenchContent() {
 												}}
 											/>
 										</div>
-									</IonCardContent>
-								</IonCard>
-							</div>
-						)}
+									</div>
+								)}
 
-						{activeComponent === 'cloud-sync' && (
-							<div className="space-y-6">
-								<div>
-									<h1 className="text-2xl font-bold tracking-tight text-white">
-										Cloud Sync Details & Status
-									</h1>
-									<p className="text-sm text-neutral-400">
-										Detailed replication metrics and current sync indicators for Dexie Cloud.
-									</p>
-								</div>
-
-								<div className="grid gap-6 md:grid-cols-2">
-									<IonCard className="m-0 border border-neutral-800 bg-neutral-900">
-										<IonCardHeader>
-											<IonCardTitle className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">
-												Status Icon
-											</IonCardTitle>
-										</IonCardHeader>
-										<IonCardContent className="flex items-center gap-3">
-											<span className="text-sm text-neutral-300">Current Icon:</span>
-											<div className="rounded border border-neutral-700 bg-neutral-800 p-2 text-2xl">
+								{activeComponent === 'cloud-sync' && (
+									<div className="w-full max-w-md space-y-4">
+										<div className="flex items-center justify-between rounded-xl border border-neutral-800 bg-neutral-900/90 p-4 shadow-xl">
+											<span className="text-sm font-medium text-neutral-300">
+												Status Indicator
+											</span>
+											<div className="rounded-lg border border-neutral-700 bg-neutral-800 p-2 text-2xl">
 												<CloudSyncStatus
 													user={simulatedUser}
 													syncState={simulatedSyncState}
 												/>
 											</div>
-										</IonCardContent>
-									</IonCard>
+										</div>
+										<div className="rounded-xl border border-neutral-800 bg-neutral-950 p-3 shadow-2xl">
+											<CloudSyncDetails
+												user={simulatedUser}
+												syncState={simulatedSyncState}
+												onLogout={() => setCloudLoggedIn(false)}
+											/>
+										</div>
+									</div>
+								)}
 
-									<IonCard className="m-0 border border-neutral-800 bg-neutral-900">
-										<IonCardHeader>
-											<IonCardTitle className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">
-												Full Details Pane
-											</IonCardTitle>
-										</IonCardHeader>
-										<IonCardContent>
-											<div className="rounded border border-neutral-800 bg-neutral-950 p-2">
-												<CloudSyncDetails
-													user={simulatedUser}
-													syncState={simulatedSyncState}
-													onLogout={() => setCloudLoggedIn(false)}
-												/>
-											</div>
-										</IonCardContent>
-									</IonCard>
-								</div>
-							</div>
-						)}
-
-						{activeComponent === 'markdown-sync' && (
-							<div className="space-y-6">
-								<div>
-									<h1 className="text-2xl font-bold tracking-tight text-white">
-										Markdown Local Sync Details & Status
-									</h1>
-									<p className="text-sm text-neutral-400">
-										Direct filesystem export status, file counters, and full sync controls.
-									</p>
-								</div>
-
-								<div className="grid gap-6 md:grid-cols-2">
-									<IonCard className="m-0 border border-neutral-800 bg-neutral-900">
-										<IonCardHeader>
-											<IonCardTitle className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">
-												Status Icon
-											</IonCardTitle>
-										</IonCardHeader>
-										<IonCardContent className="flex items-center gap-3">
-											<span className="text-sm text-neutral-300">Current Icon:</span>
-											<div className="rounded border border-neutral-700 bg-neutral-800 p-2 text-2xl">
+								{activeComponent === 'markdown-sync' && (
+									<div className="w-full max-w-md space-y-4">
+										<div className="flex items-center justify-between rounded-xl border border-neutral-800 bg-neutral-900/90 p-4 shadow-xl">
+											<span className="text-sm font-medium text-neutral-300">
+												Status Indicator
+											</span>
+											<div className="rounded-lg border border-neutral-700 bg-neutral-800 p-2 text-2xl">
 												<MarkdownSyncStatus exportStatus={simulatedExportStatus} />
 											</div>
-										</IonCardContent>
-									</IonCard>
+										</div>
+										<div className="rounded-xl border border-neutral-800 bg-neutral-950 p-3 shadow-2xl">
+											<MarkdownSyncDetails
+												exportStatus={simulatedExportStatus}
+												onRunFullSync={() => {
+													setMarkdownFullSyncPhase('in-progress')
+													setMarkdownCompletedFiles(1)
+												}}
+												onReconnect={() => {
+													setMarkdownNeedsReconnect(false)
+													setMarkdownHasError(false)
+												}}
+											/>
+										</div>
+									</div>
+								)}
 
-									<IonCard className="m-0 border border-neutral-800 bg-neutral-900">
-										<IonCardHeader>
-											<IonCardTitle className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">
-												Full Details Pane
-											</IonCardTitle>
-										</IonCardHeader>
-										<IonCardContent>
-											<div className="rounded border border-neutral-800 bg-neutral-950 p-2">
-												<MarkdownSyncDetails
-													exportStatus={simulatedExportStatus}
-													onRunFullSync={() => {
-														setMarkdownFullSyncPhase('in-progress')
-														setMarkdownCompletedFiles(1)
-													}}
-													onReconnect={() => {
-														setMarkdownNeedsReconnect(false)
-														setMarkdownHasError(false)
-													}}
-												/>
-											</div>
-										</IonCardContent>
-									</IonCard>
-								</div>
-							</div>
-						)}
-
-						{activeComponent === 'star-roles' && (
-							<div className="space-y-6">
-								<div>
-									<h1 className="text-2xl font-bold tracking-tight text-white">
-										Star Role Icons
-									</h1>
-									<p className="text-sm text-neutral-400">
-										Category and role badge visualizers.
-									</p>
-								</div>
-
-								<IonCard className="m-0 border border-neutral-800 bg-neutral-900">
-									<IonCardContent className="flex flex-wrap items-center gap-6 p-6">
+								{activeComponent === 'star-roles' && (
+									<div className="flex flex-wrap items-center justify-center gap-6 rounded-2xl border border-neutral-800 bg-neutral-900/80 p-8 shadow-2xl backdrop-blur-md">
 										<div className="flex flex-col items-center gap-2">
 											<StarRoleIcon
 												starRole={{
@@ -1063,7 +1208,7 @@ function WorkbenchContent() {
 													title: 'Selected',
 													icon: { type: 'ionicon', name: selectedIcon },
 												}}
-												style={{ color: selectedColor, fontSize: '28px' }}
+												style={{ color: selectedColor, fontSize: '32px' }}
 											/>
 											<span className="text-xs text-neutral-400">Selected</span>
 										</div>
@@ -1075,7 +1220,7 @@ function WorkbenchContent() {
 													title: 'Planet',
 													icon: { type: 'ionicon', name: 'planetSharp' },
 												}}
-												style={{ color: '#3b82f6', fontSize: '28px' }}
+												style={{ color: '#3b82f6', fontSize: '32px' }}
 											/>
 											<span className="text-xs text-neutral-400">Planet</span>
 										</div>
@@ -1087,7 +1232,7 @@ function WorkbenchContent() {
 													title: 'Rocket',
 													icon: { type: 'ionicon', name: 'rocketSharp' },
 												}}
-												style={{ color: '#ec4899', fontSize: '28px' }}
+												style={{ color: '#ec4899', fontSize: '32px' }}
 											/>
 											<span className="text-xs text-neutral-400">Rocket</span>
 										</div>
@@ -1099,428 +1244,141 @@ function WorkbenchContent() {
 													title: 'Energy',
 													icon: { type: 'ionicon', name: 'flashSharp' },
 												}}
-												style={{ color: '#10b981', fontSize: '28px' }}
+												style={{ color: '#eab308', fontSize: '32px' }}
 											/>
 											<span className="text-xs text-neutral-400">Energy</span>
 										</div>
-									</IonCardContent>
-								</IonCard>
+									</div>
+								)}
+
+								{activeComponent === 'star-points' && (
+									<div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-neutral-800 bg-neutral-900/80 p-8 shadow-2xl backdrop-blur-md">
+										<span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
+											Progression Score
+										</span>
+										<div className="transform scale-150 py-4">
+											<StarPoints />
+										</div>
+										<span className="text-xs text-neutral-500">
+											Live header score counter
+										</span>
+									</div>
+								)}
+
+								{activeComponent === 'starship-trajectory' && (
+									<div className="w-full max-w-lg flex flex-col items-center justify-center rounded-2xl border border-neutral-800 bg-neutral-950 p-8 shadow-2xl">
+										<div
+											id="workbench-starship"
+											className="relative h-[300px] w-[60px] flex justify-center"
+										>
+											<Tracjectory
+												currentPosition={starshipPosition}
+												orientation="vertical"
+											/>
+											<div
+												className="absolute left-1/2 -translate-x-1/2 transition-transform duration-300 ease-out w-[56px] h-[56px]"
+												style={{
+													transform: `translate(-50%, ${starshipPosition}px) rotate(${starshipRotation}deg)`,
+												}}
+											>
+												<Starship />
+											</div>
+										</div>
+									</div>
+								)}
+
+								{activeComponent === 'pulse-graph' && (
+									<div
+										className="w-full max-w-lg rounded-2xl border border-neutral-800 bg-neutral-950 p-8 flex flex-col items-center justify-center shadow-2xl"
+									>
+										<span className="text-xs text-neutral-500 mb-3 font-mono uppercase tracking-wider">
+											14-Day Activity Pulse
+										</span>
+										<div id="workbench-pulse-graph" className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
+											<PulseGraph starPoints={pulseStarPoints} visits={simulatedVisits} />
+										</div>
+									</div>
+								)}
+
+								{activeComponent === 'mood-player' && (
+									<div
+										className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-950 p-8 flex flex-col items-center justify-center shadow-2xl"
+										id="workbench-mood-player"
+									>
+										<Mood />
+										<div className="mt-6 flex items-center gap-2">
+											<IonBadge color={mode === 'hype' ? 'danger' : 'primary'}>
+												{mode.toUpperCase()} ACTIVE
+											</IonBadge>
+											<span className="text-xs text-neutral-400">
+												{mode === 'chill'
+													? 'Melodysheep Ambient'
+													: 'Karl Casey Synthwave'}
+											</span>
+										</div>
+									</div>
+								)}
 							</div>
-						)}
 
-						{activeComponent === 'star-points' && (
-							<div className="space-y-6">
-								<div>
-									<h1 className="text-2xl font-bold tracking-tight text-white">
-										Star Points
-									</h1>
-									<p className="text-sm text-neutral-400">
-										Experience and progression score badge.
-									</p>
+							{/* Subtle Mobile Swipe Hint */}
+							{presetsForActiveComponent.length > 1 && (
+								<div className="text-[10px] text-neutral-500 mt-2 block sm:hidden">
+									👈 Swipe left / right to cycle stories 👉
 								</div>
-
-								<IonCard className="m-0 border border-neutral-800 bg-neutral-900">
-									<IonCardContent className="p-6">
-										<StarPoints />
-									</IonCardContent>
-								</IonCard>
-							</div>
-						)}
-
-						{/* Starship & Trajectory Stage */}
-						{activeComponent === 'starship-trajectory' && (
-							<div className="space-y-6">
-								<div>
-									<h1 className="text-2xl font-bold tracking-tight text-white">
-										Starship & Trajectory Animation
-									</h1>
-									<p className="text-sm text-neutral-400">
-										Cosmic flight corridor visualizer and spacecraft position tracker with mood-reactive warp gradients.
-									</p>
-								</div>
-
-								<div className="grid gap-6 md:grid-cols-2">
-									{/* Flight Corridor Viewport */}
-									<IonCard className="m-0 border border-neutral-800 bg-neutral-900">
-										<IonCardHeader>
-											<div className="flex items-center justify-between">
-												<IonCardTitle className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">
-													Flight Corridor ({starshipOrientation})
-												</IonCardTitle>
-												<IonBadge color={mode === 'hype' ? 'danger' : 'primary'}>
-													{mode.toUpperCase()} WARP
-												</IonBadge>
-											</div>
-										</IonCardHeader>
-										<IonCardContent>
-											<div className="relative h-[360px] w-full rounded-xl border border-neutral-800 bg-neutral-950 p-4 flex items-center justify-center overflow-hidden">
-												{/* Background Starfield Pattern */}
-												<div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none" />
-
-												{starshipOrientation === 'vertical' ? (
-													<div className="relative h-[300px] w-[60px] flex justify-center">
-														<Tracjectory
-															className="absolute left-1/2 -translate-x-1/2"
-															currentPosition={starshipPosition}
-															orientation="vertical"
-														/>
-														<div
-															id="workbench-starship"
-															className="absolute left-1/2 -translate-x-1/2 transition-transform duration-300 ease-out w-[56px] h-[56px]"
-															style={{
-																transform: `translate(-50%, ${starshipPosition}px) rotate(${starshipRotation}deg)`,
-															}}
-														>
-															<Starship />
-														</div>
-													</div>
-												) : (
-													<div className="relative w-[300px] h-[60px] flex items-center">
-														<Tracjectory
-															className="absolute top-1/2 -translate-y-1/2"
-															currentPosition={starshipPosition}
-															orientation="horizontal"
-														/>
-														<div
-															id="workbench-starship"
-															className="absolute top-1/2 -translate-y-1/2 transition-transform duration-300 ease-out w-[56px] h-[56px]"
-															style={{
-																transform: `translate(${starshipPosition}px, -50%) rotate(${starshipRotation}deg)`,
-															}}
-														>
-															<Starship />
-														</div>
-													</div>
-												)}
-											</div>
-											<div className="mt-3 flex items-center justify-between text-xs text-neutral-400">
-												<span>Position: <strong className="text-white">{starshipPosition}px</strong></span>
-												<span>Heading: <strong className="text-white">{starshipRotation}°</strong></span>
-												<span>Mode: <strong className={mode === 'hype' ? 'text-rose-400' : 'text-cyan-400'}>{mode}</strong></span>
-											</div>
-										</IonCardContent>
-									</IonCard>
-
-									{/* Telemetry & Context */}
-									<IonCard className="m-0 border border-neutral-800 bg-neutral-900">
-										<IonCardHeader>
-											<IonCardTitle className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">
-												Navigational Telemetry & State
-											</IonCardTitle>
-										</IonCardHeader>
-										<IonCardContent className="space-y-4">
-											<div className="rounded-lg border border-neutral-800 bg-neutral-950 p-4 space-y-2">
-												<div className="flex justify-between text-xs">
-													<span className="text-neutral-400">Warp Drive Status:</span>
-													<span className={mode === 'hype' ? 'text-red-400 font-bold' : 'text-cyan-400 font-bold'}>
-														{mode === 'hype' ? '⚡ HYPE (Overclocked)' : '🌌 CHILL (Cruising)'}
-													</span>
-												</div>
-												<div className="flex justify-between text-xs">
-													<span className="text-neutral-400">Corridor Orientation:</span>
-													<span className="text-white capitalize">{starshipOrientation}</span>
-												</div>
-												<div className="flex justify-between text-xs">
-													<span className="text-neutral-400">Waypoint Coordinate:</span>
-													<span className="font-mono text-cyan-400">{starshipPosition}px</span>
-												</div>
-												<div className="flex justify-between text-xs">
-													<span className="text-neutral-400">Sprite Heading:</span>
-													<span className="font-mono text-white">{starshipRotation}°</span>
-												</div>
-											</div>
-
-											<div className="rounded-lg border border-neutral-800 bg-neutral-950 p-3 text-xs text-neutral-400">
-												<p className="font-semibold text-neutral-300 mb-1">🎮 Flight Controls in Production:</p>
-												<p>
-													In the real app, <code className="text-cyan-400">Journey.tsx</code> dynamically calculates <code className="text-cyan-400">starshipY</code> using a bounding box ref over the active Todo Wayfinder item. Here in the workbench, use the slider to test beam stretch, coordinate clipping, and gradient shading.
-												</p>
-											</div>
-										</IonCardContent>
-									</IonCard>
-								</div>
-							</div>
-						)}
-
-						{/* Pulse Graph Stage */}
-						{activeComponent === 'pulse-graph' && (
-							<div className="space-y-6">
-								<div>
-									<h1 className="text-2xl font-bold tracking-tight text-white">
-										Activity Pulse Graph
-									</h1>
-									<p className="text-sm text-neutral-400">
-										Compact 14-day engagement sparkline indicating visit frequency and task momentum with Fibonacci star point color tiers.
-									</p>
-								</div>
-
-								<div className="grid gap-6 md:grid-cols-2">
-									{/* Pulse Sparkline Preview */}
-									<IonCard className="m-0 border border-neutral-800 bg-neutral-900">
-										<IonCardHeader>
-											<div className="flex items-center justify-between">
-												<IonCardTitle className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">
-													Pulse Sparkline (Native Scale)
-												</IonCardTitle>
-												<IonBadge color={starScale[pulseStarPoints as keyof typeof starScale]?.ionicColor || 'primary'}>
-													Tier {pulseStarPoints}
-												</IonBadge>
-											</div>
-										</IonCardHeader>
-										<IonCardContent className="space-y-4">
-											<div className="rounded-xl border border-neutral-800 bg-neutral-950 p-6 flex flex-col items-center justify-center">
-												<span className="text-xs text-neutral-500 mb-2 font-mono uppercase tracking-wider">14-Day Activity Pulse</span>
-												<div id="workbench-pulse-graph" className="p-3 rounded-lg bg-neutral-900/60 border border-neutral-800">
-													<PulseGraph starPoints={pulseStarPoints} visits={simulatedVisits} />
-												</div>
-												<div className="mt-4 flex items-center gap-4 text-xs text-neutral-400">
-													<span className="flex items-center gap-1.5">
-														<span className="inline-block h-1.5 w-1.5 rounded-full bg-neutral-600" />
-														0 Visits (Dot)
-													</span>
-													<span className="flex items-center gap-1.5">
-														<span className="inline-block h-2 w-1 rounded-full bg-neutral-400" />
-														1 Visit (Mid)
-													</span>
-													<span className="flex items-center gap-1.5">
-														<span className="inline-block h-4 w-1 rounded-full bg-white" />
-														2+ Visits (Full)
-													</span>
-												</div>
-											</div>
-
-											{/* Simulated Todo Item Header Context */}
-											<div className="rounded-lg border border-neutral-800 bg-neutral-950 p-4">
-												<span className="text-xs font-semibold text-neutral-400 block mb-2">In-App Context (Todo Item Header)</span>
-												<div className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-900 p-3">
-													<div className="flex items-center gap-2.5">
-														<div className="h-4 w-4 rounded-full border border-neutral-600" />
-														<div>
-															<span className="text-sm font-medium text-white">Review Orbital Mechanics Specs</span>
-															<span className="block text-xs text-neutral-500">Wayfinder • Priority Task</span>
-														</div>
-													</div>
-													<PulseGraph starPoints={pulseStarPoints} visits={simulatedVisits} />
-												</div>
-											</div>
-										</IonCardContent>
-									</IonCard>
-
-									{/* Color Mapping & Metrics */}
-									<IonCard className="m-0 border border-neutral-800 bg-neutral-900">
-										<IonCardHeader>
-											<IonCardTitle className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">
-												Fibonacci Color Mapping & Metrics
-											</IonCardTitle>
-										</IonCardHeader>
-										<IonCardContent className="space-y-4">
-											<div className="grid grid-cols-3 gap-2">
-												{[1, 2, 3, 5, 8, 13].map((pt) => {
-													const scale = starScale[pt as keyof typeof starScale]
-													const isSelected = pulseStarPoints === pt
-													return (
-														<button
-															key={pt}
-															onClick={() => setPulseStarPoints(pt)}
-															className={`flex flex-col items-center rounded-lg border p-2.5 transition text-xs ${
-																isSelected
-																	? 'border-blue-500 bg-blue-500/10 text-white font-bold'
-																	: 'border-neutral-800 bg-neutral-950 text-neutral-400 hover:border-neutral-700'
-															}`}
-														>
-															<span className={`text-base font-bold ${scale.textColor}`}>{pt}★</span>
-															<span className="text-[10px] text-neutral-500 capitalize">{scale.ionicColor}</span>
-														</button>
-													)
-												})}
-											</div>
-
-											<div className="rounded-lg border border-neutral-800 bg-neutral-950 p-4 text-xs space-y-2">
-												<div className="flex justify-between">
-													<span className="text-neutral-400">Active Preset:</span>
-													<span className="font-semibold text-white capitalize">{pulsePreset}</span>
-												</div>
-												<div className="flex justify-between">
-													<span className="text-neutral-400">Total Visits (14d):</span>
-													<span className="font-mono text-cyan-400 font-bold">{simulatedVisits.length}</span>
-												</div>
-												<div className="flex justify-between">
-													<span className="text-neutral-400">Tailwind Color:</span>
-													<span className="font-mono text-neutral-300">{starScale[pulseStarPoints as keyof typeof starScale]?.tailwindBgColors}</span>
-												</div>
-											</div>
-										</IonCardContent>
-									</IonCard>
-								</div>
-							</div>
-						)}
-
-						{/* Mood Player Stage */}
-						{activeComponent === 'mood-player' && (
-							<div className="space-y-6">
-								<div>
-									<h1 className="text-2xl font-bold tracking-tight text-white">
-										Mood Soundtrack Player
-									</h1>
-									<p className="text-sm text-neutral-400">
-										Ambient soundtrack audio controller with Chill (Melodysheep) and Hype (Karl Casey) audio streams and keyboard shortcuts.
-									</p>
-								</div>
-
-								<div className="grid gap-6 md:grid-cols-2">
-									{/* Player Widget */}
-									<IonCard className="m-0 border border-neutral-800 bg-neutral-900">
-										<IonCardHeader>
-											<div className="flex items-center justify-between">
-												<IonCardTitle className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">
-													Player Widget
-												</IonCardTitle>
-												<IonBadge color={mode === 'hype' ? 'danger' : 'primary'}>
-													{mode.toUpperCase()} ACTIVE
-												</IonBadge>
-											</div>
-										</IonCardHeader>
-										<IonCardContent className="space-y-4">
-											<div className="rounded-xl border border-neutral-800 bg-neutral-950 p-8 flex flex-col items-center justify-center">
-												<div id="workbench-mood-player">
-													<Mood />
-												</div>
-												<p className="mt-4 text-xs text-neutral-400 text-center">
-													Click play to stream audio or toggle between Chill and Hype modes.
-												</p>
-											</div>
-
-											<div className="rounded-lg border border-neutral-800 bg-neutral-950 p-4">
-												<span className="text-xs font-semibold text-neutral-400 block mb-2">⌨️ Global Keyboard Shortcuts</span>
-												<div className="grid grid-cols-3 gap-2 text-center text-xs">
-													<div className="rounded border border-neutral-800 bg-neutral-900 p-2">
-														<kbd className="rounded bg-neutral-800 px-1.5 py-0.5 font-mono text-neutral-200">Z</kbd>
-														<span className="block mt-1 text-[11px] text-neutral-400">Chill Mode</span>
-													</div>
-													<div className="rounded border border-neutral-800 bg-neutral-900 p-2">
-														<kbd className="rounded bg-neutral-800 px-1.5 py-0.5 font-mono text-neutral-200">X</kbd>
-														<span className="block mt-1 text-[11px] text-neutral-400">Hype Mode</span>
-													</div>
-													<div className="rounded border border-neutral-800 bg-neutral-900 p-2">
-														<kbd className="rounded bg-neutral-800 px-1.5 py-0.5 font-mono text-neutral-200">Space</kbd>
-														<span className="block mt-1 text-[11px] text-neutral-400">Play / Pause</span>
-													</div>
-												</div>
-											</div>
-										</IonCardContent>
-									</IonCard>
-
-									{/* Soundtrack Playlist Inspector */}
-									<IonCard className="m-0 border border-neutral-800 bg-neutral-900">
-										<IonCardHeader>
-											<IonCardTitle className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">
-												Soundtrack Playlist ({mode === 'chill' ? 'Melodysheep Ambient' : 'Karl Casey Synthwave'})
-											</IonCardTitle>
-										</IonCardHeader>
-										<IonCardContent className="space-y-3">
-											<div className="space-y-1.5">
-												{(mode === 'chill'
-													? [
-															'Melodysheep - Water Worlds.mp3',
-															'Melodysheep - Sights of Space 1.mp3',
-															'Melodysheep - Sights of Space 2.mp3',
-															'Melodysheep - Sights of Space 3.mp3',
-															'Melodysheep - Sights of Space 4.mp3',
-															'Melodysheep - Sights of Space 5.mp3',
-															'Melodysheep - Sights of Space 6.mp3',
-													  ]
-													: [
-															'Karl Casey - Black Lotus.mp3',
-															'Karl Casey - Lucid Dream.mp3',
-															'Karl Casey - Radiation Sickness.mp3',
-															'Karl Casey - Replicant Hunter.mp3',
-													  ]
-												).map((track, i) => (
-													<div
-														key={track}
-														className="flex items-center justify-between rounded-md border border-neutral-800/80 bg-neutral-950 p-2 text-xs text-neutral-300"
-													>
-														<span className="flex items-center gap-2">
-															<span className="font-mono text-neutral-500">{i + 1}</span>
-															<span>{track}</span>
-														</span>
-														<IonBadge color={mode === 'hype' ? 'danger' : 'primary'} className="text-[10px]">
-															{mode}
-														</IonBadge>
-													</div>
-												))}
-											</div>
-										</IonCardContent>
-									</IonCard>
-								</div>
-							</div>
-						)}
-					</div>
-				</div>
-
-					{/* Desktop State Controls & Knobs Panel */}
-					<div className="hidden w-96 shrink-0 border-l border-neutral-800 bg-neutral-900/80 p-4 lg:block lg:sticky lg:top-0 lg:self-start lg:max-h-[calc(100vh-56px)] lg:overflow-y-auto">
-						<div className="mb-4 flex items-center justify-between">
-							<h3 className="flex items-center gap-2 text-sm font-semibold text-white">
-								<IonIcon icon={optionsSharp} />
-								State Simulator & Knobs
-							</h3>
+							)}
 						</div>
-						{knobsContent}
 					</div>
-				</div>
-		</IonContent>
+				</IonContent>
+			</div>
 
-			{/* Mobile Bottom Footer Bar (Safe Areas Handled by Ionic) */}
-			<IonFooter className="lg:hidden border-t border-neutral-800 bg-neutral-950">
-				<IonToolbar color="dark" className="ion-no-border px-2">
-					<div className="px-3 py-1.5">
-						<IonButton
-							expand="block"
-							fill="solid"
-							color="primary"
-							size="default"
-							onClick={() => setMobileKnobsOpen(true)}
-							id="mobile-knobs-toggle-btn"
-							data-testid="mobile-knobs-toggle-btn"
-							className="font-semibold text-xs"
-						>
-							<IonIcon slot="start" icon={optionsSharp} />
-							Fine-Grained Knobs & Simulator Controls
-						</IonButton>
-					</div>
-				</IonToolbar>
-			</IonFooter>
-
-			{/* Knobs Sheet Modal for Mobile (Native Safe Areas & Drag to Dismiss) */}
-			<IonModal
-				isOpen={mobileKnobsOpen}
-				onDidDismiss={() => setMobileKnobsOpen(false)}
-				initialBreakpoint={0.75}
-				breakpoints={[0, 0.4, 0.75, 1]}
-				handle={true}
-				id="mobile-knobs-drawer"
+			{/* Right Pane: State Simulator & Knobs Menu */}
+			<IonMenu
+				contentId="workbench-main"
+				menuId="knobs-menu"
+				side="end"
 			>
 				<IonHeader>
 					<IonToolbar color="dark">
-						<IonTitle size="small">State Simulator & Knobs</IonTitle>
-						<IonButtons slot="end">
-							<IonButton
-								onClick={() => setMobileKnobsOpen(false)}
-								className="font-semibold text-blue-400"
+						<div className="flex items-center gap-2 px-3 py-1">
+							<IonIcon
+								icon={optionsSharp}
+								className="text-blue-400 text-lg"
+							/>
+							<IonTitle
+								size="small"
+								className="font-bold text-sm"
 							>
-								Done
-							</IonButton>
+								Simulator & Knobs
+							</IonTitle>
+						</div>
+						<IonButtons
+							slot="end"
+							className="lg:hidden"
+						>
+							<button
+								type="button"
+								id="close-knobs-btn"
+								aria-label="Close knobs menu"
+								className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-neutral-800 text-neutral-400 hover:text-white transition mr-1"
+								onClick={async () => {
+									const menu = document.querySelector('ion-menu[menu-id="knobs-menu"]') as any
+									if (menu?.close) {
+										await menu.close()
+									} else {
+										await menuController.close('knobs-menu')
+									}
+								}}
+							>
+								<IonIcon icon={closeSharp} className="text-xl" />
+							</button>
 						</IonButtons>
 					</IonToolbar>
 				</IonHeader>
 				<IonContent className="ion-padding bg-neutral-900 text-neutral-100">
-					<div className="pb-10">
-						{knobsContent}
-					</div>
+					<div className="space-y-4 pb-6">{knobsContent}</div>
 				</IonContent>
-			</IonModal>
-		</IonPage>
+			</IonMenu>
+		</IonSplitPane>
 	)
 }
 
