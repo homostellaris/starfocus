@@ -1,4 +1,5 @@
 import { Analytics } from '@vercel/analytics/next'
+import { VercelToolbar } from '@vercel/toolbar/next'
 import type { Metadata, Viewport } from 'next'
 import { Honk, Jura, Kode_Mono } from 'next/font/google'
 import localFont from 'next/font/local'
@@ -94,6 +95,10 @@ export default function RootLayout({
 }: Readonly<{
 	children: React.ReactNode
 }>) {
+	const isNotProd =
+		process.env.NODE_ENV === 'development' ||
+		process.env.VERCEL_ENV === 'preview'
+
 	return (
 		<html
 			lang="en"
@@ -102,6 +107,7 @@ export default function RootLayout({
 			<body>
 				{children}
 				<Analytics />
+				{isNotProd && <VercelToolbar />}
 				<Script
 					id="json-ld"
 					type="application/ld+json"

@@ -45,6 +45,7 @@
 		"@types/mdx": "^2.0.13",
 		"@vercel/analytics": "^1.5.0",
 		"@vercel/node": "^5.5.26",
+		"@vercel/toolbar": "^0.2.7",
 		"clsx": "^2.1.1",
 		"dayjs": "^1.11.15",
 		"debounce": "^1.2.1",

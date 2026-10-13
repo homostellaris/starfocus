@@ -9,7 +9,9 @@ export default function Title({
 			className="font-display [font-palette:--redshift] text-3xl"
 			slot="start"
 		>
-			{children}
+			<h1 className="inline m-0 p-0 text-inherit font-inherit text-xl sm:text-2xl font-bold">
+				{children}
+			</h1>
 		</IonTitle>
 	)
 }

@@ -14,6 +14,10 @@ export function MarkdownExportProvider({ children }: { children: ReactNode }) {
 	)
 }
 
+export function useOptionalMarkdownExportContext(): UseMarkdownExportReturn | null {
+	return useContext(MarkdownExportContext)
+}
+
 export function useMarkdownExportContext(): UseMarkdownExportReturn {
 	const context = useContext(MarkdownExportContext)
 	if (!context) {
@@ -23,3 +27,4 @@ export function useMarkdownExportContext(): UseMarkdownExportReturn {
 	}
 	return context
 }
+

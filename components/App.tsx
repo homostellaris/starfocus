@@ -7,6 +7,10 @@ import Home from './pages/Home'
 import Constellation from './pages/Constellation'
 import ErrorBoundary from './ErrorBoundary'
 import Test from './pages/Test'
+import Workbench from './pages/Workbench'
+import DevHub from './pages/DevHub'
+import DevComponentsList from './pages/DevComponentsList'
+import DevTheme from './pages/DevTheme'
 import { db } from './db'
 import { useEffect } from 'react'
 import todoRepository from './todos/repository'
@@ -52,6 +56,31 @@ const App = () => {
 						<Route
 							path="/test"
 							render={() => <Test />}
+						/>
+						<Route
+							exact
+							path="/workbench"
+						>
+							<Redirect to="/dev/components/sync-status" />
+						</Route>
+						<Route
+							exact
+							path="/dev"
+							render={() => <DevHub />}
+						/>
+						<Route
+							exact
+							path="/dev/components"
+							render={() => <DevComponentsList />}
+						/>
+						<Route
+							path="/dev/components/:component"
+							render={() => <Workbench />}
+						/>
+						<Route
+							exact
+							path="/dev/theme"
+							render={() => <DevTheme />}
 						/>
 						<Route
 							render={params => {

@@ -1,6 +1,13 @@
 const withMDX = require('@next/mdx')()
+const withVercelToolbar = require('@vercel/toolbar/plugins/next')()
 
-module.exports = withMDX({
+const nextConfig = withMDX({
+	allowedDevOrigins: [
+		'omarchy.tail29c7da.ts.net:8443',
+		'omarchy.tail29c7da.ts.net',
+		'localhost:6603',
+		'127.0.0.1:6603',
+	],
 	basePath: '',
 	pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
 	images: {
@@ -22,3 +29,6 @@ module.exports = withMDX({
 		'ionicons',
 	],
 })
+
+module.exports = withVercelToolbar(nextConfig)
+
