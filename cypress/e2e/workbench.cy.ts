@@ -1,6 +1,6 @@
 describe('workbench', () => {
 	it('loads component workbench without errors', () => {
-		cy.visit('/workbench')
+		cy.visit('/dev/components/sync-status')
 		cy.get('ion-toolbar', { timeout: 15000 }).should('be.visible')
 		cy.get('#workbench-main h1', { timeout: 15000 }).contains('Unified Sync Status Popover').should('be.visible')
 		cy.get('[data-testid="workbench-canvas"]').should('be.visible')
@@ -25,31 +25,31 @@ describe('workbench', () => {
 		cy.get('h1', { timeout: 15000 }).contains('Star Points').should('be.visible')
 
 		// Back to Sync Status
-		cy.visit('/workbench')
+		cy.visit('/dev/components/sync-status')
 		cy.get('#workbench-main h1', { timeout: 15000 }).contains('Unified Sync Status Popover').should('be.visible')
 	})
 
 	it('applies quick presets and updates knobs', () => {
-		cy.visit('/workbench')
+		cy.visit('/dev/components/sync-status')
 		cy.contains('Unified Sync Status Popover', { timeout: 15000 }).should('be.visible')
 
 		// Click Cloud Uploading preset
-		cy.get('[data-testid="workbench-presets-bar"]').contains('button', 'Cloud Uploading').click()
+		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Cloud Uploading').click()
 		cy.contains('Replication Phase')
 		cy.get('#cloud-phase-select').should('have.value', 'pushing')
 
 		// Click Cloud Error preset
-		cy.get('[data-testid="workbench-presets-bar"]').contains('button', 'Cloud Error').click()
+		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Cloud Error').click()
 		cy.contains('WebSocket connection closed unexpectedly').scrollIntoView().should('be.visible')
 
 		// Click All Synced preset
-		cy.get('[data-testid="workbench-presets-bar"]').contains('button', 'All Synced').click()
+		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'All Synced').click()
 		cy.contains('Cloud database sync').scrollIntoView().should('be.visible')
 		cy.contains('Synced').should('be.visible')
 	})
 
 	it('opens the sync status popover from header button and displays dedicated incremental and full sync rows', () => {
-		cy.visit('/workbench')
+		cy.visit('/dev/components/sync-status')
 		cy.contains('Unified Sync Status Popover', { timeout: 15000 }).should('be.visible')
 		cy.get('#workbench-sync-status-btn').click()
 		cy.get('ion-popover')
@@ -89,11 +89,11 @@ describe('workbench', () => {
 	})
 
 	it('displays a single reconnect message with action button when folder reconnect is needed', () => {
-		cy.visit('/workbench')
+		cy.visit('/dev/components/sync-status')
 		cy.contains('Unified Sync Status Popover', { timeout: 15000 }).should('be.visible')
 
 		// Apply Reconnect Needed preset
-		cy.get('[data-testid="workbench-presets-bar"]').contains('button', 'Reconnect Needed').click()
+		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Reconnect Needed').click()
 
 		// Open popover
 		cy.get('#workbench-sync-status-btn').click()
@@ -126,8 +126,69 @@ describe('workbench', () => {
 		})
 	})
 
+	it('displays a dedicated Sync button when not connected to cloud', () => {
+		cy.visit('/dev/components/sync-status')
+		cy.contains('Unified Sync Status Popover', { timeout: 15000 }).should('be.visible')
+
+		// Apply Signed Out preset
+		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Signed Out').click()
+
+		// Open popover
+		cy.get('#workbench-sync-status-btn').click()
+		cy.get('ion-popover').should('be.visible')
+
+		// Disconnected cloud row and Sync login button should be visible
+		cy.get('ion-popover [data-testid="cloud-disconnected-row"]')
+			.should('be.visible')
+			.and('contain.text', 'Not connected to cloud')
+		cy.get('ion-popover [data-testid="cloud-login-btn"]')
+			.should('be.visible')
+			.and('contain.text', 'Sync')
+
+		// Click the Sync button to simulate sign in
+		cy.get('ion-popover [data-testid="cloud-login-btn"]').click()
+
+		// Disconnected row should no longer be visible once signed in
+		cy.get('ion-popover [data-testid="cloud-disconnected-row"]').should('not.exist')
+		cy.get('ion-popover [data-testid="cloud-sync-row"]').should('be.visible')
+
+		// Dismiss popover
+		cy.get('ion-popover').then(($el) => {
+			;($el[0] as any).dismiss?.()
+		})
+	})
+
+	it('displays a dedicated Set Up button when markdown export is disabled', () => {
+		cy.visit('/dev/components/sync-status')
+		cy.contains('Unified Sync Status Popover', { timeout: 15000 }).should('be.visible')
+
+		// Disable markdown export via toggle in knobs drawer
+		cy.get('ion-menu[menu-id="knobs-menu"]').contains('Export Enabled').parent().find('ion-toggle').click()
+
+		// Open popover
+		cy.get('#workbench-sync-status-btn').click()
+		cy.get('ion-popover').should('be.visible')
+
+		// Markdown disabled row and Set Up button should be visible
+		cy.get('ion-popover [data-testid="markdown-disabled-row"]')
+			.should('be.visible')
+			.and('contain.text', 'Not enabled')
+			.and('contain.text', 'Export tasks to a local folder')
+		cy.get('ion-popover [data-testid="markdown-setup-btn"]')
+			.should('be.visible')
+			.and('contain.text', 'Set Up')
+
+		// Click Set Up button
+		cy.get('ion-popover [data-testid="markdown-setup-btn"]').click()
+
+		// Dismiss popover
+		cy.get('ion-popover').then(($el) => {
+			;($el[0] as any).dismiss?.()
+		})
+	})
+
 	it('perpetually spins the sync icon whenever syncing activity is occurring', () => {
-		cy.visit('/workbench')
+		cy.visit('/dev/components/sync-status')
 		cy.contains('Unified Sync Status Popover', { timeout: 15000 }).should('be.visible')
 
 		// Default state is in-sync (idle) -> not spinning
@@ -138,97 +199,90 @@ describe('workbench', () => {
 			.and('not.have.class', 'animate-spin')
 
 		// Apply Cloud Uploading preset -> spinning
-		cy.get('[data-testid="workbench-presets-bar"]').contains('button', 'Cloud Uploading').click()
+		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Cloud Uploading').click()
 		cy.get('#workbench-sync-status-btn [data-testid="sync-icon"]')
 			.should('have.attr', 'data-spinning', 'true')
 			.and('have.class', 'animate-spin')
 		cy.screenshot('sync-icon-spinning-cloud')
 
 		// Apply Full MD Sync preset -> spinning
-		cy.get('[data-testid="workbench-presets-bar"]').contains('button', '🟣 Full MD Sync').click()
+		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Full MD Sync').click()
 		cy.get('#workbench-sync-status-btn [data-testid="sync-icon"]')
 			.should('have.attr', 'data-spinning', 'true')
 			.and('have.class', 'animate-spin')
 		cy.screenshot('sync-icon-spinning-markdown')
 
 		// Apply All Synced preset -> stops spinning
-		cy.get('[data-testid="workbench-presets-bar"]').contains('button', 'All Synced').click()
+		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'All Synced').click()
 		cy.get('#workbench-sync-status-btn [data-testid="sync-icon"]')
 			.should('have.attr', 'data-spinning', 'false')
 			.and('not.have.class', 'animate-spin')
 	})
 
-	it('provides a 3-pane desktop split pane layout with catalog, stage, and simulator knobs', () => {
+	it('provides a desktop split pane layout with stage and simulator knobs', () => {
 		cy.viewport(1280, 800)
-		cy.visit('/workbench')
+		cy.visit('/dev/components/sync-status')
 		cy.get('ion-split-pane', { timeout: 15000 }).should('have.class', 'split-pane-visible')
 
-		// Left: Catalog menu is visible
-		cy.get('ion-menu[menu-id="components-menu"]').should('be.visible')
-		cy.get('ion-menu[menu-id="components-menu"]').contains('Cloud Sync Details & Status').should('be.visible')
+		// Left catalog menu is removed
+		cy.get('ion-menu[menu-id="components-menu"]').should('not.exist')
 
-		// Middle: Main stage with canvas & presets
+		// Middle: Main stage with canvas
 		cy.get('#workbench-main').should('be.visible')
-		cy.get('[data-testid="workbench-presets-bar"]').should('be.visible')
 		cy.get('[data-testid="workbench-canvas"]').should('be.visible')
 
-		// Right: Knobs menu is visible side-by-side
+		// Right: Knobs menu is visible side-by-side with presets above the knobs
 		cy.get('ion-menu[menu-id="knobs-menu"]').should('be.visible')
+		cy.get('ion-menu[menu-id="knobs-menu"] [data-testid="workbench-presets-bar"]').should('be.visible')
 		cy.contains('Cloud Sync Controls').should('be.visible')
 
-		// Switch component via Catalog menu without full page reload
-		cy.get('ion-menu[menu-id="components-menu"]').contains('button', 'Star Role Icons').click()
-		cy.get('h1').contains('Star Role Icons').should('be.visible')
-		cy.get('ion-menu[menu-id="knobs-menu"]').contains('Star Role Visualizer').should('be.visible')
+		// Presets bar in bottom toolbar is also accessible
+		cy.get('[data-testid="workbench-toolbar-presets-bar"]').should('be.visible')
 		cy.screenshot('desktop-splitpane-workbench')
+
+		// Navigate back to component list using header back button
+		cy.get('ion-header ion-back-button').click()
+		cy.url().should('include', '/dev/components')
+		cy.contains('Component Catalog', { timeout: 15000 }).should('be.visible')
 	})
 
-	it('provides a responsive mobile split pane experience with collapsible menus and instant presets', () => {
+	it('provides a responsive mobile split pane experience with collapsible knobs menu and preset chips', () => {
 		cy.viewport(390, 844)
-		cy.visit('/workbench')
+		cy.visit('/dev/components/sync-status')
 		cy.get('#workbench-main h1', { timeout: 15000 }).contains('Unified Sync Status Popover').should('be.visible')
 
-		// On mobile, split pane is collapsed and menu buttons are visible
-		cy.get('#components-menu-btn').should('be.visible')
+		// On mobile, split pane is collapsed; left menu button does not exist
+		cy.get('#components-menu-btn').should('not.exist')
 		cy.get('#knobs-menu-btn').should('be.visible')
-
-		// Presets are directly accessible at the top of the canvas
-		cy.get('[data-testid="workbench-presets-bar"]').should('be.visible')
 		cy.get('[data-testid="workbench-canvas"]').should('be.visible')
 
-		// Advance scenario via quick presets bar
-		cy.get('[data-testid="workbench-presets-bar"]').contains('button', 'Cloud Uploading').click()
+		// Verify quick-access presets bar in bottom toolbar
+		cy.get('[data-testid="workbench-toolbar-presets-bar"]').should('be.visible')
+		cy.get('[data-testid="workbench-toolbar-presets-bar"]').contains('ion-chip', 'Cloud Uploading').click()
 		cy.get('#workbench-sync-status-btn [data-testid="sync-icon"]').should('have.attr', 'data-spinning', 'true')
-		cy.get('[data-testid="canvas-scenario-pill"]').should('contain.text', 'Cloud Uploading')
 
-		// Advance scenario via floating pill controls
-		cy.get('[data-testid="canvas-scenario-pill"] button[aria-label="Next scenario"]').click()
-		cy.get('[data-testid="canvas-scenario-pill"]').should('contain.text', 'Full MD Sync')
-		cy.screenshot('mobile-canvas-scenario-advanced')
-
-		// Open Knobs drawer via mobile menu button
+		// Open Knobs drawer via mobile menu button to access presets and knobs
 		cy.get('#knobs-menu-btn').click()
 		cy.get('ion-menu[menu-id="knobs-menu"]').should('be.visible')
-		cy.contains('Cloud Sync Controls').should('be.visible')
-		cy.screenshot('mobile-knobs-menu-open')
+		cy.get('ion-menu[menu-id="knobs-menu"] [data-testid="workbench-presets-bar"]').should('be.visible')
 
-		// Ionic menu animation must complete before closing
+		// Select a preset chip inside knobs drawer
+		cy.get('ion-menu[menu-id="knobs-menu"] [data-testid="workbench-presets-bar"]')
+			.contains('ion-chip', 'Cloud Uploading')
+			.click()
+
+		// Close knobs drawer
 		cy.wait(500)
 		cy.get('#close-knobs-btn').click({ force: true })
 		cy.get('ion-menu[menu-id="knobs-menu"]').should('not.have.class', 'show-menu')
-		cy.contains('Cloud Sync Controls').should('not.be.visible')
 
-		// Open Components Catalog drawer via mobile menu button
-		cy.wait(500)
-		cy.get('#components-menu-btn').click()
-		cy.get('ion-menu[menu-id="components-menu"]').should('have.class', 'show-menu')
-		cy.get('ion-menu[menu-id="components-menu"]').contains('Cloud Sync Details & Status').should('be.visible')
-		cy.screenshot('mobile-components-menu-open')
+		// Verify component on canvas updated
+		cy.get('#workbench-sync-status-btn [data-testid="sync-icon"]').should('have.attr', 'data-spinning', 'true')
+		cy.screenshot('mobile-canvas-scenario-advanced')
 
-		// Select a component from the mobile catalog
-		cy.wait(500)
-		cy.get('ion-menu[menu-id="components-menu"]').contains('button', 'Cloud Sync Details & Status').click()
-		cy.contains('Cloud database sync').should('be.visible')
-		cy.screenshot('mobile-component-switched')
+		// Navigate back to component list using header back button
+		cy.get('ion-header ion-back-button').click()
+		cy.url().should('include', '/dev/components')
+		cy.contains('Component Catalog', { timeout: 15000 }).should('be.visible')
 	})
 })

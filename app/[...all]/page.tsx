@@ -6,7 +6,6 @@ export async function generateStaticParams() {
 		{ all: ['constellation'] },
 		{ all: ['settings'] },
 		{ all: ['test'] },
-		{ all: ['workbench'] },
 		{ all: ['dev'] },
 		{ all: ['dev', 'components'] },
 		{ all: ['dev', 'components', 'sync-status'] },

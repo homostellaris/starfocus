@@ -1,17 +1,23 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { useParams, useHistory } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import {
-	IonBackButton,
 	IonBadge,
+	IonButton,
 	IonButtons,
+	IonChip,
 	IonContent,
+	IonFooter,
 	IonHeader,
 	IonIcon,
+	IonInput,
+	IonLabel,
 	IonMenu,
 	IonMenuButton,
 	IonRange,
+	IonSelect,
+	IonSelectOption,
 	IonSplitPane,
 	IonTitle,
 	IonToggle,
@@ -21,8 +27,6 @@ import { menuController } from '@ionic/core/components'
 import {
 	flashSharp,
 	optionsSharp,
-	chevronBackOutline,
-	chevronForwardOutline,
 	syncSharp,
 	cloudDoneSharp,
 	documentTextSharp,
@@ -32,15 +36,11 @@ import {
 	pulseSharp,
 	musicalNotesSharp,
 	closeSharp,
-	layersSharp,
 } from 'ionicons/icons'
 import dayjs from 'dayjs'
+import { Header } from '../common/Header'
 import { MarkdownExportProvider } from '../export/MarkdownExportContext'
-import SyncStatus from '../common/SyncStatus'
-import CloudSyncDetails from '../db/cloud/CloudSyncDetails'
-import CloudSyncStatus from '../db/cloud/CloudSyncStatus'
-import MarkdownSyncDetails from '../export/MarkdownSyncDetails'
-import MarkdownSyncStatus from '../export/MarkdownSyncStatus'
+import SyncStatus, { CloudSyncStatusBadge, MarkdownSyncStatusBadge } from '../common/SyncStatus'
 import { StarRoleIcon } from '../common/StarRoleIcon'
 import StarPoints from '../common/StarPoints'
 import Starship from '../common/Starship'
@@ -166,7 +166,6 @@ const COMPONENT_DESCRIPTIONS: Record<ComponentKey, string> = Object.fromEntries(
 
 function WorkbenchContent() {
 	const params = useParams<{ component?: string }>()
-	const history = useHistory()
 	const { mode, setMode } = useMood()
 
 	const activeComponent: ComponentKey =
@@ -174,13 +173,6 @@ function WorkbenchContent() {
 		VALID_COMPONENTS.includes(params.component as ComponentKey)
 			? (params.component as ComponentKey)
 			: 'sync-status'
-
-	const handleSelectComponent = (key: ComponentKey) => {
-		history.push(`/dev/components/${key}`)
-		menuController.close('components-menu')
-		menuController.close('start')
-		menuController.close()
-	}
 
 	// --- State Simulator Knobs for Sync Menu ---
 	const [cloudLoggedIn, setCloudLoggedIn] = useState(true)
@@ -502,62 +494,37 @@ function WorkbenchContent() {
 		return []
 	})()
 
-	// Active Scenario tracking for Swiping & Indicators
-	const activePresetIndex = presetsForActiveComponent.findIndex((p) => p.active)
-	const currentScenarioIndex = activePresetIndex >= 0 ? activePresetIndex : 0
-	const currentScenario = presetsForActiveComponent[currentScenarioIndex]
-
-	const goToNextScenario = () => {
-		if (presetsForActiveComponent.length <= 1) return
-		const nextIndex = (currentScenarioIndex + 1) % presetsForActiveComponent.length
-		presetsForActiveComponent[nextIndex].action()
-	}
-
-	const goToPrevScenario = () => {
-		if (presetsForActiveComponent.length <= 1) return
-		const prevIndex =
-			(currentScenarioIndex - 1 + presetsForActiveComponent.length) %
-			presetsForActiveComponent.length
-		presetsForActiveComponent[prevIndex].action()
-	}
-
-	// Touch swipe tracking on the Canvas
-	const [touchStartX, setTouchStartX] = useState<number | null>(null)
-	const [touchEndX, setTouchEndX] = useState<number | null>(null)
-
-	const handleTouchStart = (e: React.TouchEvent) => {
-		setTouchEndX(null)
-		const touch = e.touches?.[0] || e.targetTouches?.[0] || (e as any).changedTouches?.[0]
-		if (touch) {
-			setTouchStartX(touch.clientX)
-		}
-	}
-
-	const handleTouchMove = (e: React.TouchEvent) => {
-		const touch = e.touches?.[0] || e.targetTouches?.[0] || (e as any).changedTouches?.[0]
-		if (touch) {
-			setTouchEndX(touch.clientX)
-		}
-	}
-
-	const handleTouchEnd = (e: React.TouchEvent) => {
-		const endX =
-			touchEndX !== null
-				? touchEndX
-				: (e as any).changedTouches?.[0]?.clientX ?? null
-		if (touchStartX === null || endX === null) return
-		const diff = touchStartX - endX
-		if (diff > 40) {
-			goToNextScenario()
-		} else if (diff < -40) {
-			goToPrevScenario()
-		}
-		setTouchStartX(null)
-		setTouchEndX(null)
-	}
-
 	const knobsContent = (
 		<div className="space-y-5">
+			{/* Quick Scenario Presets */}
+			{presetsForActiveComponent.length > 0 && (
+				<div className="space-y-2 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+					<div className="flex items-center gap-1.5 font-semibold text-neutral-300">
+						<IonIcon icon={flashSharp} className="text-amber-400" />
+						<span>Scenario Presets</span>
+					</div>
+					<p className="text-[11px] text-neutral-400">
+						Select a preset to automatically configure simulator knobs below.
+					</p>
+					<div
+						data-testid="workbench-presets-bar"
+						className="flex flex-wrap gap-1.5 pt-1"
+					>
+						{presetsForActiveComponent.map((p) => (
+							<IonChip
+								key={p.id}
+								onClick={p.action}
+								outline={!p.active}
+								color={p.active ? 'primary' : 'medium'}
+								className="cursor-pointer m-0 text-xs"
+							>
+								<IonLabel>{p.label}</IonLabel>
+							</IonChip>
+						))}
+					</div>
+				</div>
+			)}
+
 			{/* Component-Specific Knobs */}
 			{isSyncComponent && (
 				<>
@@ -573,12 +540,13 @@ function WorkbenchContent() {
 						</div>
 						<div>
 							<span className="block mb-1 text-neutral-400">Replication Phase</span>
-							<select
+							<IonSelect
 								id="cloud-phase-select"
+								interface="popover"
 								value={cloudPhase}
-								onChange={(e) =>
+								onIonChange={(e) =>
 									setCloudPhase(
-										e.target.value as
+										e.detail.value as
 											| 'in-sync'
 											| 'pushing'
 											| 'pulling'
@@ -586,14 +554,14 @@ function WorkbenchContent() {
 											| 'error'
 									)
 								}
-								className="w-full rounded border border-neutral-700 bg-neutral-800 p-1.5 text-xs text-neutral-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								className="w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs text-neutral-200"
 							>
-								<option value="in-sync">In-Sync (Connected)</option>
-								<option value="pushing">Pushing (Uploading changes)</option>
-								<option value="pulling">Pulling (Downloading changes)</option>
-								<option value="offline">Offline</option>
-								<option value="error">Error</option>
-							</select>
+								<IonSelectOption value="in-sync">In-Sync (Connected)</IonSelectOption>
+								<IonSelectOption value="pushing">Pushing (Uploading changes)</IonSelectOption>
+								<IonSelectOption value="pulling">Pulling (Downloading changes)</IonSelectOption>
+								<IonSelectOption value="offline">Offline</IonSelectOption>
+								<IonSelectOption value="error">Error</IonSelectOption>
+							</IonSelect>
 						</div>
 
 						{cloudPhase === 'pushing' && (
@@ -623,11 +591,11 @@ function WorkbenchContent() {
 						{cloudHasError && (
 							<div>
 								<span className="block mb-1 text-neutral-400">Error Message</span>
-								<input
+								<IonInput
 									type="text"
 									value={cloudErrorMessage}
-									onChange={(e) => setCloudErrorMessage(e.target.value)}
-									className="w-full rounded border border-red-900/50 bg-neutral-900 p-1.5 text-xs text-red-200"
+									onIonInput={(e) => setCloudErrorMessage((e.detail.value as string) || '')}
+									className="w-full rounded border border-red-900/50 bg-neutral-900 px-2 py-1 text-xs text-red-200"
 								/>
 							</div>
 						)}
@@ -660,19 +628,21 @@ function WorkbenchContent() {
 
 						<div>
 							<span className="block mb-1 text-neutral-400">Full Sync Phase</span>
-							<select
+							<IonSelect
+								id="md-phase-select"
+								interface="popover"
 								value={markdownFullSyncPhase}
-								onChange={(e) =>
+								onIonChange={(e) =>
 									setMarkdownFullSyncPhase(
-										e.target.value as 'idle' | 'in-progress' | 'complete'
+										e.detail.value as 'idle' | 'in-progress' | 'complete'
 									)
 								}
-								className="w-full rounded border border-neutral-700 bg-neutral-800 p-1.5 text-xs text-neutral-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								className="w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs text-neutral-200"
 							>
-								<option value="idle">Idle</option>
-								<option value="in-progress">In-Progress</option>
-								<option value="complete">Complete</option>
-							</select>
+								<IonSelectOption value="idle">Idle</IonSelectOption>
+								<IonSelectOption value="in-progress">In-Progress</IonSelectOption>
+								<IonSelectOption value="complete">Complete</IonSelectOption>
+							</IonSelect>
 						</div>
 
 						{markdownFullSyncPhase === 'in-progress' && (
@@ -703,11 +673,11 @@ function WorkbenchContent() {
 						{markdownHasError && (
 							<div>
 								<span className="block mb-1 text-neutral-400">Error Message</span>
-								<input
+								<IonInput
 									type="text"
 									value={markdownErrorMessage}
-									onChange={(e) => setMarkdownErrorMessage(e.target.value)}
-									className="w-full rounded border border-red-900/50 bg-neutral-900 p-1.5 text-xs text-red-200"
+									onIonInput={(e) => setMarkdownErrorMessage((e.detail.value as string) || '')}
+									className="w-full rounded border border-red-900/50 bg-neutral-900 px-2 py-1 text-xs text-red-200"
 								/>
 							</div>
 						)}
@@ -747,16 +717,14 @@ function WorkbenchContent() {
 
 					<div className="flex items-center justify-between">
 						<span>Drive Mode (Warp / Cruise)</span>
-						<button
+						<IonButton
+							size="small"
+							fill={mode === 'hype' ? 'solid' : 'outline'}
+							color={mode === 'hype' ? 'danger' : 'primary'}
 							onClick={() => setMode(mode === 'chill' ? 'hype' : 'chill')}
-							className={`rounded px-3 py-1 font-semibold text-xs transition ${
-								mode === 'hype'
-									? 'bg-red-500/20 text-red-400 border border-red-500/30'
-									: 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-							}`}
 						>
 							{mode.toUpperCase()}
-						</button>
+						</IonButton>
 					</div>
 				</div>
 			)}
@@ -770,47 +738,25 @@ function WorkbenchContent() {
 							<span>Activity Pattern Preset</span>
 							<span className="capitalize">{pulsePreset}</span>
 						</div>
-						<div className="grid grid-cols-2 gap-2 mt-2">
-							<button
-								onClick={() => setPulsePreset('streak')}
-								className={`rounded p-1.5 text-xs border ${
-									pulsePreset === 'streak'
-										? 'border-blue-500 bg-blue-950/40 text-blue-200'
-										: 'border-neutral-800 bg-neutral-900 text-neutral-300'
-								}`}
-							>
-								14d Streak
-							</button>
-							<button
-								onClick={() => setPulsePreset('recent')}
-								className={`rounded p-1.5 text-xs border ${
-									pulsePreset === 'recent'
-										? 'border-blue-500 bg-blue-950/40 text-blue-200'
-										: 'border-neutral-800 bg-neutral-900 text-neutral-300'
-								}`}
-							>
-								Recent Spark
-							</button>
-							<button
-								onClick={() => setPulsePreset('sporadic')}
-								className={`rounded p-1.5 text-xs border ${
-									pulsePreset === 'sporadic'
-										? 'border-blue-500 bg-blue-950/40 text-blue-200'
-										: 'border-neutral-800 bg-neutral-900 text-neutral-300'
-								}`}
-							>
-								Alternate Days
-							</button>
-							<button
-								onClick={() => setPulsePreset('empty')}
-								className={`rounded p-1.5 text-xs border ${
-									pulsePreset === 'empty'
-										? 'border-blue-500 bg-blue-950/40 text-blue-200'
-										: 'border-neutral-800 bg-neutral-900 text-neutral-300'
-								}`}
-							>
-								Empty
-							</button>
+						<div className="flex flex-wrap gap-1.5 mt-2">
+							{(
+								[
+									{ id: 'streak', label: '14d Streak' },
+									{ id: 'recent', label: 'Recent Spark' },
+									{ id: 'sporadic', label: 'Alternate Days' },
+									{ id: 'empty', label: 'Empty' },
+								] as const
+							).map((p) => (
+								<IonChip
+									key={p.id}
+									onClick={() => setPulsePreset(p.id)}
+									outline={pulsePreset !== p.id}
+									color={pulsePreset === p.id ? 'primary' : 'medium'}
+									className="cursor-pointer m-0 text-xs"
+								>
+									<IonLabel>{p.label}</IonLabel>
+								</IonChip>
+							))}
 						</div>
 					</div>
 
@@ -835,16 +781,14 @@ function WorkbenchContent() {
 					<h4 className="font-semibold text-neutral-300">Soundtrack Stream Mode</h4>
 					<div className="flex items-center justify-between">
 						<span>Active Channel</span>
-						<button
+						<IonButton
+							size="small"
+							fill={mode === 'hype' ? 'solid' : 'outline'}
+							color={mode === 'hype' ? 'danger' : 'primary'}
 							onClick={() => setMode(mode === 'chill' ? 'hype' : 'chill')}
-							className={`rounded-full px-3 py-1 font-semibold text-xs border transition ${
-								mode === 'hype'
-									? 'bg-red-500/20 text-red-400 border-red-500/30'
-									: 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-							}`}
 						>
 							{mode === 'chill' ? '🌌 CHILL (Melodysheep)' : '⚡ HYPE (Karl Casey)'}
-						</button>
+						</IonButton>
 					</div>
 					<div className="text-[11px] text-neutral-400 space-y-1">
 						<p>• Press <kbd className="font-mono text-neutral-200">Z</kbd> for Chill Mode</p>
@@ -887,217 +831,42 @@ function WorkbenchContent() {
 				} as React.CSSProperties
 			}
 		>
-			{/* Left Pane: Component Catalog Menu */}
-			<IonMenu
-				contentId="workbench-main"
-				menuId="components-menu"
-				side="start"
-			>
-				<IonHeader>
-					<IonToolbar color="dark">
-						<div className="flex items-center gap-2 px-3 py-1">
-							<IonIcon
-								icon={layersSharp}
-								className="text-blue-400 text-lg"
-							/>
-							<IonTitle
-								size="small"
-								className="font-bold text-sm"
-							>
-								Components
-							</IonTitle>
-							<span className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400 font-mono">
-								{CATALOG_ITEMS.length}
-							</span>
-						</div>
-						<IonButtons
-							slot="end"
-							className="lg:hidden"
-						>
-							<button
-								type="button"
-								id="close-components-btn"
-								aria-label="Close component catalog"
-								className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-neutral-800 text-neutral-400 hover:text-white transition mr-1"
-								onClick={async () => {
-									const menu = document.querySelector('ion-menu[menu-id="components-menu"]') as any
-									if (menu?.close) {
-										await menu.close()
-									} else {
-										await menuController.close('components-menu')
-									}
-								}}
-							>
-								<IonIcon icon={closeSharp} className="text-xl" />
-							</button>
-						</IonButtons>
-					</IonToolbar>
-				</IonHeader>
-				<IonContent className="bg-neutral-950 text-neutral-100">
-					<div className="p-3 space-y-1">
-						{CATALOG_ITEMS.map((item) => {
-							const isActive = activeComponent === item.key
-							return (
-								<button
-									key={item.key}
-									onClick={() => handleSelectComponent(item.key)}
-									className={`w-full text-left rounded-xl p-3 transition flex items-start gap-3 border ${
-										isActive
-											? 'border-blue-500/60 bg-blue-950/50 text-blue-100 shadow-sm'
-											: 'border-transparent hover:border-neutral-800 hover:bg-neutral-900/60 text-neutral-300'
-									}`}
-								>
-									<div
-										className={`p-2 rounded-lg border text-lg shrink-0 ${item.iconColor}`}
-									>
-										<IonIcon icon={item.icon} />
-									</div>
-									<div className="flex-1 min-w-0">
-										<div className="flex items-center justify-between gap-1">
-											<span className="font-semibold text-xs truncate text-white">
-												{item.title}
-											</span>
-											<span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400 font-mono shrink-0">
-												{item.badge}
-											</span>
-										</div>
-										<p className="text-[11px] text-neutral-400 truncate mt-0.5">
-											{item.subtitle}
-										</p>
-									</div>
-								</button>
-							)
-						})}
-					</div>
-				</IonContent>
-			</IonMenu>
-
 			{/* Center Pane: Main Interactive Stage & Canvas */}
 			<div
 				className="ion-page"
 				id="workbench-main"
 			>
-				<IonHeader className="ion-no-border">
-					<IonToolbar color="dark">
-						<IonButtons slot="start">
-							<IonBackButton defaultHref="/dev/components" />
-							<IonMenuButton
-								menu="components-menu"
-								id="components-menu-btn"
-							/>
-						</IonButtons>
-						<IonTitle className="font-bold text-sm md:text-base">
-							{COMPONENT_TITLES[activeComponent] || 'Workbench'}
-						</IonTitle>
-						<IonButtons slot="end">
-							<IonMenuButton
-								menu="knobs-menu"
-								id="knobs-menu-btn"
-							>
-								<IonIcon icon={optionsSharp} />
-							</IonMenuButton>
-						</IonButtons>
-					</IonToolbar>
+				<Header
+					title={COMPONENT_TITLES[activeComponent] || 'Workbench'}
+					backHref="/dev/components"
+					hideActions
+				/>
 
-					{/* Presets Bar in Sub-Toolbar: Always visible, never covered by sheets */}
-					{presetsForActiveComponent.length > 0 && (
-						<IonToolbar
-							color="dark"
-							className="border-t border-neutral-800"
-						>
-							<div
-								data-testid="workbench-presets-bar"
-								className="flex items-center gap-2 overflow-x-auto no-scrollbar px-3 py-1"
-							>
-								<span className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-neutral-400 shrink-0 mr-1">
-									<IonIcon
-										icon={flashSharp}
-										className="text-amber-400"
-									/>
-									Scenarios:
-								</span>
-								{presetsForActiveComponent.map((p) => (
-									<button
-										key={p.id}
-										onClick={p.action}
-										className={`rounded-full border px-3 py-1 text-xs font-medium transition active:scale-95 shrink-0 flex items-center gap-1.5 ${
-											p.active
-												? 'border-blue-500/70 bg-blue-950/70 text-blue-200 ring-1 ring-blue-500/50 shadow-sm'
-												: 'border-neutral-800 bg-neutral-900/80 text-neutral-300 hover:border-neutral-700 hover:bg-neutral-800'
-										}`}
-									>
-										{p.label}
-									</button>
-								))}
-							</div>
-						</IonToolbar>
-					)}
-				</IonHeader>
-
-				<IonContent className="bg-neutral-950 text-neutral-100">
-					{/* Header / Description */}
-					<div className="px-4 py-2.5 md:px-6 md:py-3 border-b border-neutral-800/60 bg-neutral-950">
-						<h1 className="text-lg md:text-xl font-bold tracking-tight text-white">
-							{COMPONENT_TITLES[activeComponent]}
-						</h1>
-						<p className="text-xs text-neutral-400 mt-0.5 max-w-2xl">
+				<IonContent
+					className="text-neutral-100"
+					style={{
+						'--background':
+							'#09090b radial-gradient(circle, rgba(255, 255, 255, 0.14) 1px, transparent 1px) 0 0 / 22px 22px',
+					}}
+				>
+					{/* Description */}
+					<div className="px-4 py-2 md:px-6 md:py-2.5 border-b border-neutral-800/60 bg-neutral-950/70 backdrop-blur-sm">
+						<p className="text-xs text-neutral-400 max-w-2xl">
 							{COMPONENT_DESCRIPTIONS[activeComponent]}
 						</p>
 					</div>
 
-					{/* Canvas Area: Centered with subtle dot-grid background and touch swipe navigation */}
-					<div className="p-3 md:p-6">
-						<div
-							data-testid="workbench-canvas"
-							className="relative min-h-[340px] rounded-2xl border border-neutral-800/80 p-4 md:p-8 flex flex-col items-center justify-center select-none shadow-2xl"
-							style={{
-								backgroundColor: '#09090b',
-								backgroundImage:
-									'radial-gradient(circle, rgba(255, 255, 255, 0.14) 1px, transparent 1px)',
-								backgroundSize: '22px 22px',
-							}}
-							onTouchStart={handleTouchStart}
-							onTouchMove={handleTouchMove}
-							onTouchEnd={handleTouchEnd}
-						>
-							{/* Floating Scenario Pill with Swipe Hint */}
-							{presetsForActiveComponent.length > 0 && (
-								<div
-									data-testid="canvas-scenario-pill"
-									className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full border border-neutral-800/90 bg-neutral-900/90 px-3 py-1.5 shadow-xl backdrop-blur-md text-xs transition"
-								>
-									<button
-										onClick={goToPrevScenario}
-										aria-label="Previous scenario"
-										className="text-neutral-400 hover:text-white px-1 text-sm font-bold active:scale-95"
-									>
-										<IonIcon
-											icon={chevronBackOutline}
-											className="align-middle"
-										/>
-									</button>
-									<span className="text-neutral-400 text-[11px] hidden sm:inline">
-										Story:
-									</span>
-									<span className="font-semibold text-white">
-										{currentScenario?.label || 'Custom'}
-									</span>
-									<span className="text-neutral-500 text-[10px]">
-										({currentScenarioIndex + 1}/{presetsForActiveComponent.length})
-									</span>
-									<button
-										onClick={goToNextScenario}
-										aria-label="Next scenario"
-										className="text-neutral-400 hover:text-white px-1 text-sm font-bold active:scale-95"
-									>
-										<IonIcon
-											icon={chevronForwardOutline}
-											className="align-middle"
-										/>
-									</button>
-								</div>
-							)}
-
+					{/* Canvas Area: Edge-to-edge dot-grid taking up the whole content */}
+					<div
+						data-testid="workbench-canvas"
+						className="w-full min-h-[calc(100%-48px)] flex-1 flex flex-col items-center justify-center p-4 md:p-8 select-none"
+						style={{
+							backgroundColor: 'transparent',
+							backgroundImage:
+								'radial-gradient(circle, rgba(255, 255, 255, 0.14) 1px, transparent 1px)',
+							backgroundSize: '22px 22px',
+						}}
+					>
 							{/* Centered Element on Canvas */}
 							<div className="w-full flex items-center justify-center py-6">
 								{activeComponent === 'sync-status' && (
@@ -1125,6 +894,8 @@ function WorkbenchContent() {
 															setMarkdownNeedsReconnect(false)
 															setMarkdownHasError(false)
 														}}
+														onLogin={() => setCloudLoggedIn(true)}
+														onOpenSettings={() => setMarkdownEnabled(true)}
 													/>
 												</div>
 											</div>
@@ -1145,6 +916,8 @@ function WorkbenchContent() {
 													setMarkdownNeedsReconnect(false)
 													setMarkdownHasError(false)
 												}}
+												onLogin={() => setCloudLoggedIn(true)}
+												onOpenSettings={() => setMarkdownEnabled(true)}
 											/>
 										</div>
 									</div>
@@ -1157,18 +930,81 @@ function WorkbenchContent() {
 												Status Indicator
 											</span>
 											<div className="rounded-lg border border-neutral-700 bg-neutral-800 p-2 text-2xl">
-												<CloudSyncStatus
+												<CloudSyncStatusBadge
 													user={simulatedUser}
 													syncState={simulatedSyncState}
 												/>
 											</div>
 										</div>
 										<div className="rounded-xl border border-neutral-800 bg-neutral-950 p-3 shadow-2xl">
-											<CloudSyncDetails
-												user={simulatedUser}
-												syncState={simulatedSyncState}
-												onLogout={() => setCloudLoggedIn(false)}
-											/>
+											{!simulatedUser ? (
+												<div className="p-4 text-center text-neutral-400">
+													<p>Not signed in to Dexie Cloud</p>
+												</div>
+											) : (
+												<>
+													<IonHeader>
+														<IonToolbar>
+															<IonTitle
+																className="text-base font-semibold"
+																slot="start"
+															>
+																Cloud database sync
+															</IonTitle>
+															<IonButtons slot="end">
+																<IonButton
+																	color="danger"
+																	fill="solid"
+																	onClick={() => setCloudLoggedIn(false)}
+																	size="small"
+																>
+																	Unsync
+																</IonButton>
+															</IonButtons>
+														</IonToolbar>
+													</IonHeader>
+													<IonContent className="text-xs">
+														{simulatedSyncState.error ? (
+															<p className="p-2 text-red-500">
+																Sync error: {simulatedSyncState.error.message}
+															</p>
+														) : (
+															<div className="space-y-2 p-2">
+																<IonInput
+																	label="Email"
+																	labelPlacement="floating"
+																	readonly
+																	value={simulatedUser.email}
+																/>
+																<IonInput
+																	label="License"
+																	labelPlacement="floating"
+																	readonly
+																	value={simulatedSyncState.license}
+																/>
+																<IonInput
+																	label="Status"
+																	labelPlacement="floating"
+																	readonly
+																	value={simulatedSyncState.status}
+																/>
+																<IonInput
+																	label="Phase"
+																	labelPlacement="floating"
+																	readonly
+																	value={simulatedSyncState.phase}
+																/>
+																<IonInput
+																	label="Progress"
+																	labelPlacement="floating"
+																	readonly
+																	value={simulatedSyncState.progress || '-'}
+																/>
+															</div>
+														)}
+													</IonContent>
+												</>
+											)}
 										</div>
 									</div>
 								)}
@@ -1180,21 +1016,85 @@ function WorkbenchContent() {
 												Status Indicator
 											</span>
 											<div className="rounded-lg border border-neutral-700 bg-neutral-800 p-2 text-2xl">
-												<MarkdownSyncStatus exportStatus={simulatedExportStatus} />
+												<MarkdownSyncStatusBadge exportStatus={simulatedExportStatus} />
 											</div>
 										</div>
 										<div className="rounded-xl border border-neutral-800 bg-neutral-950 p-3 shadow-2xl">
-											<MarkdownSyncDetails
-												exportStatus={simulatedExportStatus}
-												onRunFullSync={() => {
-													setMarkdownFullSyncPhase('in-progress')
-													setMarkdownCompletedFiles(1)
-												}}
-												onReconnect={() => {
-													setMarkdownNeedsReconnect(false)
-													setMarkdownHasError(false)
-												}}
-											/>
+											<IonHeader>
+												<IonToolbar>
+													<IonTitle
+														className="text-base font-semibold"
+														slot="start"
+													>
+														Local markdown sync
+													</IonTitle>
+												</IonToolbar>
+											</IonHeader>
+											<div className="p-4 space-y-3 text-xs">
+												<p className="text-sm text-neutral-400">
+													{simulatedExportStatus.directoryName}
+												</p>
+												{simulatedExportStatus.needsReconnect ? (
+													<div className="rounded-lg border border-amber-800/40 bg-amber-950/30 p-3">
+														<p className="text-sm font-medium text-amber-400">
+															Folder reconnect needed
+														</p>
+														<p className="mt-1 text-xs text-neutral-400">
+															Permission to access the markdown export folder has expired.
+														</p>
+														<IonButton
+															expand="block"
+															fill="outline"
+															color="warning"
+															size="small"
+															className="mt-3"
+															onClick={() => {
+																setMarkdownNeedsReconnect(false)
+																setMarkdownHasError(false)
+															}}
+														>
+															Reconnect Folder
+														</IonButton>
+													</div>
+												) : (
+													<>
+														<p className="text-sm">
+															{simulatedExportStatus.fullSync?.phase === 'in-progress' &&
+															simulatedExportStatus.fullSync.progress
+																? `${simulatedExportStatus.fullSync.progress.completed} of ${simulatedExportStatus.fullSync.progress.total} files synced`
+																: `${simulatedExportStatus.totalFiles ?? 0} files synced`}
+															{simulatedExportStatus.lastSyncAt &&
+																` \u00b7 ${simulatedExportStatus.lastSyncAt.toLocaleTimeString()}`}
+														</p>
+														{simulatedExportStatus.isSyncing &&
+															simulatedExportStatus.fullSync?.phase !== 'in-progress' && (
+																<p className="text-sm text-neutral-400">Syncing...</p>
+															)}
+														{simulatedExportStatus.error && (
+															<p className="text-sm text-red-500">
+																{simulatedExportStatus.error}
+															</p>
+														)}
+														<IonButton
+															expand="block"
+															fill="outline"
+															size="small"
+															className="mt-2"
+															onClick={() => {
+																setMarkdownFullSyncPhase('in-progress')
+																setMarkdownCompletedFiles(1)
+															}}
+															disabled={
+																simulatedExportStatus.needsReconnect ||
+																simulatedExportStatus.fullSync?.phase === 'in-progress'
+															}
+														>
+															<IonIcon icon={syncSharp} slot="start" />
+															Full Sync
+														</IonButton>
+													</>
+												)}
+											</div>
 										</div>
 									</div>
 								)}
@@ -1319,16 +1219,44 @@ function WorkbenchContent() {
 									</div>
 								)}
 							</div>
-
-							{/* Subtle Mobile Swipe Hint */}
-							{presetsForActiveComponent.length > 1 && (
-								<div className="text-[10px] text-neutral-500 mt-2 block sm:hidden">
-									👈 Swipe left / right to cycle stories 👉
-								</div>
-							)}
 						</div>
-					</div>
 				</IonContent>
+
+				{/* Bottom Toolbar housing the workbench controls */}
+				<IonFooter className="border-t border-neutral-800 bg-neutral-950">
+					<IonToolbar className="[--background:transparent]">
+						{presetsForActiveComponent.length > 0 && (
+							<div
+								data-testid="workbench-toolbar-presets-bar"
+								className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 px-2 ml-14 sm:ml-2"
+							>
+								{presetsForActiveComponent.map((p) => (
+									<IonChip
+										key={p.id}
+										onClick={p.action}
+										outline={!p.active}
+										color={p.active ? 'primary' : 'medium'}
+										className="cursor-pointer m-0 text-xs shrink-0 whitespace-nowrap h-7"
+									>
+										<IonLabel>{p.label}</IonLabel>
+									</IonChip>
+								))}
+							</div>
+						)}
+
+						<IonButtons slot="end">
+							<span className="text-xs font-medium text-neutral-400 hidden sm:inline mr-1">
+								Controls & Knobs
+							</span>
+							<IonMenuButton
+								menu="knobs-menu"
+								id="knobs-menu-btn"
+							>
+								<IonIcon icon={optionsSharp} />
+							</IonMenuButton>
+						</IonButtons>
+					</IonToolbar>
+				</IonFooter>
 			</div>
 
 			{/* Right Pane: State Simulator & Knobs Menu */}
@@ -1338,7 +1266,7 @@ function WorkbenchContent() {
 				side="end"
 			>
 				<IonHeader>
-					<IonToolbar color="dark">
+					<IonToolbar className="border-b border-neutral-800">
 						<div className="flex items-center gap-2 px-3 py-1">
 							<IonIcon
 								icon={optionsSharp}
@@ -1355,11 +1283,11 @@ function WorkbenchContent() {
 							slot="end"
 							className="lg:hidden"
 						>
-							<button
-								type="button"
+							<IonButton
 								id="close-knobs-btn"
 								aria-label="Close knobs menu"
-								className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-neutral-800 text-neutral-400 hover:text-white transition mr-1"
+								fill="clear"
+								color="light"
 								onClick={async () => {
 									const menu = document.querySelector('ion-menu[menu-id="knobs-menu"]') as any
 									if (menu?.close) {
@@ -1369,8 +1297,8 @@ function WorkbenchContent() {
 									}
 								}}
 							>
-								<IonIcon icon={closeSharp} className="text-xl" />
-							</button>
+								<IonIcon slot="icon-only" icon={closeSharp} />
+							</IonButton>
 						</IonButtons>
 					</IonToolbar>
 				</IonHeader>

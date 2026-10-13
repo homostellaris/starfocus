@@ -95,7 +95,7 @@ export default function RootLayout({
 }: Readonly<{
 	children: React.ReactNode
 }>) {
-	const shouldInjectToolbar =
+	const isNotProd =
 		process.env.NODE_ENV === 'development' ||
 		process.env.VERCEL_ENV === 'preview'
 
@@ -107,7 +107,7 @@ export default function RootLayout({
 			<body>
 				{children}
 				<Analytics />
-				{shouldInjectToolbar && <VercelToolbar />}
+				{isNotProd && <VercelToolbar />}
 				<Script
 					id="json-ld"
 					type="application/ld+json"

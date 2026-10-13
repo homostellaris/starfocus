@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { menuController } from '@ionic/core/components'
 import {
 	IonButton,
 	IonContent,
@@ -11,13 +12,43 @@ import {
 	IonPopover,
 	IonProgressBar,
 } from '@ionic/react'
-import { syncSharp } from 'ionicons/icons'
-import CloudSyncStatus from '../db/cloud/CloudSyncStatus'
-import MarkdownSyncStatus from '../export/MarkdownSyncStatus'
+import { cloudSharp, documentTextSharp, syncSharp } from 'ionicons/icons'
 import { useObservable } from 'dexie-react-hooks'
 import { db } from '../db'
 import { useOptionalMarkdownExportContext } from '../export/MarkdownExportContext'
 import type { ExportStatus } from '../export/useMarkdownExport'
+
+export function CloudSyncStatusBadge({
+	user: _user,
+	syncState: _syncState,
+}: {
+	user?: any
+	syncState?: any
+} = {}) {
+	return (
+		<IonIcon
+			icon={cloudSharp}
+			color="medium"
+			slot="end"
+			data-testid="cloud-sync-icon"
+		/>
+	)
+}
+
+export function MarkdownSyncStatusBadge({
+	exportStatus: _exportStatus,
+}: {
+	exportStatus?: ExportStatus
+} = {}) {
+	return (
+		<IonIcon
+			icon={documentTextSharp}
+			color="medium"
+			slot="end"
+			data-testid="markdown-sync-icon"
+		/>
+	)
+}
 
 export interface SyncStatusProps {
 	id?: string
@@ -26,6 +57,8 @@ export interface SyncStatusProps {
 	user?: any
 	onRunFullSync?: () => void
 	onReconnect?: () => void
+	onLogin?: () => void
+	onOpenSettings?: () => void
 	inline?: boolean
 }
 
@@ -36,6 +69,8 @@ export default function SyncStatus({
 	user: overrideUser,
 	onRunFullSync,
 	onReconnect,
+	onLogin,
+	onOpenSettings,
 	inline = false,
 }: SyncStatusProps = {}) {
 	const dbUser = useObservable(db.cloud.currentUser)
@@ -47,7 +82,17 @@ export default function SyncStatus({
 	const exportStatus = overrideExportStatus !== undefined ? overrideExportStatus : markdownContext?.status
 	const runFullSync = onRunFullSync || markdownContext?.runFullSync
 	const reconnect = onReconnect || markdownContext?.reconnect
+	const login = onLogin || (() => db.cloud.login())
+	const openSettings =
+		onOpenSettings ||
+		(() => {
+			const popover = document.querySelector('ion-popover[trigger="' + id + '"]') as any
+			popover?.dismiss?.()
+			menuController.open('end')
+		})
 
+
+	const isConnected = Boolean(user && user.isLoggedIn)
 
 	const [lastCloudSyncAt, setLastCloudSyncAt] = useState<Date | null>(null)
 	const prevCloudPhaseRef = useRef<string | undefined>(undefined)
@@ -56,10 +101,13 @@ export default function SyncStatus({
 		const wasActive =
 			prevCloudPhaseRef.current === 'pushing' ||
 			prevCloudPhaseRef.current === 'pulling'
-		if (wasActive && current === 'in-sync') {
-			setLastCloudSyncAt(new Date())
-		}
 		prevCloudPhaseRef.current = current
+		if (wasActive && current === 'in-sync') {
+			const timerId = setTimeout(() => {
+				setLastCloudSyncAt(new Date())
+			}, 0)
+			return () => clearTimeout(timerId)
+		}
 	}, [syncState?.phase])
 
 	const [fullSyncCompletedAt, setFullSyncCompletedAt] = useState<Date | null>(
@@ -67,12 +115,15 @@ export default function SyncStatus({
 	)
 	useEffect(() => {
 		if (exportStatus?.fullSync?.phase === 'complete') {
-			setFullSyncCompletedAt(new Date())
+			const timerId = setTimeout(() => {
+				setFullSyncCompletedAt(new Date())
+			}, 0)
+			return () => clearTimeout(timerId)
 		}
 	}, [exportStatus?.fullSync?.phase])
 
 	const isCloudSyncing =
-		syncState?.phase === 'pushing' || syncState?.phase === 'pulling'
+		isConnected && (syncState?.phase === 'pushing' || syncState?.phase === 'pulling')
 	const isIncrementalSyncing =
 		Boolean(exportStatus?.isSyncing && exportStatus?.fullSync?.phase !== 'in-progress')
 	const isFullSyncing = exportStatus?.fullSync?.phase === 'in-progress'
@@ -105,56 +156,72 @@ export default function SyncStatus({
 					style={{ borderTop: 0, marginTop: 0 }}
 				>
 					<IonLabel>Cloud database sync</IonLabel>
-					<CloudSyncStatus
+					<CloudSyncStatusBadge
 						syncState={syncState}
 						user={user}
 					/>
 				</IonItemDivider>
-				{user && syncState?.error && (
+				{isConnected && syncState?.error && (
 					<IonItem>
 						<p className="text-xs text-red-500">{syncState.error.message || String(syncState.error)}</p>
 					</IonItem>
 				)}
-				{user && isCloudSyncing && (
-					<IonItem>
-						<div className="w-full py-1">
-							<div className="flex justify-between items-center mb-1 text-xs">
+				{isConnected && !syncState?.error && (
+					<IonItem data-testid="cloud-sync-row" className="[--min-height:56px]">
+						<IonLabel className="my-2">
+							<div className="flex items-center justify-between text-xs">
 								<span className="font-medium">Cloud sync</span>
-								<span className="text-neutral-400">Syncing...</span>
+								{isCloudSyncing && (
+									<span className="text-neutral-400">Syncing...</span>
+								)}
 							</div>
-							<IonProgressBar value={syncState?.progress ?? undefined} />
-						</div>
-					</IonItem>
-				)}
-				{user && !isCloudSyncing && !syncState?.error && (
-					<IonItem data-testid="cloud-sync-row">
-						<IonLabel>
-							<div className="text-xs font-medium">Cloud sync</div>
-							<div className="text-xs text-neutral-400 mt-0.5">
-								Synced{lastCloudSyncAt ? ` · ${formatTime(lastCloudSyncAt)}` : ' · Up to date'}
+							<div className="h-5 flex items-center mt-1">
+								{isCloudSyncing ? (
+									<IonProgressBar
+										value={syncState?.progress ?? undefined}
+										className="h-1.5 rounded-full w-full"
+									/>
+								) : (
+									<div className="text-xs text-neutral-400 truncate">
+										Synced{lastCloudSyncAt ? ` · ${formatTime(lastCloudSyncAt)}` : ' · Up to date'}
+									</div>
+								)}
 							</div>
 						</IonLabel>
 					</IonItem>
 				)}
-				{!user && (
-					<IonItem>
-						<IonLabel>
+				{!isConnected && (
+					<IonItem data-testid="cloud-disconnected-row" className="[--min-height:56px]">
+						<IonLabel className="my-2">
 							<div className="text-xs font-medium text-neutral-400">Not connected to cloud</div>
-							<div className="text-xs text-neutral-500 mt-0.5">Sign in to sync across devices</div>
+							<div className="mt-1 text-xs text-neutral-500">
+								Sign in to sync across devices
+							</div>
 						</IonLabel>
+						<IonButton
+							slot="end"
+							fill="solid"
+							size="small"
+							color="primary"
+							onClick={login}
+							className="text-xs h-7 my-0"
+							data-testid="cloud-login-btn"
+						>
+							Sync
+						</IonButton>
 					</IonItem>
 				)}
 			</IonItemGroup>
 			<IonItemGroup>
 				<IonItemDivider>
 					<IonLabel>Local markdown sync</IonLabel>
-					<MarkdownSyncStatus exportStatus={exportStatus} />
+					<MarkdownSyncStatusBadge exportStatus={exportStatus} />
 				</IonItemDivider>
 				{exportStatus?.needsReconnect ? (
-					<IonItem data-testid="reconnect-row">
-						<IonLabel>
+					<IonItem data-testid="reconnect-row" className="[--min-height:56px]">
+						<IonLabel className="my-2">
 							<div className="text-xs font-medium text-amber-400">Folder reconnect needed</div>
-							<div className="text-xs text-neutral-400 mt-0.5">
+							<div className="h-5 flex items-center mt-1 text-xs text-neutral-400 truncate">
 								{exportStatus.directoryName
 									? `Access to ${exportStatus.directoryName} expired`
 									: 'Permission required to sync files'}
@@ -166,7 +233,7 @@ export default function SyncStatus({
 							size="small"
 							color="warning"
 							onClick={reconnect}
-							className="text-xs"
+							className="text-xs h-7 my-0"
 							data-testid="reconnect-btn"
 						>
 							Reconnect
@@ -182,56 +249,60 @@ export default function SyncStatus({
 						{exportStatus?.isEnabled ? (
 							<>
 								{/* Row 1: Incremental sync */}
-								<IonItem data-testid="incremental-sync-row">
-									{isIncrementalSyncing ? (
-										<div className="w-full py-1">
-											<div className="flex justify-between items-center mb-1 text-xs">
-												<span className="font-medium">Incremental sync</span>
+								<IonItem data-testid="incremental-sync-row" className="[--min-height:56px]">
+									<IonLabel className="my-2">
+										<div className="flex items-center justify-between text-xs">
+											<span className="font-medium">Incremental sync</span>
+											{isIncrementalSyncing && (
 												<span className="text-neutral-400">Syncing...</span>
-											</div>
-											<IonProgressBar type="indeterminate" />
+											)}
 										</div>
-									) : (
-										<IonLabel>
-											<div className="text-xs font-medium">Incremental sync</div>
-											<div className="text-xs text-neutral-400 mt-0.5">
-												{exportStatus.lastSyncResult
-													? `${formatSyncResult()} · ${formatTime(exportStatus.lastSyncAt || new Date())}`
-													: exportStatus.lastSyncAt
-														? `Synced · ${formatTime(exportStatus.lastSyncAt)}`
-														: 'Synced · Up to date'}
-											</div>
-										</IonLabel>
-									)}
+										<div className="h-5 flex items-center mt-1">
+											{isIncrementalSyncing ? (
+												<IonProgressBar
+													type="indeterminate"
+													className="h-1.5 rounded-full w-full"
+												/>
+											) : (
+												<div className="text-xs text-neutral-400 truncate">
+													{exportStatus.lastSyncResult
+														? `${formatSyncResult()} · ${formatTime(exportStatus.lastSyncAt || new Date())}`
+														: exportStatus.lastSyncAt
+															? `Synced · ${formatTime(exportStatus.lastSyncAt)}`
+															: 'Synced · Up to date'}
+												</div>
+											)}
+										</div>
+									</IonLabel>
 								</IonItem>
 
 								{/* Row 2: Full sync */}
-								<IonItem data-testid="full-sync-row">
-									{isFullSyncing ? (
-										<div className="w-full py-1">
-											<div className="flex justify-between items-center mb-1 text-xs">
-												<span className="font-medium">Full sync</span>
+								<IonItem data-testid="full-sync-row" className="[--min-height:56px]">
+									<IonLabel className="my-2">
+										<div className="flex items-center justify-between text-xs">
+											<span className="font-medium">Full sync</span>
+											{isFullSyncing && (
 												<span className="text-neutral-400">
 													{exportStatus.fullSync?.progress
 														? `${exportStatus.fullSync.progress.completed} of ${exportStatus.fullSync.progress.total} files`
 														: 'Syncing...'}
 												</span>
-											</div>
-											<IonProgressBar
-												value={
-													exportStatus.fullSync?.progress &&
-													exportStatus.fullSync.progress.total > 0
-														? exportStatus.fullSync.progress.completed /
-														  exportStatus.fullSync.progress.total
-														: undefined
-												}
-											/>
+											)}
 										</div>
-									) : (
-										<>
-											<IonLabel>
-												<div className="text-xs font-medium">Full sync</div>
-												<div className="text-xs text-neutral-400 mt-0.5">
+										<div className="h-5 flex items-center mt-1">
+											{isFullSyncing ? (
+												<IonProgressBar
+													value={
+														exportStatus.fullSync?.progress &&
+														exportStatus.fullSync.progress.total > 0
+															? exportStatus.fullSync.progress.completed /
+															  exportStatus.fullSync.progress.total
+															: undefined
+													}
+													className="h-1.5 rounded-full w-full"
+												/>
+											) : (
+												<div className="text-xs text-neutral-400 truncate">
 													{exportStatus.fullSync?.phase === 'complete' &&
 													fullSyncCompletedAt
 														? `Complete · ${formatTime(fullSyncCompletedAt)}`
@@ -240,29 +311,47 @@ export default function SyncStatus({
 															? `${exportStatus.totalFiles} files`
 															: 'All files'}
 												</div>
-											</IonLabel>
-											<IonButton
-												slot="end"
-												fill="outline"
-												size="small"
-												onClick={runFullSync}
-												disabled={exportStatus.needsReconnect}
-												className="text-xs"
-												data-testid="full-sync-btn"
-											>
-												<IonIcon
-													icon={syncSharp}
-													slot="start"
-												/>
-												Full Sync
-											</IonButton>
-										</>
+											)}
+										</div>
+									</IonLabel>
+									{!isFullSyncing && (
+										<IonButton
+											slot="end"
+											fill="outline"
+											size="small"
+											onClick={runFullSync}
+											disabled={exportStatus.needsReconnect}
+											className="text-xs h-7 my-0"
+											data-testid="full-sync-btn"
+										>
+											<IonIcon
+												icon={syncSharp}
+												slot="start"
+											/>
+											Full Sync
+										</IonButton>
 									)}
 								</IonItem>
 							</>
 						) : (
-							<IonItem>
-								<p className="text-neutral-400">Not enabled</p>
+							<IonItem data-testid="markdown-disabled-row" className="[--min-height:56px]">
+								<IonLabel className="my-2">
+									<div className="text-xs font-medium text-neutral-400">Not enabled</div>
+									<div className="mt-1 text-xs text-neutral-500">
+										Export tasks to a local folder
+									</div>
+								</IonLabel>
+								<IonButton
+									slot="end"
+									fill="solid"
+									size="small"
+									color="primary"
+									onClick={openSettings}
+									className="text-xs h-7 my-0"
+									data-testid="markdown-setup-btn"
+								>
+									Set Up
+								</IonButton>
 							</IonItem>
 						)}
 					</>
@@ -290,7 +379,7 @@ export default function SyncStatus({
 			<IonPopover
 				trigger={id}
 				triggerAction="click"
-				style={{ '--width': '300px' } as React.CSSProperties}
+				style={{ '--width': '320px' } as React.CSSProperties}
 			>
 				<IonContent
 					className="text-xs !p-0"

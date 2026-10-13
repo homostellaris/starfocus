@@ -2,10 +2,15 @@
 
 import {
 	IonCard,
+	IonCardContent,
+	IonCardHeader,
+	IonCardSubtitle,
+	IonCardTitle,
 	IonContent,
 	IonIcon,
 	IonPage,
 	IonBadge,
+	IonButton,
 } from '@ionic/react'
 import {
 	colorPaletteSharp,
@@ -166,49 +171,53 @@ export default function DevTheme() {
 							</p>
 							<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 								{STAR_POINT_COLORS.map((token) => (
-									<div
+									<IonCard
 										key={token.variable}
+										button
 										onClick={() => copyToClipboard(token.hex)}
-										className="group relative cursor-pointer rounded-xl border border-neutral-800 bg-neutral-900/90 p-4 transition hover:border-neutral-700 hover:bg-neutral-900"
+										className="m-0 border border-neutral-800 bg-neutral-900/90 transition hover:border-neutral-700"
 									>
-										<div className="mb-3 flex items-center justify-between">
-											<div
-												className="flex h-12 w-12 items-center justify-center rounded-xl shadow-lg font-mono text-sm font-bold"
-												style={{
-													backgroundColor: token.hex,
-													color: token.textColor,
-												}}
-											>
-												★ {token.name.split(' ')[0]}
+										<IonCardContent className="p-4">
+											<div className="mb-3 flex items-center justify-between">
+												<div
+													className="flex h-12 w-12 items-center justify-center rounded-xl shadow-lg font-mono text-sm font-bold"
+													style={{
+														backgroundColor: token.hex,
+														color: token.textColor,
+													}}
+												>
+													★ {token.name.split(' ')[0]}
+												</div>
+												<IonButton
+													fill="clear"
+													size="small"
+													color={copiedColor === token.hex ? 'success' : 'medium'}
+													className="m-0 font-mono text-xs"
+													onClick={(e) => {
+														e.stopPropagation()
+														copyToClipboard(token.hex)
+													}}
+												>
+													<IonIcon
+														slot="start"
+														icon={
+															copiedColor === token.hex
+																? checkmarkOutline
+																: copyOutline
+														}
+													/>
+													<span>{token.hex}</span>
+												</IonButton>
 											</div>
-											<button
-												onClick={(e) => {
-													e.stopPropagation()
-													copyToClipboard(token.hex)
-												}}
-												className="flex items-center gap-1 rounded-md bg-neutral-800 px-2 py-1 text-xs text-neutral-300 transition hover:bg-neutral-700 hover:text-white"
-											>
-												<IonIcon
-													icon={
-														copiedColor === token.hex
-															? checkmarkOutline
-															: copyOutline
-													}
-													className={
-														copiedColor === token.hex ? 'text-emerald-400' : ''
-													}
-												/>
-												<span className="font-mono">{token.hex}</span>
-											</button>
-										</div>
-										<h3 className="font-semibold text-white">{token.name}</h3>
-										<p className="font-mono text-xs text-neutral-500">
-											{token.variable}
-										</p>
-										<p className="mt-2 text-xs text-neutral-400">
-											{token.description}
-										</p>
-									</div>
+											<h3 className="font-semibold text-white">{token.name}</h3>
+											<p className="font-mono text-xs text-neutral-500">
+												{token.variable}
+											</p>
+											<p className="mt-2 text-xs text-neutral-400">
+												{token.description}
+											</p>
+										</IonCardContent>
+									</IonCard>
 								))}
 							</div>
 						</section>
@@ -227,44 +236,48 @@ export default function DevTheme() {
 							</p>
 							<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 								{SEMANTIC_COLORS.map((token) => (
-									<div
+									<IonCard
 										key={token.variable}
+										button
 										onClick={() => copyToClipboard(token.hex)}
-										className="group relative cursor-pointer rounded-xl border border-neutral-800 bg-neutral-900/90 p-4 transition hover:border-neutral-700 hover:bg-neutral-900"
+										className="m-0 border border-neutral-800 bg-neutral-900/90 transition hover:border-neutral-700"
 									>
-										<div className="mb-3 flex items-center justify-between">
-											<div
-												className="h-10 w-10 rounded-xl shadow-lg"
-												style={{ backgroundColor: token.hex }}
-											/>
-											<button
-												onClick={(e) => {
-													e.stopPropagation()
-													copyToClipboard(token.hex)
-												}}
-												className="flex items-center gap-1 rounded-md bg-neutral-800 px-2 py-1 text-xs text-neutral-300 transition hover:bg-neutral-700 hover:text-white"
-											>
-												<IonIcon
-													icon={
-														copiedColor === token.hex
-															? checkmarkOutline
-															: copyOutline
-													}
-													className={
-														copiedColor === token.hex ? 'text-emerald-400' : ''
-													}
+										<IonCardContent className="p-4">
+											<div className="mb-3 flex items-center justify-between">
+												<div
+													className="h-10 w-10 rounded-xl shadow-lg"
+													style={{ backgroundColor: token.hex }}
 												/>
-												<span className="font-mono">{token.hex}</span>
-											</button>
-										</div>
-										<h3 className="font-semibold text-white">{token.name}</h3>
-										<p className="font-mono text-xs text-neutral-500">
-											{token.variable}
-										</p>
-										<p className="mt-2 text-xs text-neutral-400">
-											{token.description}
-										</p>
-									</div>
+												<IonButton
+													fill="clear"
+													size="small"
+													color={copiedColor === token.hex ? 'success' : 'medium'}
+													className="m-0 font-mono text-xs"
+													onClick={(e) => {
+														e.stopPropagation()
+														copyToClipboard(token.hex)
+													}}
+												>
+													<IonIcon
+														slot="start"
+														icon={
+															copiedColor === token.hex
+																? checkmarkOutline
+																: copyOutline
+														}
+													/>
+													<span>{token.hex}</span>
+												</IonButton>
+											</div>
+											<h3 className="font-semibold text-white">{token.name}</h3>
+											<p className="font-mono text-xs text-neutral-500">
+												{token.variable}
+											</p>
+											<p className="mt-2 text-xs text-neutral-400">
+												{token.description}
+											</p>
+										</IonCardContent>
+									</IonCard>
 								))}
 							</div>
 						</section>
@@ -282,76 +295,108 @@ export default function DevTheme() {
 								Custom @font-palette-values applied to the Honk display font for chromatic headers and title treatments.
 							</p>
 							<div className="space-y-4">
-								<IonCard className="m-0 border border-neutral-800 bg-neutral-900/90 p-4">
-									<div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-800 pb-3">
-										<div>
-											<h3 className="font-semibold text-white">Redshift (Header Title Default)</h3>
-											<p className="font-mono text-xs text-neutral-500">[font-palette:--redshift]</p>
+								<IonCard className="m-0 border border-neutral-800 bg-neutral-900/90">
+									<IonCardHeader className="border-b border-neutral-800 pb-3">
+										<div className="flex flex-wrap items-center justify-between gap-2">
+											<div>
+												<IonCardTitle className="text-base font-semibold text-white">
+													Redshift (Header Title Default)
+												</IonCardTitle>
+												<IonCardSubtitle className="font-mono text-xs text-neutral-500">
+													[font-palette:--redshift]
+												</IonCardSubtitle>
+											</div>
+											<IonBadge color="danger">Active Brand Title</IonBadge>
 										</div>
-										<IonBadge color="danger">Active Brand Title</IonBadge>
-									</div>
-									<div className="py-4">
-										<p className="font-display [font-palette:--redshift] text-4xl font-bold tracking-wide">
-											StarFocus Deep Space
+									</IonCardHeader>
+									<IonCardContent className="pt-4">
+										<div className="py-2">
+											<p className="font-display [font-palette:--redshift] text-4xl font-bold tracking-wide">
+												StarFocus Deep Space
+											</p>
+										</div>
+										<p className="text-xs text-neutral-400">
+											Gradient shifts from blue.400 through violet and fuchsia to deep rose.
 										</p>
-									</div>
-									<p className="text-xs text-neutral-400">
-										Gradient shifts from blue.400 through violet and fuchsia to deep rose.
-									</p>
+									</IonCardContent>
 								</IonCard>
 
-								<IonCard className="m-0 border border-neutral-800 bg-neutral-900/90 p-4">
-									<div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-800 pb-3">
-										<div>
-											<h3 className="font-semibold text-white">Blue Celestial</h3>
-											<p className="font-mono text-xs text-neutral-500">[font-palette:--blue]</p>
+								<IonCard className="m-0 border border-neutral-800 bg-neutral-900/90">
+									<IonCardHeader className="border-b border-neutral-800 pb-3">
+										<div className="flex flex-wrap items-center justify-between gap-2">
+											<div>
+												<IonCardTitle className="text-base font-semibold text-white">
+													Blue Celestial
+												</IonCardTitle>
+												<IonCardSubtitle className="font-mono text-xs text-neutral-500">
+													[font-palette:--blue]
+												</IonCardSubtitle>
+											</div>
+											<IonBadge color="primary">Palette</IonBadge>
 										</div>
-										<IonBadge color="primary">Palette</IonBadge>
-									</div>
-									<div className="py-4">
-										<p className="font-display [font-palette:--blue] text-4xl font-bold tracking-wide">
-											StarFocus Celestial
+									</IonCardHeader>
+									<IonCardContent className="pt-4">
+										<div className="py-2">
+											<p className="font-display [font-palette:--blue] text-4xl font-bold tracking-wide">
+												StarFocus Celestial
+											</p>
+										</div>
+										<p className="text-xs text-neutral-400">
+											Calm shades from blue.100 to blue.600.
 										</p>
-									</div>
-									<p className="text-xs text-neutral-400">
-										Calm shades from blue.100 to blue.600.
-									</p>
+									</IonCardContent>
 								</IonCard>
 
-								<IonCard className="m-0 border border-neutral-800 bg-neutral-900/90 p-4">
-									<div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-800 pb-3">
-										<div>
-											<h3 className="font-semibold text-white">Purple Nebula</h3>
-											<p className="font-mono text-xs text-neutral-500">[font-palette:--purple]</p>
+								<IonCard className="m-0 border border-neutral-800 bg-neutral-900/90">
+									<IonCardHeader className="border-b border-neutral-800 pb-3">
+										<div className="flex flex-wrap items-center justify-between gap-2">
+											<div>
+												<IonCardTitle className="text-base font-semibold text-white">
+													Purple Nebula
+												</IonCardTitle>
+												<IonCardSubtitle className="font-mono text-xs text-neutral-500">
+													[font-palette:--purple]
+												</IonCardSubtitle>
+											</div>
+											<IonBadge color="secondary">Palette</IonBadge>
 										</div>
-										<IonBadge color="secondary">Palette</IonBadge>
-									</div>
-									<div className="py-4">
-										<p className="font-display [font-palette:--purple] text-4xl font-bold tracking-wide">
-											StarFocus Nebula
+									</IonCardHeader>
+									<IonCardContent className="pt-4">
+										<div className="py-2">
+											<p className="font-display [font-palette:--purple] text-4xl font-bold tracking-wide">
+												StarFocus Nebula
+											</p>
+										</div>
+										<p className="text-xs text-neutral-400">
+											Mystic violet spectrum from violet.100 to violet.600.
 										</p>
-									</div>
-									<p className="text-xs text-neutral-400">
-										Mystic violet spectrum from violet.100 to violet.600.
-									</p>
+									</IonCardContent>
 								</IonCard>
 
-								<IonCard className="m-0 border border-neutral-800 bg-neutral-900/90 p-4">
-									<div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-800 pb-3">
-										<div>
-											<h3 className="font-semibold text-white">Red Supernova</h3>
-											<p className="font-mono text-xs text-neutral-500">[font-palette:--red]</p>
+								<IonCard className="m-0 border border-neutral-800 bg-neutral-900/90">
+									<IonCardHeader className="border-b border-neutral-800 pb-3">
+										<div className="flex flex-wrap items-center justify-between gap-2">
+											<div>
+												<IonCardTitle className="text-base font-semibold text-white">
+													Red Supernova
+												</IonCardTitle>
+												<IonCardSubtitle className="font-mono text-xs text-neutral-500">
+													[font-palette:--red]
+												</IonCardSubtitle>
+											</div>
+											<IonBadge color="danger">Palette</IonBadge>
 										</div>
-										<IonBadge color="danger">Palette</IonBadge>
-									</div>
-									<div className="py-4">
-										<p className="font-display [font-palette:--red] text-4xl font-bold tracking-wide">
-											StarFocus Supernova
+									</IonCardHeader>
+									<IonCardContent className="pt-4">
+										<div className="py-2">
+											<p className="font-display [font-palette:--red] text-4xl font-bold tracking-wide">
+												StarFocus Supernova
+											</p>
+										</div>
+										<p className="text-xs text-neutral-400">
+											Warm stellar burst from rose.100 to rose.600.
 										</p>
-									</div>
-									<p className="text-xs text-neutral-400">
-										Warm stellar burst from rose.100 to rose.600.
-									</p>
+									</IonCardContent>
 								</IonCard>
 							</div>
 						</section>
@@ -366,30 +411,38 @@ export default function DevTheme() {
 								<IonBadge color="medium">Fonts</IonBadge>
 							</div>
 							<div className="grid gap-4 sm:grid-cols-2">
-								<div className="rounded-xl border border-neutral-800 bg-neutral-900/90 p-4">
-									<p className="text-xs font-semibold text-neutral-400 uppercase">Display Font</p>
-									<p className="font-display [font-palette:--redshift] text-2xl font-bold my-2">Honk Variable</p>
-									<p className="font-mono text-xs text-neutral-500">font-family: Honk, sans-serif</p>
-									<p className="mt-1 text-xs text-neutral-400">Used for brand mark, main page headers, and cosmic badges.</p>
-								</div>
-								<div className="rounded-xl border border-neutral-800 bg-neutral-900/90 p-4">
-									<p className="text-xs font-semibold text-neutral-400 uppercase">Heading Font</p>
-									<p className="text-2xl font-bold my-2 text-white">Funnel Display</p>
-									<p className="font-mono text-xs text-neutral-500">var(--font-funnel-display)</p>
-									<p className="mt-1 text-xs text-neutral-400">Used for section titles, modal headers, and primary card labels.</p>
-								</div>
-								<div className="rounded-xl border border-neutral-800 bg-neutral-900/90 p-4">
-									<p className="text-xs font-semibold text-neutral-400 uppercase">Subtitles & Body</p>
-									<p className="text-xl my-2 text-neutral-300">Jura Subtitle Font</p>
-									<p className="font-mono text-xs text-neutral-500">var(--font-jura)</p>
-									<p className="mt-1 text-xs text-neutral-400">Futuristic sans-serif for descriptions, labels, and metadata.</p>
-								</div>
-								<div className="rounded-xl border border-neutral-800 bg-neutral-900/90 p-4">
-									<p className="text-xs font-semibold text-neutral-400 uppercase">Monospace & Code</p>
-									<p className="font-mono text-lg my-2 text-cyan-400">Kode_Mono 0123456789</p>
-									<p className="font-mono text-xs text-neutral-500">var(--font-kode)</p>
-									<p className="mt-1 text-xs text-neutral-400">Technical font for timings, hashes, numbers, and stats.</p>
-								</div>
+								<IonCard className="m-0 border border-neutral-800 bg-neutral-900/90">
+									<IonCardContent className="p-4">
+										<p className="text-xs font-semibold text-neutral-400 uppercase">Display Font</p>
+										<p className="font-display [font-palette:--redshift] text-2xl font-bold my-2">Honk Variable</p>
+										<p className="font-mono text-xs text-neutral-500">font-family: Honk, sans-serif</p>
+										<p className="mt-1 text-xs text-neutral-400">Used for brand mark, main page headers, and cosmic badges.</p>
+									</IonCardContent>
+								</IonCard>
+								<IonCard className="m-0 border border-neutral-800 bg-neutral-900/90">
+									<IonCardContent className="p-4">
+										<p className="text-xs font-semibold text-neutral-400 uppercase">Heading Font</p>
+										<p className="text-2xl font-bold my-2 text-white">Funnel Display</p>
+										<p className="font-mono text-xs text-neutral-500">var(--font-funnel-display)</p>
+										<p className="mt-1 text-xs text-neutral-400">Used for section titles, modal headers, and primary card labels.</p>
+									</IonCardContent>
+								</IonCard>
+								<IonCard className="m-0 border border-neutral-800 bg-neutral-900/90">
+									<IonCardContent className="p-4">
+										<p className="text-xs font-semibold text-neutral-400 uppercase">Subtitles & Body</p>
+										<p className="text-xl my-2 text-neutral-300">Jura Subtitle Font</p>
+										<p className="font-mono text-xs text-neutral-500">var(--font-jura)</p>
+										<p className="mt-1 text-xs text-neutral-400">Futuristic sans-serif for descriptions, labels, and metadata.</p>
+									</IonCardContent>
+								</IonCard>
+								<IonCard className="m-0 border border-neutral-800 bg-neutral-900/90">
+									<IonCardContent className="p-4">
+										<p className="text-xs font-semibold text-neutral-400 uppercase">Monospace & Code</p>
+										<p className="font-mono text-lg my-2 text-cyan-400">Kode_Mono 0123456789</p>
+										<p className="font-mono text-xs text-neutral-500">var(--font-kode)</p>
+										<p className="mt-1 text-xs text-neutral-400">Technical font for timings, hashes, numbers, and stats.</p>
+									</IonCardContent>
+								</IonCard>
 							</div>
 						</section>
 					</div>
