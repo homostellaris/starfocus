@@ -13,10 +13,10 @@ describe('/dev - Developer Hub', () => {
 		cy.contains('Theme & Tokens').should('be.visible')
 
 		// Links to sub-pages
-		cy.contains('a', 'View All Components')
-			.should('have.attr', 'href', '/dev/components')
-		cy.contains('a', 'Explore Theme Showcase')
-			.should('have.attr', 'href', '/dev/theme')
+		cy.contains('View All Components').should('exist')
+		cy.get('a[href="/dev/components"]').should('exist')
+		cy.contains('Explore Theme Showcase').should('exist')
+		cy.get('a[href="/dev/theme"]').should('exist')
 
 		cy.screenshot('dev-hub')
 	})
@@ -24,7 +24,7 @@ describe('/dev - Developer Hub', () => {
 	it('navigates from /dev to /dev/components', () => {
 		cy.visit('/dev')
 		cy.get('ion-toolbar', { timeout: 15000 }).should('be.visible')
-		cy.contains('a', 'View All Components').click()
+		cy.contains('View All Components').click()
 		cy.url().should('include', '/dev/components')
 		cy.contains('Component Catalog', { timeout: 15000 }).should('be.visible')
 	})
@@ -32,7 +32,7 @@ describe('/dev - Developer Hub', () => {
 	it('navigates from /dev to /dev/theme', () => {
 		cy.visit('/dev')
 		cy.get('ion-toolbar', { timeout: 15000 }).should('be.visible')
-		cy.contains('a', 'Explore Theme Showcase').click()
+		cy.contains('Explore Theme Showcase').click()
 		cy.url().should('include', '/dev/theme')
 		cy.contains('StarFocus Theme & Palettes', { timeout: 15000 }).should('be.visible')
 	})

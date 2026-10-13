@@ -10,6 +10,7 @@ import {
 	IonIcon,
 	IonPage,
 	IonBadge,
+	IonButton,
 } from '@ionic/react'
 import {
 	arrowForwardSharp,
@@ -23,7 +24,6 @@ import {
 	pulseSharp,
 	musicalNotesSharp,
 } from 'ionicons/icons'
-import { Link } from 'react-router-dom'
 import { Header } from '../common/Header'
 import { MarkdownExportProvider } from '../export/MarkdownExportContext'
 
@@ -190,21 +190,24 @@ export default function DevComponentsList() {
 										<div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-800/80 pt-3">
 											<div className="flex flex-wrap items-center gap-1.5">
 												{item.tags.map((tag) => (
-													<span
+													<IonBadge
 														key={tag}
-														className="rounded-md bg-neutral-800 px-2 py-0.5 text-[11px] font-medium text-neutral-400"
+														color="medium"
+														className="text-[10px] font-mono px-2 py-0.5"
 													>
 														{tag}
-													</span>
+													</IonBadge>
 												))}
 											</div>
-											<Link
-												to={`/dev/components/${item.key}`}
-												className="flex items-center gap-1.5 rounded-lg bg-blue-600/20 px-3 py-1.5 text-xs font-semibold text-blue-400 border border-blue-500/30 transition hover:bg-blue-600/30 hover:text-blue-300"
+											<IonButton
+												routerLink={`/dev/components/${item.key}`}
+												fill="outline"
+												size="small"
+												color="primary"
 											>
 												<span>Open in Workbench</span>
-												<IonIcon icon={arrowForwardSharp} />
-											</Link>
+												<IonIcon slot="end" icon={arrowForwardSharp} />
+											</IonButton>
 										</div>
 									</IonCardContent>
 								</IonCard>

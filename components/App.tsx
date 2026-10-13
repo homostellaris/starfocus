@@ -58,9 +58,11 @@ const App = () => {
 							render={() => <Test />}
 						/>
 						<Route
+							exact
 							path="/workbench"
-							render={() => <Workbench />}
-						/>
+						>
+							<Redirect to="/dev/components/sync-status" />
+						</Route>
 						<Route
 							exact
 							path="/dev"

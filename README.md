@@ -9,3 +9,7 @@ This repo was originally created from [nextjs-tailwind-ionic-capacitor-starter](
 # Routing overview
 
 1. NextJS routing occurs between the `/` route and the `[...all]` route. The 'all' routes are statically generated using `generateStaticParams`
+
+# Component Library
+
+StarFocus strictly uses [Ionic Framework](https://ionicframework.com) (`@ionic/react`) as its chosen component library. Refer to [DESIGN.md](DESIGN.md) for conventions on UI layouts, standard component mappings, and the split pane workbench architecture.

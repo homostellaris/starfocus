@@ -11,7 +11,6 @@ import {
 	IonPopover,
 	IonToggle,
 	IonToolbar,
-	useIonModal,
 } from '@ionic/react'
 import { useObservable } from 'dexie-react-hooks'
 import { helpCircleSharp, settingsSharp } from 'ionicons/icons'
@@ -34,9 +33,6 @@ export const Header = ({
 	hideActions?: boolean
 }) => {
 	const ui = useObservable(db.cloud.userInteraction)
-	const [, dismiss] = useIonModal(LoginModal, {
-		dismiss: (data: string, role: string) => dismiss(data, role),
-	})
 	const user = useObservable(db.cloud.currentUser)
 
 	const posthog = usePostHog()
@@ -96,13 +92,6 @@ export const Header = ({
 									>
 										Documentation
 									</IonButton>
-									<IonButton
-										expand="block"
-										fill="clear"
-										href="/dev"
-									>
-										Developer Hub
-									</IonButton>
 									{user?.isLoggedIn && (
 										<IonButton
 											expand="block"
@@ -124,17 +113,6 @@ export const Header = ({
 								</IonContent>
 							</IonPopover>
 							<SyncStatus />
-							{!user?.isLoggedIn && (
-								<IonButton
-									color="primary"
-									fill="solid"
-									onClick={() => {
-										db.cloud.login()
-									}}
-								>
-									Sync
-								</IonButton>
-							)}
 							<IonButton
 								id="settings-menu-button"
 								onClick={() => menuController.toggle('end')}

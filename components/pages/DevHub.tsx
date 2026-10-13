@@ -10,6 +10,10 @@ import {
 	IonIcon,
 	IonPage,
 	IonBadge,
+	IonButton,
+	IonList,
+	IonItem,
+	IonLabel,
 } from '@ionic/react'
 import {
 	colorPaletteSharp,
@@ -19,7 +23,6 @@ import {
 	bookOutline,
 	sparklesSharp,
 } from 'ionicons/icons'
-import { Link } from 'react-router-dom'
 import { Header } from '../common/Header'
 import { MarkdownExportProvider } from '../export/MarkdownExportContext'
 
@@ -35,40 +38,46 @@ export default function DevHub() {
 				<IonContent fullscreen>
 					<div className="mx-auto max-w-4xl px-4 py-8">
 						{/* Welcome Banner */}
-						<div className="mb-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6 backdrop-blur">
-							<div className="flex flex-wrap items-center justify-between gap-4">
-								<div>
-									<div className="mb-2 flex items-center gap-2">
-										<span className="font-display [font-palette:--redshift] text-2xl font-bold">
-											StarFocus
-										</span>
-										<IonBadge color="primary">Dev Portal</IonBadge>
+						<IonCard className="m-0 mb-8 border border-neutral-800 bg-neutral-900/60 backdrop-blur">
+							<IonCardContent className="p-6">
+								<div className="flex flex-wrap items-center justify-between gap-4">
+									<div>
+										<div className="mb-2 flex items-center gap-2">
+											<span className="font-display [font-palette:--redshift] text-2xl font-bold">
+												StarFocus
+											</span>
+											<IonBadge color="primary">Dev Portal</IonBadge>
+										</div>
+										<h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
+											Developer Tools & Design System
+										</h1>
+										<p className="mt-1 text-sm text-neutral-400">
+											Explore and test isolated components, inspect design tokens, and review application architecture.
+										</p>
 									</div>
-									<h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-										Developer Tools & Design System
-									</h1>
-									<p className="mt-1 text-sm text-neutral-400">
-										Explore and test isolated components, inspect design tokens, and review application architecture.
-									</p>
+									<div className="flex items-center gap-2">
+										<IonButton
+											routerLink="/dev/components"
+											color="primary"
+											fill="solid"
+											size="small"
+										>
+											<IonIcon slot="start" icon={cubeSharp} />
+											Workbench
+										</IonButton>
+										<IonButton
+											routerLink="/dev/theme"
+											color="medium"
+											fill="outline"
+											size="small"
+										>
+											<IonIcon slot="start" icon={colorPaletteSharp} />
+											Theme
+										</IonButton>
+									</div>
 								</div>
-								<div className="flex items-center gap-2">
-									<Link
-										to="/dev/components"
-										className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
-									>
-										<IonIcon icon={cubeSharp} />
-										<span>Workbench</span>
-									</Link>
-									<Link
-										to="/dev/theme"
-										className="flex items-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 transition hover:bg-neutral-700 hover:text-white"
-									>
-										<IonIcon icon={colorPaletteSharp} />
-										<span>Theme</span>
-									</Link>
-								</div>
-							</div>
-						</div>
+							</IonCardContent>
+						</IonCard>
 
 						{/* Primary Feature Sections */}
 						<div className="grid gap-6 md:grid-cols-2">
@@ -96,48 +105,53 @@ export default function DevHub() {
 										<p className="mb-4 text-sm text-neutral-300">
 											Inspect and interact with StarFocus components in isolation. Test upload phases, network failures, motion trajectories, and responsive layouts with dedicated controls.
 										</p>
-										<div className="space-y-2 border-t border-neutral-800/80 pt-3">
-											<Link
-												to="/dev/components/sync-status"
-												className="flex items-center justify-between rounded-md p-2 text-xs text-neutral-300 transition hover:bg-neutral-800 hover:text-white"
-											>
-												<span className="flex items-center gap-2">
-													<IonIcon icon={syncSharp} className="text-blue-400" />
-													<span>Unified Sync Status Popover</span>
-												</span>
-												<IonIcon icon={arrowForwardSharp} className="text-neutral-500" />
-											</Link>
-											<Link
-												to="/dev/components/starship-trajectory"
-												className="flex items-center justify-between rounded-md p-2 text-xs text-neutral-300 transition hover:bg-neutral-800 hover:text-white"
-											>
-												<span className="flex items-center gap-2">
-													<IonIcon icon={cubeSharp} className="text-cyan-400" />
-													<span>Starship & Trajectory</span>
-												</span>
-												<IonIcon icon={arrowForwardSharp} className="text-neutral-500" />
-											</Link>
-											<Link
-												to="/dev/components/pulse-graph"
-												className="flex items-center justify-between rounded-md p-2 text-xs text-neutral-300 transition hover:bg-neutral-800 hover:text-white"
-											>
-												<span className="flex items-center gap-2">
-													<IonIcon icon={sparklesSharp} className="text-rose-400" />
-													<span>Activity Pulse Graph</span>
-												</span>
-												<IonIcon icon={arrowForwardSharp} className="text-neutral-500" />
-											</Link>
+										<div className="border-t border-neutral-800/80 pt-3">
+											<IonList lines="none" className="bg-transparent space-y-1 p-0">
+												<IonItem
+													routerLink="/dev/components/sync-status"
+													button
+													detail={false}
+													className="[--background:transparent] hover:[--background:rgba(255,255,255,0.05)] rounded-lg text-xs"
+												>
+													<IonIcon slot="start" icon={syncSharp} className="text-blue-400 text-sm" />
+													<IonLabel className="text-xs text-neutral-300">Unified Sync Status Popover</IonLabel>
+													<IonIcon slot="end" icon={arrowForwardSharp} className="text-neutral-500 text-xs" />
+												</IonItem>
+												<IonItem
+													routerLink="/dev/components/starship-trajectory"
+													button
+													detail={false}
+													className="[--background:transparent] hover:[--background:rgba(255,255,255,0.05)] rounded-lg text-xs"
+												>
+													<IonIcon slot="start" icon={cubeSharp} className="text-cyan-400 text-sm" />
+													<IonLabel className="text-xs text-neutral-300">Starship & Trajectory</IonLabel>
+													<IonIcon slot="end" icon={arrowForwardSharp} className="text-neutral-500 text-xs" />
+												</IonItem>
+												<IonItem
+													routerLink="/dev/components/pulse-graph"
+													button
+													detail={false}
+													className="[--background:transparent] hover:[--background:rgba(255,255,255,0.05)] rounded-lg text-xs"
+												>
+													<IonIcon slot="start" icon={sparklesSharp} className="text-rose-400 text-sm" />
+													<IonLabel className="text-xs text-neutral-300">Activity Pulse Graph</IonLabel>
+													<IonIcon slot="end" icon={arrowForwardSharp} className="text-neutral-500 text-xs" />
+												</IonItem>
+											</IonList>
 										</div>
 									</IonCardContent>
 								</div>
 								<div className="border-t border-neutral-800/80 p-4">
-									<Link
-										to="/dev/components"
-										className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600/20 py-2.5 text-xs font-semibold text-blue-400 border border-blue-500/30 transition hover:bg-blue-600/30 hover:text-blue-300"
+									<IonButton
+										routerLink="/dev/components"
+										expand="block"
+										fill="outline"
+										color="primary"
+										size="small"
 									>
 										<span>View All Components</span>
-										<IonIcon icon={arrowForwardSharp} />
-									</Link>
+										<IonIcon slot="end" icon={arrowForwardSharp} />
+									</IonButton>
 								</div>
 							</IonCard>
 
@@ -182,30 +196,38 @@ export default function DevHub() {
 									</IonCardContent>
 								</div>
 								<div className="border-t border-neutral-800/80 p-4">
-									<Link
-										to="/dev/theme"
-										className="flex w-full items-center justify-center gap-2 rounded-lg bg-purple-600/20 py-2.5 text-xs font-semibold text-purple-400 border border-purple-500/30 transition hover:bg-purple-600/30 hover:text-purple-300"
+									<IonButton
+										routerLink="/dev/theme"
+										expand="block"
+										fill="outline"
+										color="secondary"
+										size="small"
 									>
 										<span>Explore Theme Showcase</span>
-										<IonIcon icon={arrowForwardSharp} />
-									</Link>
+										<IonIcon slot="end" icon={arrowForwardSharp} />
+									</IonButton>
 								</div>
 							</IonCard>
 						</div>
 
 						{/* Quick Feedback Note */}
-						<div className="mt-8 flex items-center justify-between rounded-xl border border-neutral-800 bg-neutral-950/60 p-4 text-xs text-neutral-400">
-							<div className="flex items-center gap-2">
-								<IonIcon icon={bookOutline} className="text-base text-neutral-400" />
-								<span>Vercel Toolbar is active in development and preview environments for direct comments and feedback.</span>
-							</div>
-							<Link
-								to="/home"
-								className="text-blue-400 hover:underline"
-							>
-								Back to App →
-							</Link>
-						</div>
+						<IonCard className="m-0 mt-8 border border-neutral-800 bg-neutral-950/60">
+							<IonCardContent className="flex flex-wrap items-center justify-between gap-3 p-4 text-xs text-neutral-400">
+								<div className="flex items-center gap-2">
+									<IonIcon icon={bookOutline} className="text-base text-neutral-400 shrink-0" />
+									<span>Vercel Toolbar is active in development and preview environments for direct comments and feedback.</span>
+								</div>
+								<IonButton
+									routerLink="/home"
+									fill="clear"
+									size="small"
+									color="primary"
+									className="m-0"
+								>
+									Back to App →
+								</IonButton>
+							</IonCardContent>
+						</IonCard>
 					</div>
 				</IonContent>
 			</IonPage>
