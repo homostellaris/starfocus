@@ -28,7 +28,7 @@ export function matchesQuery(
 						dayjs(todo.snoozedUntil).isSameOrAfter(dayjs(), 'day'),
 				)
 		} else {
-			return todo => todo?.title.toLowerCase().includes(query)
+			return todo => (todo?.title ?? '').toLowerCase().includes(query)
 		}
 	})
 	return matchers.every(matcher => matcher(todo))

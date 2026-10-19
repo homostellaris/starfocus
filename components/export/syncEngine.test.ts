@@ -18,6 +18,9 @@ import {
 	statusForIncrementalSyncComplete,
 	statusForIncrementalSyncError,
 	statusForFullSyncError,
+	handleCreatingHook,
+	handleUpdatingHook,
+	handleDeletingHook,
 } from './syncEngine'
 
 function makeTodo(overrides: Partial<Todo> = {}): Todo {
@@ -288,6 +291,32 @@ describe('deduplicateQueue', () => {
 		expect(upsertTodoIds.has('todo-1')).toBe(true)
 		expect(deleteFilenames.has('old-title_abc.md')).toBe(true)
 	})
+
+	test('collects unique delete todo IDs', () => {
+		const items: QueueItem[] = [
+			{ type: 'delete', todoId: 'todo-1' },
+			{ type: 'delete', todoId: 'todo-2' },
+			{ type: 'delete', todoId: 'todo-1' },
+		]
+
+		const { deleteTodoIds } = deduplicateQueue(items)
+
+		expect(deleteTodoIds.size).toBe(2)
+		expect(deleteTodoIds.has('todo-1')).toBe(true)
+		expect(deleteTodoIds.has('todo-2')).toBe(true)
+	})
+
+	test('separates delete filenames and delete todo IDs', () => {
+		const items: QueueItem[] = [
+			{ type: 'delete', filename: 'old-file.md' },
+			{ type: 'delete', todoId: 'todo-1' },
+		]
+
+		const { deleteFilenames, deleteTodoIds } = deduplicateQueue(items)
+
+		expect(deleteFilenames.has('old-file.md')).toBe(true)
+		expect(deleteTodoIds.has('todo-1')).toBe(true)
+	})
 })
 
 describe('status transitions', () => {
@@ -389,5 +418,253 @@ describe('status transitions', () => {
 			6,
 		)
 		expect(s.totalFiles).toBe(6)
+	})
+})
+
+describe('handleCreatingHook', () => {
+	test('queues upsert when todoItem has id', () => {
+		const queue: QueueItem[] = []
+		let drainCount = 0
+		const onDrain = () => {
+			drainCount++
+		}
+
+		handleCreatingHook(queue, onDrain, undefined, { id: 'todo-123' })
+
+		expect(queue).toEqual([{ type: 'upsert', todoId: 'todo-123' }])
+		expect(drainCount).toBe(1)
+	})
+
+	test('queues upsert using primaryKey when todoItem lacks id', () => {
+		const queue: QueueItem[] = []
+		let drainCount = 0
+		const onDrain = () => {
+			drainCount++
+		}
+
+		handleCreatingHook(queue, onDrain, 'key-123', undefined)
+
+		expect(queue).toEqual([{ type: 'upsert', todoId: 'key-123' }])
+		expect(drainCount).toBe(1)
+	})
+
+	test('registers onsuccess callback on context when neither id nor primaryKey is available', () => {
+		const queue: QueueItem[] = []
+		let drainCount = 0
+		const onDrain = () => {
+			drainCount++
+		}
+		const context: { onsuccess?: (generatedKey: string) => void } = {}
+
+		handleCreatingHook(queue, onDrain, undefined, undefined, context)
+
+		expect(queue).toEqual([])
+		expect(typeof context.onsuccess).toBe('function')
+
+		context.onsuccess!('generated-key-1')
+		expect(queue).toEqual([{ type: 'upsert', todoId: 'generated-key-1' }])
+		expect(drainCount).toBe(1)
+	})
+
+	test('does not throw when neither id nor primaryKey is available and no context provided', () => {
+		const queue: QueueItem[] = []
+		let drainCount = 0
+		const onDrain = () => {
+			drainCount++
+		}
+
+		expect(() =>
+			handleCreatingHook(queue, onDrain, undefined, undefined),
+		).not.toThrow()
+		expect(queue).toEqual([])
+		expect(drainCount).toBe(0)
+	})
+})
+
+describe('handleUpdatingHook', () => {
+	test('queues upsert when todoItem is updated without title change', () => {
+		const queue: QueueItem[] = []
+		let drainCount = 0
+		const onDrain = () => {
+			drainCount++
+		}
+		const todoItem: Todo = { id: 'todo-123', title: 'Buy milk' }
+
+		handleUpdatingHook(
+			queue,
+			onDrain,
+			{ completedAt: new Date() },
+			'todo-123',
+			todoItem,
+		)
+
+		expect(queue).toEqual([{ type: 'upsert', todoId: 'todo-123' }])
+		expect(drainCount).toBe(1)
+	})
+
+	test('queues delete for old filename and upsert when title is modified', () => {
+		const queue: QueueItem[] = []
+		let drainCount = 0
+		const onDrain = () => {
+			drainCount++
+		}
+		const todoItem: Todo = { id: 'todo-12345678', title: 'Old Title' }
+
+		handleUpdatingHook(
+			queue,
+			onDrain,
+			{ title: 'New Title' },
+			'todo-12345678',
+			todoItem,
+		)
+
+		expect(queue).toEqual([
+			{ type: 'delete', filename: 'old-title_12345678.md' },
+			{ type: 'upsert', todoId: 'todo-12345678' },
+		])
+		expect(drainCount).toBe(1)
+	})
+
+	test('queues delete with todoId when title is modified and todoItem lacks title', () => {
+		const queue: QueueItem[] = []
+		let drainCount = 0
+		const onDrain = () => {
+			drainCount++
+		}
+		const todoItem = { id: 'todo-12345678' } as Todo
+
+		handleUpdatingHook(
+			queue,
+			onDrain,
+			{ title: 'New Title' },
+			'todo-12345678',
+			todoItem,
+		)
+
+		expect(queue).toEqual([
+			{ type: 'delete', todoId: 'todo-12345678' },
+			{ type: 'upsert', todoId: 'todo-12345678' },
+		])
+		expect(drainCount).toBe(1)
+	})
+
+	test('queues upsert using primaryKey when todoItem is undefined', () => {
+		const queue: QueueItem[] = []
+		let drainCount = 0
+		const onDrain = () => {
+			drainCount++
+		}
+
+		handleUpdatingHook(
+			queue,
+			onDrain,
+			{ completedAt: new Date() },
+			'todo-12345678',
+			undefined,
+		)
+
+		expect(queue).toEqual([{ type: 'upsert', todoId: 'todo-12345678' }])
+		expect(drainCount).toBe(1)
+	})
+
+	test('queues delete with primaryKey and upsert when title is modified and todoItem is undefined', () => {
+		const queue: QueueItem[] = []
+		let drainCount = 0
+		const onDrain = () => {
+			drainCount++
+		}
+
+		handleUpdatingHook(
+			queue,
+			onDrain,
+			{ title: 'New Title' },
+			'todo-12345678',
+			undefined,
+		)
+
+		expect(queue).toEqual([
+			{ type: 'delete', todoId: 'todo-12345678' },
+			{ type: 'upsert', todoId: 'todo-12345678' },
+		])
+		expect(drainCount).toBe(1)
+	})
+
+	test('does not throw when both todoItem and primaryKey are undefined', () => {
+		const queue: QueueItem[] = []
+		let drainCount = 0
+		const onDrain = () => {
+			drainCount++
+		}
+
+		expect(() =>
+			handleUpdatingHook(
+				queue,
+				onDrain,
+				{ title: 'New Title' },
+				undefined,
+				undefined,
+			),
+		).not.toThrow()
+		expect(queue).toEqual([])
+		expect(drainCount).toBe(0)
+	})
+})
+
+describe('handleDeletingHook', () => {
+	test('queues delete with generated filename when todoItem has title', () => {
+		const queue: QueueItem[] = []
+		let drainCount = 0
+		const onDrain = () => {
+			drainCount++
+		}
+		const todoItem: Todo = { id: 'todo-12345678', title: 'Buy milk' }
+
+		handleDeletingHook(queue, onDrain, 'todo-12345678', todoItem)
+
+		expect(queue).toEqual([
+			{ type: 'delete', filename: 'buy-milk_12345678.md' },
+		])
+		expect(drainCount).toBe(1)
+	})
+
+	test('queues delete with todoId when todoItem lacks title', () => {
+		const queue: QueueItem[] = []
+		let drainCount = 0
+		const onDrain = () => {
+			drainCount++
+		}
+		const todoItem = { id: 'todo-12345678' } as Todo
+
+		handleDeletingHook(queue, onDrain, 'todo-12345678', todoItem)
+
+		expect(queue).toEqual([{ type: 'delete', todoId: 'todo-12345678' }])
+		expect(drainCount).toBe(1)
+	})
+
+	test('queues delete with primaryKey when todoItem is undefined', () => {
+		const queue: QueueItem[] = []
+		let drainCount = 0
+		const onDrain = () => {
+			drainCount++
+		}
+
+		handleDeletingHook(queue, onDrain, 'todo-12345678', undefined)
+
+		expect(queue).toEqual([{ type: 'delete', todoId: 'todo-12345678' }])
+		expect(drainCount).toBe(1)
+	})
+
+	test('does not throw when both primaryKey and todoItem are undefined', () => {
+		const queue: QueueItem[] = []
+		let drainCount = 0
+		const onDrain = () => {
+			drainCount++
+		}
+
+		expect(() =>
+			handleDeletingHook(queue, onDrain, undefined, undefined),
+		).not.toThrow()
+		expect(queue).toEqual([])
+		expect(drainCount).toBe(0)
 	})
 })

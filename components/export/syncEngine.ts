@@ -25,32 +25,39 @@ import {
 
 export type QueueItem =
 	| { type: 'upsert'; todoId: string }
-	| { type: 'delete'; filename: string }
+	| { type: 'delete'; filename?: string; todoId?: string }
 
 export function resolveCreatingTodoId(
-	objId: string | undefined,
-	primKey: string | undefined,
+	todoItemId: string | undefined,
+	primaryKey: string | undefined,
 ): string | null {
-	const todoId = objId ?? primKey
+	const todoId = todoItemId ?? primaryKey
 	return todoId || null
 }
 
 export function deduplicateQueue(items: QueueItem[]): {
 	upsertTodoIds: Set<string>
 	deleteFilenames: Set<string>
+	deleteTodoIds: Set<string>
 } {
 	const upsertTodoIds = new Set<string>()
 	const deleteFilenames = new Set<string>()
+	const deleteTodoIds = new Set<string>()
 
 	for (const item of items) {
 		if (item.type === 'upsert') {
 			upsertTodoIds.add(item.todoId)
 		} else {
-			deleteFilenames.add(item.filename)
+			if (item.filename) {
+				deleteFilenames.add(item.filename)
+			}
+			if (item.todoId) {
+				deleteTodoIds.add(item.todoId)
+			}
 		}
 	}
 
-	return { upsertTodoIds, deleteFilenames }
+	return { upsertTodoIds, deleteFilenames, deleteTodoIds }
 }
 
 export interface IncrementalSyncStatus {
@@ -472,6 +479,61 @@ async function performFullSync(
 	return result
 }
 
+export function handleCreatingHook(
+	queue: QueueItem[],
+	onDrain: () => void,
+	primaryKey: string | undefined,
+	todoItem: Partial<Todo> | undefined,
+	context?: { onsuccess?: (generatedKey: string) => void },
+): void {
+	const todoId = resolveCreatingTodoId(todoItem?.id, primaryKey)
+	if (todoId) {
+		queue.push({ type: 'upsert', todoId })
+		onDrain()
+	} else if (context) {
+		context.onsuccess = function (generatedKey: string) {
+			queue.push({ type: 'upsert', todoId: String(generatedKey) })
+			onDrain()
+		}
+	}
+}
+
+export function handleUpdatingHook(
+	queue: QueueItem[],
+	onDrain: () => void,
+	modificationRecord: Record<string, unknown>,
+	primaryKey: string | undefined,
+	todoItem: Partial<Todo> | undefined,
+): void {
+	const todoId = todoItem?.id || primaryKey
+	if ('title' in modificationRecord) {
+		if (todoItem?.title && modificationRecord.title !== todoItem.title) {
+			queue.push({ type: 'delete', filename: generateFilename(todoItem) })
+		} else if (!todoItem?.title && todoId) {
+			queue.push({ type: 'delete', todoId: String(todoId) })
+		}
+	}
+	if (todoId) {
+		queue.push({ type: 'upsert', todoId: String(todoId) })
+		onDrain()
+	}
+}
+
+export function handleDeletingHook(
+	queue: QueueItem[],
+	onDrain: () => void,
+	primaryKey: string | undefined,
+	todoItem: Partial<Todo> | undefined,
+): void {
+	if (todoItem?.title) {
+		queue.push({ type: 'delete', filename: generateFilename(todoItem) })
+		onDrain()
+	} else if (primaryKey || todoItem?.id) {
+		queue.push({ type: 'delete', todoId: String(primaryKey || todoItem?.id) })
+		onDrain()
+	}
+}
+
 export function createSyncEngine(): SyncEngine {
 	const status = new BehaviorSubject<SyncEngineStatus>(initialSyncEngineStatus)
 
@@ -484,44 +546,36 @@ export function createSyncEngine(): SyncEngine {
 
 	function onCreating(
 		this: { onsuccess?: (primKey: string) => void },
-		primKey: string,
-		obj: Todo,
+		primaryKey: string,
+		todoItem: Todo,
 		_transaction: Transaction,
 	) {
-		const todoId = resolveCreatingTodoId(obj.id, primKey)
-		if (todoId) {
-			queue.push({ type: 'upsert', todoId })
-			debouncedDrain()
-		} else {
-			this.onsuccess = function (generatedKey: string) {
-				queue.push({ type: 'upsert', todoId: String(generatedKey) })
-				debouncedDrain()
-			}
-		}
+		handleCreatingHook(queue, debouncedDrain, primaryKey, todoItem, this)
 	}
 
 	function onUpdating(
 		this: unknown,
-		modifications: Record<string, unknown>,
-		_primKey: string,
-		obj: Todo,
+		modificationRecord: Record<string, unknown>,
+		primaryKey: string,
+		todoItem: Todo,
 		_transaction: Transaction,
 	) {
-		if ('title' in modifications && modifications.title !== obj.title) {
-			queue.push({ type: 'delete', filename: generateFilename(obj) })
-		}
-		queue.push({ type: 'upsert', todoId: obj.id })
-		debouncedDrain()
+		handleUpdatingHook(
+			queue,
+			debouncedDrain,
+			modificationRecord,
+			primaryKey,
+			todoItem,
+		)
 	}
 
 	function onDeleting(
 		this: unknown,
-		_primKey: string,
-		obj: Todo,
+		primaryKey: string,
+		todoItem: Todo,
 		_transaction: Transaction,
 	) {
-		queue.push({ type: 'delete', filename: generateFilename(obj) })
-		debouncedDrain()
+		handleDeletingHook(queue, debouncedDrain, primaryKey, todoItem)
 	}
 
 	const debouncedDrain = debounce(async () => {
@@ -558,7 +612,8 @@ export function createSyncEngine(): SyncEngine {
 		const items = queue.splice(0)
 		if (items.length === 0) return null
 
-		const { upsertTodoIds, deleteFilenames } = deduplicateQueue(items)
+		const { upsertTodoIds, deleteFilenames, deleteTodoIds } =
+			deduplicateQueue(items)
 
 		let created = 0
 		let updated = 0
@@ -566,6 +621,24 @@ export function createSyncEngine(): SyncEngine {
 		let failed = 0
 
 		const { starRolesById, starRoleGroupsById } = await loadRelationMaps()
+
+		if (deleteTodoIds.size > 0) {
+			const diskFiles = await ops.listFiles()
+			for (const todoId of Array.from(deleteTodoIds)) {
+				const shortId = todoId
+					.replace(/[^a-z0-9]/gi, '')
+					.toLowerCase()
+					.slice(-8)
+				if (shortId) {
+					const suffix = `_${shortId}.md`
+					for (const file of diskFiles) {
+						if (file.endsWith(suffix)) {
+							deleteFilenames.add(file)
+						}
+					}
+				}
+			}
+		}
 
 		for (const todoId of Array.from(upsertTodoIds)) {
 			const todo = await db.todos.get(todoId)

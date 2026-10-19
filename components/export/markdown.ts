@@ -20,22 +20,22 @@ export function buildFrontMatterData(
 	todo: TodoWithRelations,
 ): Record<string, unknown> {
 	const data: Record<string, unknown> = {
-		id: todo.id,
-		title: todo.title,
+		id: todo?.id ?? '',
+		title: todo?.title ?? '',
 	}
 
-	if (todo.starPoints !== undefined) {
+	if (todo?.starPoints !== undefined) {
 		data.starPoints = todo.starPoints
 	}
 
-	if (todo.starRoleData) {
+	if (todo?.starRoleData?.title) {
 		data.starRole = todo.starRoleData.title
-		if (todo.starRoleGroupData) {
+		if (todo?.starRoleGroupData?.title) {
 			data.starRoleGroup = todo.starRoleGroupData.title
 		}
 	}
 
-	if (todo.completedAt) {
+	if (todo?.completedAt) {
 		data.completedAt = todo.completedAt
 	}
 
@@ -57,14 +57,19 @@ function extractBodyContent(content: string): string {
 	return match ? match[1] : ''
 }
 
-export function generateFilename(todo: Todo): string {
-	const safeTitle = todo.title
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/^-|-$/g, '')
-		.slice(0, 50)
+export function generateFilename(
+	todo?: { title?: string; id?: string } | null,
+): string {
+	const rawTitle = typeof todo?.title === 'string' ? todo.title : 'untitled'
+	const safeTitle =
+		rawTitle
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, '-')
+			.replace(/^-|-$/g, '')
+			.slice(0, 50) || 'untitled'
 
-	const shortId = todo.id
+	const rawId = typeof todo?.id === 'string' ? todo.id : ''
+	const shortId = rawId
 		.replace(/[^a-z0-9]/gi, '')
 		.toLowerCase()
 		.slice(-8)
@@ -72,14 +77,20 @@ export function generateFilename(todo: Todo): string {
 	return `${safeTitle}_${shortId}.md`
 }
 
-export function generateStarRoleFilename(starRole: StarRole): string {
-	const safeTitle = starRole.title
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/^-|-$/g, '')
-		.slice(0, 50)
+export function generateStarRoleFilename(
+	starRole?: { title?: string; id?: string } | null,
+): string {
+	const rawTitle =
+		typeof starRole?.title === 'string' ? starRole.title : 'untitled'
+	const safeTitle =
+		rawTitle
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, '-')
+			.replace(/^-|-$/g, '')
+			.slice(0, 50) || 'untitled'
 
-	const shortId = starRole.id
+	const rawId = typeof starRole?.id === 'string' ? starRole.id : ''
+	const shortId = rawId
 		.replace(/[^a-z0-9]/gi, '')
 		.toLowerCase()
 		.slice(-8)
@@ -93,11 +104,11 @@ export function createStarRoleFile(
 ): string {
 	const data: Record<string, unknown> = {
 		id: starRole.id,
-		title: starRole.title,
-		icon: starRole.icon.name,
+		title: starRole.title ?? '',
+		icon: starRole.icon?.name ?? '',
 	}
 
-	if (starRoleGroup) {
+	if (starRoleGroup?.title) {
 		data.group = starRoleGroup.title
 	}
 

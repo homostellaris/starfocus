@@ -264,6 +264,20 @@ describe('generateFilename', () => {
 		expect(filename).toBe('buy-groceries_crlm1234.md')
 		expect(filename).not.toContain('/')
 	})
+
+	test('falls back to untitled when title is missing', () => {
+		expect(generateFilename({ id: 'todo-12345678' } as Todo)).toBe(
+			'untitled_12345678.md',
+		)
+	})
+
+	test('handles undefined todo without throwing', () => {
+		expect(generateFilename(undefined)).toBe('untitled_.md')
+	})
+
+	test('handles null todo without throwing', () => {
+		expect(generateFilename(null)).toBe('untitled_.md')
+	})
 })
 
 describe('createAsteroidFieldFile', () => {
@@ -348,6 +362,20 @@ describe('generateStarRoleFilename', () => {
 			icon: { type: 'ionicon', name: 'code-outline' },
 		}
 		expect(generateStarRoleFilename(starRole)).toBe('developer_rlm12345.md')
+	})
+
+	test('falls back to untitled when star role title is missing', () => {
+		expect(
+			generateStarRoleFilename({ id: 'role-12345678' } as StarRole),
+		).toBe('untitled_12345678.md')
+	})
+
+	test('handles undefined star role without throwing', () => {
+		expect(generateStarRoleFilename(undefined)).toBe('untitled_.md')
+	})
+
+	test('handles null star role without throwing', () => {
+		expect(generateStarRoleFilename(null)).toBe('untitled_.md')
 	})
 })
 
