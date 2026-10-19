@@ -116,6 +116,12 @@ export function statusForFullSyncStart(
 	}
 }
 
+export function shouldNotifyProgress(completed: number, total: number): boolean {
+	if (completed === total) return true
+	if (total <= 10) return true
+	return completed % 5 === 0
+}
+
 export function statusForFullSyncProgress(
 	current: SyncEngineStatus,
 	completed: number,
@@ -770,13 +776,20 @@ export function createSyncEngine(): SyncEngine {
 				await saveFullSyncProgress(progress)
 			}
 
-			status.next(
-				statusForFullSyncProgress(
-					status.value,
+			if (
+				shouldNotifyProgress(
 					progress.completedIds.length,
 					progress.todoIds.length,
-				),
-			)
+				)
+			) {
+				status.next(
+					statusForFullSyncProgress(
+						status.value,
+						progress.completedIds.length,
+						progress.todoIds.length,
+					),
+				)
+			}
 		}
 
 		if (stopped || fullSyncAborted) return

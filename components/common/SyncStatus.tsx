@@ -15,8 +15,8 @@ import {
 import { cloudSharp, documentTextSharp, syncSharp } from 'ionicons/icons'
 import { useObservable } from 'dexie-react-hooks'
 import { db } from '../db'
-import { useOptionalMarkdownExportContext } from '../export/MarkdownExportContext'
-import type { ExportStatus } from '../export/useMarkdownExport'
+import { useMarkdownExportStatus, type ExportStatus } from '../export/useMarkdownExport'
+import { markdownExportService } from '../export/markdownExportService'
 
 export function CloudSyncStatusBadge({
 	user: _user,
@@ -75,13 +75,13 @@ export default function SyncStatus({
 }: SyncStatusProps = {}) {
 	const dbUser = useObservable(db.cloud.currentUser)
 	const dbSyncState = useObservable(db.cloud.syncState)
-	const markdownContext = useOptionalMarkdownExportContext()
+	const markdownExportStatus = useMarkdownExportStatus()
 
 	const user = overrideUser !== undefined ? overrideUser : dbUser
 	const syncState = overrideSyncState !== undefined ? overrideSyncState : dbSyncState
-	const exportStatus = overrideExportStatus !== undefined ? overrideExportStatus : markdownContext?.status
-	const runFullSync = onRunFullSync || markdownContext?.runFullSync
-	const reconnect = onReconnect || markdownContext?.reconnect
+	const exportStatus = overrideExportStatus !== undefined ? overrideExportStatus : markdownExportStatus
+	const runFullSync = onRunFullSync || (() => markdownExportService.runFullSync())
+	const reconnect = onReconnect || (() => markdownExportService.reconnect())
 	const login = onLogin || (() => db.cloud.login())
 	const openSettings =
 		onOpenSettings ||

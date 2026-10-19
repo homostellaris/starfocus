@@ -18,7 +18,6 @@ import posthog from 'posthog-js'
 import { RefObject, useCallback, useEffect, useRef } from 'react'
 import { Header } from '../common/Header'
 import { db, StarRole, StarRoleGroup } from '../db'
-import { MarkdownExportProvider } from '../export/MarkdownExportContext'
 import { useCreateStarRoleGroupModal } from '../starRoleGroups/create/useCreateStarRoleGroupModal'
 import { useCreateStarRoleModal } from '../starRoles/create/useCreateStarRoleModal'
 import { getIonIcon } from '../starRoles/icons'
@@ -63,8 +62,7 @@ export default function Constellation() {
 	useSeedMissingStarRoleOrders(data)
 
 	return (
-		<MarkdownExportProvider>
-			<IonPage>
+		<IonPage>
 				<Header title="Constellation" backHref="/home" />
 				<IonContent fullscreen>
 					{isLoading ? (
@@ -120,7 +118,6 @@ export default function Constellation() {
 					</IonFab>
 				</IonContent>
 			</IonPage>
-		</MarkdownExportProvider>
 	)
 }
 

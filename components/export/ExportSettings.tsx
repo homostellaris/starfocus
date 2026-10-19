@@ -13,11 +13,12 @@ import {
 	folderOpenSharp,
 	syncSharp,
 } from 'ionicons/icons'
-import { useMarkdownExportContext } from './MarkdownExportContext'
+import { useMarkdownExportStatus } from './useMarkdownExport'
+import { markdownExportService } from './markdownExportService'
 
 export default function ExportSettings() {
-	const { status, enable, disable, exportOnce, reconnect } =
-		useMarkdownExportContext()
+	const status = useMarkdownExportStatus()
+	const { enable, disable, exportOnce, reconnect } = markdownExportService
 
 	if (!status.isSupported) {
 		return (

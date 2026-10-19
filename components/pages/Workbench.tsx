@@ -39,7 +39,6 @@ import {
 } from 'ionicons/icons'
 import dayjs from 'dayjs'
 import { Header } from '../common/Header'
-import { MarkdownExportProvider } from '../export/MarkdownExportContext'
 import SyncStatus, { CloudSyncStatusBadge, MarkdownSyncStatusBadge } from '../common/SyncStatus'
 import { StarRoleIcon } from '../common/StarRoleIcon'
 import StarPoints from '../common/StarPoints'
@@ -1312,10 +1311,8 @@ function WorkbenchContent() {
 
 export default function Workbench() {
 	return (
-		<MarkdownExportProvider>
-			<MoodProvider>
-				<WorkbenchContent />
-			</MoodProvider>
-		</MarkdownExportProvider>
+		<MoodProvider>
+			<WorkbenchContent />
+		</MoodProvider>
 	)
 }

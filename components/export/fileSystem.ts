@@ -213,6 +213,10 @@ export async function getStoredDirectoryHandle(): Promise<FileSystemDirectoryHan
  * Clear stored directory handle
  */
 export async function clearStoredDirectoryHandle(): Promise<void> {
+	if (typeof indexedDB === 'undefined') {
+		return
+	}
+
 	return new Promise((resolve, reject) => {
 		const request = indexedDB.open(DB_NAME, 1)
 
@@ -434,18 +438,15 @@ export function createFileOperations(
 	return {
 		async readFile(filename: string): Promise<string | null> {
 			try {
-				console.debug('[FS] readFile: getFileHandle', filename)
 				const { dir, name } = await resolveDir(handle, filename, false)
 				const fileHandle = await withTimeout(
 					dir.getFileHandle(name),
 					`readFile.getFileHandle(${filename})`,
 				)
-				console.debug('[FS] readFile: getFile', filename)
 				const file = await withTimeout(
 					fileHandle.getFile(),
 					`readFile.getFile(${filename})`,
 				)
-				console.debug('[FS] readFile: text', filename)
 				return await withTimeout(file.text(), `readFile.text(${filename})`)
 			} catch (error) {
 				if ((error as Error).name === 'NotFoundError') return null
@@ -455,18 +456,15 @@ export function createFileOperations(
 		},
 		async writeFile(filename: string, content: string): Promise<boolean> {
 			try {
-				console.debug('[FS] writeFile: getFileHandle', filename)
 				const { dir, name } = await resolveDir(handle, filename, true)
 				const fileHandle = await withTimeout(
 					dir.getFileHandle(name, { create: true }),
 					`writeFile.getFileHandle(${filename})`,
 				)
-				console.debug('[FS] writeFile: createWritable', filename)
 				const writable = await withTimeout(
 					fileHandle.createWritable(),
 					`writeFile.createWritable(${filename})`,
 				)
-				console.debug('[FS] writeFile: write', filename)
 				await withTimeout(
 					writable.write(content),
 					`writeFile.write(${filename})`,
@@ -475,13 +473,11 @@ export function createFileOperations(
 				// createWritable() is supposed to truncate by default but
 				// Capacitor's implementation may not, leaving trailing bytes
 				// from a previous longer write which causes duplicate YAML keys.
-				console.debug('[FS] writeFile: truncate', filename)
 				const byteLength = new TextEncoder().encode(content).length
 				await withTimeout(
 					writable.truncate(byteLength),
 					`writeFile.truncate(${filename})`,
 				)
-				console.debug('[FS] writeFile: close', filename)
 				await withTimeout(writable.close(), `writeFile.close(${filename})`)
 				return true
 			} catch (error) {
@@ -491,7 +487,6 @@ export function createFileOperations(
 		},
 		async deleteFile(filename: string): Promise<boolean> {
 			try {
-				console.debug('[FS] deleteFile: removeEntry', filename)
 				const { dir, name } = await resolveDir(handle, filename, false)
 				await withTimeout(
 					dir.removeEntry(name),
@@ -506,7 +501,6 @@ export function createFileOperations(
 		},
 		async listFiles(): Promise<string[]> {
 			try {
-				console.debug('[FS] listFiles: iterating handle.values()')
 				const files: string[] = []
 				const iterator = handle.values()
 				let done = false
@@ -516,7 +510,6 @@ export function createFileOperations(
 						done = true
 					} else {
 						const entry = result.value
-						console.debug('[FS] listFiles: entry', entry.name)
 						if (entry.kind === 'file' && entry.name.endsWith('.md')) {
 							files.push(entry.name)
 						}

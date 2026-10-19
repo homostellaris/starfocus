@@ -22,7 +22,6 @@ import {
 } from 'ionicons/icons'
 import { useState } from 'react'
 import { Header } from '../common/Header'
-import { MarkdownExportProvider } from '../export/MarkdownExportContext'
 
 interface ColorToken {
 	name: string
@@ -132,8 +131,7 @@ export default function DevTheme() {
 	}
 
 	return (
-		<MarkdownExportProvider>
-			<IonPage id="main-content">
+		<IonPage id="main-content">
 				<Header
 					title="Theme"
 					backHref="/dev"
@@ -448,6 +446,5 @@ export default function DevTheme() {
 					</div>
 				</IonContent>
 			</IonPage>
-		</MarkdownExportProvider>
 	)
 }

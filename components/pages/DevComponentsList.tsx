@@ -25,7 +25,6 @@ import {
 	musicalNotesSharp,
 } from 'ionicons/icons'
 import { Header } from '../common/Header'
-import { MarkdownExportProvider } from '../export/MarkdownExportContext'
 
 interface ComponentCatalogItem {
 	key: string
@@ -131,8 +130,7 @@ const CATALOG_ITEMS: ComponentCatalogItem[] = [
 
 export default function DevComponentsList() {
 	return (
-		<MarkdownExportProvider>
-			<IonPage id="main-content">
+		<IonPage id="main-content">
 				<Header
 					title="Components"
 					backHref="/dev"
@@ -216,6 +214,5 @@ export default function DevComponentsList() {
 					</div>
 				</IonContent>
 			</IonPage>
-		</MarkdownExportProvider>
 	)
 }

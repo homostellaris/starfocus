@@ -2,7 +2,7 @@ import { useIonModal } from '@ionic/react'
 import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
 import { useCallback, useRef } from 'react'
 import { db, ListType, Todo, TodoInput } from '../../db'
-import { useMarkdownExportContext } from '../../export/MarkdownExportContext'
+import { markdownExportService } from '../../export/markdownExportService'
 import todoRepository from '../repository'
 import { CreateTodoModal } from './modal'
 import { usePostHog } from 'posthog-js/react'
@@ -18,7 +18,6 @@ export function useCreateTodoModal(): [
 	(data?: any, role?: string) => void,
 ] {
 	const posthog = usePostHog()
-	const { requestPermissionIfNeeded } = useMarkdownExportContext()
 	const titleInput = useRef<HTMLIonInputElement>(null)
 	const todoRef = useRef<Todo>(undefined)
 	const [present, dismiss] = useIonModal(CreateTodoModal, {
@@ -33,7 +32,7 @@ export function useCreateTodoModal(): [
 		async (todo: TodoInput, location: ListType) => {
 			if (!todo.title) throw new TypeError('Title is required')
 
-			await requestPermissionIfNeeded()
+			await markdownExportService.requestPermissionIfNeeded()
 			await db.transaction(
 				'rw',
 				db.asteroidFieldOrder,
@@ -54,7 +53,7 @@ export function useCreateTodoModal(): [
 				},
 			)
 		},
-		[requestPermissionIfNeeded],
+		[],
 	)
 
 	return [

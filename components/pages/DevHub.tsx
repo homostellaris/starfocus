@@ -24,12 +24,10 @@ import {
 	sparklesSharp,
 } from 'ionicons/icons'
 import { Header } from '../common/Header'
-import { MarkdownExportProvider } from '../export/MarkdownExportContext'
 
 export default function DevHub() {
 	return (
-		<MarkdownExportProvider>
-			<IonPage id="main-content">
+		<IonPage id="main-content">
 				<Header
 					title="Developer Hub"
 					backHref="/home"
@@ -231,6 +229,5 @@ export default function DevHub() {
 					</div>
 				</IonContent>
 			</IonPage>
-		</MarkdownExportProvider>
 	)
 }

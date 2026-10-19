@@ -13,6 +13,7 @@ import {
 	initialSyncEngineStatus,
 	statusForFullSyncStart,
 	statusForFullSyncProgress,
+	shouldNotifyProgress,
 	statusForFullSyncComplete,
 	statusForIncrementalSyncStart,
 	statusForIncrementalSyncComplete,
@@ -666,5 +667,28 @@ describe('handleDeletingHook', () => {
 		).not.toThrow()
 		expect(queue).toEqual([])
 		expect(drainCount).toBe(0)
+	})
+})
+
+describe('shouldNotifyProgress', () => {
+	test('notifies on completion regardless of total count', () => {
+		expect(shouldNotifyProgress(100, 100)).toBe(true)
+		expect(shouldNotifyProgress(7, 7)).toBe(true)
+		expect(shouldNotifyProgress(1, 1)).toBe(true)
+	})
+
+	test('notifies every item when total is 10 or fewer', () => {
+		expect(shouldNotifyProgress(1, 8)).toBe(true)
+		expect(shouldNotifyProgress(2, 8)).toBe(true)
+		expect(shouldNotifyProgress(3, 8)).toBe(true)
+	})
+
+	test('notifies every 5 items when total exceeds 10', () => {
+		expect(shouldNotifyProgress(5, 50)).toBe(true)
+		expect(shouldNotifyProgress(10, 50)).toBe(true)
+		expect(shouldNotifyProgress(15, 50)).toBe(true)
+		expect(shouldNotifyProgress(1, 50)).toBe(false)
+		expect(shouldNotifyProgress(2, 50)).toBe(false)
+		expect(shouldNotifyProgress(4, 50)).toBe(false)
 	})
 })

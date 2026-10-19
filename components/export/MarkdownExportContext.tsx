@@ -1,30 +1,24 @@
-import { createContext, useContext, ReactNode } from 'react'
-import useMarkdownExport, { UseMarkdownExportReturn } from './useMarkdownExport'
-
-const MarkdownExportContext = createContext<UseMarkdownExportReturn | null>(
-	null,
-)
+import { ReactNode } from 'react'
+import { markdownExportService } from './markdownExportService'
+import { UseMarkdownExportReturn } from './useMarkdownExport'
 
 export function MarkdownExportProvider({ children }: { children: ReactNode }) {
-	const markdownExport = useMarkdownExport()
-	return (
-		<MarkdownExportContext.Provider value={markdownExport}>
-			{children}
-		</MarkdownExportContext.Provider>
-	)
+	return <>{children}</>
 }
 
 export function useOptionalMarkdownExportContext(): UseMarkdownExportReturn | null {
-	return useContext(MarkdownExportContext)
+	return {
+		status: markdownExportService.getStatus(),
+		enable: markdownExportService.enable,
+		disable: markdownExportService.disable,
+		syncNow: markdownExportService.syncNow,
+		exportOnce: markdownExportService.exportOnce,
+		reconnect: markdownExportService.reconnect,
+		runFullSync: markdownExportService.runFullSync,
+		requestPermissionIfNeeded: markdownExportService.requestPermissionIfNeeded,
+	}
 }
 
 export function useMarkdownExportContext(): UseMarkdownExportReturn {
-	const context = useContext(MarkdownExportContext)
-	if (!context) {
-		throw new Error(
-			'useMarkdownExportContext must be used within a MarkdownExportProvider',
-		)
-	}
-	return context
+	return useOptionalMarkdownExportContext()!
 }
-
