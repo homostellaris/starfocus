@@ -48,7 +48,6 @@ import Placeholder from '../common/Placeholder'
 import { StarRoleIcon } from '../common/StarRoleIcon'
 import order, { calculateReorderIndices, MAX_ORDER_KEY_LENGTH } from '../common/order'
 import {
-	AsteroidFieldTodoListItem,
 	db,
 	ListType,
 	LogTodoListItem,
@@ -142,10 +141,16 @@ export const TodoLists = ({
 	const wayfinderOrderMode = useSettings('#wayfinderOrderMode')
 	const { inActiveStarRoles, query } = useView()
 
+	const asteroidFieldCount = useLiveQuery(() => db.asteroidFieldOrder.count())
+	useEffect(() => {
+		if (asteroidFieldCount && asteroidFieldCount > 0) {
+			todoRepository.migrateAsteroidFieldToWayfinder()
+		}
+	}, [asteroidFieldCount])
+
 	const data = useLiveQuery<{
 		log: LogTodoListItem[]
 		visits: LogTodoListItem[]
-		asteroidField: AsteroidFieldTodoListItem[]
 		wayfinder: WayfinderTodoListItem[]
 		database: Todo[]
 	}>(async () => {
@@ -188,30 +193,6 @@ export const TodoLists = ({
 				starRoleOrderMap.set(starRoleId, o)
 			})
 		}
-
-		const asteroidFieldOrder = await db.asteroidFieldOrder
-			.orderBy('order')
-			.toArray()
-		const asteroidFieldTodoIds = asteroidFieldOrder.map(({ todoId }) => todoId)
-		const asteroidFieldTodosPromise = db.todos
-			.bulkGet(asteroidFieldTodoIds)
-			.then(todos => {
-				const mapped = todos
-					.map((todo, index) => ({
-						...todo!,
-						order: asteroidFieldOrder[index].order,
-						snoozedUntil: asteroidFieldOrder[index].snoozedUntil,
-					}))
-					.filter(todo => matchesQuery(query, todo) && inActiveStarRoles(todo))
-
-				if (wayfinderOrderMode === 'star') {
-					return starSort(mapped, starRoleOrderMap).map((todo, index) => ({
-						...todo,
-						order: index.toString(),
-					}))
-				}
-				return mapped
-			})
 
 		const wayfinderOrder = await db.wayfinderOrder.orderBy('order').toArray()
 		const wayfinderTodoIds = wayfinderOrder.map(({ todoId }) => todoId)
@@ -258,7 +239,7 @@ export const TodoLists = ({
 			wayfinderOrderMode === 'star'
 				? db.todos
 						.where('id')
-						.noneOf([...asteroidFieldTodoIds, ...wayfinderTodoIds])
+						.noneOf(wayfinderTodoIds)
 						.and(
 							todo =>
 								todo.completedAt === undefined &&
@@ -271,7 +252,7 @@ export const TodoLists = ({
 						)
 				: db.todos
 						.where('id')
-						.noneOf([...asteroidFieldTodoIds, ...wayfinderTodoIds])
+						.noneOf(wayfinderTodoIds)
 						.and(
 							todo =>
 								todo.completedAt === undefined &&
@@ -282,19 +263,15 @@ export const TodoLists = ({
 						.limit(databaseLimit)
 						.toArray()
 
-		const [log, visits, asteroidField, wayfinder, database] = await Promise.all(
-			[
-				logTodosPromise,
-				visitsPromise,
-				asteroidFieldTodosPromise,
-				wayfinderTodosPromise,
-				databaseTodosPromise,
-			],
-		)
+		const [log, visits, wayfinder, database] = await Promise.all([
+			logTodosPromise,
+			visitsPromise,
+			wayfinderTodosPromise,
+			databaseTodosPromise,
+		])
 		return {
 			log: log.reverse(),
 			visits: visits,
-			asteroidField,
 			wayfinder,
 			database: database,
 		}
@@ -310,13 +287,7 @@ export const TodoLists = ({
 
 	const starRoles = useLiveQuery(() => db.starRoles.toArray())
 
-	// Its possible for ref not to change when todo is completed because one other than 'next' is completed in which case starship doesn't move
-	// Consider using a callback ref instead: https://stackoverflow.com/questions/60881446/receive-dimensions-of-element-via-getboundingclientrect-in-react
-	const nextUrgentTodo = useRef<HTMLIonItemElement>(null)
-	const nextImportantTodo = useRef<HTMLIonItemElement>(null)
-	const nextTodo = data?.asteroidField.length
-		? nextUrgentTodo
-		: nextImportantTodo
+	const nextTodo = useRef<HTMLIonItemElement>(null)
 	const {
 		nextTodo: {
 			position: [nextTodoPosition, setNextTodoPosition],
@@ -599,184 +570,6 @@ export const TodoLists = ({
 											))}
 											<IonReorderGroup
 												disabled={wayfinderOrderMode === 'star'}
-												id="asteroid-field"
-												onIonItemReorder={async event => {
-													console.debug('reorder event', { event })
-													// We don't use this to reorder for us because it results in a flash of 'unordered' content.
-													// Instead we re-order right away, calculate the new order ourselves, and update the DB.
-													event.detail.complete()
-
-													/* If the todo moves down then all the todos after its target location must be nudged up
-													 * If the todo moves up then all the todos
-													 */
-													// TODO: Could make this easier with IDs in the DOM
-													const fromTodo = data.asteroidField[event.detail.from]
-													const toTodo = data.asteroidField[event.detail.to]
-
-													const asteroidFieldTodos = await db.asteroidFieldOrder
-														.orderBy('order')
-														.toArray()
-													const unfilteredFromIndex =
-														asteroidFieldTodos.findIndex(
-															({ todoId }) => todoId === fromTodo.id,
-														)
-													const unfilteredToIndex =
-														asteroidFieldTodos.findIndex(
-															({ todoId }) => todoId === toTodo.id,
-														)
-
-													const [startIndex, endIndex] =
-														calculateReorderIndices(
-															unfilteredFromIndex,
-															unfilteredToIndex,
-														)
-													const start = asteroidFieldTodos[startIndex]?.order
-													const end = asteroidFieldTodos[endIndex]?.order
-													const newOrder = order(start, end)
-
-													console.debug('Re-ordering', {
-														originalFromIndex: event.detail.from,
-														orignialToIndex: event.detail.to,
-														unfilteredFromIndex,
-														unfilteredToIndex,
-														start,
-														end,
-														newOrder,
-													})
-
-													await db.asteroidFieldOrder.update(fromTodo.id, {
-														order: newOrder,
-													})
-													if (newOrder.length > MAX_ORDER_KEY_LENGTH) {
-														await todoRepository.rebalanceAsteroidFieldOrder(newOrder, 'drag_and_drop')
-													}
-													posthog.capture('todo_reordered', {
-														location: 'asteroid_field',
-														from_index: event.detail.from,
-														to_index: event.detail.to,
-													})
-												}}
-											>
-												{(data.asteroidField.length === 0 || helpEnabled) && (
-													<Placeholder heading="Asteroid Field">
-														Tasks which demand immediate attention. They will
-														try to feign &apos;urgency&apos; but are usually
-														nothing more than distractions. Delegate, defer, or
-														delete where possible to accelerate though this
-														treacherous region as fast as possible so you can
-														move on to the mission-critical objectives in your
-														Wayfinder.
-													</Placeholder>
-												)}
-												{data.asteroidField.length > 0 &&
-													data.asteroidField.map((todo, index) => (
-														<TodoListItem
-															key={todo.id}
-															data-id={todo.id}
-															data-next-todo={index === 0}
-															onCompletionChange={async event => {
-																if (event.detail.checked) {
-																	await markdownExportService.requestPermissionIfNeeded()
-																	await todoRepository.complete(todo)
-																	setLogLimit(limit => limit + 1)
-																	posthog.capture('todo_completed', {
-																		location: 'asteroid_field',
-																		has_star_role: !!todo.starRole,
-																		star_points: todo.starPoints,
-																	})
-																} else {
-																	await markdownExportService.requestPermissionIfNeeded()
-																	await todoRepository.uncomplete(todo)
-																	setLogLimit(limit => limit - 1)
-																	posthog.capture('todo_uncompleted', {
-																		todo_id: todo.id,
-																		location: 'asteroid_field',
-																	})
-																}
-															}}
-															onClick={_event => {
-																presentTodoActionSheet(todo, {
-																	buttons: [
-																		{
-																			icon: arrowUpSharp,
-																			text: 'Move to top',
-																			data: {
-																				action: 'top',
-																			},
-																			handler: async () => {
-																				const asteroidFieldTodos =
-																					await db.asteroidFieldOrder
-																						.orderBy('order')
-																						.toArray()
-																				const newOrder = order(
-																					undefined,
-																					asteroidFieldTodos[0]?.order,
-																				)
-
-																				await db.wayfinderOrder.update(
-																					todo.id,
-																					{
-																						order: newOrder,
-																					},
-																				)
-																			},
-																		},
-																		{
-																			icon: snowSharp,
-																			text: 'Move to database',
-																			data: {
-																				action: 'database',
-																			},
-																			handler: async () => {
-																				db.transaction(
-																					'rw',
-																					db.asteroidFieldOrder,
-																					async () => {
-																						await db.asteroidFieldOrder.delete(
-																							todo.id,
-																						)
-																					},
-																				)
-																				posthog.capture('todo_moved', {
-																					from_list: 'asteroid_field',
-																					to_list: 'database',
-																					has_star_role: !!todo.starRole,
-																					star_points: todo.starPoints,
-																				})
-																			},
-																		},
-																		{
-																			icon: timeSharp,
-																			text: 'Snooze',
-																			data: {
-																				action: 'snooze',
-																			},
-																			handler: () =>
-																				presentSnoozeTodoModal(
-																					todo,
-																					ListType.asteroidField,
-																				),
-																		},
-																	],
-																})
-															}}
-															ref={
-																index === 0
-																	? (nextUrgentTodo as any)
-																	: undefined
-															}
-															starRole={starRoles?.find(
-																starRole => todo.starRole === starRole.id,
-															)}
-															todo={{ ...todo }}
-														>
-															<VisitInfo todo={todo} />
-														</TodoListItem>
-													))}
-											</IonReorderGroup>
-											<div className="mx-auto w-full h-[1px] bg-[linear-gradient(to_right,transparent,theme(colors.rose.400),theme(colors.pink.400),theme(colors.fuchsia.400),theme(colors.violet.400),theme(colors.indigo.400),theme(colors.blue.400),transparent)] z-10 absolute"></div>
-											<IonReorderGroup
-												disabled={wayfinderOrderMode === 'star'}
 												id="wayfinder"
 												onIonItemReorder={async event => {
 													console.debug('reorder event', { event })
@@ -847,58 +640,79 @@ export const TodoLists = ({
 															data-id={todo.id}
 															data-next-todo={index === 0}
 															onCompletionChange={async checkboxEvent => {
-																presentCompletionPopover(checkboxEvent, todo, {
-																	onDidDismiss: async overlayEvent => {
-																		console.debug(
-																			'popover did dismiss',
-																			overlayEvent,
-																		)
-																		if (overlayEvent.detail.role === 'visit') {
-																			await db.visits.add({
-																				todoId: todo.id,
-																				date: new Date(),
-																			})
-																			posthog.capture('todo_visited', {
-																				todo_id: todo.id,
-																			})
-																		} else if (
-																			overlayEvent.detail.role === 'snooze'
-																		) {
-																			await db.visits.add({
-																				todoId: todo.id,
-																				date: new Date(),
-																			})
-																			posthog.capture('todo_visited', {
-																				todo_id: todo.id,
-																			})
-																			presentSnoozeTodoModal(
-																				todo,
-																				ListType.wayfinder,
+																if (todo.starPoints) {
+																	presentCompletionPopover(checkboxEvent, todo, {
+																		onDidDismiss: async overlayEvent => {
+																			console.debug(
+																				'popover did dismiss',
+																				overlayEvent,
 																			)
-																		} else if (
-																			overlayEvent.detail.role === 'complete'
-																		) {
-																			if (checkboxEvent.detail.checked) {
-																				await markdownExportService.requestPermissionIfNeeded()
-																				await todoRepository.complete(todo)
-																				setLogLimit(limit => limit + 1)
-																				posthog.capture('todo_completed', {
-																					location: 'wayfinder',
-																					has_star_role: !!todo.starRole,
-																					star_points: todo.starPoints,
+																			if (overlayEvent.detail.role === 'visit') {
+																				await db.visits.add({
+																					todoId: todo.id,
+																					date: new Date(),
 																				})
-																			} else {
-																				await markdownExportService.requestPermissionIfNeeded()
-																				await todoRepository.uncomplete(todo)
-																				setLogLimit(limit => limit - 1)
-																				posthog.capture('todo_uncompleted', {
+																				posthog.capture('todo_visited', {
 																					todo_id: todo.id,
-																					location: 'wayfinder',
 																				})
+																			} else if (
+																				overlayEvent.detail.role === 'snooze'
+																			) {
+																				await db.visits.add({
+																					todoId: todo.id,
+																					date: new Date(),
+																				})
+																				posthog.capture('todo_visited', {
+																					todo_id: todo.id,
+																				})
+																				presentSnoozeTodoModal(
+																					todo,
+																					ListType.wayfinder,
+																				)
+																			} else if (
+																				overlayEvent.detail.role === 'complete'
+																			) {
+																				if (checkboxEvent.detail.checked) {
+																					await markdownExportService.requestPermissionIfNeeded()
+																					await todoRepository.complete(todo)
+																					setLogLimit(limit => limit + 1)
+																					posthog.capture('todo_completed', {
+																						location: 'wayfinder',
+																						has_star_role: !!todo.starRole,
+																						star_points: todo.starPoints,
+																					})
+																				} else {
+																					await markdownExportService.requestPermissionIfNeeded()
+																					await todoRepository.uncomplete(todo)
+																					setLogLimit(limit => limit - 1)
+																					posthog.capture('todo_uncompleted', {
+																						todo_id: todo.id,
+																						location: 'wayfinder',
+																					})
+																				}
 																			}
-																		}
-																	},
-																})
+																		},
+																	})
+																} else {
+																	if (checkboxEvent.detail.checked) {
+																		await markdownExportService.requestPermissionIfNeeded()
+																		await todoRepository.complete(todo)
+																		setLogLimit(limit => limit + 1)
+																		posthog.capture('todo_completed', {
+																			location: 'wayfinder',
+																			has_star_role: !!todo.starRole,
+																			star_points: todo.starPoints,
+																		})
+																	} else {
+																		await markdownExportService.requestPermissionIfNeeded()
+																		await todoRepository.uncomplete(todo)
+																		setLogLimit(limit => limit - 1)
+																		posthog.capture('todo_uncompleted', {
+																			todo_id: todo.id,
+																			location: 'wayfinder',
+																		})
+																	}
+																}
 															}}
 															onClick={() => {
 																presentTodoActionSheet(todo, {
@@ -968,7 +782,7 @@ export const TodoLists = ({
 															}}
 															ref={
 																index === 0
-																	? (nextImportantTodo as any)
+																	? (nextTodo as any)
 																	: undefined
 															}
 															starRole={starRoles?.find(

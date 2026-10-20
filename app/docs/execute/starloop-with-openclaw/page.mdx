@@ -5,7 +5,7 @@ StarLoop is an autonomous work loop that uses OpenClaw to orchestrate Claude Cod
 ## How it works
 
 1. **Every 4 hours**, an OpenClaw cron job wakes up and runs the `/starloop` skill against your todos folder.
-2. The skill reads your wayfinder and asteroid field, ranks uncompleted Starfocuser todos, and produces a recommendation with reasoning.
+2. The skill reads your wayfinder, ranks uncompleted Starfocuser todos, and produces a recommendation with reasoning.
 3. OpenClaw sends the recommendation to you via **Telegram** with a top pick and two alternatives.
 4. You reply `go`, `1`, `2`, or a task name.
 5. OpenClaw spawns a **Claude Code ACP session** (named after the todo file) and passes it the todo filepath.

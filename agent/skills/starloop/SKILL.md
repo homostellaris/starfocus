@@ -13,7 +13,6 @@ Read a StarFocus todo folder and produce a ranked recommendation for the next ta
 
 Read all `.md` files in the todos directory. Skip:
 - `_manifest.md`
-- `_asteroid-field.md`
 - `_wayfinder.md`
 - Any file with `completedAt` set in its frontmatter
 
@@ -22,14 +21,12 @@ If `star-roles` / `$ARGUMENTS[1]` was provided, filter to todos where `starRole`
 ### 2. Read context files
 
 - `_wayfinder.md` — strategic priority order
-- `_asteroid-field.md` — urgent/time-sensitive items
 
 ### 3. Rank and evaluate todos
 
 Sort all todos by:
 1. Position in `_wayfinder.md` (higher = more important)
 2. `starPoints` value
-3. Presence in `_asteroid-field.md` (urgency boost)
 
 Then walk down the ranked list. For each todo, read its full content and assess tractability: can the coding agent make concrete progress on this right now using available tools? If yes, add it to the candidates list. If no, it is blocked — note what capability is missing and continue down the list.
 

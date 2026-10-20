@@ -58,7 +58,7 @@ describe('star sort', () => {
 			])
 		})
 
-		// Asteroid field: no star points, sorted by role order
+		// No star points, sorted by role order
 		createTodo({ title: 'partner chore', starRole: 'Partner' })
 		createTodo({ title: 'father chore', starRole: 'Father' })
 
@@ -78,18 +78,19 @@ describe('star sort', () => {
 			]),
 		)
 
-		assertList('asteroid-field', ['father chore', 'partner chore'])
 		assertList('wayfinder', [
 			'high points',
 			'father tied',
 			'partner tied',
 			'no role tied',
 			'low points',
+			'father chore',
+			'partner chore',
 		])
 		assertList('database', ['db high', 'db mid', 'db low'])
 	})
 
-	it('disables reordering in the asteroid field and wayfinder', () => {
+	it('disables reordering in the wayfinder', () => {
 		cy.get('#view-menu-button').click()
 		cy.get('#view-menu ion-segment').should('be.visible')
 		cy.get('#view-menu ion-segment-button[value="star"]').click({ force: true })
@@ -97,15 +98,14 @@ describe('star sort', () => {
 		cy.get('#view-menu-button').click({ force: true })
 		cy.get('ion-fab>ion-fab-button').should('be.visible')
 
-		cy.get('#asteroid-field').invoke('prop', 'disabled').should('eq', true)
 		cy.get('#wayfinder').invoke('prop', 'disabled').should('eq', true)
 	})
 })
 
-describe('asteroid field', () => {
+describe('wayfinder', () => {
 	it('stores todos with no star points', () => {
 		createTodo({ title: 'take the bins out' })
-		assertList('asteroid-field', ['take the bins out'])
+		assertList('wayfinder', ['take the bins out'])
 	})
 
 	it('stores todos with no star points and star role', () => {
@@ -119,14 +119,14 @@ describe('asteroid field', () => {
 			}),
 		)
 		createTodo({ title: 'be silly together', starRole: 'Father' })
-		assertList('asteroid-field', [
+		assertList('wayfinder', [
 			{ title: 'be silly together', starRole: 'Father' },
 		])
 	})
 
 	it('can move a todo to the database via edit modal', () => {
 		createTodo({ title: 'take the bins out' })
-		assertList('asteroid-field', ['take the bins out'])
+		assertList('wayfinder', ['take the bins out'])
 
 		cy.get('[data-class="todo"]').click()
 		cy.get('#todo-action-sheet').contains('Edit').click()
@@ -139,12 +139,10 @@ describe('asteroid field', () => {
 		cy.get('#edit-todo-modal').contains('Confirm').click()
 		cy.get('#edit-todo-modal').should('not.exist')
 
-		cy.get('#asteroid-field [data-class="todo"]').should('not.exist')
+		cy.get('#wayfinder [data-class="todo"]').should('not.exist')
 		cy.get('#database').contains('take the bins out')
 	})
-})
 
-describe('wayfinder', () => {
 	it('stores todos with star points', () => {
 		cy.db(db =>
 			db.starRoles.add({
@@ -180,7 +178,7 @@ describe('wayfinder', () => {
 	})
 
 	it.skip('can edit todos')
-	it('can reorder todos in asteroid field and triggers rebalancing when needed', () => {
+	it('can reorder todos in wayfinder and triggers rebalancing when needed', () => {
 		createTodo({ title: 'todo A' })
 		createTodo({ title: 'todo B' })
 		createTodo({ title: 'todo C' })
@@ -192,18 +190,18 @@ describe('wayfinder', () => {
 			const idB = todos.find(t => t.title === 'todo B')?.id
 			const idC = todos.find(t => t.title === 'todo C')?.id
 
-			if (idA) await db.asteroidFieldOrder.update(idA, { order: 'baaaaaaaaa' })
-			if (idB) await db.asteroidFieldOrder.update(idB, { order: 'baaaaaaaab' })
-			if (idC) await db.asteroidFieldOrder.update(idC, { order: 'z' })
+			if (idA) await db.wayfinderOrder.update(idA, { order: 'baaaaaaaaa' })
+			if (idB) await db.wayfinderOrder.update(idB, { order: 'baaaaaaaab' })
+			if (idC) await db.wayfinderOrder.update(idC, { order: 'z' })
 		})
 
 		cy.reload()
 
-		assertList('asteroid-field', ['todo A', 'todo B', 'todo C'])
+		assertList('wayfinder', ['todo A', 'todo B', 'todo C'])
 
 		// Trigger reordering event from the UI (drag todo C from index 2 to index 1)
 		cy.window().then(win => {
-			const reorderGroup = win.document.getElementById('asteroid-field')
+			const reorderGroup = win.document.getElementById('wayfinder')
 			if (!reorderGroup) throw new Error('Reorder group not found')
 			const event = new win.CustomEvent('ionItemReorder', {
 				detail: {
@@ -218,13 +216,13 @@ describe('wayfinder', () => {
 		})
 
 		// Reordering 2 -> 1 moves todo C between todo A and todo B
-		cy.get('#asteroid-field [data-class="todo"]').eq(0).find('[data-class="title"]').should('have.text', 'todo A')
-		cy.get('#asteroid-field [data-class="todo"]').eq(1).find('[data-class="title"]').should('have.text', 'todo C')
-		cy.get('#asteroid-field [data-class="todo"]').eq(2).find('[data-class="title"]').should('have.text', 'todo B')
+		cy.get('#wayfinder [data-class="todo"]').eq(0).find('[data-class="title"]').should('have.text', 'todo A')
+		cy.get('#wayfinder [data-class="todo"]').eq(1).find('[data-class="title"]').should('have.text', 'todo C')
+		cy.get('#wayfinder [data-class="todo"]').eq(2).find('[data-class="title"]').should('have.text', 'todo B')
 
 		// Verify that all order strings in DB are rebalanced (length === 1)
 		cy.db(async db => {
-			const items = await db.asteroidFieldOrder.orderBy('order').toArray()
+			const items = await db.wayfinderOrder.orderBy('order').toArray()
 			expect(items).to.have.length(3)
 			items.forEach(item => {
 				expect(item.order.length).to.eq(1)
@@ -266,7 +264,7 @@ describe('snooze', () => {
 			.click()
 		cy.contains('Confirm').click()
 		cy.get('[data-class="todo"]').should('not.exist')
-		cy.db(db => db.asteroidFieldOrder.toArray())
+		cy.db(db => db.wayfinderOrder.toArray())
 			.its('0.snoozedUntil')
 			.invoke('toISOString')
 			.should('eq', '2025-01-03T00:00:00.000Z')

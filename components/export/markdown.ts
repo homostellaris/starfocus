@@ -3,7 +3,6 @@ import {
 	Todo,
 	StarRole,
 	StarRoleGroup,
-	AsteroidFieldOrder,
 	WayfinderOrder,
 } from '../db'
 
@@ -224,14 +223,6 @@ exportedAt: ${new Date().toISOString()}
 
 	const numberedList = items.map((item, i) => `${i + 1}. ${item}`).join('\n')
 	return frontMatter + `# ${title}\n\n${numberedList}\n`
-}
-
-export function createAsteroidFieldFile(
-	orderEntries: AsteroidFieldOrder[],
-	todos: Todo[],
-): string {
-	const todosById = new Map(todos.map(t => [t.id, t]))
-	return createOrderListMarkdown('Asteroid Field', orderEntries, todosById)
 }
 
 export function createWayfinderFile(

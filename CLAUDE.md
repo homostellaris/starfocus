@@ -47,7 +47,7 @@ bun cypress open
 
 ### Test Structure
 
-- `cypress/e2e/home.cy.ts` - Main feature tests (asteroid field, wayfinder, snooze, search, settings)
+- `cypress/e2e/home.cy.ts` - Main feature tests (wayfinder, snooze, search, settings)
 - `cypress/e2e/index.cy.ts` - Onboarding/landing page tests
 - `cypress/support/commands.ts` - Custom commands including drag-drop support
 

@@ -4,7 +4,7 @@
 # Triggers starloop-orchestrate.sh when:
 #   - A new todo file arrives (potential new work)
 #   - An existing todo is updated (may have been completed)
-#   - Priority/index files (_wayfinder.md, _asteroid-field.md, etc.) change
+#   - Priority/index files (_wayfinder.md, etc.) change
 #
 # Uses an inotify stream debounced by a configurable quiet window (default: 25s)
 # so bursts of file writes (e.g. creating multiple todos or Obsidian sync runs)

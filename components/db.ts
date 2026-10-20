@@ -47,8 +47,6 @@ export type TodoListItemBase = Todo & {
 
 export type LogTodoListItem = TodoListItemBase
 
-export type AsteroidFieldTodoListItem = TodoListItemBase & WayfinderMeta
-
 export type WayfinderTodoListItem = TodoListItemBase & WayfinderMeta
 
 export interface StarRole {
@@ -75,7 +73,6 @@ export interface List {
 }
 
 export enum ListType {
-	asteroidField,
 	wayfinder,
 	database,
 }

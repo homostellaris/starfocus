@@ -10,7 +10,6 @@ import {
 	generateStarRoleFilename,
 	createStarRoleFile,
 	createManifest,
-	createAsteroidFieldFile,
 	createWayfinderFile,
 	updateFrontMatter,
 	TodoWithRelations,
@@ -336,12 +335,11 @@ async function writeAggregateFiles(
 	ops: FileOperations,
 	writeManifest: (content: string) => Promise<void>,
 ): Promise<void> {
-	const [todos, starRoles, starRoleGroups, asteroidFieldOrder, wayfinderOrder] =
+	const [todos, starRoles, starRoleGroups, wayfinderOrder] =
 		await Promise.all([
 			db.todos.toArray(),
 			db.starRoles.toArray(),
 			db.starRoleGroups.toArray(),
-			db.asteroidFieldOrder.orderBy('order').toArray(),
 			db.wayfinderOrder.orderBy('order').toArray(),
 		])
 
@@ -354,11 +352,7 @@ async function writeAggregateFiles(
 	const manifest = createManifest(enrichedTodos, starRoles, starRoleGroups)
 	await writeManifest(manifest)
 
-	await writeFileIfChanged(
-		'_asteroid-field.md',
-		createAsteroidFieldFile(asteroidFieldOrder, todos),
-		ops,
-	)
+	await ops.deleteFile('_asteroid-field.md')
 	await writeFileIfChanged(
 		'_wayfinder.md',
 		createWayfinderFile(wayfinderOrder, todos),
@@ -450,12 +444,11 @@ async function performFullSync(
 	ops: FileOperations,
 	writeManifest: (content: string) => Promise<void>,
 ): Promise<SyncEngineStatus['incremental']['lastSyncResult']> {
-	const [todos, starRoles, starRoleGroups, asteroidFieldOrder, wayfinderOrder] =
+	const [todos, starRoles, starRoleGroups, wayfinderOrder] =
 		await Promise.all([
 			db.todos.toArray(),
 			db.starRoles.toArray(),
 			db.starRoleGroups.toArray(),
-			db.asteroidFieldOrder.orderBy('order').toArray(),
 			db.wayfinderOrder.orderBy('order').toArray(),
 		])
 
@@ -470,11 +463,7 @@ async function performFullSync(
 	const manifest = createManifest(enrichedTodos, starRoles, starRoleGroups)
 	await writeManifest(manifest)
 
-	await writeFileIfChanged(
-		'_asteroid-field.md',
-		createAsteroidFieldFile(asteroidFieldOrder, todos),
-		ops,
-	)
+	await ops.deleteFile('_asteroid-field.md')
 	await writeFileIfChanged(
 		'_wayfinder.md',
 		createWayfinderFile(wayfinderOrder, todos),
