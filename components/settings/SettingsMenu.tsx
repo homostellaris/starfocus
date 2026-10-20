@@ -10,12 +10,41 @@ import {
 	IonToolbar,
 } from '@ionic/react'
 import _ from 'lodash'
+import { useState } from 'react'
 import { starMudder } from '../common/order'
 import Title from '../common/Title'
 import { db } from '../db'
 import ExportSettings from '../export/ExportSettings'
+import ObsidianSettings from '../obsidian/ObsidianSettings'
+import { ObsidianSettings as ObsidianSettingsType } from '../obsidian/useObsidian'
+import useSettings from './useSettings'
 
 export const SettingsMenu = () => {
+	const storedObsidianSettings = useSettings('obsidian') as
+		| ObsidianSettingsType
+		| undefined
+
+	const [localVault, setLocalVault] = useState<string | null>(null)
+	const [localFolder, setLocalFolder] = useState<string | null>(null)
+	const [showToast, setShowToast] = useState(false)
+
+	const vault = localVault ?? storedObsidianSettings?.vault ?? ''
+	const folder = localFolder ?? storedObsidianSettings?.folder ?? ''
+
+	const handleSave = async (event: React.FormEvent) => {
+		event.preventDefault()
+		await db.settings.put({
+			key: 'obsidian',
+			value: {
+				vault: vault.trim(),
+				folder: folder.trim(),
+			},
+		})
+		setLocalVault(null)
+		setLocalFolder(null)
+		setShowToast(true)
+	}
+
 	return (
 		<IonMenu
 			contentId="main-content"
@@ -29,7 +58,19 @@ export const SettingsMenu = () => {
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
-				<ExportSettings />
+				<form
+					id="settings-form"
+					onSubmit={handleSave}
+					className="space-y-4"
+				>
+					<ExportSettings />
+					<ObsidianSettings
+						vault={vault}
+						folder={folder}
+						onVaultChange={setLocalVault}
+						onFolderChange={setLocalFolder}
+					/>
+				</form>
 				<IonButton
 					id="clean-database"
 					className="hidden"
@@ -72,7 +113,7 @@ export const SettingsMenu = () => {
 			</IonContent>
 			<IonFooter>
 				<IonToolbar>
-					<IonButtons slot="primary">
+					<IonButtons slot="secondary">
 						<IonButton
 							onClick={() => {
 								menuController.toggle('end')
@@ -81,7 +122,22 @@ export const SettingsMenu = () => {
 							Close
 						</IonButton>
 					</IonButtons>
+					<IonButtons slot="primary">
+						<IonButton
+							form="settings-form"
+							type="submit"
+							strong={true}
+						>
+							Save
+						</IonButton>
+					</IonButtons>
 				</IonToolbar>
+				<IonToast
+					isOpen={showToast}
+					message="Settings saved"
+					duration={2000}
+					onDidDismiss={() => setShowToast(false)}
+				></IonToast>
 			</IonFooter>
 		</IonMenu>
 	)

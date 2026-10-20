@@ -13,7 +13,8 @@ export interface TodoWithRelations extends Todo {
 }
 
 export function todoToMarkdown(todo: TodoWithRelations): string {
-	return matter.stringify('', buildFrontMatterData(todo))
+	const body = todo.noteInitialContent ? `\n${todo.noteInitialContent}\n` : ''
+	return matter.stringify(body, buildFrontMatterData(todo))
 }
 
 export function buildFrontMatterData(

@@ -51,6 +51,16 @@ describe('todoToMarkdown', () => {
 		])
 	})
 
+	test('includes noteInitialContent in markdown body', () => {
+		const result = todoToMarkdown(
+			makeTodo({ noteInitialContent: '# Shopping\n- Apples' }),
+		)
+
+		expect(result).toBe(
+			'---\nid: todo-abc12345\ntitle: Buy groceries\nexportedAt: 2025-06-15T12:00:00.000Z\n---\n\n# Shopping\n- Apples\n',
+		)
+	})
+
 	test('includes starPoints in front matter', () => {
 		const result = todoToMarkdown(makeTodo({ starPoints: 5 }))
 
@@ -365,9 +375,9 @@ describe('generateStarRoleFilename', () => {
 	})
 
 	test('falls back to untitled when star role title is missing', () => {
-		expect(
-			generateStarRoleFilename({ id: 'role-12345678' } as StarRole),
-		).toBe('untitled_12345678.md')
+		expect(generateStarRoleFilename({ id: 'role-12345678' } as StarRole)).toBe(
+			'untitled_12345678.md',
+		)
 	})
 
 	test('handles undefined star role without throwing', () => {

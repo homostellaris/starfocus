@@ -3,6 +3,7 @@ import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOpt
 import { useCallback, useRef } from 'react'
 import { db, ListType, Todo, TodoInput } from '../../db'
 import { markdownExportService } from '../../export/markdownExportService'
+import { useObsidian } from '../../obsidian/useObsidian'
 import todoRepository from '../repository'
 import { CreateTodoModal } from './modal'
 import { usePostHog } from 'posthog-js/react'
@@ -18,6 +19,8 @@ export function useCreateTodoModal(): [
 	(data?: any, role?: string) => void,
 ] {
 	const posthog = usePostHog()
+	const { isConfigured: isObsidianConfigured, createAndOpenNote } =
+		useObsidian()
 	const titleInput = useRef<HTMLIonInputElement>(null)
 	const todoRef = useRef<Todo>(undefined)
 	const [present, dismiss] = useIonModal(CreateTodoModal, {
@@ -33,6 +36,8 @@ export function useCreateTodoModal(): [
 			if (!todo.title) throw new TypeError('Title is required')
 
 			await markdownExportService.requestPermissionIfNeeded()
+			let createdTodoIdentifier: string | undefined
+
 			await db.transaction(
 				'rw',
 				db.asteroidFieldOrder,
@@ -44,16 +49,32 @@ export function useCreateTodoModal(): [
 						starPoints: todo.starPoints,
 						starRole: todo.starRole,
 						title: todo.title,
+						...(todo.noteInitialContent
+							? { noteInitialContent: todo.noteInitialContent }
+							: {}),
 					})
+					createdTodoIdentifier = createdTodoId.toString()
 					if (location === ListType.asteroidField) {
-						await todoRepository.addToTopOfAsteroidField(createdTodoId.toString())
+						await todoRepository.addToTopOfAsteroidField(createdTodoIdentifier)
 					} else if (location === ListType.wayfinder) {
-						await todoRepository.addToTopOfWayfinder(createdTodoId.toString())
+						await todoRepository.addToTopOfWayfinder(createdTodoIdentifier)
 					}
 				},
 			)
+
+			if (
+				todo.noteInitialContent &&
+				isObsidianConfigured &&
+				!markdownExportService.status$.value.isEnabled &&
+				createdTodoIdentifier
+			) {
+				createAndOpenNote(
+					{ id: createdTodoIdentifier, title: todo.title },
+					todo.noteInitialContent,
+				)
+			}
 		},
-		[],
+		[createAndOpenNote, isObsidianConfigured],
 	)
 
 	return [
@@ -71,6 +92,7 @@ export function useCreateTodoModal(): [
 							location,
 							has_star_role: !!todo.starRole,
 							star_points: todo.starPoints,
+							has_note: !!todo.noteInitialContent,
 						})
 					}
 					onWillDismiss?.(event)

@@ -4,13 +4,16 @@ import {
 	IonContent,
 	IonFooter,
 	IonHeader,
+	IonIcon,
 	IonInput,
 	IonPage,
 	IonSelect,
 	IonSelectOption,
+	IonTextarea,
 	IonTitle,
 	IonToolbar,
 } from '@ionic/react'
+import { openSharp } from 'ionicons/icons'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
 	ComponentProps,
@@ -22,6 +25,7 @@ import {
 } from 'react'
 import { cn } from '../common/cn'
 import { db, ListType, Todo } from '../db'
+import { useObsidian } from '../obsidian/useObsidian'
 
 export default function TodoModal({
 	dismiss,
@@ -35,12 +39,20 @@ export default function TodoModal({
 	titleInput: MutableRefObject<HTMLIonInputElement | null>
 	todo?: Partial<Todo>
 } & ComponentProps<typeof IonPage>) {
+	const { isConfigured: isObsidianConfigured, getOpenUri: getObsidianOpenUri } =
+		useObsidian()
+	const obsidianUri =
+		isObsidianConfigured && todo?.id ? getObsidianOpenUri(todo) : null
+
 	// Certain things don't seem to work unless using controlled inputs unfortunately
 	const [title, setTitle] = useState(todo?.title)
 	const [titleIsTouched, setTitleIsTouched] = useState(false)
 	const [titleIsValid, setTitleIsValid] = useState<boolean>(!!todo?.title)
 	const [starPoints, setStarPoints] = useState(todo?.starPoints)
 	const [starRole, setStarRole] = useState(todo?.starRole)
+	const [noteInitialContent, setNoteInitialContent] = useState<
+		string | undefined
+	>(todo?.noteInitialContent)
 	const locationSelect = useRef<HTMLIonSelectElement>(null)
 	const eligibleForWayfinder = useMemo(() => !!starPoints, [starPoints])
 
@@ -51,6 +63,7 @@ export default function TodoModal({
 			{
 				todo: {
 					...todo,
+					noteInitialContent,
 					starPoints,
 					starRole,
 					title,
@@ -59,7 +72,7 @@ export default function TodoModal({
 			},
 			'confirm',
 		)
-	}, [dismiss, starPoints, starRole, todo, title])
+	}, [dismiss, noteInitialContent, starPoints, starRole, todo, title])
 
 	return (
 		<IonPage
@@ -144,6 +157,39 @@ export default function TodoModal({
 					<IonSelectOption value={8}>8</IonSelectOption>
 					<IonSelectOption value={13}>13</IonSelectOption>
 				</IonSelect>
+				{todo?.id ? (
+					obsidianUri ? (
+						<div className="pt-2">
+							<a
+								className="inline-flex items-center space-x-1.5 text-sm text-[--ion-color-primary] hover:underline"
+								href={obsidianUri}
+								target="_blank"
+								rel="noreferrer"
+							>
+								<IonIcon icon={openSharp} />
+								<span>Open note in Obsidian</span>
+							</a>
+						</div>
+					) : null
+				) : (
+					<IonTextarea
+						autoGrow
+						fill="outline"
+						helperText={
+							isObsidianConfigured
+								? 'Initial content for the note in your Obsidian vault'
+								: 'Set an Obsidian vault in settings to link notes'
+						}
+						label="Note (markdown)"
+						labelPlacement="floating"
+						placeholder="Write markdown here..."
+						rows={3}
+						value={noteInitialContent}
+						onIonInput={event =>
+							setNoteInitialContent(event.detail.value ?? undefined)
+						}
+					/>
+				)}
 			</IonContent>
 			<IonFooter>
 				<IonToolbar>
