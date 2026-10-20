@@ -104,13 +104,6 @@ try {
   hash.update("_wayfinder.md\n" + w + "\n");
 } catch (e) {}
 
-// asteroid field (urgency)
-try {
-  const a = fs.readFileSync(path.join(dir, "_asteroid-field.md"), "utf8")
-    .split("\n").filter(l => !l.startsWith("exportedAt:")).join("\n");
-  hash.update("_asteroid-field.md\n" + a + "\n");
-} catch (e) {}
-
 // active uncompleted todos
 try {
   const files = fs.readdirSync(dir).filter(f => f.endsWith(".md") && !f.startsWith("_")).sort();

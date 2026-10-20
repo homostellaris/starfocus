@@ -21,13 +21,9 @@ export function useSnoozeTodoModal(): [
 		todo,
 	})
 	const snoozeTodo = useCallback(
-		async ({ todoId, snoozedUntil }: WayfinderOrder, location: ListType) => {
+		async ({ todoId, snoozedUntil }: WayfinderOrder, location: ListType = ListType.wayfinder) => {
 			if (location === ListType.wayfinder)
 				await db.wayfinderOrder.update(todoId, {
-					snoozedUntil,
-				})
-			else if (location === ListType.asteroidField)
-				await db.asteroidFieldOrder.update(todoId, {
 					snoozedUntil,
 				})
 			else throw new Error('No list type provided')

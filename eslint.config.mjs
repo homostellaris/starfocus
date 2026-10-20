@@ -10,6 +10,7 @@ export default [
 			'out/',
 			'node_modules/',
 			'android/',
+			'.worktrees/',
 			'*.config.js',
 			'*.config.mjs',
 		],

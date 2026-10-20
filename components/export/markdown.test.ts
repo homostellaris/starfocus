@@ -12,11 +12,10 @@ import {
 	createStarRoleFile,
 	todoToMarkdown,
 	updateFrontMatter,
-	createAsteroidFieldFile,
 	createWayfinderFile,
 	TodoWithRelations,
 } from './markdown'
-import { Todo, StarRole, AsteroidFieldOrder, WayfinderOrder } from '../db'
+import { Todo, StarRole, WayfinderOrder } from '../db'
 
 beforeEach(() => {
 	setSystemTime(new Date('2025-06-15T12:00:00.000Z'))
@@ -290,70 +289,15 @@ describe('generateFilename', () => {
 	})
 })
 
-describe('createAsteroidFieldFile', () => {
+describe('createWayfinderFile', () => {
 	const todos: Todo[] = [
 		{ id: 'todo-abc12345', title: 'Buy groceries' },
 		{ id: 'todo-def67890', title: 'Fix bug' },
 	]
 
 	test('renders numbered markdown links sorted by order', () => {
-		const orderEntries: AsteroidFieldOrder[] = [
-			{ todoId: 'todo-def67890', order: 'b' },
-			{ todoId: 'todo-abc12345', order: 'a' },
-		]
-
-		const result = createAsteroidFieldFile(orderEntries, todos)
-
-		expect(result).toContain('# Asteroid Field')
-		expect(result).toContain('1. [Buy groceries](buy-groceries_abc12345.md)')
-		expect(result).toContain('2. [Fix bug](fix-bug_def67890.md)')
-	})
-
-	test('includes snoozed date annotation', () => {
-		const orderEntries: AsteroidFieldOrder[] = [
-			{
-				todoId: 'todo-abc12345',
-				order: 'a',
-				snoozedUntil: new Date('2026-03-01T00:00:00.000Z'),
-			},
-		]
-
-		const result = createAsteroidFieldFile(orderEntries, todos)
-
-		expect(result).toContain('*(snoozed until 2026-03-01)*')
-	})
-
-	test('produces heading with no list items when order table is empty', () => {
-		const result = createAsteroidFieldFile([], todos)
-
-		expect(result).toContain('# Asteroid Field')
-		expect(result).not.toContain('1.')
-	})
-
-	test('skips order entries referencing missing todos', () => {
-		const orderEntries: AsteroidFieldOrder[] = [
-			{ todoId: 'todo-abc12345', order: 'a' },
-			{ todoId: 'nonexistent', order: 'b' },
-		]
-
-		const result = createAsteroidFieldFile(orderEntries, todos)
-
-		expect(result).toContain('1. [Buy groceries](buy-groceries_abc12345.md)')
-		expect(result).not.toContain('2.')
-	})
-
-	test('includes order-list type in frontmatter', () => {
-		const result = createAsteroidFieldFile([], todos)
-
-		expect(result).toContain('type: order-list')
-		expect(result).toContain('exportedAt: 2025-06-15T12:00:00.000Z')
-	})
-})
-
-describe('createWayfinderFile', () => {
-	test('renders with Wayfinder heading', () => {
-		const todos: Todo[] = [{ id: 'todo-abc12345', title: 'Buy groceries' }]
 		const orderEntries: WayfinderOrder[] = [
+			{ todoId: 'todo-def67890', order: 'b' },
 			{ todoId: 'todo-abc12345', order: 'a' },
 		]
 
@@ -361,6 +305,47 @@ describe('createWayfinderFile', () => {
 
 		expect(result).toContain('# Wayfinder')
 		expect(result).toContain('1. [Buy groceries](buy-groceries_abc12345.md)')
+		expect(result).toContain('2. [Fix bug](fix-bug_def67890.md)')
+	})
+
+	test('includes snoozed date annotation', () => {
+		const orderEntries: WayfinderOrder[] = [
+			{
+				todoId: 'todo-abc12345',
+				order: 'a',
+				snoozedUntil: new Date('2026-03-01T00:00:00.000Z'),
+			},
+		]
+
+		const result = createWayfinderFile(orderEntries, todos)
+
+		expect(result).toContain('*(snoozed until 2026-03-01)*')
+	})
+
+	test('produces heading with no list items when order table is empty', () => {
+		const result = createWayfinderFile([], todos)
+
+		expect(result).toContain('# Wayfinder')
+		expect(result).not.toContain('1.')
+	})
+
+	test('skips order entries referencing missing todos', () => {
+		const orderEntries: WayfinderOrder[] = [
+			{ todoId: 'todo-abc12345', order: 'a' },
+			{ todoId: 'nonexistent', order: 'b' },
+		]
+
+		const result = createWayfinderFile(orderEntries, todos)
+
+		expect(result).toContain('1. [Buy groceries](buy-groceries_abc12345.md)')
+		expect(result).not.toContain('2.')
+	})
+
+	test('includes order-list type in frontmatter', () => {
+		const result = createWayfinderFile([], todos)
+
+		expect(result).toContain('type: order-list')
+		expect(result).toContain('exportedAt: 2025-06-15T12:00:00.000Z')
 	})
 })
 

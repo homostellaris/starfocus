@@ -37,12 +37,7 @@ export function useEditTodoModal(): [
 					starRole: updatedTodo.starRole,
 					title: updatedTodo.title,
 				})
-				if (location === ListType.asteroidField) {
-					await Promise.all([
-						todoRepository.addToTopOfAsteroidField(updatedTodo.id),
-						db.wayfinderOrder.where({ todoId: updatedTodo.id }).delete(),
-					])
-				} else if (location === ListType.wayfinder) {
+				if (location === ListType.wayfinder) {
 					await Promise.all([
 						todoRepository.addToTopOfWayfinder(updatedTodo.id),
 						db.asteroidFieldOrder.where({ todoId: updatedTodo.id }).delete(),

@@ -40,7 +40,6 @@ export function useCreateTodoModal(): [
 
 			await db.transaction(
 				'rw',
-				db.asteroidFieldOrder,
 				db.wayfinderOrder,
 				db.todos,
 				async () => {
@@ -54,9 +53,7 @@ export function useCreateTodoModal(): [
 							: {}),
 					})
 					createdTodoIdentifier = createdTodoId.toString()
-					if (location === ListType.asteroidField) {
-						await todoRepository.addToTopOfAsteroidField(createdTodoIdentifier)
-					} else if (location === ListType.wayfinder) {
+					if (location === ListType.wayfinder) {
 						await todoRepository.addToTopOfWayfinder(createdTodoIdentifier)
 					}
 				},

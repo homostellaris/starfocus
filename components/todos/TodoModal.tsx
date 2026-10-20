@@ -19,7 +19,6 @@ import {
 	ComponentProps,
 	MutableRefObject,
 	useCallback,
-	useMemo,
 	useRef,
 	useState,
 } from 'react'
@@ -54,7 +53,6 @@ export default function TodoModal({
 		string | undefined
 	>(todo?.noteInitialContent)
 	const locationSelect = useRef<HTMLIonSelectElement>(null)
-	const eligibleForWayfinder = useMemo(() => !!starPoints, [starPoints])
 
 	const starRoles = useLiveQuery(() => db.starRoles.toArray(), [], [])
 
@@ -87,7 +85,7 @@ export default function TodoModal({
 			}}
 			onKeyUp={event => {
 				if (!event.metaKey) {
-					locationSelect.current!.value = ListType.asteroidField
+					locationSelect.current!.value = ListType.wayfinder
 				}
 			}}
 		>
@@ -216,23 +214,12 @@ export default function TodoModal({
 						fill="outline"
 						ref={locationSelect}
 						slot="end"
-						value={
-							eligibleForWayfinder ? ListType.wayfinder : ListType.asteroidField
-						}
+						value={ListType.wayfinder}
 					>
 						<IonSelectOption value={ListType.database}>
 							Database
 						</IonSelectOption>
-						<IonSelectOption
-							disabled={!!eligibleForWayfinder}
-							value={ListType.asteroidField}
-						>
-							Asteroid Field
-						</IonSelectOption>
-						<IonSelectOption
-							disabled={!eligibleForWayfinder}
-							value={ListType.wayfinder}
-						>
+						<IonSelectOption value={ListType.wayfinder}>
 							Wayfinder
 						</IonSelectOption>
 					</IonSelect>

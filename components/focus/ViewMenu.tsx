@@ -65,18 +65,16 @@ export const ViewMenu = () => {
 			starRolesOrder.map(({ starRoleId, order: o }) => [starRoleId, o]),
 		)
 
-		for (const table of [db.asteroidFieldOrder, db.wayfinderOrder]) {
-			const entries = await table.orderBy('order').toArray()
-			const todos = await db.todos.bulkGet(entries.map(e => e.todoId))
-			const updates = computeVisibleStarSortUpdates(
-				entries,
-				todos,
-				starRoleOrderMap,
-				query,
-				inActiveStarRoles,
-			)
-			await table.bulkPut(updates)
-		}
+		const entries = await db.wayfinderOrder.orderBy('order').toArray()
+		const todos = await db.todos.bulkGet(entries.map(e => e.todoId))
+		const updates = computeVisibleStarSortUpdates(
+			entries,
+			todos,
+			starRoleOrderMap,
+			query,
+			inActiveStarRoles,
+		)
+		await db.wayfinderOrder.bulkPut(updates)
 
 		await db.settings.put({ key: '#wayfinderOrderMode', value: 'manual' })
 	}
