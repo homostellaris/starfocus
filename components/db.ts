@@ -17,9 +17,13 @@ export interface Todo {
 	starRole?: StarRole['id'] // TODO: How do we delete this when the star role is deleted? Need to add associative table and compute ID of association from todo ID and starRoleID, then delete entries when star roles gets deleted.
 	starPoints?: number
 	title: string
+	noteInitialContent?: string
 }
 
-export type TodoInput = Pick<Todo, 'title' | 'starRole' | 'starPoints'>
+export type TodoInput = Pick<
+	Todo,
+	'title' | 'starRole' | 'starPoints' | 'noteInitialContent'
+>
 
 export type AsteroidFieldOrder = {
 	todoId: string

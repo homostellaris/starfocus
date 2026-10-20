@@ -7,12 +7,7 @@ import {
 	IonListHeader,
 	IonNote,
 } from '@ionic/react'
-import {
-	cloudOfflineSharp,
-	documentTextSharp,
-	folderOpenSharp,
-	syncSharp,
-} from 'ionicons/icons'
+import { cloudOfflineSharp, folderSharp, syncSharp } from 'ionicons/icons'
 import { useMarkdownExportStatus } from './useMarkdownExport'
 import { markdownExportService } from './markdownExportService'
 
@@ -54,7 +49,7 @@ export default function ExportSettings() {
 				<>
 					<IonItem>
 						<IonIcon
-							icon={folderOpenSharp}
+							icon={folderSharp}
 							slot="start"
 							color="primary"
 						/>
@@ -74,7 +69,7 @@ export default function ExportSettings() {
 									onClick={reconnect}
 								>
 									<IonIcon
-										icon={folderOpenSharp}
+										icon={folderSharp}
 										slot="start"
 									/>
 									Reconnect
@@ -103,7 +98,7 @@ export default function ExportSettings() {
 				<>
 					<IonItem>
 						<IonIcon
-							icon={documentTextSharp}
+							icon={folderSharp}
 							slot="start"
 							color="medium"
 						/>
@@ -145,7 +140,7 @@ export default function ExportSettings() {
 								onClick={exportOnce}
 							>
 								<IonIcon
-									icon={documentTextSharp}
+									icon={folderSharp}
 									slot="start"
 								/>
 								One-Time Export
