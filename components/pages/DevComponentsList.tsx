@@ -23,6 +23,7 @@ import {
 	rocketSharp,
 	pulseSharp,
 	musicalNotesSharp,
+	duplicateOutline,
 } from 'ionicons/icons'
 import { Header } from '../common/Header'
 
@@ -114,6 +115,17 @@ const CATALOG_ITEMS: ComponentCatalogItem[] = [
 		iconColor: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
 		badge: 'Data Viz',
 		tags: ['Activity Sparkline', '14-Day History', 'Fibonacci Scale', 'Gamification'],
+	},
+	{
+		key: 'duplicate-detector',
+		title: 'Duplicate Todo Detector',
+		subtitle: 'Fuzzy Matching & Prevention Interface',
+		description:
+			'Detects, prevents, and resolves duplicate or similar tasks across active and completed lists using fuzzy token-set Jaccard and edit distance clustering.',
+		icon: duplicateOutline,
+		iconColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+		badge: 'Database',
+		tags: ['Fuzzy Match', 'Prevention', 'Deduplication', 'Dexie'],
 	},
 	{
 		key: 'mood-player',

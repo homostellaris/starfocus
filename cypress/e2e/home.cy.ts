@@ -515,3 +515,33 @@ function createTodo({
 	cy.get('#create-todo-modal').contains('Confirm').click()
 	cy.get('#create-todo-modal').should('not.exist')
 }
+
+describe('duplicate todo detector', () => {
+	it('detects similar task inline and intercepts creation when confirming duplicate', () => {
+		createTodo({ title: 'Plan starship expedition' })
+		cy.contains('[data-class="todo"]', 'Plan starship expedition').should('be.visible')
+
+		cy.get('ion-fab>ion-fab-button').click()
+		cy.get('#create-todo-modal')
+			.should('be.visible')
+			.within(() => {
+				cy.contains('label', 'Title')
+					.find('input')
+					.should('be.visible')
+					.type('Plan starship expedition!')
+			})
+
+		cy.get('[data-testid="duplicate-alert"]').should('be.visible')
+		cy.get('[data-testid="duplicate-alert"]').contains('Similar task found')
+
+		cy.get('#create-todo-modal').contains('Confirm').click()
+		cy.get('ion-alert').should('be.visible')
+		cy.get('ion-alert').contains('Similar Task Exists')
+
+		cy.get('ion-alert').contains('Cancel').click()
+		cy.get('#create-todo-modal').should('be.visible')
+
+		cy.get('#create-todo-modal').contains('Cancel').click()
+		cy.get('#create-todo-modal').should('not.exist')
+	})
+})
