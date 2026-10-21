@@ -297,12 +297,7 @@ export default function MomentumSyncIcon({
 
 	const pixelSize = resolvePixelSize(size)
 	const isDotActive = indicatorStyle === 'dot' && isSyncing
-	const isColorActive =
-		(indicatorStyle === 'color' ||
-			indicatorStyle === 'dot' ||
-			indicatorStyle === 'pill' ||
-			indicatorStyle === 'glow') &&
-		isSyncing
+	const isColorActive = indicatorStyle === 'color' && isSyncing
 	const isPillActive = indicatorStyle === 'pill' && isSyncing
 	const isGlowActive =
 		indicatorStyle === 'glow' && isSyncing && glowIntensity > 0
@@ -323,14 +318,16 @@ export default function MomentumSyncIcon({
 			}}
 		>
 			{/* Option 3: Surface Pill / Container Tint */}
-			<span
-				aria-hidden="true"
-				className={`pointer-events-none absolute -inset-1.5 rounded-lg border transition-all duration-200 ${
-					isPillActive
-						? 'bg-sky-500/15 border-sky-500/30 opacity-100 scale-100'
-						: 'bg-transparent border-transparent opacity-0 scale-95'
-				}`}
-			/>
+			{indicatorStyle === 'pill' && (
+				<span
+					aria-hidden="true"
+					className={`pointer-events-none absolute -inset-2.5 rounded-full border transition-all duration-200 ${
+						isPillActive
+							? 'bg-purple-500/20 border-purple-500/50 shadow-[0_0_12px_rgba(168,85,247,0.3)] opacity-100 scale-100'
+							: 'bg-neutral-800/40 border-neutral-700/60 opacity-60 scale-95'
+					}`}
+				/>
+			)}
 
 			{/* Optional Glow Aura */}
 			{indicatorStyle === 'glow' && (
@@ -339,21 +336,23 @@ export default function MomentumSyncIcon({
 					className={`pointer-events-none absolute inset-0 rounded-full transition-opacity duration-300 ${glowStyle.haloBackground}`}
 					style={{
 						opacity: isGlowActive ? 0.35 * glowIntensity : 0,
-						transform: 'scale(1.3)',
-						filter: 'blur(4px)',
+						transform: 'scale(1.4)',
+						filter: 'blur(6px)',
 					}}
 				/>
 			)}
 
 			{/* Option 1: Micro Status Pip / Badge Dot */}
-			<span
-				aria-hidden="true"
-				className={`pointer-events-none absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full transition-all duration-200 ${
-					isDotActive
-						? 'opacity-100 scale-100 ' + glowStyle.haloBackground
-						: 'opacity-0 scale-0'
-				}`}
-			/>
+			{indicatorStyle === 'dot' && (
+				<span
+					aria-hidden="true"
+					className={`pointer-events-none absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full transition-all duration-200 ${
+						isDotActive
+							? `opacity-100 scale-100 ${glowStyle.haloBackground} shadow-[0_0_8px_rgba(56,189,248,0.9)]`
+							: 'opacity-0 scale-0'
+					}`}
+				/>
+			)}
 
 			<IonIcon
 				ref={iconReference}

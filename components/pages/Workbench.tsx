@@ -1487,23 +1487,42 @@ function WorkbenchContent() {
 													</p>
 												</div>
 												<div className="py-8 flex items-center justify-center">
-													<MomentumSyncIcon
-														size={44}
-														isSyncing={
+													<div
+														className={`inline-flex items-center gap-3 px-4 py-2 rounded-full border transition-all duration-300 ${
 															simulatedSyncState.phase === 'pushing' ||
 															simulatedSyncState.phase === 'pulling' ||
 															markdownIsSyncing ||
 															markdownFullSyncPhase === 'in-progress'
-														}
-														indicatorStyle="pill"
-														glowColor={momentumGlowColor}
-														glowIntensity={momentumGlowIntensity}
-														enablePhysics={momentumEnabled}
-														maxVelocity={momentumMaxVelocity}
-														accelerationRate={momentumAcceleration}
-														frictionCoefficient={momentumFriction}
-														minimumImpulseDuration={momentumMinImpulseDuration}
-													/>
+																? 'bg-purple-950/60 border-purple-500/60 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.3)]'
+																: 'bg-neutral-900/90 border-neutral-800 text-neutral-400'
+														}`}
+													>
+														<MomentumSyncIcon
+															size={24}
+															isSyncing={
+																simulatedSyncState.phase === 'pushing' ||
+																simulatedSyncState.phase === 'pulling' ||
+																markdownIsSyncing ||
+																markdownFullSyncPhase === 'in-progress'
+															}
+															indicatorStyle="none"
+															glowColor={momentumGlowColor}
+															glowIntensity={momentumGlowIntensity}
+															enablePhysics={momentumEnabled}
+															maxVelocity={momentumMaxVelocity}
+															accelerationRate={momentumAcceleration}
+															frictionCoefficient={momentumFriction}
+															minimumImpulseDuration={momentumMinImpulseDuration}
+														/>
+														<span className="text-xs font-semibold uppercase tracking-wider font-mono">
+															{simulatedSyncState.phase === 'pushing' ||
+															simulatedSyncState.phase === 'pulling' ||
+															markdownIsSyncing ||
+															markdownFullSyncPhase === 'in-progress'
+																? 'Syncing'
+																: 'Ready'}
+														</span>
+													</div>
 												</div>
 												<div className="w-full pt-4 border-t border-neutral-800/80 flex items-center justify-between text-xs text-neutral-400">
 													<span>Convention</span>
