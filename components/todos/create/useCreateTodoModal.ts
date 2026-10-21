@@ -4,6 +4,7 @@ import { useCallback, useRef } from 'react'
 import { db, ListType, Todo, TodoInput } from '../../db'
 import { markdownExportService } from '../../export/markdownExportService'
 import { useObsidian } from '../../obsidian/useObsidian'
+import { useEditTodoModal } from '../edit/useEditTodoModal'
 import todoRepository from '../repository'
 import { CreateTodoModal } from './modal'
 import { usePostHog } from 'posthog-js/react'
@@ -21,6 +22,7 @@ export function useCreateTodoModal(): [
 	const posthog = usePostHog()
 	const { isConfigured: isObsidianConfigured, createAndOpenNote } =
 		useObsidian()
+	const [presentEditTodoModal] = useEditTodoModal()
 	const titleInput = useRef<HTMLIonInputElement>(null)
 	const todoRef = useRef<Todo>(undefined)
 	const [present, dismiss] = useIonModal(CreateTodoModal, {
@@ -91,6 +93,11 @@ export function useCreateTodoModal(): [
 							star_points: todo.starPoints,
 							has_note: !!todo.noteInitialContent,
 						})
+					} else if (
+						event.detail.data?.action === 'open_existing' &&
+						event.detail.data?.existingTodo
+					) {
+						presentEditTodoModal(event.detail.data.existingTodo)
 					}
 					onWillDismiss?.(event)
 				},
