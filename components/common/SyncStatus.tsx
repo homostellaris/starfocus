@@ -20,6 +20,11 @@ import {
 	type ExportStatus,
 } from '../export/useMarkdownExport'
 import { markdownExportService } from '../export/markdownExportService'
+import MomentumSyncIcon, {
+	type MomentumGlowColor,
+	type MomentumIndicatorStyle,
+	type MomentumTelemetry,
+} from './MomentumSyncIcon'
 
 export function CloudSyncStatusBadge({
 	user: _user,
@@ -63,6 +68,15 @@ export interface SyncStatusProps {
 	onLogin?: () => void
 	onOpenSettings?: () => void
 	inline?: boolean
+	indicatorStyle?: MomentumIndicatorStyle
+	glowColor?: MomentumGlowColor
+	glowIntensity?: number
+	enableMomentum?: boolean
+	maxVelocity?: number
+	accelerationRate?: number
+	frictionCoefficient?: number
+	minimumImpulseDuration?: number
+	onTelemetryChange?: (telemetry: MomentumTelemetry) => void
 }
 
 export default function SyncStatus({
@@ -75,6 +89,15 @@ export default function SyncStatus({
 	onLogin,
 	onOpenSettings,
 	inline = false,
+	indicatorStyle = 'dot',
+	glowColor = 'cyan',
+	glowIntensity = 1,
+	enableMomentum = true,
+	maxVelocity = 540,
+	accelerationRate = 960,
+	frictionCoefficient = 2.4,
+	minimumImpulseDuration = 650,
+	onTelemetryChange,
 }: SyncStatusProps = {}) {
 	const dbUser = useObservable(db.cloud.currentUser)
 	const dbSyncState = useObservable(db.cloud.syncState)
@@ -412,16 +435,24 @@ export default function SyncStatus({
 			id={id}
 			aria-label={isSyncingActive ? 'Syncing in progress' : 'Sync status'}
 		>
-			<IonIcon
-				icon={syncSharp}
+			<MomentumSyncIcon
 				slot="icon-only"
-				className={isSyncingActive ? 'animate-spin origin-center' : ''}
-				data-testid="sync-icon"
-				data-spinning={isSyncingActive ? 'true' : 'false'}
-			></IonIcon>
+				isSyncing={isSyncingActive}
+				indicatorStyle={indicatorStyle}
+				glowColor={glowColor}
+				glowIntensity={glowIntensity}
+				enablePhysics={enableMomentum}
+				maxVelocity={maxVelocity}
+				accelerationRate={accelerationRate}
+				frictionCoefficient={frictionCoefficient}
+				minimumImpulseDuration={minimumImpulseDuration}
+				onTelemetryChange={onTelemetryChange}
+			/>
 			<IonPopover
+				data-testid="sync-status-popover"
 				trigger={id}
 				triggerAction="click"
+				animated={false}
 				style={{ '--width': '320px' } as React.CSSProperties}
 			>
 				<IonContent

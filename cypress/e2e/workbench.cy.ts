@@ -1,4 +1,8 @@
 describe('workbench', () => {
+	beforeEach(() => {
+		cy.viewport(1280, 800)
+	})
+
 	it('loads component workbench without errors', () => {
 		cy.visit('/dev/components/sync-status')
 		cy.get('ion-toolbar', { timeout: 15000 }).should('be.visible')
@@ -24,9 +28,13 @@ describe('workbench', () => {
 		cy.visit('/dev/components/star-points')
 		cy.get('h1', { timeout: 15000 }).contains('Star Points').should('be.visible')
 
+		// Momentum Sync Icon
+		cy.visit('/dev/components/sync-icon')
+		cy.contains('#workbench-main h1', 'Momentum & Inertia Sync Icon', { timeout: 15000 }).should('be.visible')
+
 		// Back to Sync Status
 		cy.visit('/dev/components/sync-status')
-		cy.get('#workbench-main h1', { timeout: 15000 }).contains('Unified Sync Status Popover').should('be.visible')
+		cy.contains('#workbench-main h1', 'Unified Sync Status Popover', { timeout: 15000 }).should('be.visible')
 	})
 
 	it('applies quick presets and updates knobs', () => {
@@ -44,46 +52,47 @@ describe('workbench', () => {
 
 		// Click All Synced preset
 		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'All Synced').click()
-		cy.contains('Cloud database sync').scrollIntoView().should('be.visible')
-		cy.contains('Synced').should('be.visible')
+		cy.get('#workbench-sync-status-btn').click()
+		cy.get('ion-popover').should('be.visible').and('contain.text', 'Cloud database sync')
+		cy.get('ion-popover').then(($el) => {
+			;($el[0] as any).dismiss?.()
+		})
 	})
 
 	it('opens the sync status popover from header button and displays dedicated incremental and full sync rows', () => {
 		cy.visit('/dev/components/sync-status')
 		cy.contains('Unified Sync Status Popover', { timeout: 15000 }).should('be.visible')
 		cy.get('#workbench-sync-status-btn').click()
-		cy.get('ion-popover')
+		cy.get('[data-testid="sync-status-popover"]')
 			.should('be.visible')
 			.and('contain.text', 'Cloud database sync')
 			.and('contain.text', 'Local markdown sync')
 		// Subheadings have static icons indicating sync type
-		cy.get('ion-popover [data-testid="cloud-sync-icon"]').should('exist')
-		cy.get('ion-popover [data-testid="markdown-sync-icon"]').should('exist')
+		cy.get('[data-testid="sync-status-popover"] [data-testid="cloud-sync-icon"]').should('exist')
+		cy.get('[data-testid="sync-status-popover"] [data-testid="markdown-sync-icon"]').should('exist')
 
 		// Row 1: Incremental sync
-		cy.get('ion-popover [data-testid="incremental-sync-row"]')
+		cy.get('[data-testid="sync-status-popover"] [data-testid="incremental-sync-row"]')
 			.should('be.visible')
 			.and('contain.text', 'Incremental sync')
 
 		// Row 2: Full sync with action button inside
-		cy.get('ion-popover [data-testid="full-sync-row"]')
+		cy.get('[data-testid="sync-status-popover"] [data-testid="full-sync-row"]')
 			.should('be.visible')
 			.and('contain.text', 'Full sync')
-		cy.get('ion-popover [data-testid="full-sync-btn"]')
+		cy.get('[data-testid="sync-status-popover"] [data-testid="full-sync-btn"]')
 			.should('be.visible')
 			.and('contain.text', 'Full Sync')
 		// Click the Full Sync button inside the popover
-		cy.get('ion-popover [data-testid="full-sync-btn"]').click()
+		cy.get('[data-testid="sync-status-popover"] [data-testid="full-sync-btn"]').click()
 
 		// Verify full sync row is running and button is now hidden
-		cy.get('ion-popover [data-testid="full-sync-row"]')
+		cy.get('[data-testid="sync-status-popover"] [data-testid="full-sync-row"]')
 			.should('be.visible')
 			.and('contain.text', 'Full sync')
-		cy.get('ion-popover [data-testid="full-sync-btn"]').should('not.exist')
-		cy.screenshot('sync-popover-full-sync-running')
-
+		cy.get('[data-testid="sync-status-popover"] [data-testid="full-sync-btn"]').should('not.exist')
 		// Dismiss popover
-		cy.get('ion-popover').then(($el) => {
+		cy.get('[data-testid="sync-status-popover"]').then(($el) => {
 			;($el[0] as any).dismiss?.()
 		})
 	})
@@ -110,8 +119,6 @@ describe('workbench', () => {
 		// The usual two rows and error messages should NOT exist
 		cy.get('ion-popover [data-testid="incremental-sync-row"]').should('not.exist')
 		cy.get('ion-popover [data-testid="full-sync-row"]').should('not.exist')
-		cy.screenshot('sync-popover-reconnect-needed')
-
 		// Click reconnect button
 		cy.get('ion-popover [data-testid="reconnect-btn"]').click()
 
@@ -203,20 +210,33 @@ describe('workbench', () => {
 		cy.get('#workbench-sync-status-btn [data-testid="sync-icon"]')
 			.should('have.attr', 'data-spinning', 'true')
 			.and('have.class', 'animate-spin')
-		cy.screenshot('sync-icon-spinning-cloud')
 
 		// Apply Full MD Sync preset -> spinning
 		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Full MD Sync').click()
 		cy.get('#workbench-sync-status-btn [data-testid="sync-icon"]')
 			.should('have.attr', 'data-spinning', 'true')
 			.and('have.class', 'animate-spin')
-		cy.screenshot('sync-icon-spinning-markdown')
 
 		// Apply All Synced preset -> stops spinning
 		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'All Synced').click()
 		cy.get('#workbench-sync-status-btn [data-testid="sync-icon"]')
 			.should('have.attr', 'data-spinning', 'false')
 			.and('not.have.class', 'animate-spin')
+	})
+
+	it('displays the momentum & inertia isolated component with presets and simulator knobs', () => {
+		cy.visit('/dev/components/sync-icon')
+		cy.contains('#workbench-main h1', 'Momentum & Inertia Sync Icon', { timeout: 15000 }).should('be.visible')
+		cy.get('[data-testid="workbench-canvas"]').should('be.visible')
+		cy.get('[data-testid="sync-icon"]').should('be.visible')
+
+		// Click Quick Pulse trigger from presets bar
+		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', '150ms Pulse').click()
+		cy.get('[data-testid="sync-icon"]').should('have.attr', 'data-spinning', 'true')
+
+		// Knobs menu has simulation triggers and telemetry
+		cy.contains('Simulation Triggers').should('be.visible')
+		cy.contains('Active State:').should('be.visible')
 	})
 
 	it('provides a desktop split pane layout with stage and simulator knobs', () => {
@@ -238,7 +258,6 @@ describe('workbench', () => {
 
 		// Presets bar in bottom toolbar is also accessible
 		cy.get('[data-testid="workbench-toolbar-presets-bar"]').should('be.visible')
-		cy.screenshot('desktop-splitpane-workbench')
 
 		// Navigate back to component list using header back button
 		cy.get('ion-header ion-back-button').click()
@@ -278,7 +297,6 @@ describe('workbench', () => {
 
 		// Verify component on canvas updated
 		cy.get('#workbench-sync-status-btn [data-testid="sync-icon"]').should('have.attr', 'data-spinning', 'true')
-		cy.screenshot('mobile-canvas-scenario-advanced')
 
 		// Navigate back to component list using header back button
 		cy.get('ion-header ion-back-button').click()

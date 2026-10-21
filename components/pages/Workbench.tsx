@@ -40,6 +40,11 @@ import {
 import dayjs from 'dayjs'
 import { Header } from '../common/Header'
 import SyncStatus, { CloudSyncStatusBadge, MarkdownSyncStatusBadge } from '../common/SyncStatus'
+import MomentumSyncIcon, {
+	type MomentumGlowColor,
+	type MomentumIndicatorStyle,
+	type MomentumTelemetry,
+} from '../common/MomentumSyncIcon'
 import { StarRoleIcon } from '../common/StarRoleIcon'
 import StarPoints from '../common/StarPoints'
 import Starship from '../common/Starship'
@@ -52,6 +57,7 @@ import type { Visit } from '../db'
 
 type ComponentKey =
 	| 'sync-status'
+	| 'sync-icon'
 	| 'cloud-sync'
 	| 'markdown-sync'
 	| 'star-roles'
@@ -80,6 +86,16 @@ const CATALOG_ITEMS: CatalogItem[] = [
 		icon: syncSharp,
 		iconColor: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
 		badge: 'Core UI',
+	},
+	{
+		key: 'sync-icon',
+		title: 'Momentum & Inertia Sync Icon',
+		subtitle: 'Physical Flywheel Spinner & Transfer Glow',
+		description:
+			'Physical rotational flywheel simulation for synchronization indicators. Features angular acceleration, viscous friction coasting, guaranteed minimum animation impulse, and active data transfer glow.',
+		icon: syncSharp,
+		iconColor: 'text-sky-400 bg-sky-500/10 border-sky-500/20',
+		badge: 'Motion',
 	},
 	{
 		key: 'cloud-sync',
@@ -193,9 +209,40 @@ function WorkbenchContent() {
 	const [updatedCount] = useState(5)
 	const [deletedCount] = useState(0)
 
+	// --- Momentum & Inertia Knobs ---
+	const [momentumEnabled, setMomentumEnabled] = useState(true)
+	const [momentumIndicatorStyle, setMomentumIndicatorStyle] = useState<MomentumIndicatorStyle>('dot')
+	const [momentumGlowColor, setMomentumGlowColor] = useState<MomentumGlowColor>('cyan')
+	const [momentumGlowIntensity, setMomentumGlowIntensity] = useState(1.0)
+	const [momentumMaxVelocity, setMomentumMaxVelocity] = useState(540)
+	const [momentumAcceleration, setMomentumAcceleration] = useState(960)
+	const [momentumFriction, setMomentumFriction] = useState(2.4)
+	const [momentumMinImpulseDuration, setMomentumMinImpulseDuration] = useState(650)
+	const [momentumTelemetry, setMomentumTelemetry] = useState<MomentumTelemetry>({
+		phase: 'idle',
+		velocity: 0,
+		angle: 0,
+		isSyncing: false,
+		isCoasting: false,
+	})
+
+	const triggerPulseSync = (durationMilliseconds: number) => {
+		setCloudLoggedIn(true)
+		setCloudHasError(false)
+		setCloudPhase('pushing')
+		setCloudProgress(0.5)
+		setTimeout(() => {
+			setCloudPhase('in-sync')
+		}, durationMilliseconds)
+	}
+
+	// --- Sync Status Presentation Knobs ---
+	const [syncStatusInline, setSyncStatusInline] = useState(false)
+
 	// --- Star Role Knobs ---
-	const [selectedIcon] = useState('starSharp')
-	const [selectedColor] = useState('#f59e0b')
+	const [selectedIcon, setSelectedIcon] = useState('starSharp')
+	const [selectedColor, setSelectedColor] = useState('#f59e0b')
+	const [selectedRoleTitle, setSelectedRoleTitle] = useState('Captain')
 
 	// --- Starship & Trajectory Knobs ---
 	const [starshipPosition, setStarshipPosition] = useState(120)
@@ -378,6 +425,88 @@ function WorkbenchContent() {
 		activeComponent === 'markdown-sync'
 
 	const presetsForActiveComponent = (() => {
+		if (activeComponent === 'sync-icon') {
+			return [
+				{
+					id: 'style-dot',
+					label: '🔴 Option 1: Micro Dot',
+					action: () => setMomentumIndicatorStyle('dot'),
+					active: momentumIndicatorStyle === 'dot',
+				},
+				{
+					id: 'style-color',
+					label: '🎨 Option 2: Color Shift',
+					action: () => setMomentumIndicatorStyle('color'),
+					active: momentumIndicatorStyle === 'color',
+				},
+				{
+					id: 'style-pill',
+					label: '🏷️ Option 3: Surface Pill',
+					action: () => setMomentumIndicatorStyle('pill'),
+					active: momentumIndicatorStyle === 'pill',
+				},
+				{
+					id: 'style-glow',
+					label: '✨ Option 4: Drop Glow',
+					action: () => setMomentumIndicatorStyle('glow'),
+					active: momentumIndicatorStyle === 'glow',
+				},
+				{
+					id: 'pulse-quick',
+					label: '⚡ 150ms Pulse',
+					action: () => triggerPulseSync(150),
+					active: false,
+				},
+				{
+					id: 'pulse-standard',
+					label: '⏱️ Standard Sync (1.5s)',
+					action: () => triggerPulseSync(1500),
+					active: false,
+				},
+				{
+					id: 'pulse-long',
+					label: '🚀 Long Transfer (4.0s)',
+					action: () => triggerPulseSync(4000),
+					active: false,
+				},
+				{
+					id: 'toggle-continuous',
+					label: cloudPhase === 'pushing' ? '⏹ Stop Continuous' : '▶ Continuous Sync',
+					action: () => {
+						if (cloudPhase === 'pushing') {
+							setCloudPhase('in-sync')
+						} else {
+							setCloudLoggedIn(true)
+							setCloudHasError(false)
+							setCloudPhase('pushing')
+						}
+					},
+					active: cloudPhase === 'pushing',
+				},
+				{
+					id: 'preset-heavy',
+					label: '🛸 Heavy Flywheel',
+					action: () => {
+						setMomentumMaxVelocity(360)
+						setMomentumAcceleration(450)
+						setMomentumFriction(1.4)
+						setMomentumMinImpulseDuration(800)
+					},
+					active: momentumMaxVelocity === 360 && momentumFriction === 1.4,
+				},
+				{
+					id: 'preset-hyper',
+					label: '⚡ Hyper Drive',
+					action: () => {
+						setMomentumMaxVelocity(720)
+						setMomentumAcceleration(1400)
+						setMomentumFriction(3.0)
+						setMomentumMinImpulseDuration(500)
+					},
+					active: momentumMaxVelocity === 720 && momentumFriction === 3.0,
+				},
+			]
+		}
 		if (isSyncComponent) {
 			return [
 				{
@@ -421,6 +550,60 @@ function WorkbenchContent() {
 					label: '⚪ Signed Out',
 					action: () => applyPreset('logged-out'),
 					active: !cloudLoggedIn,
+				},
+			]
+		}
+		if (activeComponent === 'star-roles') {
+			return [
+				{
+					id: 'role-star',
+					label: '⭐ Captain',
+					action: () => {
+						setSelectedIcon('starSharp')
+						setSelectedColor('#f59e0b')
+						setSelectedRoleTitle('Captain')
+					},
+					active: selectedIcon === 'starSharp',
+				},
+				{
+					id: 'role-planet',
+					label: '🪐 Navigator',
+					action: () => {
+						setSelectedIcon('planetSharp')
+						setSelectedColor('#3b82f6')
+						setSelectedRoleTitle('Navigator')
+					},
+					active: selectedIcon === 'planetSharp',
+				},
+				{
+					id: 'role-rocket',
+					label: '🚀 Pilot',
+					action: () => {
+						setSelectedIcon('rocketSharp')
+						setSelectedColor('#ec4899')
+						setSelectedRoleTitle('Pilot')
+					},
+					active: selectedIcon === 'rocketSharp',
+				},
+				{
+					id: 'role-energy',
+					label: '⚡ Engineer',
+					action: () => {
+						setSelectedIcon('flashSharp')
+						setSelectedColor('#eab308')
+						setSelectedRoleTitle('Engineer')
+					},
+					active: selectedIcon === 'flashSharp',
+				},
+				{
+					id: 'role-sparkles',
+					label: '✨ Botanist',
+					action: () => {
+						setSelectedIcon('sparklesSharp')
+						setSelectedColor('#10b981')
+						setSelectedRoleTitle('Botanist')
+					},
+					active: selectedIcon === 'sparklesSharp',
 				},
 			]
 		}
@@ -524,6 +707,20 @@ function WorkbenchContent() {
 				</div>
 			)}
 
+			{/* Sync Status Presentation Knobs */}
+			{activeComponent === 'sync-status' && (
+				<div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+					<h4 className="font-semibold text-neutral-300">Presentation Mode</h4>
+					<div className="flex items-center justify-between">
+						<span>Inline List Embed</span>
+						<IonToggle
+							checked={syncStatusInline}
+							onIonChange={(e) => setSyncStatusInline(e.detail.checked)}
+						/>
+					</div>
+				</div>
+			)}
+
 			{/* Component-Specific Knobs */}
 			{isSyncComponent && (
 				<>
@@ -590,6 +787,7 @@ function WorkbenchContent() {
 						{cloudHasError && (
 							<div>
 								<span className="block mb-1 text-neutral-400">Error Message</span>
+								<div className="text-xs text-red-400 mb-1.5 font-mono">{cloudErrorMessage}</div>
 								<IonInput
 									type="text"
 									value={cloudErrorMessage}
@@ -672,6 +870,7 @@ function WorkbenchContent() {
 						{markdownHasError && (
 							<div>
 								<span className="block mb-1 text-neutral-400">Error Message</span>
+								<div className="text-xs text-red-400 mb-1.5 font-mono">{markdownErrorMessage}</div>
 								<IonInput
 									type="text"
 									value={markdownErrorMessage}
@@ -680,8 +879,241 @@ function WorkbenchContent() {
 								/>
 							</div>
 						)}
+
+						<div className="space-y-2 pt-2 border-t border-neutral-800">
+							<IonButton
+								expand="block"
+								fill="outline"
+								size="small"
+								onClick={() => {
+									setMarkdownFullSyncPhase('in-progress')
+									setMarkdownCompletedFiles(1)
+								}}
+								disabled={simulatedExportStatus.fullSync?.phase === 'in-progress'}
+							>
+								Trigger Full Sync
+							</IonButton>
+							{simulatedExportStatus.needsReconnect && (
+								<IonButton
+									expand="block"
+									fill="solid"
+									color="warning"
+									size="small"
+									onClick={() => {
+										setMarkdownNeedsReconnect(false)
+										setMarkdownHasError(false)
+									}}
+								>
+									Reconnect Folder
+								</IonButton>
+							)}
+						</div>
 					</div>
 				</>
+			)}
+
+			{/* Momentum & Inertia Physics Knobs for Sync Icon */}
+			{activeComponent === 'sync-icon' && (
+				<div className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+					<div className="flex items-center justify-between">
+						<h4 className="font-semibold text-neutral-300">Simulation Triggers</h4>
+						<IonBadge color="primary" className="text-[10px]">Triggers</IonBadge>
+					</div>
+					<div className="grid grid-cols-2 gap-2">
+						<IonButton
+							size="small"
+							fill="outline"
+							color="primary"
+							className="text-xs h-8"
+							onClick={() => triggerPulseSync(150)}
+						>
+							⚡ Quick 150ms
+						</IonButton>
+						<IonButton
+							size="small"
+							fill="outline"
+							color="primary"
+							className="text-xs h-8"
+							onClick={() => triggerPulseSync(1500)}
+						>
+							⏱️ 1.5s Sync
+						</IonButton>
+						<IonButton
+							size="small"
+							fill="outline"
+							color="primary"
+							className="text-xs h-8"
+							onClick={() => triggerPulseSync(4000)}
+						>
+							🚀 4.0s Long
+						</IonButton>
+						<IonButton
+							size="small"
+							fill={simulatedSyncState.phase === 'pushing' ? 'solid' : 'outline'}
+							color={simulatedSyncState.phase === 'pushing' ? 'danger' : 'medium'}
+							className="text-xs h-8"
+							onClick={() => {
+								if (simulatedSyncState.phase === 'pushing') {
+									setCloudPhase('in-sync')
+								} else {
+									setCloudLoggedIn(true)
+									setCloudHasError(false)
+									setCloudPhase('pushing')
+								}
+							}}
+						>
+							{simulatedSyncState.phase === 'pushing' ? '⏹ Stop' : '▶ Continuous'}
+						</IonButton>
+					</div>
+
+					{/* Live Telemetry Readout in Knobs */}
+					<div className="rounded-lg bg-neutral-900/80 p-2.5 border border-neutral-800 font-mono space-y-1.5">
+						<div className="flex justify-between items-center text-[11px]">
+							<span className="text-neutral-400">Phase:</span>
+							<span className="font-semibold text-sky-400 capitalize">{momentumTelemetry.phase}</span>
+						</div>
+						<div className="flex justify-between items-center text-[11px]">
+							<span className="text-neutral-400">Velocity:</span>
+							<span className="font-semibold text-neutral-200">{momentumTelemetry.velocity}°/s</span>
+						</div>
+						<div className="flex justify-between items-center text-[11px]">
+							<span className="text-neutral-400">Angle:</span>
+							<span className="font-semibold text-neutral-200">{momentumTelemetry.angle}°</span>
+						</div>
+						<div className="flex justify-between items-center text-[11px]">
+							<span className="text-neutral-400">Active State:</span>
+							<span className={`font-semibold ${momentumTelemetry.isSyncing ? 'text-sky-400' : 'text-neutral-500'}`}>
+								{momentumTelemetry.isSyncing ? 'TRANSMITTING' : momentumTelemetry.isCoasting ? 'COASTING' : 'AT REST'}
+							</span>
+						</div>
+					</div>
+
+					<div className="pt-2 border-t border-neutral-800 space-y-3">
+						<div className="flex items-center justify-between">
+							<h4 className="font-semibold text-neutral-300">Sync Indicator & Physics</h4>
+							<IonBadge color="primary" className="text-[10px]">Controls</IonBadge>
+						</div>
+						<div className="flex items-center justify-between">
+							<span>Enable Momentum Physics</span>
+							<IonToggle
+								checked={momentumEnabled}
+								onIonChange={(event) => setMomentumEnabled(event.detail.checked)}
+							/>
+						</div>
+						<div>
+							<span className="block mb-1 text-neutral-400">Ionic Active Indicator Style</span>
+							<IonSelect
+								interface="popover"
+								value={momentumIndicatorStyle}
+								onIonChange={(event) =>
+									setMomentumIndicatorStyle(
+										event.detail.value as MomentumIndicatorStyle,
+									)
+								}
+								className="w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs text-neutral-200"
+							>
+								<IonSelectOption value="dot">Option 1: Micro Status Pip (Badge Dot)</IonSelectOption>
+								<IonSelectOption value="color">Option 2: Semantic Color Shift (Theme)</IonSelectOption>
+								<IonSelectOption value="pill">Option 3: Surface Pill (Button Tint)</IonSelectOption>
+								<IonSelectOption value="glow">Option 4: Drop-Shadow Glow Aura</IonSelectOption>
+								<IonSelectOption value="none">Option 5: None (Pure Motion Only)</IonSelectOption>
+							</IonSelect>
+						</div>
+						<div>
+							<span className="block mb-1 text-neutral-400">Accent Color</span>
+							<IonSelect
+								interface="popover"
+								value={momentumGlowColor}
+								onIonChange={(event) =>
+									setMomentumGlowColor(event.detail.value as MomentumGlowColor)
+								}
+								className="w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs text-neutral-200"
+							>
+								<IonSelectOption value="cyan">Cyan (Celestial)</IonSelectOption>
+								<IonSelectOption value="blue">Blue (Cobalt)</IonSelectOption>
+								<IonSelectOption value="purple">Purple (Aurora)</IonSelectOption>
+								<IonSelectOption value="amber">Amber (Solar)</IonSelectOption>
+							</IonSelect>
+						</div>
+						<div>
+							<div className="flex justify-between text-neutral-400">
+								<span>Glow Intensity</span>
+								<span>{Math.round(momentumGlowIntensity * 100)}%</span>
+							</div>
+							<IonRange
+								min={0}
+								max={1}
+								step={0.1}
+								value={momentumGlowIntensity}
+								onIonChange={(event) =>
+									setMomentumGlowIntensity(event.detail.value as number)
+								}
+							/>
+						</div>
+						<div>
+							<div className="flex justify-between text-neutral-400">
+								<span>Max Velocity (Top Speed)</span>
+								<span>
+									{Math.round(momentumMaxVelocity / 6)} RPM ({momentumMaxVelocity}°/s)
+								</span>
+							</div>
+							<IonRange
+								min={180}
+								max={1080}
+								step={60}
+								value={momentumMaxVelocity}
+								onIonChange={(event) =>
+									setMomentumMaxVelocity(event.detail.value as number)
+								}
+							/>
+						</div>
+						<div>
+							<div className="flex justify-between text-neutral-400">
+								<span>Acceleration Rate</span>
+								<span>{momentumAcceleration}°/s²</span>
+							</div>
+							<IonRange
+								min={300}
+								max={2000}
+								step={100}
+								value={momentumAcceleration}
+								onIonChange={(event) =>
+									setMomentumAcceleration(event.detail.value as number)
+								}
+							/>
+						</div>
+						<div>
+							<div className="flex justify-between text-neutral-400">
+								<span>Coasting Drag (Inertial Friction)</span>
+								<span>{momentumFriction.toFixed(1)}</span>
+							</div>
+							<IonRange
+								min={1.0}
+								max={5.0}
+								step={0.2}
+								value={momentumFriction}
+								onIonChange={(event) =>
+									setMomentumFriction(event.detail.value as number)
+								}
+							/>
+						</div>
+						<div>
+							<div className="flex justify-between text-neutral-400">
+								<span>Minimum Animation Duration</span>
+								<span>{momentumMinImpulseDuration} ms</span>
+							</div>
+							<IonRange
+								min={200}
+								max={1500}
+								step={50}
+								value={momentumMinImpulseDuration}
+								onIonChange={(event) =>
+									setMomentumMinImpulseDuration(event.detail.value as number)
+								}
+							/>
+						</div>
+					</div>
+				</div>
 			)}
 
 			{/* Starship & Trajectory Knobs */}
@@ -799,11 +1231,39 @@ function WorkbenchContent() {
 
 			{/* Star Roles Knobs */}
 			{activeComponent === 'star-roles' && (
-				<div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
-					<h4 className="font-semibold text-neutral-300">Star Role Visualizer</h4>
-					<p className="text-neutral-400">
-						Displays role-based classification badges used across todos and wayfinder sequences.
-					</p>
+				<div className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+					<h4 className="font-semibold text-neutral-300">Star Role Configuration</h4>
+					<div>
+						<span className="block mb-1 text-neutral-400">Role Icon</span>
+						<IonSelect
+							interface="popover"
+							value={selectedIcon}
+							onIonChange={(e) => setSelectedIcon(e.detail.value)}
+							className="w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs text-neutral-200"
+						>
+							<IonSelectOption value="starSharp">Star (Captain)</IonSelectOption>
+							<IonSelectOption value="planetSharp">Planet (Navigator)</IonSelectOption>
+							<IonSelectOption value="rocketSharp">Rocket (Pilot)</IonSelectOption>
+							<IonSelectOption value="flashSharp">Energy (Engineer)</IonSelectOption>
+							<IonSelectOption value="sparklesSharp">Sparkles (Botanist)</IonSelectOption>
+						</IonSelect>
+					</div>
+					<div>
+						<span className="block mb-1 text-neutral-400">Accent Color</span>
+						<IonSelect
+							interface="popover"
+							value={selectedColor}
+							onIonChange={(e) => setSelectedColor(e.detail.value)}
+							className="w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs text-neutral-200"
+						>
+							<IonSelectOption value="#f59e0b">Amber (#f59e0b)</IonSelectOption>
+							<IonSelectOption value="#3b82f6">Blue (#3b82f6)</IonSelectOption>
+							<IonSelectOption value="#ec4899">Pink (#ec4899)</IonSelectOption>
+							<IonSelectOption value="#eab308">Yellow (#eab308)</IonSelectOption>
+							<IonSelectOption value="#10b981">Emerald (#10b981)</IonSelectOption>
+							<IonSelectOption value="#a855f7">Purple (#a855f7)</IonSelectOption>
+						</IonSelect>
+					</div>
 				</div>
 			)}
 
@@ -885,6 +1345,14 @@ function WorkbenchContent() {
 														syncState={simulatedSyncState}
 														exportStatus={simulatedExportStatus}
 														user={simulatedUser}
+														indicatorStyle={momentumIndicatorStyle}
+														glowColor={momentumGlowColor}
+														glowIntensity={momentumGlowIntensity}
+														enableMomentum={momentumEnabled}
+														maxVelocity={momentumMaxVelocity}
+														accelerationRate={momentumAcceleration}
+														frictionCoefficient={momentumFriction}
+														minimumImpulseDuration={momentumMinImpulseDuration}
 														onRunFullSync={() => {
 															setMarkdownFullSyncPhase('in-progress')
 															setMarkdownCompletedFiles(1)
@@ -907,6 +1375,14 @@ function WorkbenchContent() {
 												syncState={simulatedSyncState}
 												exportStatus={simulatedExportStatus}
 												user={simulatedUser}
+												indicatorStyle={momentumIndicatorStyle}
+												glowColor={momentumGlowColor}
+												glowIntensity={momentumGlowIntensity}
+												enableMomentum={momentumEnabled}
+												maxVelocity={momentumMaxVelocity}
+												accelerationRate={momentumAcceleration}
+												frictionCoefficient={momentumFriction}
+												minimumImpulseDuration={momentumMinImpulseDuration}
 												onRunFullSync={() => {
 													setMarkdownFullSyncPhase('in-progress')
 													setMarkdownCompletedFiles(1)
@@ -918,6 +1394,154 @@ function WorkbenchContent() {
 												onLogin={() => setCloudLoggedIn(true)}
 												onOpenSettings={() => setMarkdownEnabled(true)}
 											/>
+										</div>
+									</div>
+								)}
+
+								{activeComponent === 'sync-icon' && (
+									<div className="w-full max-w-5xl flex flex-col items-center gap-6">
+										<div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+											{/* Variant 1: Micro Dot Pip */}
+											<div className="flex flex-col items-center justify-between p-6 rounded-2xl border border-neutral-800 bg-neutral-900/80 shadow-2xl backdrop-blur-md text-center">
+												<div className="mb-4">
+													<span className="text-xs font-semibold uppercase tracking-wider text-cyan-400">
+														Variant 1
+													</span>
+													<h3 className="font-semibold text-white text-base mt-1">Micro Dot Pip</h3>
+													<p className="text-xs text-neutral-400 mt-1">
+														Discrete corner pip indicating active data transfer
+													</p>
+												</div>
+												<div className="py-8 flex items-center justify-center">
+													<MomentumSyncIcon
+														id="workbench-sync-status-btn"
+														size={72}
+														isSyncing={
+															simulatedSyncState.phase === 'pushing' ||
+															simulatedSyncState.phase === 'pulling' ||
+															markdownIsSyncing ||
+															markdownFullSyncPhase === 'in-progress'
+														}
+														indicatorStyle="dot"
+														glowColor={momentumGlowColor}
+														glowIntensity={momentumGlowIntensity}
+														enablePhysics={momentumEnabled}
+														maxVelocity={momentumMaxVelocity}
+														accelerationRate={momentumAcceleration}
+														frictionCoefficient={momentumFriction}
+														minimumImpulseDuration={momentumMinImpulseDuration}
+														onTelemetryChange={setMomentumTelemetry}
+													/>
+												</div>
+												<div className="w-full pt-4 border-t border-neutral-800/80 flex items-center justify-between text-xs text-neutral-400">
+													<span>Convention</span>
+													<span className="font-mono text-cyan-400">Ionic Status Pip</span>
+												</div>
+											</div>
+
+											{/* Variant 2: Color Shift */}
+											<div className="flex flex-col items-center justify-between p-6 rounded-2xl border border-neutral-800 bg-neutral-900/80 shadow-2xl backdrop-blur-md text-center">
+												<div className="mb-4">
+													<span className="text-xs font-semibold uppercase tracking-wider text-blue-400">
+														Variant 2
+													</span>
+													<h3 className="font-semibold text-white text-base mt-1">Color Shift</h3>
+													<p className="text-xs text-neutral-400 mt-1">
+														Transitions from neutral to energetic tint while syncing
+													</p>
+												</div>
+												<div className="py-8 flex items-center justify-center">
+													<MomentumSyncIcon
+														size={72}
+														isSyncing={
+															simulatedSyncState.phase === 'pushing' ||
+															simulatedSyncState.phase === 'pulling' ||
+															markdownIsSyncing ||
+															markdownFullSyncPhase === 'in-progress'
+														}
+														indicatorStyle="color"
+														glowColor={momentumGlowColor}
+														glowIntensity={momentumGlowIntensity}
+														enablePhysics={momentumEnabled}
+														maxVelocity={momentumMaxVelocity}
+														accelerationRate={momentumAcceleration}
+														frictionCoefficient={momentumFriction}
+														minimumImpulseDuration={momentumMinImpulseDuration}
+													/>
+												</div>
+												<div className="w-full pt-4 border-t border-neutral-800/80 flex items-center justify-between text-xs text-neutral-400">
+													<span>Convention</span>
+													<span className="font-mono text-blue-400">Ionic Accent Color</span>
+												</div>
+											</div>
+
+											{/* Variant 3: Surface Pill */}
+											<div className="flex flex-col items-center justify-between p-6 rounded-2xl border border-neutral-800 bg-neutral-900/80 shadow-2xl backdrop-blur-md text-center">
+												<div className="mb-4">
+													<span className="text-xs font-semibold uppercase tracking-wider text-purple-400">
+														Variant 3
+													</span>
+													<h3 className="font-semibold text-white text-base mt-1">Surface Pill</h3>
+													<p className="text-xs text-neutral-400 mt-1">
+														Contained chip with icon and live sync state label
+													</p>
+												</div>
+												<div className="py-8 flex items-center justify-center">
+													<MomentumSyncIcon
+														size={44}
+														isSyncing={
+															simulatedSyncState.phase === 'pushing' ||
+															simulatedSyncState.phase === 'pulling' ||
+															markdownIsSyncing ||
+															markdownFullSyncPhase === 'in-progress'
+														}
+														indicatorStyle="pill"
+														glowColor={momentumGlowColor}
+														glowIntensity={momentumGlowIntensity}
+														enablePhysics={momentumEnabled}
+														maxVelocity={momentumMaxVelocity}
+														accelerationRate={momentumAcceleration}
+														frictionCoefficient={momentumFriction}
+														minimumImpulseDuration={momentumMinImpulseDuration}
+													/>
+												</div>
+												<div className="w-full pt-4 border-t border-neutral-800/80 flex items-center justify-between text-xs text-neutral-400">
+													<span>Convention</span>
+													<span className="font-mono text-purple-400">Ionic Chip Container</span>
+												</div>
+											</div>
+										</div>
+
+										{/* Variant 4: Aura Glow (Alternative Option) */}
+										<div className="w-full rounded-2xl border border-neutral-800/80 bg-neutral-950/60 p-4 flex items-center justify-between shadow-xl">
+											<div className="flex items-center gap-4">
+												<MomentumSyncIcon
+													size={44}
+													isSyncing={
+														simulatedSyncState.phase === 'pushing' ||
+														simulatedSyncState.phase === 'pulling' ||
+														markdownIsSyncing ||
+														markdownFullSyncPhase === 'in-progress'
+													}
+													indicatorStyle="glow"
+													glowColor={momentumGlowColor}
+													glowIntensity={momentumGlowIntensity}
+													enablePhysics={momentumEnabled}
+													maxVelocity={momentumMaxVelocity}
+													accelerationRate={momentumAcceleration}
+													frictionCoefficient={momentumFriction}
+													minimumImpulseDuration={momentumMinImpulseDuration}
+												/>
+												<div>
+													<h4 className="text-sm font-semibold text-white">Variant 4: Aura Glow (Alternative)</h4>
+													<p className="text-xs text-neutral-400">
+														Soft radial backlight that illuminates exclusively during active transfer
+													</p>
+												</div>
+											</div>
+											<div className="text-xs font-mono text-neutral-500">
+												{'indicatorStyle="glow"'}
+											</div>
 										</div>
 									</div>
 								)}
@@ -1099,17 +1723,17 @@ function WorkbenchContent() {
 								)}
 
 								{activeComponent === 'star-roles' && (
-									<div className="flex flex-wrap items-center justify-center gap-6 rounded-2xl border border-neutral-800 bg-neutral-900/80 p-8 shadow-2xl backdrop-blur-md">
+									<div className="grid grid-cols-2 sm:grid-cols-4 gap-6 p-6 rounded-2xl border border-neutral-800 bg-neutral-900/60 shadow-xl backdrop-blur-md">
 										<div className="flex flex-col items-center gap-2">
 											<StarRoleIcon
 												starRole={{
 													id: '1',
-													title: 'Selected',
+													title: selectedRoleTitle,
 													icon: { type: 'ionicon', name: selectedIcon },
 												}}
-												style={{ color: selectedColor, fontSize: '32px' }}
+												style={{ color: selectedColor, fontSize: '36px' }}
 											/>
-											<span className="text-xs text-neutral-400">Selected</span>
+											<span className="text-xs text-neutral-300 font-medium">{selectedRoleTitle}</span>
 										</div>
 
 										<div className="flex flex-col items-center gap-2">
@@ -1119,7 +1743,7 @@ function WorkbenchContent() {
 													title: 'Planet',
 													icon: { type: 'ionicon', name: 'planetSharp' },
 												}}
-												style={{ color: '#3b82f6', fontSize: '32px' }}
+												style={{ color: '#3b82f6', fontSize: '36px' }}
 											/>
 											<span className="text-xs text-neutral-400">Planet</span>
 										</div>
@@ -1131,7 +1755,7 @@ function WorkbenchContent() {
 													title: 'Rocket',
 													icon: { type: 'ionicon', name: 'rocketSharp' },
 												}}
-												style={{ color: '#ec4899', fontSize: '32px' }}
+												style={{ color: '#ec4899', fontSize: '36px' }}
 											/>
 											<span className="text-xs text-neutral-400">Rocket</span>
 										</div>
@@ -1143,7 +1767,7 @@ function WorkbenchContent() {
 													title: 'Energy',
 													icon: { type: 'ionicon', name: 'flashSharp' },
 												}}
-												style={{ color: '#eab308', fontSize: '32px' }}
+												style={{ color: '#eab308', fontSize: '36px' }}
 											/>
 											<span className="text-xs text-neutral-400">Energy</span>
 										</div>
@@ -1165,10 +1789,10 @@ function WorkbenchContent() {
 								)}
 
 								{activeComponent === 'starship-trajectory' && (
-									<div className="w-full max-w-lg flex flex-col items-center justify-center rounded-2xl border border-neutral-800 bg-neutral-950 p-8 shadow-2xl">
+									<div className="flex items-center justify-center p-8">
 										<div
 											id="workbench-starship"
-											className="relative h-[300px] w-[60px] flex justify-center"
+											className="relative h-[320px] w-[60px] flex justify-center"
 										>
 											<Tracjectory
 												currentPosition={starshipPosition}
@@ -1187,34 +1811,14 @@ function WorkbenchContent() {
 								)}
 
 								{activeComponent === 'pulse-graph' && (
-									<div
-										className="w-full max-w-lg rounded-2xl border border-neutral-800 bg-neutral-950 p-8 flex flex-col items-center justify-center shadow-2xl"
-									>
-										<span className="text-xs text-neutral-500 mb-3 font-mono uppercase tracking-wider">
-											14-Day Activity Pulse
-										</span>
-										<div id="workbench-pulse-graph" className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
-											<PulseGraph starPoints={pulseStarPoints} visits={simulatedVisits} />
-										</div>
+									<div id="workbench-pulse-graph" className="flex items-center justify-center p-8">
+										<PulseGraph starPoints={pulseStarPoints} visits={simulatedVisits} />
 									</div>
 								)}
 
 								{activeComponent === 'mood-player' && (
-									<div
-										className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-950 p-8 flex flex-col items-center justify-center shadow-2xl"
-										id="workbench-mood-player"
-									>
+									<div id="workbench-mood-player" className="flex items-center justify-center p-12">
 										<Mood />
-										<div className="mt-6 flex items-center gap-2">
-											<IonBadge color={mode === 'hype' ? 'danger' : 'primary'}>
-												{mode.toUpperCase()} ACTIVE
-											</IonBadge>
-											<span className="text-xs text-neutral-400">
-												{mode === 'chill'
-													? 'Melodysheep Ambient'
-													: 'Karl Casey Synthwave'}
-											</span>
-										</div>
 									</div>
 								)}
 							</div>
@@ -1250,6 +1854,7 @@ function WorkbenchContent() {
 							<IonMenuButton
 								menu="knobs-menu"
 								id="knobs-menu-btn"
+								autoHide={false}
 							>
 								<IonIcon icon={optionsSharp} />
 							</IonMenuButton>
