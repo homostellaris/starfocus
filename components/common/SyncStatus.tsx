@@ -21,8 +21,6 @@ import {
 } from '../export/useMarkdownExport'
 import { markdownExportService } from '../export/markdownExportService'
 import MomentumSyncIcon, {
-	type MomentumGlowColor,
-	type MomentumIndicatorStyle,
 	type MomentumTelemetry,
 } from './MomentumSyncIcon'
 
@@ -68,9 +66,6 @@ export interface SyncStatusProps {
 	onLogin?: () => void
 	onOpenSettings?: () => void
 	inline?: boolean
-	indicatorStyle?: MomentumIndicatorStyle
-	glowColor?: MomentumGlowColor
-	glowIntensity?: number
 	enableMomentum?: boolean
 	maxVelocity?: number
 	accelerationRate?: number
@@ -89,9 +84,6 @@ export default function SyncStatus({
 	onLogin,
 	onOpenSettings,
 	inline = false,
-	indicatorStyle = 'none',
-	glowColor = 'cyan',
-	glowIntensity = 1,
 	enableMomentum = true,
 	maxVelocity = 540,
 	accelerationRate = 960,
@@ -431,23 +423,22 @@ export default function SyncStatus({
 	}
 
 	return (
-		<IonButton
-			id={id}
-			aria-label={isSyncingActive ? 'Syncing in progress' : 'Sync status'}
-		>
-			<MomentumSyncIcon
-				slot="icon-only"
-				isSyncing={isSyncingActive}
-				indicatorStyle={indicatorStyle}
-				glowColor={glowColor}
-				glowIntensity={glowIntensity}
-				enablePhysics={enableMomentum}
-				maxVelocity={maxVelocity}
-				accelerationRate={accelerationRate}
-				frictionCoefficient={frictionCoefficient}
-				minimumImpulseDuration={minimumImpulseDuration}
-				onTelemetryChange={onTelemetryChange}
-			/>
+		<>
+			<IonButton
+				id={id}
+				aria-label={isSyncingActive ? 'Syncing in progress' : 'Sync status'}
+			>
+				<MomentumSyncIcon
+					slot="icon-only"
+					isSyncing={isSyncingActive}
+					enablePhysics={enableMomentum}
+					maxVelocity={maxVelocity}
+					accelerationRate={accelerationRate}
+					frictionCoefficient={frictionCoefficient}
+					minimumImpulseDuration={minimumImpulseDuration}
+					onTelemetryChange={onTelemetryChange}
+				/>
+			</IonButton>
 			<IonPopover
 				data-testid="sync-status-popover"
 				trigger={id}
@@ -467,6 +458,6 @@ export default function SyncStatus({
 					{listContent}
 				</IonContent>
 			</IonPopover>
-		</IonButton>
+		</>
 	)
 }

@@ -39,8 +39,6 @@ import dayjs from 'dayjs'
 import { Header } from '../common/Header'
 import SyncStatus, { CloudSyncStatusBadge, MarkdownSyncStatusBadge } from '../common/SyncStatus'
 import MomentumSyncIcon, {
-	type MomentumGlowColor,
-	type MomentumIndicatorStyle,
 	type MomentumTelemetry,
 } from '../common/MomentumSyncIcon'
 import { StarRoleIcon } from '../common/StarRoleIcon'
@@ -88,9 +86,9 @@ const CATALOG_ITEMS: CatalogItem[] = [
 	{
 		key: 'sync-icon',
 		title: 'Momentum & Inertia Sync Icon',
-		subtitle: 'Physical Flywheel Spinner & Transfer Glow',
+		subtitle: 'Physical Flywheel Spinner & Inertial Coasting',
 		description:
-			'Physical rotational flywheel simulation for synchronization indicators. Features angular acceleration, viscous friction coasting, guaranteed minimum animation impulse, and active data transfer glow.',
+			'Physical rotational flywheel simulation for synchronization indicators. Features angular acceleration, viscous friction coasting, guaranteed minimum animation impulse, and smooth momentum physics.',
 		icon: syncSharp,
 		iconColor: 'text-sky-400 bg-sky-500/10 border-sky-500/20',
 		badge: 'Motion',
@@ -209,9 +207,6 @@ function WorkbenchContent() {
 
 	// --- Momentum & Inertia Knobs ---
 	const [momentumEnabled, setMomentumEnabled] = useState(true)
-	const [momentumIndicatorStyle, setMomentumIndicatorStyle] = useState<MomentumIndicatorStyle>('none')
-	const [momentumGlowColor, setMomentumGlowColor] = useState<MomentumGlowColor>('cyan')
-	const [momentumGlowIntensity, setMomentumGlowIntensity] = useState(1.0)
 	const [momentumMaxVelocity, setMomentumMaxVelocity] = useState(540)
 	const [momentumAcceleration, setMomentumAcceleration] = useState(960)
 	const [momentumFriction, setMomentumFriction] = useState(2.4)
@@ -434,12 +429,6 @@ function WorkbenchContent() {
 	const presetsForActiveComponent = (() => {
 		if (activeComponent === 'sync-icon') {
 			return [
-				{
-					id: 'style-none',
-					label: '🎯 Pure Motion (None)',
-					action: () => setMomentumIndicatorStyle('none'),
-					active: momentumIndicatorStyle === 'none',
-				},
 				{
 					id: 'pulse-quick',
 					label: '⚡ 150ms Pulse',
@@ -972,7 +961,7 @@ function WorkbenchContent() {
 
 					<div className="pt-2 border-t border-neutral-800 space-y-3">
 						<div className="flex items-center justify-between">
-							<h4 className="font-semibold text-neutral-300">Sync Indicator & Physics</h4>
+							<h4 className="font-semibold text-neutral-300">Sync Flywheel & Physics</h4>
 							<IonBadge color="primary" className="text-[10px]">Controls</IonBadge>
 						</div>
 						<div className="flex items-center justify-between">
@@ -980,56 +969,6 @@ function WorkbenchContent() {
 							<IonToggle
 								checked={momentumEnabled}
 								onIonChange={(event) => setMomentumEnabled(event.detail.checked)}
-							/>
-						</div>
-						<div>
-							<span className="block mb-1 text-neutral-400">Ionic Active Indicator Style</span>
-							<IonSelect
-								interface="popover"
-								value={momentumIndicatorStyle}
-								onIonChange={(event) =>
-									setMomentumIndicatorStyle(
-										event.detail.value as MomentumIndicatorStyle,
-									)
-								}
-								className="w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs text-neutral-200"
-							>
-								<IonSelectOption value="none">Option 1: None (Pure Motion Only)</IonSelectOption>
-								<IonSelectOption value="dot">Option 2: Micro Status Pip (Badge Dot)</IonSelectOption>
-								<IonSelectOption value="color">Option 3: Semantic Color Shift (Theme)</IonSelectOption>
-								<IonSelectOption value="pill">Option 4: Surface Pill (Button Tint)</IonSelectOption>
-								<IonSelectOption value="glow">Option 5: Drop-Shadow Glow Aura</IonSelectOption>
-							</IonSelect>
-						</div>
-						<div>
-							<span className="block mb-1 text-neutral-400">Accent Color</span>
-							<IonSelect
-								interface="popover"
-								value={momentumGlowColor}
-								onIonChange={(event) =>
-									setMomentumGlowColor(event.detail.value as MomentumGlowColor)
-								}
-								className="w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs text-neutral-200"
-							>
-								<IonSelectOption value="cyan">Cyan (Celestial)</IonSelectOption>
-								<IonSelectOption value="blue">Blue (Cobalt)</IonSelectOption>
-								<IonSelectOption value="purple">Purple (Aurora)</IonSelectOption>
-								<IonSelectOption value="amber">Amber (Solar)</IonSelectOption>
-							</IonSelect>
-						</div>
-						<div>
-							<div className="flex justify-between text-neutral-400">
-								<span>Glow Intensity</span>
-								<span>{Math.round(momentumGlowIntensity * 100)}%</span>
-							</div>
-							<IonRange
-								min={0}
-								max={1}
-								step={0.1}
-								value={momentumGlowIntensity}
-								onIonChange={(event) =>
-									setMomentumGlowIntensity(event.detail.value as number)
-								}
 							/>
 						</div>
 						<div>
@@ -1316,9 +1255,6 @@ function WorkbenchContent() {
 														syncState={simulatedSyncState}
 														exportStatus={simulatedExportStatus}
 														user={simulatedUser}
-														indicatorStyle={momentumIndicatorStyle}
-														glowColor={momentumGlowColor}
-														glowIntensity={momentumGlowIntensity}
 														enableMomentum={momentumEnabled}
 														maxVelocity={momentumMaxVelocity}
 														accelerationRate={momentumAcceleration}
@@ -1346,9 +1282,6 @@ function WorkbenchContent() {
 												syncState={simulatedSyncState}
 												exportStatus={simulatedExportStatus}
 												user={simulatedUser}
-												indicatorStyle={momentumIndicatorStyle}
-												glowColor={momentumGlowColor}
-												glowIntensity={momentumGlowIntensity}
 												enableMomentum={momentumEnabled}
 												maxVelocity={momentumMaxVelocity}
 												accelerationRate={momentumAcceleration}
@@ -1380,9 +1313,6 @@ function WorkbenchContent() {
 												markdownIsSyncing ||
 												markdownFullSyncPhase === 'in-progress'
 											}
-											indicatorStyle={momentumIndicatorStyle}
-											glowColor={momentumGlowColor}
-											glowIntensity={momentumGlowIntensity}
 											enablePhysics={momentumEnabled}
 											maxVelocity={momentumMaxVelocity}
 											accelerationRate={momentumAcceleration}

@@ -52,13 +52,13 @@ const CATALOG_ITEMS: ComponentCatalogItem[] = [
 	{
 		key: 'sync-icon',
 		title: 'Momentum & Inertia Sync Icon',
-		subtitle: 'Physical Flywheel Spinner & Transfer Glow',
+		subtitle: 'Physical Flywheel Spinner & Inertial Coasting',
 		description:
-			'Physical rotational flywheel simulation for synchronization indicators. Features angular acceleration, viscous friction coasting, guaranteed minimum animation impulse, and active data transfer glow.',
+			'Physical rotational flywheel simulation for synchronization indicators. Features angular acceleration, viscous friction coasting, guaranteed minimum animation impulse, and smooth momentum physics.',
 		icon: syncSharp,
 		iconColor: 'text-sky-400 bg-sky-500/10 border-sky-500/20',
 		badge: 'Motion',
-		tags: ['Flywheel', 'Momentum', 'Inertia', 'Active Glow', 'Physics'],
+		tags: ['Flywheel', 'Momentum', 'Inertia', 'Physics'],
 	},
 	{
 		key: 'cloud-sync',

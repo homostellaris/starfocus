@@ -4,28 +4,9 @@ import {
 	calculateNextAngle,
 	determineMomentumPhase,
 	resolvePixelSize,
-	GLOW_COLOR_STYLES,
-	type MomentumGlowColor,
 } from './MomentumSyncIcon'
 
 // Happy path tests
-test('glow color palette returns expected celestial styles for cyan, blue, purple, and amber', () => {
-	const supportedColors: MomentumGlowColor[] = [
-		'cyan',
-		'blue',
-		'purple',
-		'amber',
-	]
-
-	for (const color of supportedColors) {
-		const style = GLOW_COLOR_STYLES[color]
-		expect(style).toBeDefined()
-		expect(style.activeColor).toBeString()
-		expect(style.dropShadow).toContain('drop-shadow')
-		expect(style.haloBackground).toBeString()
-	}
-})
-
 test('resolvePixelSize maps semantic size tokens to correct pixel dimensions', () => {
 	expect(resolvePixelSize('sm')).toBe(16)
 	expect(resolvePixelSize('md')).toBe(20)

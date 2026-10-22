@@ -4,10 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { IonIcon } from '@ionic/react'
 import { syncSharp } from 'ionicons/icons'
 
-export type MomentumGlowColor = 'cyan' | 'blue' | 'purple' | 'amber'
-
-export type MomentumIndicatorStyle = 'dot' | 'color' | 'pill' | 'glow' | 'none'
-
 export type MomentumPhase = 'idle' | 'accelerating' | 'cruising' | 'coasting'
 
 export interface MomentumTelemetry {
@@ -25,9 +21,6 @@ export interface MomentumSyncIconProps {
 	style?: React.CSSProperties
 	slot?: string
 	size?: 'sm' | 'md' | 'lg' | 'xl' | number
-	indicatorStyle?: MomentumIndicatorStyle
-	glowColor?: MomentumGlowColor
-	glowIntensity?: number
 	maxVelocity?: number
 	accelerationRate?: number
 	frictionCoefficient?: number
@@ -35,36 +28,6 @@ export interface MomentumSyncIconProps {
 	enablePhysics?: boolean
 	onTelemetryChange?: (telemetry: MomentumTelemetry) => void
 	'data-testid'?: string
-}
-
-export const GLOW_COLOR_STYLES: Record<
-	MomentumGlowColor,
-	{ activeColor: string; dropShadow: string; haloBackground: string }
-> = {
-	cyan: {
-		activeColor: 'text-sky-400',
-		dropShadow:
-			'drop-shadow(0 0 6px rgba(56, 189, 248, 0.85)) drop-shadow(0 0 14px rgba(14, 165, 233, 0.5))',
-		haloBackground: 'bg-sky-400',
-	},
-	blue: {
-		activeColor: 'text-blue-400',
-		dropShadow:
-			'drop-shadow(0 0 6px rgba(96, 165, 250, 0.85)) drop-shadow(0 0 14px rgba(59, 130, 246, 0.5))',
-		haloBackground: 'bg-blue-500',
-	},
-	purple: {
-		activeColor: 'text-fuchsia-400',
-		dropShadow:
-			'drop-shadow(0 0 6px rgba(232, 121, 249, 0.85)) drop-shadow(0 0 14px rgba(217, 70, 239, 0.5))',
-		haloBackground: 'bg-fuchsia-500',
-	},
-	amber: {
-		activeColor: 'text-amber-400',
-		dropShadow:
-			'drop-shadow(0 0 6px rgba(251, 191, 36, 0.85)) drop-shadow(0 0 14px rgba(245, 158, 11, 0.5))',
-		haloBackground: 'bg-amber-400',
-	},
 }
 
 export function calculateNextVelocity({
@@ -123,8 +86,11 @@ export function determineMomentumPhase({
 }
 
 export function resolvePixelSize(
-	size: 'sm' | 'md' | 'lg' | 'xl' | number,
+	size?: 'sm' | 'md' | 'lg' | 'xl' | number,
 ): number | undefined {
+	if (!size) {
+		return undefined
+	}
 	if (typeof size === 'number') {
 		return size
 	}
@@ -148,10 +114,7 @@ export default function MomentumSyncIcon({
 	className = '',
 	style,
 	slot,
-	size = 'md',
-	indicatorStyle = 'none',
-	glowColor = 'cyan',
-	glowIntensity = 1,
+	size,
 	maxVelocity = 540,
 	accelerationRate = 960,
 	frictionCoefficient = 2.4,
@@ -162,7 +125,6 @@ export default function MomentumSyncIcon({
 }: MomentumSyncIconProps) {
 	const iconReference = useRef<HTMLIonIconElement | null>(null)
 	const [currentPhase, setCurrentPhase] = useState<MomentumPhase>('idle')
-	const glowStyle = GLOW_COLOR_STYLES[glowColor]
 
 	const physicsStateReference = useRef({
 		angle: 0,
@@ -296,11 +258,6 @@ export default function MomentumSyncIcon({
 	])
 
 	const pixelSize = resolvePixelSize(size)
-	const isDotActive = indicatorStyle === 'dot' && isSyncing
-	const isColorActive = indicatorStyle === 'color' && isSyncing
-	const isPillActive = indicatorStyle === 'pill' && isSyncing
-	const isGlowActive =
-		indicatorStyle === 'glow' && isSyncing && glowIntensity > 0
 	const displayedPhase = enablePhysics
 		? currentPhase
 		: isSyncing
@@ -308,72 +265,23 @@ export default function MomentumSyncIcon({
 			: 'idle'
 
 	return (
-		<span
+		<IonIcon
 			id={id}
+			ref={iconReference}
+			icon={syncSharp}
 			slot={slot}
-			className="relative inline-flex items-center justify-center origin-center select-none pointer-events-none"
+			className={`origin-center text-neutral-400 transition-colors duration-200 select-none ${
+				isSyncing ? 'animate-spin' : ''
+			} ${className}`}
+			data-testid={testIdentifier}
+			data-spinning={isSyncing ? 'true' : 'false'}
+			data-phase={displayedPhase}
 			style={{
-				width: pixelSize ? `${pixelSize}px` : undefined,
-				height: pixelSize ? `${pixelSize}px` : undefined,
+				animation: enablePhysics ? 'none' : undefined,
+				fontSize: pixelSize ? `${pixelSize}px` : undefined,
+				willChange: enablePhysics ? 'transform' : undefined,
+				...style,
 			}}
-		>
-			{/* Option 3: Surface Pill / Container Tint */}
-			{indicatorStyle === 'pill' && (
-				<span
-					aria-hidden="true"
-					className={`pointer-events-none absolute -inset-2.5 rounded-full border transition-all duration-200 ${
-						isPillActive
-							? 'bg-purple-500/20 border-purple-500/50 shadow-[0_0_12px_rgba(168,85,247,0.3)] opacity-100 scale-100'
-							: 'bg-neutral-800/40 border-neutral-700/60 opacity-60 scale-95'
-					}`}
-				/>
-			)}
-
-			{/* Optional Glow Aura */}
-			{indicatorStyle === 'glow' && (
-				<span
-					aria-hidden="true"
-					className={`pointer-events-none absolute inset-0 rounded-full transition-opacity duration-300 ${glowStyle.haloBackground}`}
-					style={{
-						opacity: isGlowActive ? 0.35 * glowIntensity : 0,
-						transform: 'scale(1.4)',
-						filter: 'blur(6px)',
-					}}
-				/>
-			)}
-
-			{/* Option 1: Micro Status Pip / Badge Dot */}
-			{indicatorStyle === 'dot' && (
-				<span
-					aria-hidden="true"
-					className={`pointer-events-none absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full transition-all duration-200 ${
-						isDotActive
-							? `opacity-100 scale-100 ${glowStyle.haloBackground} shadow-[0_0_8px_rgba(56,189,248,0.9)]`
-							: 'opacity-0 scale-0'
-					}`}
-				/>
-			)}
-
-			<IonIcon
-				ref={iconReference}
-				icon={syncSharp}
-				slot={slot}
-				className={`origin-center transition-colors duration-200 ${
-					isColorActive ? glowStyle.activeColor : 'text-neutral-400'
-				} ${isSyncing ? 'animate-spin' : ''} ${className}`}
-				data-testid={testIdentifier}
-				data-spinning={isSyncing ? 'true' : 'false'}
-				data-phase={displayedPhase}
-				data-indicator-style={indicatorStyle}
-				data-glow={isGlowActive ? 'true' : 'false'}
-				style={{
-					animation: enablePhysics ? 'none' : undefined,
-					filter: isGlowActive ? glowStyle.dropShadow : 'none',
-					fontSize: pixelSize ? `${pixelSize}px` : undefined,
-					willChange: enablePhysics ? 'transform' : undefined,
-					...style,
-				}}
-			/>
-		</span>
+		/>
 	)
 }
