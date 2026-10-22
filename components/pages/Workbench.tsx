@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import {
 	IonBadge,
@@ -8,22 +8,18 @@ import {
 	IonButtons,
 	IonChip,
 	IonContent,
-	IonFooter,
 	IonHeader,
 	IonIcon,
 	IonInput,
 	IonLabel,
-	IonMenu,
-	IonMenuButton,
+	IonModal,
 	IonRange,
 	IonSelect,
 	IonSelectOption,
-	IonSplitPane,
 	IonTitle,
 	IonToggle,
 	IonToolbar,
 } from '@ionic/react'
-import { menuController } from '@ionic/core/components'
 import {
 	flashSharp,
 	optionsSharp,
@@ -36,6 +32,8 @@ import {
 	pulseSharp,
 	musicalNotesSharp,
 	closeSharp,
+	chevronUpSharp,
+	chevronDownSharp,
 } from 'ionicons/icons'
 import dayjs from 'dayjs'
 import { Header } from '../common/Header'
@@ -225,6 +223,15 @@ function WorkbenchContent() {
 		isSyncing: false,
 		isCoasting: false,
 	})
+
+	const controlsSheetRef = useRef<HTMLIonModalElement | null>(null)
+	const [sheetBreakpoint, setSheetBreakpoint] = useState(0.16)
+
+	const toggleSheetKnobs = () => {
+		const nextBreakpoint = sheetBreakpoint <= 0.2 ? 0.65 : 0.16
+		controlsSheetRef.current?.setCurrentBreakpoint(nextBreakpoint)
+		setSheetBreakpoint(nextBreakpoint)
+	}
 
 	const triggerPulseSync = (durationMilliseconds: number) => {
 		setCloudLoggedIn(true)
@@ -660,34 +667,27 @@ function WorkbenchContent() {
 
 	const knobsContent = (
 		<div className="space-y-5">
-			{/* Quick Scenario Presets */}
-			{presetsForActiveComponent.length > 0 && (
-				<div className="space-y-2 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
-					<div className="flex items-center gap-1.5 font-semibold text-neutral-300">
-						<IonIcon icon={flashSharp} className="text-amber-400" />
-						<span>Scenario Presets</span>
-					</div>
-					<p className="text-[11px] text-neutral-400">
-						Select a preset to automatically configure simulator knobs below.
-					</p>
-					<div
-						data-testid="workbench-presets-bar"
-						className="flex flex-wrap gap-1.5 pt-1"
-					>
-						{presetsForActiveComponent.map((p) => (
-							<IonChip
-								key={p.id}
-								onClick={p.action}
-								outline={!p.active}
-								color={p.active ? 'primary' : 'medium'}
-								className="cursor-pointer m-0 text-xs"
-							>
-								<IonLabel>{p.label}</IonLabel>
-							</IonChip>
-						))}
-					</div>
+			<div className="flex items-center justify-between pb-2 border-b border-neutral-800">
+				<div className="flex items-center gap-2">
+					<IonIcon icon={optionsSharp} className="text-sky-400 text-sm" />
+					<h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-300">
+						Simulator Controls & Knobs
+					</h3>
 				</div>
-			)}
+				<IonButton
+					id="close-knobs-btn"
+					fill="clear"
+					size="small"
+					color="light"
+					className="text-xs -mr-1"
+					onClick={() => {
+						controlsSheetRef.current?.setCurrentBreakpoint(0.16)
+						setSheetBreakpoint(0.16)
+					}}
+				>
+					<IonIcon slot="icon-only" icon={closeSharp} />
+				</IonButton>
+			</div>
 
 			{/* Sync Status Presentation Knobs */}
 			{activeComponent === 'sync-status' && (
@@ -1262,26 +1262,15 @@ function WorkbenchContent() {
 	)
 
 	return (
-		<IonSplitPane
-			when="lg"
-			contentId="workbench-main"
-			style={
-				{
-					'--side-min-width': '270px',
-					'--side-max-width': '340px',
-				} as React.CSSProperties
-			}
+		<div
+			className="ion-page"
+			id="workbench-main"
 		>
-			{/* Center Pane: Main Interactive Stage & Canvas */}
-			<div
-				className="ion-page"
-				id="workbench-main"
-			>
-				<Header
-					title={COMPONENT_TITLES[activeComponent] || 'Workbench'}
-					backHref="/dev/components"
-					hideActions
-				/>
+			<Header
+				title={COMPONENT_TITLES[activeComponent] || 'Workbench'}
+				backHref="/dev/components"
+				hideActions
+			/>
 
 				<IonContent
 					className="text-neutral-100"
@@ -1381,119 +1370,26 @@ function WorkbenchContent() {
 								)}
 
 								{activeComponent === 'sync-icon' && (
-									<div className="w-full max-w-3xl flex flex-col items-center gap-6">
-										{/* Hero Flywheel Showcase */}
-										<div className="w-full flex flex-col items-center justify-between p-8 rounded-2xl border border-neutral-800 bg-neutral-900/80 shadow-2xl backdrop-blur-md text-center">
-											<div className="mb-6">
-												<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800/80 border border-neutral-700/60 text-xs font-mono text-neutral-300 mb-2">
-													<span>Indicator Style:</span>
-													<span className="font-semibold text-sky-400 uppercase tracking-wide">
-														{momentumIndicatorStyle === 'none'
-															? 'Pure Motion (No Indicator)'
-															: momentumIndicatorStyle}
-													</span>
-												</div>
-												<h3 className="font-semibold text-white text-lg">Pure Momentum Flywheel</h3>
-												<p className="text-xs text-neutral-400 mt-1 max-w-md mx-auto">
-													Angular momentum physics with acceleration, top cruising velocity,
-													and viscous drag deceleration — without any dots, badges, or color shifts.
-												</p>
-											</div>
-
-											{/* Hero Scaled Icon */}
-											<div className="py-8 flex items-center justify-center">
-												<MomentumSyncIcon
-													id="workbench-sync-status-btn"
-													size={80}
-													isSyncing={
-														simulatedSyncState.phase === 'pushing' ||
-														simulatedSyncState.phase === 'pulling' ||
-														markdownIsSyncing ||
-														markdownFullSyncPhase === 'in-progress'
-													}
-													indicatorStyle={momentumIndicatorStyle}
-													glowColor={momentumGlowColor}
-													glowIntensity={momentumGlowIntensity}
-													enablePhysics={momentumEnabled}
-													maxVelocity={momentumMaxVelocity}
-													accelerationRate={momentumAcceleration}
-													frictionCoefficient={momentumFriction}
-													minimumImpulseDuration={momentumMinImpulseDuration}
-													onTelemetryChange={setMomentumTelemetry}
-												/>
-											</div>
-
-											{/* Real-time Telemetry Grid */}
-											<div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-neutral-800/80 text-left">
-												<div className="bg-neutral-950/60 p-3 rounded-lg border border-neutral-800/60">
-													<div className="text-[10px] uppercase tracking-wider text-neutral-500 font-medium">Phase</div>
-													<div className="text-sm font-semibold font-mono text-sky-400 capitalize mt-0.5">
-														{momentumTelemetry.phase}
-													</div>
-												</div>
-												<div className="bg-neutral-950/60 p-3 rounded-lg border border-neutral-800/60">
-													<div className="text-[10px] uppercase tracking-wider text-neutral-500 font-medium">Velocity</div>
-													<div className="text-sm font-semibold font-mono text-white mt-0.5">
-														{momentumTelemetry.velocity} <span className="text-xs text-neutral-500 font-normal">deg/s</span>
-													</div>
-												</div>
-												<div className="bg-neutral-950/60 p-3 rounded-lg border border-neutral-800/60">
-													<div className="text-[10px] uppercase tracking-wider text-neutral-500 font-medium">Rotation Angle</div>
-													<div className="text-sm font-semibold font-mono text-white mt-0.5">
-														{momentumTelemetry.angle}°
-													</div>
-												</div>
-												<div className="bg-neutral-950/60 p-3 rounded-lg border border-neutral-800/60">
-													<div className="text-[10px] uppercase tracking-wider text-neutral-500 font-medium">Sync Signal</div>
-													<div className="text-sm font-semibold font-mono mt-0.5 flex items-center gap-1.5">
-														<span
-															className={`w-2 h-2 rounded-full ${
-																momentumTelemetry.isSyncing
-																	? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]'
-																	: 'bg-neutral-600'
-															}`}
-														/>
-														<span className={momentumTelemetry.isSyncing ? 'text-emerald-400' : 'text-neutral-400'}>
-															{momentumTelemetry.isSyncing ? 'Active' : 'Idle'}
-														</span>
-													</div>
-												</div>
-											</div>
-										</div>
-
-										{/* Header Toolbar Context Preview */}
-										<div className="w-full rounded-2xl border border-neutral-800/80 bg-neutral-950/60 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
-											<div className="flex items-center gap-4">
-												<div className="h-10 w-10 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-300">
-													<MomentumSyncIcon
-														size={22}
-														isSyncing={
-															simulatedSyncState.phase === 'pushing' ||
-															simulatedSyncState.phase === 'pulling' ||
-															markdownIsSyncing ||
-															markdownFullSyncPhase === 'in-progress'
-														}
-														indicatorStyle={momentumIndicatorStyle}
-														glowColor={momentumGlowColor}
-														glowIntensity={momentumGlowIntensity}
-														enablePhysics={momentumEnabled}
-														maxVelocity={momentumMaxVelocity}
-														accelerationRate={momentumAcceleration}
-														frictionCoefficient={momentumFriction}
-														minimumImpulseDuration={momentumMinImpulseDuration}
-													/>
-												</div>
-												<div>
-													<h4 className="text-sm font-semibold text-white">Production Scale Preview (22px)</h4>
-													<p className="text-xs text-neutral-400">
-														How the pure momentum flywheel looks directly in the StarFocus header button
-													</p>
-												</div>
-											</div>
-											<div className="text-xs font-mono text-neutral-400 px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800">
-												v_max: {momentumMaxVelocity}°/s | drag: {momentumFriction}
-											</div>
-										</div>
+									<div className="flex items-center justify-center p-12">
+										<MomentumSyncIcon
+											id="workbench-sync-status-btn"
+											size={72}
+											isSyncing={
+												simulatedSyncState.phase === 'pushing' ||
+												simulatedSyncState.phase === 'pulling' ||
+												markdownIsSyncing ||
+												markdownFullSyncPhase === 'in-progress'
+											}
+											indicatorStyle={momentumIndicatorStyle}
+											glowColor={momentumGlowColor}
+											glowIntensity={momentumGlowIntensity}
+											enablePhysics={momentumEnabled}
+											maxVelocity={momentumMaxVelocity}
+											accelerationRate={momentumAcceleration}
+											frictionCoefficient={momentumFriction}
+											minimumImpulseDuration={momentumMinImpulseDuration}
+											onTelemetryChange={setMomentumTelemetry}
+										/>
 									</div>
 								)}
 
@@ -1776,92 +1672,96 @@ function WorkbenchContent() {
 						</div>
 				</IonContent>
 
-				{/* Bottom Toolbar housing the workbench controls */}
-				<IonFooter className="border-t border-neutral-800 bg-neutral-950">
-					<IonToolbar className="[--background:transparent]">
-						{presetsForActiveComponent.length > 0 && (
-							<div
-								data-testid="workbench-toolbar-presets-bar"
-								className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 px-2 ml-14 sm:ml-2"
-							>
-								{presetsForActiveComponent.map((p) => (
-									<IonChip
-										key={p.id}
-										onClick={p.action}
-										outline={!p.active}
-										color={p.active ? 'primary' : 'medium'}
-										className="cursor-pointer m-0 text-xs shrink-0 whitespace-nowrap h-7"
-									>
-										<IonLabel>{p.label}</IonLabel>
-									</IonChip>
-								))}
+				{/* Sheet Modal: Presets in peek mode by default, expandable to Knobs */}
+				<IonModal
+					ref={controlsSheetRef}
+					isOpen={true}
+					canDismiss={false}
+					breakpoints={[0.16, 0.65, 0.95]}
+					initialBreakpoint={0.16}
+					backdropBreakpoint={0.65}
+					handle={true}
+					handleBehavior="cycle"
+					id="workbench-controls-sheet"
+					data-testid="workbench-controls-sheet"
+					onIonBreakpointDidChange={(event) => {
+						setSheetBreakpoint(event.detail.breakpoint)
+					}}
+					style={
+						{
+							'--background': '#18181b',
+							'--border-color': '#27272a',
+							'--border-radius': '16px 16px 0 0',
+							'--box-shadow': '0 -10px 25px -5px rgba(0, 0, 0, 0.5)',
+						} as React.CSSProperties
+					}
+				>
+					<div className="flex flex-col h-full bg-neutral-900 text-neutral-100 select-none">
+						{/* Peek Surface: Drag Handle + Presets Bar */}
+						<div className="px-3 pt-1.5 pb-2 border-b border-neutral-800 shrink-0 bg-neutral-950/95">
+							<div className="flex items-center justify-between pb-1 px-1">
+								<div className="flex items-center gap-1.5">
+									<IonIcon icon={flashSharp} className="text-amber-400 text-sm" />
+									<span className="text-xs font-semibold text-neutral-300">
+										{sheetBreakpoint > 0.2 ? 'Presets & Simulator Knobs' : 'Scenario Presets'}
+									</span>
+									<span className="text-[10px] text-neutral-500 font-mono">
+										({presetsForActiveComponent.length} presets)
+									</span>
+								</div>
+								<IonButton
+									id="knobs-menu-btn"
+									fill="clear"
+									size="small"
+									className="text-xs text-neutral-400 -mr-1 h-6"
+									onClick={toggleSheetKnobs}
+								>
+									{sheetBreakpoint <= 0.2 ? (
+										<>
+											<IonIcon slot="start" icon={chevronUpSharp} className="text-xs" />
+											<span>Knobs</span>
+										</>
+									) : (
+										<>
+											<IonIcon slot="start" icon={chevronDownSharp} className="text-xs" />
+											<span>Peek</span>
+										</>
+									)}
+								</IonButton>
 							</div>
-						)}
 
-						<IonButtons slot="end">
-							<span className="text-xs font-medium text-neutral-400 hidden sm:inline mr-1">
-								Controls & Knobs
-							</span>
-							<IonMenuButton
-								menu="knobs-menu"
-								id="knobs-menu-btn"
-								autoHide={false}
-							>
-								<IonIcon icon={optionsSharp} />
-							</IonMenuButton>
-						</IonButtons>
-					</IonToolbar>
-				</IonFooter>
-			</div>
-
-			{/* Right Pane: State Simulator & Knobs Menu */}
-			<IonMenu
-				contentId="workbench-main"
-				menuId="knobs-menu"
-				side="end"
-			>
-				<IonHeader>
-					<IonToolbar className="border-b border-neutral-800">
-						<div className="flex items-center gap-2 px-3 py-1">
-							<IonIcon
-								icon={optionsSharp}
-								className="text-blue-400 text-lg"
-							/>
-							<IonTitle
-								size="small"
-								className="font-bold text-sm"
-							>
-								Simulator & Knobs
-							</IonTitle>
+							{presetsForActiveComponent.length > 0 && (
+								<div
+									data-testid="workbench-presets-bar"
+									className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1"
+								>
+									<div
+										data-testid="workbench-toolbar-presets-bar"
+										className="contents"
+									>
+										{presetsForActiveComponent.map((preset) => (
+											<IonChip
+												key={preset.id}
+												onClick={preset.action}
+												outline={!preset.active}
+												color={preset.active ? 'primary' : 'medium'}
+												className="cursor-pointer m-0 text-xs shrink-0 whitespace-nowrap h-7"
+											>
+												<IonLabel>{preset.label}</IonLabel>
+											</IonChip>
+										))}
+									</div>
+								</div>
+							)}
 						</div>
-						<IonButtons
-							slot="end"
-							className="lg:hidden"
-						>
-							<IonButton
-								id="close-knobs-btn"
-								aria-label="Close knobs menu"
-								fill="clear"
-								color="light"
-								onClick={async () => {
-									const menu = document.querySelector('ion-menu[menu-id="knobs-menu"]') as any
-									if (menu?.close) {
-										await menu.close()
-									} else {
-										await menuController.close('knobs-menu')
-									}
-								}}
-							>
-								<IonIcon slot="icon-only" icon={closeSharp} />
-							</IonButton>
-						</IonButtons>
-					</IonToolbar>
-				</IonHeader>
-				<IonContent className="ion-padding bg-neutral-900 text-neutral-100">
-					<div className="space-y-4 pb-6">{knobsContent}</div>
-				</IonContent>
-			</IonMenu>
-		</IonSplitPane>
+
+						{/* Expanded Surface: Knobs & Controls */}
+						<IonContent className="ion-padding bg-neutral-900 text-neutral-100" scrollY={true}>
+							<div className="space-y-4 pb-12">{knobsContent}</div>
+						</IonContent>
+					</div>
+				</IonModal>
+			</div>
 	)
 }
 

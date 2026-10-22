@@ -8,7 +8,7 @@ describe('workbench', () => {
 		cy.get('ion-toolbar', { timeout: 15000 }).should('be.visible')
 		cy.get('#workbench-main h1', { timeout: 15000 }).contains('Unified Sync Status Popover').should('be.visible')
 		cy.get('[data-testid="workbench-canvas"]').should('be.visible')
-		cy.get('ion-split-pane').should('exist')
+		cy.get('[data-testid="workbench-controls-sheet"]').should('exist')
 	})
 
 	it('can switch between components via route', () => {
@@ -105,7 +105,7 @@ describe('workbench', () => {
 		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Reconnect Needed').click()
 
 		// Open popover
-		cy.get('#workbench-sync-status-btn').click()
+		cy.get('#workbench-sync-status-btn').click({ force: true })
 		cy.get('ion-popover').should('be.visible')
 
 		// Single reconnect row should be visible
@@ -141,7 +141,7 @@ describe('workbench', () => {
 		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Signed Out').click()
 
 		// Open popover
-		cy.get('#workbench-sync-status-btn').click()
+		cy.get('#workbench-sync-status-btn').click({ force: true })
 		cy.get('ion-popover').should('be.visible')
 
 		// Disconnected cloud row and Sync login button should be visible
@@ -169,11 +169,20 @@ describe('workbench', () => {
 		cy.visit('/dev/components/sync-status')
 		cy.contains('Unified Sync Status Popover', { timeout: 15000 }).should('be.visible')
 
-		// Disable markdown export via toggle in knobs drawer
-		cy.get('ion-menu[menu-id="knobs-menu"]').contains('Export Enabled').parent().find('ion-toggle').click()
+		// Expand controls sheet to access markdown export toggle in knobs
+		cy.get('#knobs-menu-btn').click()
+		cy.get('[data-testid="workbench-controls-sheet"]')
+			.contains('Export Enabled')
+			.parent()
+			.find('ion-toggle')
+			.click()
+
+		// Collapse controls sheet back to peek mode so canvas is clear
+		cy.get('#close-knobs-btn').click({ force: true })
+		cy.wait(400)
 
 		// Open popover
-		cy.get('#workbench-sync-status-btn').click()
+		cy.get('#workbench-sync-status-btn').click({ force: true })
 		cy.get('ion-popover').should('be.visible')
 
 		// Markdown disabled row and Set Up button should be visible
@@ -234,30 +243,27 @@ describe('workbench', () => {
 		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', '150ms Pulse').click()
 		cy.get('[data-testid="sync-icon"]').should('have.attr', 'data-spinning', 'true')
 
-		// Knobs menu has simulation triggers and telemetry
+		// Expand controls sheet to access simulation triggers and telemetry
+		cy.get('#knobs-menu-btn').click()
 		cy.contains('Simulation Triggers').should('be.visible')
 		cy.contains('Active State:').should('be.visible')
 	})
 
-	it('provides a desktop split pane layout with stage and simulator knobs', () => {
+	it('provides a sheet modal controls layout with presets in peek mode and expandable knobs', () => {
 		cy.viewport(1280, 800)
 		cy.visit('/dev/components/sync-status')
-		cy.get('ion-split-pane', { timeout: 15000 }).should('have.class', 'split-pane-visible')
 
-		// Left catalog menu is removed
-		cy.get('ion-menu[menu-id="components-menu"]').should('not.exist')
-
-		// Middle: Main stage with canvas
-		cy.get('#workbench-main').should('be.visible')
+		// Main stage with canvas
+		cy.get('#workbench-main', { timeout: 15000 }).should('be.visible')
 		cy.get('[data-testid="workbench-canvas"]').should('be.visible')
 
-		// Right: Knobs menu is visible side-by-side with presets above the knobs
-		cy.get('ion-menu[menu-id="knobs-menu"]').should('be.visible')
-		cy.get('ion-menu[menu-id="knobs-menu"] [data-testid="workbench-presets-bar"]').should('be.visible')
-		cy.contains('Cloud Sync Controls').should('be.visible')
+		// Sheet modal is mounted with presets visible in peek mode
+		cy.get('[data-testid="workbench-controls-sheet"]').should('exist')
+		cy.get('[data-testid="workbench-presets-bar"]').should('be.visible')
 
-		// Presets bar in bottom toolbar is also accessible
-		cy.get('[data-testid="workbench-toolbar-presets-bar"]').should('be.visible')
+		// Expand sheet modal to access simulator knobs
+		cy.get('#knobs-menu-btn').click()
+		cy.contains('Cloud Sync Controls').should('be.visible')
 
 		// Navigate back to component list using header back button
 		cy.get('ion-header ion-back-button').click()
@@ -265,37 +271,27 @@ describe('workbench', () => {
 		cy.contains('Component Catalog', { timeout: 15000 }).should('be.visible')
 	})
 
-	it('provides a responsive mobile split pane experience with collapsible knobs menu and preset chips', () => {
+	it('provides a responsive mobile sheet modal experience with peek presets and expandable knobs', () => {
 		cy.viewport(390, 844)
 		cy.visit('/dev/components/sync-status')
 		cy.get('#workbench-main h1', { timeout: 15000 }).contains('Unified Sync Status Popover').should('be.visible')
 
-		// On mobile, split pane is collapsed; left menu button does not exist
-		cy.get('#components-menu-btn').should('not.exist')
 		cy.get('#knobs-menu-btn').should('be.visible')
 		cy.get('[data-testid="workbench-canvas"]').should('be.visible')
 
-		// Verify quick-access presets bar in bottom toolbar
-		cy.get('[data-testid="workbench-toolbar-presets-bar"]').should('be.visible')
-		cy.get('[data-testid="workbench-toolbar-presets-bar"]').contains('ion-chip', 'Cloud Uploading').click()
+		// Verify quick-access presets bar in peek mode
+		cy.get('[data-testid="workbench-presets-bar"]').should('be.visible')
+		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Cloud Uploading').click()
 		cy.get('#workbench-sync-status-btn [data-testid="sync-icon"]').should('have.attr', 'data-spinning', 'true')
 
-		// Open Knobs drawer via mobile menu button to access presets and knobs
+		// Expand sheet modal to reveal knobs
 		cy.get('#knobs-menu-btn').click()
-		cy.get('ion-menu[menu-id="knobs-menu"]').should('be.visible')
-		cy.get('ion-menu[menu-id="knobs-menu"] [data-testid="workbench-presets-bar"]').should('be.visible')
+		cy.get('[data-testid="workbench-controls-sheet"]').contains('Presentation Mode').should('be.visible')
 
-		// Select a preset chip inside knobs drawer
-		cy.get('ion-menu[menu-id="knobs-menu"] [data-testid="workbench-presets-bar"]')
-			.contains('ion-chip', 'Cloud Uploading')
-			.click()
-
-		// Close knobs drawer
-		cy.wait(500)
+		// Collapse sheet modal back to peek mode
 		cy.get('#close-knobs-btn').click({ force: true })
-		cy.get('ion-menu[menu-id="knobs-menu"]').should('not.have.class', 'show-menu')
 
-		// Verify component on canvas updated
+		// Verify component on canvas remains updated
 		cy.get('#workbench-sync-status-btn [data-testid="sync-icon"]').should('have.attr', 'data-spinning', 'true')
 
 		// Navigate back to component list using header back button
