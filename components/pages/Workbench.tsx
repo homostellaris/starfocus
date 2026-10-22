@@ -211,7 +211,7 @@ function WorkbenchContent() {
 
 	// --- Momentum & Inertia Knobs ---
 	const [momentumEnabled, setMomentumEnabled] = useState(true)
-	const [momentumIndicatorStyle, setMomentumIndicatorStyle] = useState<MomentumIndicatorStyle>('dot')
+	const [momentumIndicatorStyle, setMomentumIndicatorStyle] = useState<MomentumIndicatorStyle>('none')
 	const [momentumGlowColor, setMomentumGlowColor] = useState<MomentumGlowColor>('cyan')
 	const [momentumGlowIntensity, setMomentumGlowIntensity] = useState(1.0)
 	const [momentumMaxVelocity, setMomentumMaxVelocity] = useState(540)
@@ -428,28 +428,10 @@ function WorkbenchContent() {
 		if (activeComponent === 'sync-icon') {
 			return [
 				{
-					id: 'style-dot',
-					label: '🔴 Option 1: Micro Dot',
-					action: () => setMomentumIndicatorStyle('dot'),
-					active: momentumIndicatorStyle === 'dot',
-				},
-				{
-					id: 'style-color',
-					label: '🎨 Option 2: Color Shift',
-					action: () => setMomentumIndicatorStyle('color'),
-					active: momentumIndicatorStyle === 'color',
-				},
-				{
-					id: 'style-pill',
-					label: '🏷️ Option 3: Surface Pill',
-					action: () => setMomentumIndicatorStyle('pill'),
-					active: momentumIndicatorStyle === 'pill',
-				},
-				{
-					id: 'style-glow',
-					label: '✨ Option 4: Drop Glow',
-					action: () => setMomentumIndicatorStyle('glow'),
-					active: momentumIndicatorStyle === 'glow',
+					id: 'style-none',
+					label: '🎯 Pure Motion (None)',
+					action: () => setMomentumIndicatorStyle('none'),
+					active: momentumIndicatorStyle === 'none',
 				},
 				{
 					id: 'pulse-quick',
@@ -1012,11 +994,11 @@ function WorkbenchContent() {
 								}
 								className="w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs text-neutral-200"
 							>
-								<IonSelectOption value="dot">Option 1: Micro Status Pip (Badge Dot)</IonSelectOption>
-								<IonSelectOption value="color">Option 2: Semantic Color Shift (Theme)</IonSelectOption>
-								<IonSelectOption value="pill">Option 3: Surface Pill (Button Tint)</IonSelectOption>
-								<IonSelectOption value="glow">Option 4: Drop-Shadow Glow Aura</IonSelectOption>
-								<IonSelectOption value="none">Option 5: None (Pure Motion Only)</IonSelectOption>
+								<IonSelectOption value="none">Option 1: None (Pure Motion Only)</IonSelectOption>
+								<IonSelectOption value="dot">Option 2: Micro Status Pip (Badge Dot)</IonSelectOption>
+								<IonSelectOption value="color">Option 3: Semantic Color Shift (Theme)</IonSelectOption>
+								<IonSelectOption value="pill">Option 4: Surface Pill (Button Tint)</IonSelectOption>
+								<IonSelectOption value="glow">Option 5: Drop-Shadow Glow Aura</IonSelectOption>
 							</IonSelect>
 						</div>
 						<div>
@@ -1399,150 +1381,37 @@ function WorkbenchContent() {
 								)}
 
 								{activeComponent === 'sync-icon' && (
-									<div className="w-full max-w-5xl flex flex-col items-center gap-6">
-										<div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-											{/* Variant 1: Micro Dot Pip */}
-											<div className="flex flex-col items-center justify-between p-6 rounded-2xl border border-neutral-800 bg-neutral-900/80 shadow-2xl backdrop-blur-md text-center">
-												<div className="mb-4">
-													<span className="text-xs font-semibold uppercase tracking-wider text-cyan-400">
-														Variant 1
+									<div className="w-full max-w-3xl flex flex-col items-center gap-6">
+										{/* Hero Flywheel Showcase */}
+										<div className="w-full flex flex-col items-center justify-between p-8 rounded-2xl border border-neutral-800 bg-neutral-900/80 shadow-2xl backdrop-blur-md text-center">
+											<div className="mb-6">
+												<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800/80 border border-neutral-700/60 text-xs font-mono text-neutral-300 mb-2">
+													<span>Indicator Style:</span>
+													<span className="font-semibold text-sky-400 uppercase tracking-wide">
+														{momentumIndicatorStyle === 'none'
+															? 'Pure Motion (No Indicator)'
+															: momentumIndicatorStyle}
 													</span>
-													<h3 className="font-semibold text-white text-base mt-1">Micro Dot Pip</h3>
-													<p className="text-xs text-neutral-400 mt-1">
-														Discrete corner pip indicating active data transfer
-													</p>
 												</div>
-												<div className="py-8 flex items-center justify-center">
-													<MomentumSyncIcon
-														id="workbench-sync-status-btn"
-														size={72}
-														isSyncing={
-															simulatedSyncState.phase === 'pushing' ||
-															simulatedSyncState.phase === 'pulling' ||
-															markdownIsSyncing ||
-															markdownFullSyncPhase === 'in-progress'
-														}
-														indicatorStyle="dot"
-														glowColor={momentumGlowColor}
-														glowIntensity={momentumGlowIntensity}
-														enablePhysics={momentumEnabled}
-														maxVelocity={momentumMaxVelocity}
-														accelerationRate={momentumAcceleration}
-														frictionCoefficient={momentumFriction}
-														minimumImpulseDuration={momentumMinImpulseDuration}
-														onTelemetryChange={setMomentumTelemetry}
-													/>
-												</div>
-												<div className="w-full pt-4 border-t border-neutral-800/80 flex items-center justify-between text-xs text-neutral-400">
-													<span>Convention</span>
-													<span className="font-mono text-cyan-400">Ionic Status Pip</span>
-												</div>
+												<h3 className="font-semibold text-white text-lg">Pure Momentum Flywheel</h3>
+												<p className="text-xs text-neutral-400 mt-1 max-w-md mx-auto">
+													Angular momentum physics with acceleration, top cruising velocity,
+													and viscous drag deceleration — without any dots, badges, or color shifts.
+												</p>
 											</div>
 
-											{/* Variant 2: Color Shift */}
-											<div className="flex flex-col items-center justify-between p-6 rounded-2xl border border-neutral-800 bg-neutral-900/80 shadow-2xl backdrop-blur-md text-center">
-												<div className="mb-4">
-													<span className="text-xs font-semibold uppercase tracking-wider text-blue-400">
-														Variant 2
-													</span>
-													<h3 className="font-semibold text-white text-base mt-1">Color Shift</h3>
-													<p className="text-xs text-neutral-400 mt-1">
-														Transitions from neutral to energetic tint while syncing
-													</p>
-												</div>
-												<div className="py-8 flex items-center justify-center">
-													<MomentumSyncIcon
-														size={72}
-														isSyncing={
-															simulatedSyncState.phase === 'pushing' ||
-															simulatedSyncState.phase === 'pulling' ||
-															markdownIsSyncing ||
-															markdownFullSyncPhase === 'in-progress'
-														}
-														indicatorStyle="color"
-														glowColor={momentumGlowColor}
-														glowIntensity={momentumGlowIntensity}
-														enablePhysics={momentumEnabled}
-														maxVelocity={momentumMaxVelocity}
-														accelerationRate={momentumAcceleration}
-														frictionCoefficient={momentumFriction}
-														minimumImpulseDuration={momentumMinImpulseDuration}
-													/>
-												</div>
-												<div className="w-full pt-4 border-t border-neutral-800/80 flex items-center justify-between text-xs text-neutral-400">
-													<span>Convention</span>
-													<span className="font-mono text-blue-400">Ionic Accent Color</span>
-												</div>
-											</div>
-
-											{/* Variant 3: Surface Pill */}
-											<div className="flex flex-col items-center justify-between p-6 rounded-2xl border border-neutral-800 bg-neutral-900/80 shadow-2xl backdrop-blur-md text-center">
-												<div className="mb-4">
-													<span className="text-xs font-semibold uppercase tracking-wider text-purple-400">
-														Variant 3
-													</span>
-													<h3 className="font-semibold text-white text-base mt-1">Surface Pill</h3>
-													<p className="text-xs text-neutral-400 mt-1">
-														Contained chip with icon and live sync state label
-													</p>
-												</div>
-												<div className="py-8 flex items-center justify-center">
-													<div
-														className={`inline-flex items-center gap-3 px-4 py-2 rounded-full border transition-all duration-300 ${
-															simulatedSyncState.phase === 'pushing' ||
-															simulatedSyncState.phase === 'pulling' ||
-															markdownIsSyncing ||
-															markdownFullSyncPhase === 'in-progress'
-																? 'bg-purple-950/60 border-purple-500/60 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.3)]'
-																: 'bg-neutral-900/90 border-neutral-800 text-neutral-400'
-														}`}
-													>
-														<MomentumSyncIcon
-															size={24}
-															isSyncing={
-																simulatedSyncState.phase === 'pushing' ||
-																simulatedSyncState.phase === 'pulling' ||
-																markdownIsSyncing ||
-																markdownFullSyncPhase === 'in-progress'
-															}
-															indicatorStyle="none"
-															glowColor={momentumGlowColor}
-															glowIntensity={momentumGlowIntensity}
-															enablePhysics={momentumEnabled}
-															maxVelocity={momentumMaxVelocity}
-															accelerationRate={momentumAcceleration}
-															frictionCoefficient={momentumFriction}
-															minimumImpulseDuration={momentumMinImpulseDuration}
-														/>
-														<span className="text-xs font-semibold uppercase tracking-wider font-mono">
-															{simulatedSyncState.phase === 'pushing' ||
-															simulatedSyncState.phase === 'pulling' ||
-															markdownIsSyncing ||
-															markdownFullSyncPhase === 'in-progress'
-																? 'Syncing'
-																: 'Ready'}
-														</span>
-													</div>
-												</div>
-												<div className="w-full pt-4 border-t border-neutral-800/80 flex items-center justify-between text-xs text-neutral-400">
-													<span>Convention</span>
-													<span className="font-mono text-purple-400">Ionic Chip Container</span>
-												</div>
-											</div>
-										</div>
-
-										{/* Variant 4: Aura Glow (Alternative Option) */}
-										<div className="w-full rounded-2xl border border-neutral-800/80 bg-neutral-950/60 p-4 flex items-center justify-between shadow-xl">
-											<div className="flex items-center gap-4">
+											{/* Hero Scaled Icon */}
+											<div className="py-8 flex items-center justify-center">
 												<MomentumSyncIcon
-													size={44}
+													id="workbench-sync-status-btn"
+													size={80}
 													isSyncing={
 														simulatedSyncState.phase === 'pushing' ||
 														simulatedSyncState.phase === 'pulling' ||
 														markdownIsSyncing ||
 														markdownFullSyncPhase === 'in-progress'
 													}
-													indicatorStyle="glow"
+													indicatorStyle={momentumIndicatorStyle}
 													glowColor={momentumGlowColor}
 													glowIntensity={momentumGlowIntensity}
 													enablePhysics={momentumEnabled}
@@ -1550,16 +1419,79 @@ function WorkbenchContent() {
 													accelerationRate={momentumAcceleration}
 													frictionCoefficient={momentumFriction}
 													minimumImpulseDuration={momentumMinImpulseDuration}
+													onTelemetryChange={setMomentumTelemetry}
 												/>
+											</div>
+
+											{/* Real-time Telemetry Grid */}
+											<div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-neutral-800/80 text-left">
+												<div className="bg-neutral-950/60 p-3 rounded-lg border border-neutral-800/60">
+													<div className="text-[10px] uppercase tracking-wider text-neutral-500 font-medium">Phase</div>
+													<div className="text-sm font-semibold font-mono text-sky-400 capitalize mt-0.5">
+														{momentumTelemetry.phase}
+													</div>
+												</div>
+												<div className="bg-neutral-950/60 p-3 rounded-lg border border-neutral-800/60">
+													<div className="text-[10px] uppercase tracking-wider text-neutral-500 font-medium">Velocity</div>
+													<div className="text-sm font-semibold font-mono text-white mt-0.5">
+														{momentumTelemetry.velocity} <span className="text-xs text-neutral-500 font-normal">deg/s</span>
+													</div>
+												</div>
+												<div className="bg-neutral-950/60 p-3 rounded-lg border border-neutral-800/60">
+													<div className="text-[10px] uppercase tracking-wider text-neutral-500 font-medium">Rotation Angle</div>
+													<div className="text-sm font-semibold font-mono text-white mt-0.5">
+														{momentumTelemetry.angle}°
+													</div>
+												</div>
+												<div className="bg-neutral-950/60 p-3 rounded-lg border border-neutral-800/60">
+													<div className="text-[10px] uppercase tracking-wider text-neutral-500 font-medium">Sync Signal</div>
+													<div className="text-sm font-semibold font-mono mt-0.5 flex items-center gap-1.5">
+														<span
+															className={`w-2 h-2 rounded-full ${
+																momentumTelemetry.isSyncing
+																	? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]'
+																	: 'bg-neutral-600'
+															}`}
+														/>
+														<span className={momentumTelemetry.isSyncing ? 'text-emerald-400' : 'text-neutral-400'}>
+															{momentumTelemetry.isSyncing ? 'Active' : 'Idle'}
+														</span>
+													</div>
+												</div>
+											</div>
+										</div>
+
+										{/* Header Toolbar Context Preview */}
+										<div className="w-full rounded-2xl border border-neutral-800/80 bg-neutral-950/60 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+											<div className="flex items-center gap-4">
+												<div className="h-10 w-10 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-300">
+													<MomentumSyncIcon
+														size={22}
+														isSyncing={
+															simulatedSyncState.phase === 'pushing' ||
+															simulatedSyncState.phase === 'pulling' ||
+															markdownIsSyncing ||
+															markdownFullSyncPhase === 'in-progress'
+														}
+														indicatorStyle={momentumIndicatorStyle}
+														glowColor={momentumGlowColor}
+														glowIntensity={momentumGlowIntensity}
+														enablePhysics={momentumEnabled}
+														maxVelocity={momentumMaxVelocity}
+														accelerationRate={momentumAcceleration}
+														frictionCoefficient={momentumFriction}
+														minimumImpulseDuration={momentumMinImpulseDuration}
+													/>
+												</div>
 												<div>
-													<h4 className="text-sm font-semibold text-white">Variant 4: Aura Glow (Alternative)</h4>
+													<h4 className="text-sm font-semibold text-white">Production Scale Preview (22px)</h4>
 													<p className="text-xs text-neutral-400">
-														Soft radial backlight that illuminates exclusively during active transfer
+														How the pure momentum flywheel looks directly in the StarFocus header button
 													</p>
 												</div>
 											</div>
-											<div className="text-xs font-mono text-neutral-500">
-												{'indicatorStyle="glow"'}
+											<div className="text-xs font-mono text-neutral-400 px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800">
+												v_max: {momentumMaxVelocity}°/s | drag: {momentumFriction}
 											</div>
 										</div>
 									</div>

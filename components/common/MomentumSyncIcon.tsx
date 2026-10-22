@@ -149,7 +149,7 @@ export default function MomentumSyncIcon({
 	style,
 	slot,
 	size = 'md',
-	indicatorStyle = 'dot',
+	indicatorStyle = 'none',
 	glowColor = 'cyan',
 	glowIntensity = 1,
 	maxVelocity = 540,

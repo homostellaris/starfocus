@@ -89,7 +89,7 @@ export default function SyncStatus({
 	onLogin,
 	onOpenSettings,
 	inline = false,
-	indicatorStyle = 'dot',
+	indicatorStyle = 'none',
 	glowColor = 'cyan',
 	glowIntensity = 1,
 	enableMomentum = true,
