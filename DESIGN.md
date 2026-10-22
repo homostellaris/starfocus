@@ -105,10 +105,10 @@ Unless there is an explicit and documented technical reason, all UI layouts, pag
 
 The Component Workbench (`/dev/components/:component`) provides an isolated environment for developing, inspecting, and stress-testing individual components.
 
-1. **Strict Canvas Isolation**:
+1. **Strict Canvas Isolation & Top Alignment**:
    - **The Stage Canvas (`[data-testid="workbench-canvas"]`) is strictly and exclusively reserved for the component under test.**
    - Do NOT place telemetry grids, debug HUDs, multiple variant comparison cards, mock surrounding apps, or floating test buttons on the canvas.
-   - The canvas displays only the component under test, cleanly centered against the standard dot-grid background.
+   - **Top Alignment**: The component is aligned to the top of the canvas (`justify-start pt-8 md:pt-12`) rather than vertically centered. This ensures it remains clearly visible and unobstructed in the upper viewport even when the sheet modal is expanded up to adjust simulator knobs or inspect live telemetry.
 
 2. **Sheet Modal Architecture for Presets & Knobs**:
    - Both Scenario Presets and Simulator Knobs are consolidated into an Ionic Sheet Modal (`<IonModal>` with `breakpoints={[0.16, 0.65, 0.95]}`).

@@ -1289,7 +1289,7 @@ function WorkbenchContent() {
 					{/* Canvas Area: Edge-to-edge dot-grid taking up the whole content */}
 					<div
 						data-testid="workbench-canvas"
-						className="w-full min-h-[calc(100%-48px)] flex-1 flex flex-col items-center justify-center p-4 md:p-8 select-none"
+						className="w-full min-h-[calc(100%-48px)] flex-1 flex flex-col items-center justify-start p-4 md:p-8 select-none pt-8 md:pt-12 pb-44"
 						style={{
 							backgroundColor: 'transparent',
 							backgroundImage:
@@ -1297,8 +1297,8 @@ function WorkbenchContent() {
 							backgroundSize: '22px 22px',
 						}}
 					>
-							{/* Centered Element on Canvas */}
-							<div className="w-full flex items-center justify-center py-6">
+							{/* Component on Canvas (top-aligned for expanded sheet visibility) */}
+							<div className="w-full flex items-center justify-center">
 								{activeComponent === 'sync-status' && (
 									<div className="flex flex-col items-center gap-6 max-w-md w-full">
 										{/* Interactive Popover Header Trigger Bar */}
@@ -1370,7 +1370,7 @@ function WorkbenchContent() {
 								)}
 
 								{activeComponent === 'sync-icon' && (
-									<div className="flex items-center justify-center p-12">
+									<div className="flex items-center justify-center py-4 px-4">
 										<MomentumSyncIcon
 											id="workbench-sync-status-btn"
 											size={72}
