@@ -182,7 +182,7 @@ describe('workbench', () => {
 
 		// Collapse controls sheet back to peek mode so canvas is clear
 		cy.get('[data-testid="workbench-controls-sheet"]').then(($el) => {
-			;($el[0] as any).setCurrentBreakpoint(0.16)
+			;($el[0] as any).setCurrentBreakpoint(0.08)
 		})
 		cy.wait(400)
 
@@ -274,7 +274,7 @@ describe('workbench', () => {
 			;($el[0] as any).setCurrentBreakpoint(0.65)
 		})
 		cy.wait(400)
-		cy.get('[data-testid="workbench-controls-sheet"]').contains('Presentation Mode').should('be.visible')
+		cy.get('[data-testid="workbench-controls-sheet"]').contains('Presentation Mode').scrollIntoView().should('be.visible')
 
 		// Navigate back to component list using header back button
 		cy.get('ion-header ion-back-button').click()
@@ -300,11 +300,11 @@ describe('workbench', () => {
 			;($el[0] as any).setCurrentBreakpoint(0.65)
 		})
 		cy.wait(400)
-		cy.get('[data-testid="workbench-controls-sheet"]').contains('Presentation Mode').should('be.visible')
+		cy.get('[data-testid="workbench-controls-sheet"]').contains('Presentation Mode').scrollIntoView().should('be.visible')
 
 		// Collapse sheet modal back to peek mode
 		cy.get('[data-testid="workbench-controls-sheet"]').then(($el) => {
-			;($el[0] as any).setCurrentBreakpoint(0.16)
+			;($el[0] as any).setCurrentBreakpoint(0.08)
 		})
 
 		// Verify component on canvas remains updated

@@ -1584,8 +1584,8 @@ function WorkbenchContent() {
 					ref={controlsSheetRef}
 					isOpen={true}
 					canDismiss={false}
-					breakpoints={[0.16, 0.65, 0.95]}
-					initialBreakpoint={0.16}
+					breakpoints={[0.08, 0.65, 0.95]}
+					initialBreakpoint={0.08}
 					backdropBreakpoint={0.65}
 					handle={true}
 					handleBehavior="cycle"
@@ -1605,7 +1605,7 @@ function WorkbenchContent() {
 						{presetsForActiveComponent.length > 0 && (
 							<div
 								data-testid="workbench-presets-bar"
-								className="flex items-center gap-1.5 overflow-x-auto no-scrollbar px-3 pt-2 pb-2.5 shrink-0 bg-[#1f1f1f]"
+								className="flex items-center gap-1.5 overflow-x-auto no-scrollbar px-3 pt-4 pb-2.5 shrink-0 bg-[#1f1f1f]"
 							>
 								<div
 									data-testid="workbench-toolbar-presets-bar"
