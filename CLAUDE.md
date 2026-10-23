@@ -98,6 +98,7 @@ The build workflow (`.github/workflows/build.yml`) runs:
 
 - State: Dexie (IndexedDB) with cloud sync addon
 - UI Components: Ionic React in `/components/`
+- Component Workbench: `/dev/components/:component` uses an isolated canvas exclusively for the component under test, with presets in a peek sheet modal and expandable simulator knobs / telemetry (see `DESIGN.md`).
 - App Router: Next.js App Router in `/app/`
 - Database schema: `/components/db.ts`
 

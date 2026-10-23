@@ -50,6 +50,17 @@ const CATALOG_ITEMS: ComponentCatalogItem[] = [
 		tags: ['Popover', 'Dexie Cloud', 'Markdown Export', 'Interactive'],
 	},
 	{
+		key: 'sync-icon',
+		title: 'Momentum & Inertia Sync Icon',
+		subtitle: 'Physical Flywheel Spinner & Inertial Coasting',
+		description:
+			'Physical rotational flywheel simulation for synchronization indicators. Features angular acceleration, viscous friction coasting, guaranteed minimum animation impulse, and smooth momentum physics.',
+		icon: syncSharp,
+		iconColor: 'text-sky-400 bg-sky-500/10 border-sky-500/20',
+		badge: 'Motion',
+		tags: ['Flywheel', 'Momentum', 'Inertia', 'Physics'],
+	},
+	{
 		key: 'cloud-sync',
 		title: 'Cloud Sync Details & Status',
 		subtitle: 'Dexie Cloud Database Replication',

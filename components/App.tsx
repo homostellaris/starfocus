@@ -16,7 +16,12 @@ import { useEffect } from 'react'
 import todoRepository from './todos/repository'
 import { HelpProvider } from './common/HelpContext'
 
-setupIonicReact({})
+const isCypressEnvironment =
+	typeof window !== 'undefined' && Boolean((window as any).Cypress)
+
+setupIonicReact({
+	animated: !isCypressEnvironment,
+})
 
 window
 	.matchMedia('(prefers-color-scheme: dark)')
