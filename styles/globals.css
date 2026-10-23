@@ -151,3 +151,11 @@ body::-webkit-scrollbar {
 	backface-visibility: hidden;
 	-webkit-backface-visibility: hidden;
 }
+
+/* Prevent Next.js dev overlay indicator from blocking FAB clicks */
+nextjs-portal,
+[data-nextjs-toast],
+[data-nextjs-dev-indicator] {
+	display: none !important;
+	pointer-events: none !important;
+}
