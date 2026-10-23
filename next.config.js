@@ -2,7 +2,9 @@ const withMDX = require('@next/mdx')()
 const withVercelToolbar = require('@vercel/toolbar/plugins/next')()
 
 const nextConfig = withMDX({
-	devIndicators: false,
+	devIndicators: {
+		position: 'bottom-right',
+	},
 	allowedDevOrigins: [
 		'omarchy.tail29c7da.ts.net:8443',
 		'omarchy.tail29c7da.ts.net',

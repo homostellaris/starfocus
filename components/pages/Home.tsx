@@ -366,7 +366,7 @@ export const TodoLists = ({
 			scrollEvents={true}
 		>
 			<IonFab
-				className="left-2 bottom-2 lg:left-[calc((100vw/12*3)-56px)] z-50"
+				className="left-0 lg:left-[calc((100vw/12*3)-56px)] bottom-0"
 				slot="fixed"
 				horizontal="start"
 				vertical="bottom"
