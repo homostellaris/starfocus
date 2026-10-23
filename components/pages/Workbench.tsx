@@ -21,8 +21,6 @@ import {
 	IonToolbar,
 } from '@ionic/react'
 import {
-	flashSharp,
-	optionsSharp,
 	syncSharp,
 	cloudDoneSharp,
 	documentTextSharp,
@@ -31,9 +29,6 @@ import {
 	rocketSharp,
 	pulseSharp,
 	musicalNotesSharp,
-	closeSharp,
-	chevronUpSharp,
-	chevronDownSharp,
 } from 'ionicons/icons'
 import dayjs from 'dayjs'
 import { Header } from '../common/Header'
@@ -220,13 +215,6 @@ function WorkbenchContent() {
 	})
 
 	const controlsSheetRef = useRef<HTMLIonModalElement | null>(null)
-	const [sheetBreakpoint, setSheetBreakpoint] = useState(0.16)
-
-	const toggleSheetKnobs = () => {
-		const nextBreakpoint = sheetBreakpoint <= 0.2 ? 0.65 : 0.16
-		controlsSheetRef.current?.setCurrentBreakpoint(nextBreakpoint)
-		setSheetBreakpoint(nextBreakpoint)
-	}
 
 	const triggerPulseSync = (durationMilliseconds: number) => {
 		setCloudLoggedIn(true)
@@ -656,31 +644,9 @@ function WorkbenchContent() {
 
 	const knobsContent = (
 		<div className="space-y-5">
-			<div className="flex items-center justify-between pb-2 border-b border-neutral-800">
-				<div className="flex items-center gap-2">
-					<IonIcon icon={optionsSharp} className="text-sky-400 text-sm" />
-					<h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-300">
-						Simulator Controls & Knobs
-					</h3>
-				</div>
-				<IonButton
-					id="close-knobs-btn"
-					fill="clear"
-					size="small"
-					color="light"
-					className="text-xs -mr-1"
-					onClick={() => {
-						controlsSheetRef.current?.setCurrentBreakpoint(0.16)
-						setSheetBreakpoint(0.16)
-					}}
-				>
-					<IonIcon slot="icon-only" icon={closeSharp} />
-				</IonButton>
-			</div>
-
 			{/* Sync Status Presentation Knobs */}
 			{activeComponent === 'sync-status' && (
-				<div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+				<div className="space-y-3 pt-1 text-xs">
 					<h4 className="font-semibold text-neutral-300">Presentation Mode</h4>
 					<div className="flex items-center justify-between">
 						<span>Inline List Embed</span>
@@ -696,7 +662,7 @@ function WorkbenchContent() {
 			{isSyncComponent && (
 				<>
 					{/* Cloud Sync Knobs */}
-					<div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+					<div className="space-y-3 pt-3 border-t border-neutral-800/60 text-xs">
 						<h4 className="font-semibold text-neutral-300">Cloud Sync Controls</h4>
 						<div className="flex items-center justify-between">
 							<span>User Logged In</span>
@@ -770,7 +736,7 @@ function WorkbenchContent() {
 					</div>
 
 					{/* Markdown Sync Knobs */}
-					<div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+					<div className="space-y-3 pt-3 border-t border-neutral-800/60 text-xs">
 						<h4 className="font-semibold text-neutral-300">Markdown Export Controls</h4>
 						<div className="flex items-center justify-between">
 							<span>Export Enabled</span>
@@ -851,7 +817,7 @@ function WorkbenchContent() {
 							</div>
 						)}
 
-						<div className="space-y-2 pt-2 border-t border-neutral-800">
+						<div className="space-y-2 pt-2 border-t border-neutral-800/60">
 							<IonButton
 								expand="block"
 								fill="outline"
@@ -885,7 +851,7 @@ function WorkbenchContent() {
 
 			{/* Momentum & Inertia Physics Knobs for Sync Icon */}
 			{activeComponent === 'sync-icon' && (
-				<div className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+				<div className="space-y-4 pt-1 text-xs">
 					<div className="flex items-center justify-between">
 						<h4 className="font-semibold text-neutral-300">Simulation Triggers</h4>
 						<IonBadge color="primary" className="text-[10px]">Triggers</IonBadge>
@@ -938,7 +904,7 @@ function WorkbenchContent() {
 					</div>
 
 					{/* Live Telemetry Readout in Knobs */}
-					<div className="rounded-lg bg-neutral-900/80 p-2.5 border border-neutral-800 font-mono space-y-1.5">
+					<div className="rounded-lg bg-neutral-800/50 p-2.5 border border-neutral-700/50 font-mono space-y-1.5">
 						<div className="flex justify-between items-center text-[11px]">
 							<span className="text-neutral-400">Phase:</span>
 							<span className="font-semibold text-sky-400 capitalize">{momentumTelemetry.phase}</span>
@@ -959,7 +925,7 @@ function WorkbenchContent() {
 						</div>
 					</div>
 
-					<div className="pt-2 border-t border-neutral-800 space-y-3">
+					<div className="pt-2 border-t border-neutral-800/60 space-y-3">
 						<div className="flex items-center justify-between">
 							<h4 className="font-semibold text-neutral-300">Sync Flywheel & Physics</h4>
 							<IonBadge color="primary" className="text-[10px]">Controls</IonBadge>
@@ -1039,7 +1005,7 @@ function WorkbenchContent() {
 
 			{/* Starship & Trajectory Knobs */}
 			{activeComponent === 'starship-trajectory' && (
-				<div className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+				<div className="space-y-4 pt-1 text-xs">
 					<h4 className="font-semibold text-neutral-300">Starship Flight Controls</h4>
 					<div>
 						<div className="flex justify-between text-neutral-400">
@@ -1083,7 +1049,7 @@ function WorkbenchContent() {
 
 			{/* Pulse Graph Knobs */}
 			{activeComponent === 'pulse-graph' && (
-				<div className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+				<div className="space-y-4 pt-1 text-xs">
 					<h4 className="font-semibold text-neutral-300">Pulse Activity Controls</h4>
 					<div>
 						<div className="flex justify-between text-neutral-400">
@@ -1129,7 +1095,7 @@ function WorkbenchContent() {
 
 			{/* Mood Player Knobs */}
 			{activeComponent === 'mood-player' && (
-				<div className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+				<div className="space-y-4 pt-1 text-xs">
 					<h4 className="font-semibold text-neutral-300">Soundtrack Stream Mode</h4>
 					<div className="flex items-center justify-between">
 						<span>Active Channel</span>
@@ -1152,7 +1118,7 @@ function WorkbenchContent() {
 
 			{/* Star Roles Knobs */}
 			{activeComponent === 'star-roles' && (
-				<div className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+				<div className="space-y-4 pt-1 text-xs">
 					<h4 className="font-semibold text-neutral-300">Star Role Configuration</h4>
 					<div>
 						<span className="block mb-1 text-neutral-400">Role Icon</span>
@@ -1190,7 +1156,7 @@ function WorkbenchContent() {
 
 			{/* Star Points Knobs */}
 			{activeComponent === 'star-points' && (
-				<div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+				<div className="space-y-3 pt-1 text-xs">
 					<h4 className="font-semibold text-neutral-300">Star Points Widget</h4>
 					<p className="text-neutral-400">
 						Inspects the live header score counter tracking completed achievements.
@@ -1614,79 +1580,47 @@ function WorkbenchContent() {
 					handleBehavior="cycle"
 					id="workbench-controls-sheet"
 					data-testid="workbench-controls-sheet"
-					onIonBreakpointDidChange={(event) => {
-						setSheetBreakpoint(event.detail.breakpoint)
-					}}
 					style={
 						{
-							'--background': '#18181b',
-							'--border-color': '#27272a',
+							'--background': '#1f1f1f',
+							'--border-color': 'rgba(255, 255, 255, 0.08)',
 							'--border-radius': '16px 16px 0 0',
 							'--box-shadow': '0 -10px 25px -5px rgba(0, 0, 0, 0.5)',
 						} as React.CSSProperties
 					}
 				>
-					<div className="flex flex-col h-full bg-neutral-900 text-neutral-100 select-none">
-						{/* Peek Surface: Drag Handle + Presets Bar */}
-						<div className="px-3 pt-1.5 pb-2 border-b border-neutral-800 shrink-0 bg-neutral-950/95">
-							<div className="flex items-center justify-between pb-1 px-1">
-								<div className="flex items-center gap-1.5">
-									<IonIcon icon={flashSharp} className="text-amber-400 text-sm" />
-									<span className="text-xs font-semibold text-neutral-300">
-										{sheetBreakpoint > 0.2 ? 'Presets & Simulator Knobs' : 'Scenario Presets'}
-									</span>
-									<span className="text-[10px] text-neutral-500 font-mono">
-										({presetsForActiveComponent.length} presets)
-									</span>
-								</div>
-								<IonButton
-									id="knobs-menu-btn"
-									fill="clear"
-									size="small"
-									className="text-xs text-neutral-400 -mr-1 h-6"
-									onClick={toggleSheetKnobs}
-								>
-									{sheetBreakpoint <= 0.2 ? (
-										<>
-											<IonIcon slot="start" icon={chevronUpSharp} className="text-xs" />
-											<span>Knobs</span>
-										</>
-									) : (
-										<>
-											<IonIcon slot="start" icon={chevronDownSharp} className="text-xs" />
-											<span>Peek</span>
-										</>
-									)}
-								</IonButton>
-							</div>
-
-							{presetsForActiveComponent.length > 0 && (
+					<div className="flex flex-col h-full bg-[#1f1f1f] text-neutral-100 select-none">
+						{/* Presets Bar */}
+						{presetsForActiveComponent.length > 0 && (
+							<div
+								data-testid="workbench-presets-bar"
+								className="flex items-center gap-1.5 overflow-x-auto no-scrollbar px-3 pt-2 pb-2.5 shrink-0 bg-[#1f1f1f]"
+							>
 								<div
-									data-testid="workbench-presets-bar"
-									className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1"
+									data-testid="workbench-toolbar-presets-bar"
+									className="contents"
 								>
-									<div
-										data-testid="workbench-toolbar-presets-bar"
-										className="contents"
-									>
-										{presetsForActiveComponent.map((preset) => (
-											<IonChip
-												key={preset.id}
-												onClick={preset.action}
-												outline={!preset.active}
-												color={preset.active ? 'primary' : 'medium'}
-												className="cursor-pointer m-0 text-xs shrink-0 whitespace-nowrap h-7"
-											>
-												<IonLabel>{preset.label}</IonLabel>
-											</IonChip>
-										))}
-									</div>
+									{presetsForActiveComponent.map((preset) => (
+										<IonChip
+											key={preset.id}
+											onClick={preset.action}
+											outline={!preset.active}
+											color={preset.active ? 'primary' : 'medium'}
+											className="cursor-pointer m-0 text-xs shrink-0 whitespace-nowrap h-7 font-medium"
+										>
+											<IonLabel>{preset.label}</IonLabel>
+										</IonChip>
+									))}
 								</div>
-							)}
-						</div>
+							</div>
+						)}
 
 						{/* Expanded Surface: Knobs & Controls */}
-						<IonContent className="ion-padding bg-neutral-900 text-neutral-100" scrollY={true}>
+						<IonContent
+							className="ion-padding text-neutral-100"
+							scrollY={true}
+							style={{ '--background': '#1f1f1f' } as React.CSSProperties}
+						>
 							<div className="space-y-4 pb-12">{knobsContent}</div>
 						</IonContent>
 					</div>

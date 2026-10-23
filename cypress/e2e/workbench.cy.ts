@@ -170,15 +170,20 @@ describe('workbench', () => {
 		cy.contains('Unified Sync Status Popover', { timeout: 15000 }).should('be.visible')
 
 		// Expand controls sheet to access markdown export toggle in knobs
-		cy.get('#knobs-menu-btn').click()
+		cy.get('[data-testid="workbench-controls-sheet"]').then(($el) => {
+			;($el[0] as any).setCurrentBreakpoint(0.65)
+		})
+		cy.wait(400)
 		cy.get('[data-testid="workbench-controls-sheet"]')
 			.contains('Export Enabled')
 			.parent()
 			.find('ion-toggle')
-			.click()
+			.click({ force: true })
 
 		// Collapse controls sheet back to peek mode so canvas is clear
-		cy.get('#close-knobs-btn').click({ force: true })
+		cy.get('[data-testid="workbench-controls-sheet"]').then(($el) => {
+			;($el[0] as any).setCurrentBreakpoint(0.16)
+		})
 		cy.wait(400)
 
 		// Open popover
@@ -244,7 +249,10 @@ describe('workbench', () => {
 		cy.get('[data-testid="sync-icon"]').should('have.attr', 'data-spinning', 'true')
 
 		// Expand controls sheet to access simulation triggers and telemetry
-		cy.get('#knobs-menu-btn').click()
+		cy.get('[data-testid="workbench-controls-sheet"]').then(($el) => {
+			;($el[0] as any).setCurrentBreakpoint(0.65)
+		})
+		cy.wait(400)
 		cy.contains('Simulation Triggers').should('be.visible')
 		cy.contains('Active State:').should('be.visible')
 	})
@@ -262,8 +270,11 @@ describe('workbench', () => {
 		cy.get('[data-testid="workbench-presets-bar"]').should('be.visible')
 
 		// Expand sheet modal to access simulator knobs
-		cy.get('#knobs-menu-btn').click()
-		cy.contains('Cloud Sync Controls').should('be.visible')
+		cy.get('[data-testid="workbench-controls-sheet"]').then(($el) => {
+			;($el[0] as any).setCurrentBreakpoint(0.65)
+		})
+		cy.wait(400)
+		cy.get('[data-testid="workbench-controls-sheet"]').contains('Presentation Mode').should('be.visible')
 
 		// Navigate back to component list using header back button
 		cy.get('ion-header ion-back-button').click()
@@ -276,7 +287,7 @@ describe('workbench', () => {
 		cy.visit('/dev/components/sync-status')
 		cy.get('#workbench-main h1', { timeout: 15000 }).contains('Unified Sync Status Popover').should('be.visible')
 
-		cy.get('#knobs-menu-btn').should('be.visible')
+		cy.get('[data-testid="workbench-controls-sheet"]').should('exist')
 		cy.get('[data-testid="workbench-canvas"]').should('be.visible')
 
 		// Verify quick-access presets bar in peek mode
@@ -285,11 +296,16 @@ describe('workbench', () => {
 		cy.get('#workbench-sync-status-btn [data-testid="sync-icon"]').should('have.attr', 'data-spinning', 'true')
 
 		// Expand sheet modal to reveal knobs
-		cy.get('#knobs-menu-btn').click()
+		cy.get('[data-testid="workbench-controls-sheet"]').then(($el) => {
+			;($el[0] as any).setCurrentBreakpoint(0.65)
+		})
+		cy.wait(400)
 		cy.get('[data-testid="workbench-controls-sheet"]').contains('Presentation Mode').should('be.visible')
 
 		// Collapse sheet modal back to peek mode
-		cy.get('#close-knobs-btn').click({ force: true })
+		cy.get('[data-testid="workbench-controls-sheet"]').then(($el) => {
+			;($el[0] as any).setCurrentBreakpoint(0.16)
+		})
 
 		// Verify component on canvas remains updated
 		cy.get('#workbench-sync-status-btn [data-testid="sync-icon"]').should('have.attr', 'data-spinning', 'true')
