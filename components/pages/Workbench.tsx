@@ -1068,9 +1068,20 @@ function WorkbenchContent() {
 								<IonChip
 									key={p.id}
 									onClick={() => setPulsePreset(p.id)}
-									outline={pulsePreset !== p.id}
-									color={pulsePreset === p.id ? 'primary' : 'medium'}
-									className="cursor-pointer m-0 text-xs"
+									style={
+										{
+											'--background':
+												pulsePreset === p.id
+													? 'rgba(56, 189, 248, 0.18)'
+													: 'rgba(255, 255, 255, 0.08)',
+											'--color': pulsePreset === p.id ? '#38bdf8' : '#e5e5e5',
+											border:
+												pulsePreset === p.id
+													? '1px solid rgba(56, 189, 248, 0.45)'
+													: '1px solid rgba(255, 255, 255, 0.12)',
+										} as React.CSSProperties
+									}
+									className="cursor-pointer m-0 text-xs font-medium"
 								>
 									<IonLabel>{p.label}</IonLabel>
 								</IonChip>
@@ -1604,9 +1615,18 @@ function WorkbenchContent() {
 										<IonChip
 											key={preset.id}
 											onClick={preset.action}
-											outline={!preset.active}
-											color={preset.active ? 'primary' : 'medium'}
-											className="cursor-pointer m-0 text-xs shrink-0 whitespace-nowrap h-7 font-medium"
+											style={
+												{
+													'--background': preset.active
+														? 'rgba(56, 189, 248, 0.2)'
+														: 'rgba(255, 255, 255, 0.08)',
+													'--color': preset.active ? '#38bdf8' : '#e5e5e5',
+													border: preset.active
+														? '1px solid rgba(56, 189, 248, 0.5)'
+														: '1px solid rgba(255, 255, 255, 0.12)',
+												} as React.CSSProperties
+											}
+											className="cursor-pointer m-0 text-xs shrink-0 whitespace-nowrap h-7 font-medium transition-colors hover:opacity-90"
 										>
 											<IonLabel>{preset.label}</IonLabel>
 										</IonChip>
