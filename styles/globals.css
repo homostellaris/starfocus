@@ -151,3 +151,40 @@ body::-webkit-scrollbar {
 	backface-visibility: hidden;
 	-webkit-backface-visibility: hidden;
 }
+
+@keyframes curious-beacon {
+	0%, 100% {
+		transform: translateY(0px) rotate(0deg) scale(1.1);
+		filter: drop-shadow(0 0 3px rgba(56, 189, 248, 0.45));
+	}
+	20% {
+		transform: translateY(-3px) rotate(-14deg) scale(1.16);
+		filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.8));
+	}
+	40% {
+		transform: translateY(0px) rotate(0deg) scale(1.1);
+		filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.45));
+	}
+	60% {
+		transform: translateY(-3px) rotate(14deg) scale(1.16);
+		filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.8));
+	}
+	80% {
+		transform: translateY(-1px) rotate(-4deg) scale(1.12);
+		filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.6));
+	}
+}
+
+.animate-curious-beacon {
+	animation: curious-beacon 1.8s ease-in-out infinite;
+	transform-origin: center center;
+	will-change: transform, filter;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.animate-curious-beacon {
+		animation: none;
+		transform: scale(1.1);
+		filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.8));
+	}
+}

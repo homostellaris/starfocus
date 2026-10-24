@@ -23,6 +23,8 @@ import {
 	rocketSharp,
 	pulseSharp,
 	musicalNotesSharp,
+	settingsSharp,
+	helpCircleSharp,
 } from 'ionicons/icons'
 import { Header } from '../common/Header'
 
@@ -59,6 +61,28 @@ const CATALOG_ITEMS: ComponentCatalogItem[] = [
 		iconColor: 'text-sky-400 bg-sky-500/10 border-sky-500/20',
 		badge: 'Motion',
 		tags: ['Flywheel', 'Momentum', 'Inertia', 'Physics'],
+	},
+	{
+		key: 'settings-icon',
+		title: 'Momentum & Inertia Settings Cog',
+		subtitle: 'Physical Flywheel Spinner & Inertial Coasting',
+		description:
+			'Physical rotational flywheel simulation for the settings cog. Starts spinning when the settings menu opens, cruises with momentum while open, and coasts to a smooth stop with inertia when closed.',
+		icon: settingsSharp,
+		iconColor: 'text-violet-400 bg-violet-500/10 border-violet-500/20',
+		badge: 'Motion',
+		tags: ['Settings', 'Cog', 'Momentum', 'Inertia', 'Flywheel'],
+	},
+	{
+		key: 'help-icon',
+		title: 'Curious Beacon Help Icon',
+		subtitle: 'Inquisitive Wobble & Cosmic Beacon Animation',
+		description:
+			'Playful, inquisitive animation for the help icon trigger while the popover is active. Features curious tilting, floating hover, and a celestial beacon aura pulse.',
+		icon: helpCircleSharp,
+		iconColor: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+		badge: 'Motion',
+		tags: ['Help', 'Popover', 'Beacon', 'Animation', 'Playful'],
 	},
 	{
 		key: 'cloud-sync',

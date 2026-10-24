@@ -319,9 +319,16 @@ describe('search', () => {
 })
 
 describe('setting', () => {
-	it('can open and close the settings panel', () => {
+	it('can open and close the settings panel and animates the momentum settings cog', () => {
+		cy.get('#settings-menu-button [data-testid="settings-icon"]')
+			.should('exist')
+			.and('have.attr', 'data-spinning', 'false')
+
 		cy.get('#settings-menu-button').should('be.visible').click()
 		cy.contains('ion-title', 'Settings').should('be.visible')
+		cy.get('#settings-menu-button [data-testid="settings-icon"]')
+			.should('have.attr', 'data-spinning', 'true')
+
 		// Ionic menu animation must complete before toggle() will close it
 		cy.wait(500)
 		cy.get('ion-menu')
@@ -329,6 +336,32 @@ describe('setting', () => {
 			.should('be.visible')
 			.click()
 		cy.contains('ion-title', 'Settings').should('not.be.visible')
+		cy.get('#settings-menu-button [data-testid="settings-icon"]')
+			.should('have.attr', 'data-spinning', 'false')
+	})
+})
+
+describe('help', () => {
+	it('triggers the curious beacon animation while the help popover is open', () => {
+		cy.get('#help-popover [data-testid="help-icon"]')
+			.should('exist')
+			.and('have.attr', 'data-active', 'false')
+			.and('not.have.class', 'animate-curious-beacon')
+
+		cy.get('#help-popover').should('be.visible').click()
+		cy.contains('Help hints').should('be.visible')
+		cy.get('#help-popover [data-testid="help-icon"]')
+			.should('have.attr', 'data-active', 'true')
+			.and('have.attr', 'data-animation', 'curious-beacon')
+			.and('have.class', 'animate-curious-beacon')
+
+		// Dismiss popover by clicking backdrop or dismissing
+		cy.get('ion-popover[trigger="help-popover"]').then(($el) => {
+			;($el[0] as any).dismiss?.()
+		})
+		cy.get('#help-popover [data-testid="help-icon"]')
+			.should('have.attr', 'data-active', 'false')
+			.and('not.have.class', 'animate-curious-beacon')
 	})
 })
 

@@ -10,6 +10,8 @@ export async function generateStaticParams() {
 		{ all: ['dev', 'components'] },
 		{ all: ['dev', 'components', 'sync-status'] },
 		{ all: ['dev', 'components', 'sync-icon'] },
+		{ all: ['dev', 'components', 'settings-icon'] },
+		{ all: ['dev', 'components', 'help-icon'] },
 		{ all: ['dev', 'components', 'cloud-sync'] },
 		{ all: ['dev', 'components', 'markdown-sync'] },
 		{ all: ['dev', 'components', 'star-roles'] },

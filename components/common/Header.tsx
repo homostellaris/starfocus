@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { menuController } from '@ionic/core/components'
 import {
 	IonBackButton,
@@ -5,7 +6,6 @@ import {
 	IonButtons,
 	IonContent,
 	IonHeader,
-	IonIcon,
 	IonItem,
 	IonLabel,
 	IonPopover,
@@ -13,12 +13,13 @@ import {
 	IonToolbar,
 } from '@ionic/react'
 import { useObservable } from 'dexie-react-hooks'
-import { helpCircleSharp, settingsSharp } from 'ionicons/icons'
 import { DisplaySurveyType } from 'posthog-js'
 import { usePostHog } from 'posthog-js/react'
 import { LoginModal } from '../auth/dexie'
 import { db } from '../db'
 import { useHelp } from './HelpContext'
+import HelpIcon from './HelpIcon'
+import MomentumSettingsIcon from './MomentumSettingsIcon'
 import StarPoints from './StarPoints'
 import SyncStatus from './SyncStatus'
 import Title from './Title'
@@ -37,6 +38,53 @@ export const Header = ({
 
 	const posthog = usePostHog()
 	const { helpEnabled, toggleHelp } = useHelp()
+
+	const [isHelpOpen, setIsHelpOpen] = useState(false)
+	const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+
+	useEffect(() => {
+		let isMounted = true
+		menuController.isOpen('end').then((open) => {
+			if (isMounted) setIsSettingsOpen(open)
+		})
+
+		function handleMenuOpen(event: Event) {
+			const target = event.target as HTMLElement | null
+			if (
+				!target ||
+				target.id === 'settings-menu' ||
+				target.getAttribute('side') === 'end' ||
+				target.tagName?.toLowerCase() === 'ion-menu'
+			) {
+				setIsSettingsOpen(true)
+			}
+		}
+
+		function handleMenuClose(event: Event) {
+			const target = event.target as HTMLElement | null
+			if (
+				!target ||
+				target.id === 'settings-menu' ||
+				target.getAttribute('side') === 'end' ||
+				target.tagName?.toLowerCase() === 'ion-menu'
+			) {
+				setIsSettingsOpen(false)
+			}
+		}
+
+		document.addEventListener('ionWillOpen', handleMenuOpen)
+		document.addEventListener('ionDidOpen', handleMenuOpen)
+		document.addEventListener('ionWillClose', handleMenuClose)
+		document.addEventListener('ionDidClose', handleMenuClose)
+
+		return () => {
+			isMounted = false
+			document.removeEventListener('ionWillOpen', handleMenuOpen)
+			document.removeEventListener('ionDidOpen', handleMenuOpen)
+			document.removeEventListener('ionWillClose', handleMenuClose)
+			document.removeEventListener('ionDidClose', handleMenuClose)
+		}
+	}, [])
 
 	return (
 		<>
@@ -67,14 +115,17 @@ export const Header = ({
 							slot="end"
 						>
 							<IonButton id="help-popover">
-								<IonIcon
-									icon={helpCircleSharp}
+								<HelpIcon
+									isOpen={isHelpOpen}
 									slot="icon-only"
 								/>
 							</IonButton>
 							<IonPopover
 								trigger="help-popover"
 								triggerAction="click"
+								onWillPresent={() => setIsHelpOpen(true)}
+								onWillDismiss={() => setIsHelpOpen(false)}
+								onDidDismiss={() => setIsHelpOpen(false)}
 							>
 								<IonContent class="ion-padding">
 									<IonItem lines="none">
@@ -115,10 +166,14 @@ export const Header = ({
 							<SyncStatus />
 							<IonButton
 								id="settings-menu-button"
-								onClick={() => menuController.toggle('end')}
+								onClick={async () => {
+									await menuController.toggle('end')
+									const isOpen = await menuController.isOpen('end')
+									setIsSettingsOpen(isOpen)
+								}}
 							>
-								<IonIcon
-									icon={settingsSharp}
+								<MomentumSettingsIcon
+									isOpen={isSettingsOpen}
 									slot="icon-only"
 								/>
 							</IonButton>
