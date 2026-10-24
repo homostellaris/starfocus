@@ -1,5 +1,18 @@
 import { expect, test } from 'bun:test'
-import MomentumSettingsIcon from './MomentumSettingsIcon'
+import MomentumSettingsIcon, { calculateRatchetProgress } from './MomentumSettingsIcon'
+
+test('calculateRatchetProgress produces zero at start and 1 at completion', () => {
+	expect(calculateRatchetProgress(0, 300)).toBe(0)
+	expect(calculateRatchetProgress(300, 300)).toBe(1)
+	expect(calculateRatchetProgress(500, 300)).toBe(1)
+	expect(calculateRatchetProgress(-10, 300)).toBe(0)
+})
+
+test('calculateRatchetProgress demonstrates crisp mechanical pawl overshoot and settle', () => {
+	const midpointProgress = calculateRatchetProgress(150, 300)
+	expect(midpointProgress).toBeGreaterThan(1.0)
+	expect(midpointProgress).toBeLessThan(1.1)
+})
 import {
 	calculateNextAngle,
 	calculateNextVelocity,

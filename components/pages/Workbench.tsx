@@ -252,13 +252,12 @@ function WorkbenchContent() {
 		}, durationMilliseconds)
 	}
 
-	// --- Settings Cog Momentum Knobs ---
+	// --- Settings Cog Ratchet Knobs ---
 	const [settingsMenuOpen, setSettingsMenuOpen] = useState(false)
 	const [settingsPhysicsEnabled, setSettingsPhysicsEnabled] = useState(true)
-	const [settingsMaxVelocity, setSettingsMaxVelocity] = useState(540)
-	const [settingsAcceleration, setSettingsAcceleration] = useState(960)
-	const [settingsFriction, setSettingsFriction] = useState(2.4)
-	const [settingsMinImpulseDuration, setSettingsMinImpulseDuration] = useState(650)
+	const [settingsStepIncrement, setSettingsStepIncrement] = useState(60)
+	const [settingsStepDuration, setSettingsStepDuration] = useState(280)
+	const [settingsHoldDuration, setSettingsHoldDuration] = useState(900)
 	const [settingsTelemetry, setSettingsTelemetry] = useState<MomentumTelemetry>({
 		phase: 'idle',
 		velocity: 0,
@@ -547,25 +546,23 @@ function WorkbenchContent() {
 				},
 				{
 					id: 'settings-heavy',
-					label: '🛸 Heavy Clockwork',
+					label: '🛸 Heavy Ratchet (45° / 1.2s)',
 					action: () => {
-						setSettingsMaxVelocity(360)
-						setSettingsAcceleration(500)
-						setSettingsFriction(1.2)
-						setSettingsMinImpulseDuration(750)
+						setSettingsStepIncrement(45)
+						setSettingsStepDuration(360)
+						setSettingsHoldDuration(1200)
 					},
-					active: settingsMaxVelocity === 360 && settingsFriction === 1.2,
+					active: settingsStepIncrement === 45 && settingsHoldDuration === 1200,
 				},
 				{
 					id: 'settings-precision',
-					label: '⏱️ Precision Gear',
+					label: '⏱️ Escapement Tick (60° / 0.8s)',
 					action: () => {
-						setSettingsMaxVelocity(720)
-						setSettingsAcceleration(1200)
-						setSettingsFriction(3.5)
-						setSettingsMinImpulseDuration(500)
+						setSettingsStepIncrement(60)
+						setSettingsStepDuration(240)
+						setSettingsHoldDuration(800)
 					},
-					active: settingsMaxVelocity === 720 && settingsFriction === 3.5,
+					active: settingsStepIncrement === 60 && settingsHoldDuration === 800,
 				},
 			]
 		}
@@ -1215,63 +1212,46 @@ function WorkbenchContent() {
 						</div>
 						<div>
 							<div className="flex justify-between text-neutral-400">
-								<span>Max Velocity (Top Speed)</span>
-								<span>
-									{Math.round(settingsMaxVelocity / 6)} RPM ({settingsMaxVelocity}°/s)
-								</span>
+								<span>Ratchet Increment (Angle per Tooth)</span>
+								<span>{settingsStepIncrement}°</span>
 							</div>
 							<IonRange
-								min={180}
-								max={1080}
-								step={60}
-								value={settingsMaxVelocity}
+								min={30}
+								max={120}
+								step={15}
+								value={settingsStepIncrement}
 								onIonChange={(event) =>
-									setSettingsMaxVelocity(event.detail.value as number)
+									setSettingsStepIncrement(event.detail.value as number)
 								}
 							/>
 						</div>
 						<div>
 							<div className="flex justify-between text-neutral-400">
-								<span>Acceleration Rate</span>
-								<span>{settingsAcceleration}°/s²</span>
+								<span>Step Snap Duration</span>
+								<span>{settingsStepDuration} ms</span>
+							</div>
+							<IonRange
+								min={150}
+								max={600}
+								step={25}
+								value={settingsStepDuration}
+								onIonChange={(event) =>
+									setSettingsStepDuration(event.detail.value as number)
+								}
+							/>
+						</div>
+						<div>
+							<div className="flex justify-between text-neutral-400">
+								<span>Hold / Pause Between Clicks</span>
+								<span>{settingsHoldDuration} ms</span>
 							</div>
 							<IonRange
 								min={300}
 								max={2000}
 								step={100}
-								value={settingsAcceleration}
+								value={settingsHoldDuration}
 								onIonChange={(event) =>
-									setSettingsAcceleration(event.detail.value as number)
-								}
-							/>
-						</div>
-						<div>
-							<div className="flex justify-between text-neutral-400">
-								<span>Coasting Drag (Inertial Friction)</span>
-								<span>{settingsFriction.toFixed(1)}</span>
-							</div>
-							<IonRange
-								min={1.0}
-								max={5.0}
-								step={0.2}
-								value={settingsFriction}
-								onIonChange={(event) =>
-									setSettingsFriction(event.detail.value as number)
-								}
-							/>
-						</div>
-						<div>
-							<div className="flex justify-between text-neutral-400">
-								<span>Minimum Impulse Duration</span>
-								<span>{settingsMinImpulseDuration} ms</span>
-							</div>
-							<IonRange
-								min={200}
-								max={1500}
-								step={50}
-								value={settingsMinImpulseDuration}
-								onIonChange={(event) =>
-									setSettingsMinImpulseDuration(event.detail.value as number)
+									setSettingsHoldDuration(event.detail.value as number)
 								}
 							/>
 						</div>
@@ -1636,10 +1616,9 @@ function WorkbenchContent() {
 											size={72}
 											isOpen={settingsMenuOpen}
 											enablePhysics={settingsPhysicsEnabled}
-											maxVelocity={settingsMaxVelocity}
-											accelerationRate={settingsAcceleration}
-											frictionCoefficient={settingsFriction}
-											minimumImpulseDuration={settingsMinImpulseDuration}
+											stepIncrement={settingsStepIncrement}
+											stepDuration={settingsStepDuration}
+											holdDuration={settingsHoldDuration}
 											onTelemetryChange={setSettingsTelemetry}
 										/>
 									</div>

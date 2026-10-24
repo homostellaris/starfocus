@@ -5,9 +5,6 @@ import { IonIcon } from '@ionic/react'
 import { menuController } from '@ionic/core/components'
 import { settingsSharp } from 'ionicons/icons'
 import {
-	calculateNextAngle,
-	calculateNextVelocity,
-	determineMomentumPhase,
 	resolvePixelSize,
 	type MomentumPhase,
 	type MomentumTelemetry,
@@ -20,6 +17,9 @@ export interface MomentumSettingsIconProps {
 	style?: React.CSSProperties
 	slot?: string
 	size?: 'sm' | 'md' | 'lg' | 'xl' | number
+	stepIncrement?: number
+	stepDuration?: number
+	holdDuration?: number
 	maxVelocity?: number
 	accelerationRate?: number
 	frictionCoefficient?: number
@@ -29,6 +29,29 @@ export interface MomentumSettingsIconProps {
 	'data-testid'?: string
 }
 
+export function calculateRatchetProgress(
+	elapsedMilliseconds: number,
+	stepDurationMilliseconds: number,
+): number {
+	if (stepDurationMilliseconds <= 0 || elapsedMilliseconds >= stepDurationMilliseconds) {
+		return 1
+	}
+	if (elapsedMilliseconds <= 0) {
+		return 0
+	}
+	const progressRatio = Math.max(
+		0,
+		Math.min(1, elapsedMilliseconds / stepDurationMilliseconds),
+	)
+	const overshootCoefficient = 1.2
+	const decayCoefficient = overshootCoefficient + 1
+	return (
+		1 +
+		decayCoefficient * Math.pow(progressRatio - 1, 3) +
+		overshootCoefficient * Math.pow(progressRatio - 1, 2)
+	)
+}
+
 export default function MomentumSettingsIcon({
 	id,
 	isOpen: controlledIsOpen,
@@ -36,10 +59,9 @@ export default function MomentumSettingsIcon({
 	style,
 	slot,
 	size,
-	maxVelocity = 540,
-	accelerationRate = 960,
-	frictionCoefficient = 2.4,
-	minimumImpulseDuration = 650,
+	stepIncrement = 60,
+	stepDuration = 280,
+	holdDuration = 900,
 	enablePhysics = true,
 	onTelemetryChange,
 	'data-testid': testIdentifier = 'settings-icon',
@@ -51,12 +73,13 @@ export default function MomentumSettingsIcon({
 	const isMenuOpen =
 		controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen
 
-	const physicsStateReference = useRef({
-		angle: 0,
-		velocity: 0,
-		isImpulseActive: false,
-		minimumAnimationEndTime: 0,
-		lastTimestamp: 0,
+	const ratchetStateReference = useRef({
+		currentAngle: 0,
+		startAngle: 0,
+		targetAngle: 0,
+		state: 'idle' as 'idle' | 'stepping' | 'holding',
+		stepStartTime: 0,
+		holdStartTime: 0,
 		animationFrameIdentifier: 0,
 	})
 
@@ -107,126 +130,115 @@ export default function MomentumSettingsIcon({
 	}, [controlledIsOpen])
 
 	useEffect(() => {
-		physicsStateReference.current.isImpulseActive = isMenuOpen
-
-		if (isMenuOpen) {
-			const currentTime = performance.now()
-			physicsStateReference.current.minimumAnimationEndTime =
-				currentTime + minimumImpulseDuration
-		}
-	}, [isMenuOpen, minimumImpulseDuration])
-
-	useEffect(() => {
 		if (!enablePhysics) {
 			onTelemetryChange?.({
 				phase: isMenuOpen ? 'cruising' : 'idle',
-				velocity: isMenuOpen ? maxVelocity : 0,
+				velocity: isMenuOpen ? 60 : 0,
 				angle: 0,
 				isSyncing: isMenuOpen,
 				isCoasting: false,
 			})
 		}
-	}, [enablePhysics, isMenuOpen, maxVelocity, onTelemetryChange])
+	}, [enablePhysics, isMenuOpen, onTelemetryChange])
 
 	useEffect(() => {
 		if (!enablePhysics) return
 
 		let isActive = true
-		const physicsState = physicsStateReference.current
+		const ratchetState = ratchetStateReference.current
+
+		if (isMenuOpen && ratchetState.state === 'idle') {
+			ratchetState.state = 'stepping'
+			ratchetState.stepStartTime = performance.now()
+			ratchetState.startAngle = ratchetState.currentAngle
+			ratchetState.targetAngle = ratchetState.startAngle + stepIncrement
+		}
 
 		function step(currentTime: number) {
 			if (!isActive) return
 
-			if (!physicsState.lastTimestamp) {
-				physicsState.lastTimestamp = currentTime
+			if (ratchetState.state === 'stepping') {
+				const elapsedMilliseconds = currentTime - ratchetState.stepStartTime
+				if (elapsedMilliseconds < stepDuration) {
+					const progressRatio = calculateRatchetProgress(
+						elapsedMilliseconds,
+						stepDuration,
+					)
+					ratchetState.currentAngle =
+						ratchetState.startAngle +
+						(ratchetState.targetAngle - ratchetState.startAngle) * progressRatio
+					setCurrentPhase('accelerating')
+				} else {
+					ratchetState.currentAngle = ratchetState.targetAngle
+					if (isMenuOpen) {
+						ratchetState.state = 'holding'
+						ratchetState.holdStartTime = currentTime
+						setCurrentPhase('cruising')
+					} else {
+						ratchetState.state = 'idle'
+						setCurrentPhase('idle')
+					}
+				}
+			} else if (ratchetState.state === 'holding') {
+				ratchetState.currentAngle = ratchetState.targetAngle
+				if (!isMenuOpen) {
+					ratchetState.state = 'idle'
+					setCurrentPhase('idle')
+				} else {
+					const holdElapsed = currentTime - ratchetState.holdStartTime
+					if (holdElapsed >= holdDuration) {
+						ratchetState.state = 'stepping'
+						ratchetState.stepStartTime = currentTime
+						ratchetState.startAngle = ratchetState.currentAngle
+						ratchetState.targetAngle = ratchetState.startAngle + stepIncrement
+						setCurrentPhase('accelerating')
+					}
+				}
 			}
-
-			const deltaSeconds = (currentTime - physicsState.lastTimestamp) / 1000
-			physicsState.lastTimestamp = currentTime
-
-			const requiresImpulse =
-				physicsState.isImpulseActive ||
-				currentTime < physicsState.minimumAnimationEndTime
-
-			physicsState.velocity = calculateNextVelocity({
-				currentVelocity: physicsState.velocity,
-				requiresImpulse,
-				maxVelocity,
-				accelerationRate,
-				frictionCoefficient,
-				deltaSeconds,
-			})
-
-			physicsState.angle = calculateNextAngle(
-				physicsState.angle,
-				physicsState.velocity,
-				deltaSeconds,
-			)
 
 			if (iconReference.current) {
-				iconReference.current.style.transform = `rotate(${physicsState.angle}deg)`
+				iconReference.current.style.transform = `rotate(${ratchetState.currentAngle}deg)`
 			}
 
-			const isCoasting = !requiresImpulse && physicsState.velocity > 1
-			const calculatedPhase = determineMomentumPhase({
-				requiresImpulse,
-				velocity: physicsState.velocity,
-				maxVelocity,
-			})
+			const displayedPhase =
+				ratchetState.state === 'idle'
+					? 'idle'
+					: ratchetState.state === 'stepping'
+						? 'accelerating'
+						: 'cruising'
 
-			setCurrentPhase(calculatedPhase)
+			const instantVelocity =
+				ratchetState.state === 'stepping'
+					? Math.round(stepIncrement / (stepDuration / 1000))
+					: 0
 
 			onTelemetryChange?.({
-				phase: calculatedPhase,
-				velocity: Math.round(physicsState.velocity),
-				angle: Math.round(physicsState.angle),
-				isSyncing: physicsState.isImpulseActive,
-				isCoasting,
+				phase: displayedPhase,
+				velocity: instantVelocity,
+				angle: Math.round(ratchetState.currentAngle),
+				isSyncing: isMenuOpen,
+				isCoasting: ratchetState.state === 'stepping' && !isMenuOpen,
 			})
 
-			if (!requiresImpulse && physicsState.velocity <= 1) {
-				physicsState.velocity = 0
-				physicsState.lastTimestamp = 0
-				physicsState.animationFrameIdentifier = 0
-				setCurrentPhase('idle')
-				onTelemetryChange?.({
-					phase: 'idle',
-					velocity: 0,
-					angle: Math.round(physicsState.angle),
-					isSyncing: false,
-					isCoasting: false,
-				})
-				return
+			if (ratchetState.state !== 'idle') {
+				ratchetState.animationFrameIdentifier = requestAnimationFrame(step)
+			} else {
+				ratchetState.animationFrameIdentifier = 0
 			}
-
-			physicsState.animationFrameIdentifier = requestAnimationFrame(step)
 		}
 
-		const shouldRun =
-			isMenuOpen ||
-			physicsState.velocity > 1 ||
-			performance.now() < physicsState.minimumAnimationEndTime
-
-		if (shouldRun && !physicsState.animationFrameIdentifier) {
-			physicsState.animationFrameIdentifier = requestAnimationFrame(step)
+		if (ratchetState.state !== 'idle' && !ratchetState.animationFrameIdentifier) {
+			ratchetState.animationFrameIdentifier = requestAnimationFrame(step)
 		}
 
 		return () => {
 			isActive = false
-			if (physicsState.animationFrameIdentifier) {
-				cancelAnimationFrame(physicsState.animationFrameIdentifier)
-				physicsState.animationFrameIdentifier = 0
+			if (ratchetState.animationFrameIdentifier) {
+				cancelAnimationFrame(ratchetState.animationFrameIdentifier)
+				ratchetState.animationFrameIdentifier = 0
 			}
 		}
-	}, [
-		isMenuOpen,
-		enablePhysics,
-		maxVelocity,
-		accelerationRate,
-		frictionCoefficient,
-		minimumImpulseDuration,
-		onTelemetryChange,
-	])
+	}, [isMenuOpen, enablePhysics, stepIncrement, stepDuration, holdDuration, onTelemetryChange])
 
 	const pixelSize = resolvePixelSize(size)
 	const displayedPhase = enablePhysics
@@ -242,13 +254,12 @@ export default function MomentumSettingsIcon({
 			icon={settingsSharp}
 			slot={slot}
 			className={`origin-center text-neutral-400 transition-colors duration-200 select-none ${
-				isMenuOpen ? 'animate-spin' : ''
+				isMenuOpen && !enablePhysics ? 'animate-spin' : ''
 			} ${className}`}
 			data-testid={testIdentifier}
 			data-spinning={isMenuOpen ? 'true' : 'false'}
 			data-phase={displayedPhase}
 			style={{
-				animation: enablePhysics ? 'none' : undefined,
 				fontSize: pixelSize ? `${pixelSize}px` : undefined,
 				willChange: enablePhysics ? 'transform' : undefined,
 				...style,

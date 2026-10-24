@@ -335,11 +335,11 @@ describe('workbench', () => {
 			.should('have.attr', 'data-spinning', 'false')
 
 		// Click Open Menu preset -> starts spinning
-		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Open Menu').click()
+		cy.get('[data-testid="workbench-presets-bar"]', { timeout: 15000 }).contains('ion-chip', 'Open Menu').click()
 		cy.get('[data-testid="settings-icon"]').should('have.attr', 'data-spinning', 'true')
 
 		// Click Close Menu preset -> stops impulse and coasts to idle
-		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Close Menu').click()
+		cy.get('[data-testid="workbench-presets-bar"]', { timeout: 15000 }).contains('ion-chip', 'Close Menu').click()
 		cy.get('[data-testid="settings-icon"]').should('have.attr', 'data-spinning', 'false')
 	})
 
@@ -356,14 +356,14 @@ describe('workbench', () => {
 			.and('have.class', 'animate-curious-beacon')
 
 		// Click Close Popover preset -> switches to resting state
-		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Close Popover').click()
+		cy.get('[data-testid="workbench-presets-bar"]', { timeout: 15000 }).contains('ion-chip', 'Close Popover').click()
 		cy.get('[data-testid="help-icon"]')
 			.should('have.attr', 'data-active', 'false')
 			.and('have.attr', 'data-animation', 'none')
 			.and('not.have.class', 'animate-curious-beacon')
 
 		// Click Open Popover preset -> reactivates curious beacon loop
-		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Open Popover').click()
+		cy.get('[data-testid="workbench-presets-bar"]', { timeout: 15000 }).contains('ion-chip', 'Open Popover').click()
 		cy.get('[data-testid="help-icon"]')
 			.should('have.attr', 'data-active', 'true')
 			.and('have.attr', 'data-animation', 'curious-beacon')

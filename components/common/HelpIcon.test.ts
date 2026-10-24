@@ -15,7 +15,8 @@ test('renders with active curious beacon animation when isOpen is true', () => {
 	expect(element.props['data-active']).toBe('true')
 	expect(element.props['data-animation']).toBe('curious-beacon')
 	expect(element.props.className).toContain('animate-curious-beacon')
-	expect(element.props.className).toContain('text-sky-400')
+	expect(element.props.className).toContain('text-neutral-400')
+	expect(element.props.className).not.toContain('text-sky-400')
 })
 
 test('applies custom test identifier and className', () => {

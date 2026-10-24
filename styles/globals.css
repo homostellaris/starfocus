@@ -152,39 +152,41 @@ body::-webkit-scrollbar {
 	-webkit-backface-visibility: hidden;
 }
 
-@keyframes curious-beacon {
+@keyframes curious-question {
 	0%, 100% {
-		transform: translateY(0px) rotate(0deg) scale(1.1);
-		filter: drop-shadow(0 0 3px rgba(56, 189, 248, 0.45));
+		transform: translateY(0px) rotate(0deg);
 	}
-	20% {
-		transform: translateY(-3px) rotate(-14deg) scale(1.16);
-		filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.8));
+	16% {
+		transform: translateY(-5px) rotate(-10deg);
 	}
-	40% {
-		transform: translateY(0px) rotate(0deg) scale(1.1);
-		filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.45));
+	32% {
+		transform: translateY(0px) rotate(0deg);
 	}
-	60% {
-		transform: translateY(-3px) rotate(14deg) scale(1.16);
-		filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.8));
+	48% {
+		transform: translateY(-5px) rotate(10deg);
 	}
-	80% {
-		transform: translateY(-1px) rotate(-4deg) scale(1.12);
-		filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.6));
+	64% {
+		transform: translateY(0px) rotate(0deg);
+	}
+	78% {
+		transform: translateY(-2px) rotate(-3deg);
+	}
+	88% {
+		transform: translateY(0px) rotate(0deg);
 	}
 }
 
-.animate-curious-beacon {
-	animation: curious-beacon 1.8s ease-in-out infinite;
-	transform-origin: center center;
-	will-change: transform, filter;
+.animate-curious-beacon .curious-question-mark,
+.animate-curious-question {
+	animation: curious-question 2.4s ease-in-out infinite;
+	transform-origin: 256px 256px;
+	will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.animate-curious-beacon {
+	.animate-curious-beacon .curious-question-mark,
+	.animate-curious-question {
 		animation: none;
-		transform: scale(1.1);
-		filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.8));
+		transform: none;
 	}
 }
