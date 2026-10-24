@@ -29,6 +29,8 @@ import {
 	rocketSharp,
 	pulseSharp,
 	musicalNotesSharp,
+	settingsSharp,
+	helpCircleSharp,
 } from 'ionicons/icons'
 import dayjs from 'dayjs'
 import { Header } from '../common/Header'
@@ -36,6 +38,8 @@ import SyncStatus, { CloudSyncStatusBadge, MarkdownSyncStatusBadge } from '../co
 import MomentumSyncIcon, {
 	type MomentumTelemetry,
 } from '../common/MomentumSyncIcon'
+import MomentumSettingsIcon from '../common/MomentumSettingsIcon'
+import HelpIcon from '../common/HelpIcon'
 import { StarRoleIcon } from '../common/StarRoleIcon'
 import StarPoints from '../common/StarPoints'
 import Starship from '../common/Starship'
@@ -49,6 +53,8 @@ import type { Visit } from '../db'
 type ComponentKey =
 	| 'sync-status'
 	| 'sync-icon'
+	| 'settings-icon'
+	| 'help-icon'
 	| 'cloud-sync'
 	| 'markdown-sync'
 	| 'star-roles'
@@ -86,6 +92,26 @@ const CATALOG_ITEMS: CatalogItem[] = [
 			'Physical rotational flywheel simulation for synchronization indicators. Features angular acceleration, viscous friction coasting, guaranteed minimum animation impulse, and smooth momentum physics.',
 		icon: syncSharp,
 		iconColor: 'text-sky-400 bg-sky-500/10 border-sky-500/20',
+		badge: 'Motion',
+	},
+	{
+		key: 'settings-icon',
+		title: 'Momentum & Inertia Settings Cog',
+		subtitle: 'Physical Flywheel Spinner & Inertial Coasting',
+		description:
+			'Physical rotational flywheel simulation for the settings cog. Starts spinning when the settings menu opens, cruises with momentum while open, and coasts to a smooth stop with inertia when closed.',
+		icon: settingsSharp,
+		iconColor: 'text-violet-400 bg-violet-500/10 border-violet-500/20',
+		badge: 'Motion',
+	},
+	{
+		key: 'help-icon',
+		title: 'Curious Beacon Help Icon',
+		subtitle: 'Inquisitive Wobble & Cosmic Beacon Animation',
+		description:
+			'Playful, inquisitive animation for the help icon trigger while the popover is active. Features curious tilting, floating hover, and a celestial beacon aura pulse.',
+		icon: helpCircleSharp,
+		iconColor: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
 		badge: 'Motion',
 	},
 	{
@@ -225,6 +251,31 @@ function WorkbenchContent() {
 			setCloudPhase('in-sync')
 		}, durationMilliseconds)
 	}
+
+	// --- Settings Cog Ratchet Knobs ---
+	const [settingsMenuOpen, setSettingsMenuOpen] = useState(false)
+	const [settingsPhysicsEnabled, setSettingsPhysicsEnabled] = useState(true)
+	const [settingsStepIncrement, setSettingsStepIncrement] = useState(60)
+	const [settingsStepDuration, setSettingsStepDuration] = useState(280)
+	const [settingsHoldDuration, setSettingsHoldDuration] = useState(900)
+	const [settingsTelemetry, setSettingsTelemetry] = useState<MomentumTelemetry>({
+		phase: 'idle',
+		velocity: 0,
+		angle: 0,
+		isSyncing: false,
+		isCoasting: false,
+	})
+
+	const triggerPulseSettings = (durationMilliseconds: number) => {
+		setSettingsMenuOpen(true)
+		setTimeout(() => {
+			setSettingsMenuOpen(false)
+		}, durationMilliseconds)
+	}
+
+	// --- Help Icon Knobs ---
+	const [helpPopoverOpen, setHelpPopoverOpen] = useState(true)
+	const [helpIconSize, setHelpIconSize] = useState<any>('xl')
 
 	// --- Sync Status Presentation Knobs ---
 	const [syncStatusInline, setSyncStatusInline] = useState(false)
@@ -470,6 +521,82 @@ function WorkbenchContent() {
 						setMomentumMinImpulseDuration(500)
 					},
 					active: momentumMaxVelocity === 720 && momentumFriction === 3.0,
+				},
+			]
+		}
+		if (activeComponent === 'settings-icon') {
+			return [
+				{
+					id: 'settings-open',
+					label: settingsMenuOpen ? '⏹ Close Menu (Coast)' : '▶ Open Menu (Cruise)',
+					action: () => setSettingsMenuOpen(!settingsMenuOpen),
+					active: settingsMenuOpen,
+				},
+				{
+					id: 'settings-tap',
+					label: '⚡ 500ms Tap',
+					action: () => triggerPulseSettings(500),
+					active: false,
+				},
+				{
+					id: 'settings-standard',
+					label: '⏱️ 1.5s Open',
+					action: () => triggerPulseSettings(1500),
+					active: false,
+				},
+				{
+					id: 'settings-heavy',
+					label: '🛸 Heavy Ratchet (45° / 1.2s)',
+					action: () => {
+						setSettingsStepIncrement(45)
+						setSettingsStepDuration(360)
+						setSettingsHoldDuration(1200)
+					},
+					active: settingsStepIncrement === 45 && settingsHoldDuration === 1200,
+				},
+				{
+					id: 'settings-precision',
+					label: '⏱️ Escapement Tick (60° / 0.8s)',
+					action: () => {
+						setSettingsStepIncrement(60)
+						setSettingsStepDuration(240)
+						setSettingsHoldDuration(800)
+					},
+					active: settingsStepIncrement === 60 && settingsHoldDuration === 800,
+				},
+			]
+		}
+		if (activeComponent === 'help-icon') {
+			return [
+				{
+					id: 'help-toggle',
+					label: helpPopoverOpen ? '⏹ Close Popover (Resting)' : '✨ Open Popover (Beacon)',
+					action: () => setHelpPopoverOpen(!helpPopoverOpen),
+					active: helpPopoverOpen,
+				},
+				{
+					id: 'help-size-sm',
+					label: 'Size sm (16px)',
+					action: () => setHelpIconSize('sm'),
+					active: helpIconSize === 'sm',
+				},
+				{
+					id: 'help-size-md',
+					label: 'Size md (20px)',
+					action: () => setHelpIconSize('md'),
+					active: helpIconSize === 'md',
+				},
+				{
+					id: 'help-size-lg',
+					label: 'Size lg (32px)',
+					action: () => setHelpIconSize('lg'),
+					active: helpIconSize === 'lg',
+				},
+				{
+					id: 'help-size-xl',
+					label: 'Size xl (48px)',
+					action: () => setHelpIconSize('xl'),
+					active: helpIconSize === 'xl',
 				},
 			]
 		}
@@ -1003,6 +1130,188 @@ function WorkbenchContent() {
 				</div>
 			)}
 
+			{/* Momentum & Inertia Physics Knobs for Settings Cog */}
+			{activeComponent === 'settings-icon' && (
+				<div className="space-y-4 pt-1 text-xs">
+					<div className="flex items-center justify-between">
+						<h4 className="font-semibold text-neutral-300">Simulation Triggers</h4>
+						<IonBadge color="primary" className="text-[10px]">Triggers</IonBadge>
+					</div>
+					<div className="grid grid-cols-2 gap-2">
+						<IonButton
+							size="small"
+							fill="outline"
+							color="primary"
+							className="text-xs h-8"
+							onClick={() => triggerPulseSettings(500)}
+						>
+							⚡ Quick 500ms
+						</IonButton>
+						<IonButton
+							size="small"
+							fill="outline"
+							color="primary"
+							className="text-xs h-8"
+							onClick={() => triggerPulseSettings(1500)}
+						>
+							⏱️ 1.5s Open
+						</IonButton>
+						<IonButton
+							size="small"
+							fill="outline"
+							color="primary"
+							className="text-xs h-8"
+							onClick={() => triggerPulseSettings(4000)}
+						>
+							🚀 4.0s Open
+						</IonButton>
+						<IonButton
+							size="small"
+							fill={settingsMenuOpen ? 'solid' : 'outline'}
+							color={settingsMenuOpen ? 'danger' : 'medium'}
+							className="text-xs h-8"
+							onClick={() => setSettingsMenuOpen(!settingsMenuOpen)}
+						>
+							{settingsMenuOpen ? '⏹ Close Menu' : '▶ Open Menu'}
+						</IonButton>
+					</div>
+
+					{/* Live Telemetry Readout in Knobs */}
+					<div className="rounded-lg bg-neutral-800/50 p-2.5 border border-neutral-700/50 font-mono space-y-1.5">
+						<div className="flex justify-between items-center text-[11px]">
+							<span className="text-neutral-400">Phase:</span>
+							<span className="font-semibold text-violet-400 capitalize">{settingsTelemetry.phase}</span>
+						</div>
+						<div className="flex justify-between items-center text-[11px]">
+							<span className="text-neutral-400">Velocity:</span>
+							<span className="font-semibold text-neutral-200">{settingsTelemetry.velocity}°/s</span>
+						</div>
+						<div className="flex justify-between items-center text-[11px]">
+							<span className="text-neutral-400">Angle:</span>
+							<span className="font-semibold text-neutral-200">{settingsTelemetry.angle}°</span>
+						</div>
+						<div className="flex justify-between items-center text-[11px]">
+							<span className="text-neutral-400">Active State:</span>
+							<span className={`font-semibold ${settingsTelemetry.isSyncing ? 'text-violet-400' : 'text-neutral-500'}`}>
+								{settingsTelemetry.isSyncing ? 'MOTOR DRIVEN' : settingsTelemetry.isCoasting ? 'COASTING' : 'AT REST'}
+							</span>
+						</div>
+					</div>
+
+					<div className="pt-2 border-t border-neutral-800/60 space-y-3">
+						<div className="flex items-center justify-between">
+							<h4 className="font-semibold text-neutral-300">Settings Flywheel & Physics</h4>
+							<IonBadge color="primary" className="text-[10px]">Controls</IonBadge>
+						</div>
+						<div className="flex items-center justify-between">
+							<span>Enable Momentum Physics</span>
+							<IonToggle
+								checked={settingsPhysicsEnabled}
+								onIonChange={(event) => setSettingsPhysicsEnabled(event.detail.checked)}
+							/>
+						</div>
+						<div>
+							<div className="flex justify-between text-neutral-400">
+								<span>Ratchet Increment (Angle per Tooth)</span>
+								<span>{settingsStepIncrement}°</span>
+							</div>
+							<IonRange
+								min={30}
+								max={120}
+								step={15}
+								value={settingsStepIncrement}
+								onIonChange={(event) =>
+									setSettingsStepIncrement(event.detail.value as number)
+								}
+							/>
+						</div>
+						<div>
+							<div className="flex justify-between text-neutral-400">
+								<span>Step Snap Duration</span>
+								<span>{settingsStepDuration} ms</span>
+							</div>
+							<IonRange
+								min={150}
+								max={600}
+								step={25}
+								value={settingsStepDuration}
+								onIonChange={(event) =>
+									setSettingsStepDuration(event.detail.value as number)
+								}
+							/>
+						</div>
+						<div>
+							<div className="flex justify-between text-neutral-400">
+								<span>Hold / Pause Between Clicks</span>
+								<span>{settingsHoldDuration} ms</span>
+							</div>
+							<IonRange
+								min={300}
+								max={2000}
+								step={100}
+								value={settingsHoldDuration}
+								onIonChange={(event) =>
+									setSettingsHoldDuration(event.detail.value as number)
+								}
+							/>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Animation Knobs for Help Icon */}
+			{activeComponent === 'help-icon' && (
+				<div className="space-y-4 pt-1 text-xs">
+					<div className="flex items-center justify-between">
+						<h4 className="font-semibold text-neutral-300">Popover Trigger State</h4>
+						<IonBadge color="secondary" className="text-[10px]">Active Loop</IonBadge>
+					</div>
+					<div className="flex items-center justify-between">
+						<span>Help Popover Open</span>
+						<IonToggle
+							checked={helpPopoverOpen}
+							onIonChange={(event) => setHelpPopoverOpen(event.detail.checked)}
+						/>
+					</div>
+
+					<div className="rounded-lg bg-neutral-800/50 p-2.5 border border-neutral-700/50 font-mono space-y-1.5">
+						<div className="flex justify-between items-center text-[11px]">
+							<span className="text-neutral-400">Animation:</span>
+							<span className="font-semibold text-cyan-400">
+								{helpPopoverOpen ? 'curious-beacon (1.8s loop)' : 'resting'}
+							</span>
+						</div>
+						<div className="flex justify-between items-center text-[11px]">
+							<span className="text-neutral-400">Motion Mode:</span>
+							<span className="font-semibold text-neutral-200">
+								{helpPopoverOpen ? 'Tilt (-14°..+14°) + Hover + Aura' : 'Stationary'}
+							</span>
+						</div>
+					</div>
+
+					<div className="pt-2 border-t border-neutral-800/60 space-y-3">
+						<div className="flex items-center justify-between">
+							<h4 className="font-semibold text-neutral-300">Display Size</h4>
+							<IonBadge color="primary" className="text-[10px]">Controls</IonBadge>
+						</div>
+						<div className="flex items-center justify-between">
+							<span>Icon Dimension</span>
+							<IonSelect
+								value={helpIconSize}
+								interface="popover"
+								onIonChange={(e) => setHelpIconSize(e.detail.value)}
+							>
+								<IonSelectOption value="sm">Small (16px)</IonSelectOption>
+								<IonSelectOption value="md">Medium (20px)</IonSelectOption>
+								<IonSelectOption value="lg">Large (32px)</IonSelectOption>
+								<IonSelectOption value="xl">Extra Large (48px)</IonSelectOption>
+								<IonSelectOption value={72}>Hero (72px)</IonSelectOption>
+							</IonSelect>
+						</div>
+					</div>
+				</div>
+			)}
+
 			{/* Starship & Trajectory Knobs */}
 			{activeComponent === 'starship-trajectory' && (
 				<div className="space-y-4 pt-1 text-xs">
@@ -1296,6 +1605,41 @@ function WorkbenchContent() {
 											frictionCoefficient={momentumFriction}
 											minimumImpulseDuration={momentumMinImpulseDuration}
 											onTelemetryChange={setMomentumTelemetry}
+										/>
+									</div>
+								)}
+
+								{activeComponent === 'settings-icon' && (
+									<div className="flex items-center justify-center py-4 px-4">
+										<MomentumSettingsIcon
+											id="workbench-settings-btn"
+											size={72}
+											isOpen={settingsMenuOpen}
+											enablePhysics={settingsPhysicsEnabled}
+											stepIncrement={settingsStepIncrement}
+											stepDuration={settingsStepDuration}
+											holdDuration={settingsHoldDuration}
+											onTelemetryChange={setSettingsTelemetry}
+										/>
+									</div>
+								)}
+
+								{activeComponent === 'help-icon' && (
+									<div className="flex items-center justify-center py-4 px-4">
+										<HelpIcon
+											id="workbench-help-btn"
+											size={
+												helpIconSize === 'sm'
+													? 16
+													: helpIconSize === 'md'
+														? 20
+														: helpIconSize === 'lg'
+															? 32
+															: helpIconSize === 'xl'
+																? 48
+																: 72
+											}
+											isOpen={helpPopoverOpen}
 										/>
 									</div>
 								)}
