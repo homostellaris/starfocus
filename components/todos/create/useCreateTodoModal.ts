@@ -94,12 +94,19 @@ export function useCreateTodoModal(): [
 			todo,
 		}: HookOverlayOptions & { todo: Todo }) => {
 			todoRef.current = todo
+			let existingTodoToOpen: Todo | undefined
+
 			present({
 				onDidPresent: _event => {
 					titleInput.current?.setFocus()
 				},
 				onWillDismiss: async event => {
-					if (event.detail.role === 'confirm') {
+					if (
+						event.detail.data?.action === 'open_existing' &&
+						event.detail.data?.existingTodo
+					) {
+						existingTodoToOpen = event.detail.data.existingTodo
+					} else if (event.detail.role === 'confirm') {
 						const { todo, location } = event.detail.data
 						await createTodo(todo, location)
 						posthog.capture('todo_created', {
@@ -112,17 +119,21 @@ export function useCreateTodoModal(): [
 					onWillDismiss?.(event)
 				},
 				onDidDismiss: event => {
-					if (
-						event.detail.data?.action === 'open_existing' &&
-						event.detail.data?.existingTodo
-					) {
-						const existingTodo = event.detail.data.existingTodo
+					const existingTodo =
+						existingTodoToOpen ??
+						(event.detail.data?.action === 'open_existing'
+							? event.detail.data.existingTodo
+							: undefined)
+
+					if (existingTodo) {
 						presentToast({
 							message: `Opened existing todo "${existingTodo.title}"`,
 							duration: 2000,
 							position: 'bottom',
 						})
-						presentEditTodoModal(existingTodo)
+						setTimeout(() => {
+							presentEditTodoModal(existingTodo)
+						}, 100)
 					}
 					onDidDismiss?.(event)
 				},

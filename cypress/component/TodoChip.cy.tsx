@@ -1,6 +1,8 @@
 import React from 'react'
 import { IonApp } from '@ionic/react'
 import { TodoChip } from '../../components/todos/TodoChip'
+import { DuplicateChips } from '../../components/todos/duplicate/DuplicateAlert'
+import { DuplicateMatch } from '../../components/todos/duplicate/detector'
 import { StarRole, Todo } from '../../components/db'
 
 const starRole: StarRole = {
@@ -79,4 +81,29 @@ it('renders without error when star role is undefined', () => {
 
 	cy.get('[data-testid="todo-chip"]').should('be.visible')
 	cy.get('[data-class="star-role-icon"]').should('not.have.attr', 'data-star-role')
+})
+
+it('invokes onSelectExisting with the exact todo when clicking a chip in DuplicateChips', () => {
+	const selectSpy = cy.spy().as('selectSpy')
+	const matches: DuplicateMatch[] = [
+		{
+			todo: sampleTodo,
+			similarityScore: 0.95,
+			matchType: 'exact',
+			location: 'wayfinder',
+		},
+	]
+
+	cy.mount(
+		<IonApp>
+			<DuplicateChips
+				matches={matches}
+				onSelectExisting={selectSpy}
+				starRoles={[starRole]}
+			/>
+		</IonApp>,
+	)
+
+	cy.get('[data-testid="todo-chip"]').click()
+	cy.get('@selectSpy').should('have.been.calledWith', sampleTodo)
 })

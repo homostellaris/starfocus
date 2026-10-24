@@ -65,12 +65,19 @@ export function useEditTodoModal(): [
 	const openEditModal = useCallback(
 		(todo: Todo) => {
 			todoRef.current = todo
+			let existingTodoToOpen: Todo | undefined
+
 			present({
 				onDidPresent: _event => {
 					titleInput.current?.setFocus()
 				},
 				onWillDismiss: event => {
-					if (event.detail.role === 'confirm') {
+					if (
+						event.detail.data?.action === 'open_existing' &&
+						event.detail.data?.existingTodo
+					) {
+						existingTodoToOpen = event.detail.data.existingTodo
+					} else if (event.detail.role === 'confirm') {
 						const { todo, location } = event.detail.data
 						const originalTodo = todoRef.current
 						editTodo(todo, location)
@@ -82,11 +89,16 @@ export function useEditTodoModal(): [
 					}
 				},
 				onDidDismiss: event => {
-					if (
-						event.detail.data?.action === 'open_existing' &&
-						event.detail.data?.existingTodo
-					) {
-						openEditModalRef.current(event.detail.data.existingTodo)
+					const existingTodo =
+						existingTodoToOpen ??
+						(event.detail.data?.action === 'open_existing'
+							? event.detail.data.existingTodo
+							: undefined)
+
+					if (existingTodo) {
+						setTimeout(() => {
+							openEditModalRef.current(existingTodo)
+						}, 100)
 					}
 				},
 			})
