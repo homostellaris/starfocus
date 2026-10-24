@@ -1,18 +1,20 @@
-import { IonChip, IonIcon, IonLabel } from '@ionic/react'
+import { IonIcon } from '@ionic/react'
 import { alertCircleOutline } from 'ionicons/icons'
-import { CSSProperties } from 'react'
 import { DuplicateMatch } from './detector'
-import { Todo } from '../../db'
+import { StarRole, Todo } from '../../db'
+import { TodoChip } from '../TodoChip'
 import { cn } from '../../common/cn'
 
 export function DuplicateChips({
 	className,
 	matches,
 	onSelectExisting,
+	starRoles = [],
 }: {
 	className?: string
 	matches: DuplicateMatch[]
 	onSelectExisting: (existingTodo: Todo) => void
+	starRoles?: StarRole[]
 }) {
 	if (matches.length === 0) {
 		return null
@@ -21,38 +23,25 @@ export function DuplicateChips({
 	return (
 		<div
 			className={cn(
-				'flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1',
+				'flex items-center gap-2 overflow-x-auto no-scrollbar py-1',
 				className,
 			)}
 			data-testid="duplicate-chips-bar"
 		>
+			<div className="flex items-center gap-1 text-xs font-semibold text-amber-400 shrink-0 select-none">
+				<IonIcon
+					icon={alertCircleOutline}
+					className="text-sm"
+				/>
+				<span>Duplicates</span>
+			</div>
 			{matches.map(match => (
-				<IonChip
+				<TodoChip
 					key={match.todo.id}
+					todo={match.todo}
+					starRole={starRoles.find(role => role.id === match.todo.starRole)}
 					onClick={() => onSelectExisting(match.todo)}
-					color="warning"
-					outline={true}
-					style={
-						{
-							'--background': 'rgba(245, 158, 11, 0.12)',
-							'--color': '#fbbf24',
-							border: '1px solid rgba(245, 158, 11, 0.6)',
-						} as CSSProperties
-					}
-					className="cursor-pointer m-0 h-7 text-xs shrink-0 font-medium transition-colors hover:opacity-90 border border-amber-500/60"
-					data-testid="duplicate-chip"
-				>
-					<IonIcon
-						icon={alertCircleOutline}
-						className="text-amber-400"
-					/>
-					<IonLabel className="truncate max-w-[110px] sm:max-w-[160px] text-amber-200">
-						{match.todo.title}
-					</IonLabel>
-					<span className="text-[10px] text-amber-400/90 font-mono ml-0.5">
-						{Math.round(match.similarityScore * 100)}%
-					</span>
-				</IonChip>
+				/>
 			))}
 		</div>
 	)
@@ -62,16 +51,19 @@ export function DuplicateAlert({
 	className,
 	matches,
 	onSelectExisting,
+	starRoles = [],
 }: {
 	className?: string
 	matches: DuplicateMatch[]
 	onSelectExisting: (existingTodo: Todo) => void
+	starRoles?: StarRole[]
 }) {
 	return (
 		<DuplicateChips
 			className={className}
 			matches={matches}
 			onSelectExisting={onSelectExisting}
+			starRoles={starRoles}
 		/>
 	)
 }

@@ -531,8 +531,9 @@ describe('duplicate todo detector', () => {
 					.type('Plan starship expedition!')
 			})
 
-		cy.get('[data-testid="duplicate-chip"]').should('be.visible')
-		cy.get('[data-testid="duplicate-chip"]').contains('Plan starship expedition')
+		cy.get('[data-testid="duplicate-chips-bar"]').contains('Duplicates').should('be.visible')
+		cy.get('[data-testid="todo-chip"]').should('be.visible')
+		cy.get('[data-testid="todo-chip"]').contains('Plan starship expedition')
 
 		cy.get('#create-todo-modal').contains('Confirm').click()
 		cy.get('#create-todo-modal').should('not.exist')
@@ -553,7 +554,7 @@ describe('duplicate todo detector', () => {
 					.type('Build telescope lenses')
 			})
 
-		cy.get('[data-testid="duplicate-chip"]').contains('Build telescope lens').click()
+		cy.get('[data-testid="todo-chip"]').contains('Build telescope lens').click()
 		cy.get('#edit-todo-modal').should('be.visible')
 		cy.get('#edit-todo-modal').contains('label', 'Title').find('input').should('have.value', 'Build telescope lens')
 		cy.get('#edit-todo-modal').contains('Cancel').click()

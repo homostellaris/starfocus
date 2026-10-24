@@ -94,10 +94,16 @@ export default function TodoModal({
 		>
 			<IonHeader>
 				<IonToolbar>
-					<IonTitle slot="start">{modalTitle}</IonTitle>
-					<div slot="end" className="pr-2 max-w-[65vw]">
+					<div
+						slot="start"
+						className="flex items-center gap-3 px-3 py-1 overflow-x-auto no-scrollbar max-w-full"
+					>
+						<IonTitle className="ion-no-padding shrink-0 font-bold text-base">
+							{modalTitle}
+						</IonTitle>
 						<DuplicateChips
 							matches={matches}
+							starRoles={starRoles}
 							onSelectExisting={existingTodo => {
 								dismiss(
 									{
