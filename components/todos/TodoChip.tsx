@@ -18,12 +18,11 @@ export function TodoChip({
 	starRole,
 	todo,
 }: TodoChipProps) {
-	const starPoints = todo.starPoints
-	const hasStarPoints = typeof starPoints === 'number' && starPoints > 0
-	const starColorClass = hasStarPoints
-		? (starScale[starPoints as keyof typeof starScale]?.textColor ??
-			'text-neutral-300')
-		: ''
+	const starPoints = todo.starPoints ?? 0
+	const starColorClass =
+		starPoints > 0 && starPoints in starScale
+			? starScale[starPoints as keyof typeof starScale]?.textColor
+			: 'text-neutral-400'
 
 	return (
 		<IonChip
@@ -41,28 +40,24 @@ export function TodoChip({
 			)}
 			data-testid="todo-chip"
 		>
+			<span
+				className={cn(
+					'!font-mono shrink-0 text-xs font-semibold',
+					starColorClass,
+				)}
+				data-testid="todo-chip-star-points"
+			>
+				{starPoints}
+			</span>
+
 			<IonLabel className="truncate max-w-[110px] sm:max-w-[160px] text-neutral-200">
 				{todo.title}
 			</IonLabel>
 
-			{hasStarPoints ? (
-				<span
-					className={cn(
-						'text-[11px] font-mono font-semibold shrink-0',
-						starColorClass,
-					)}
-					data-testid="todo-chip-star-points"
-				>
-					{starPoints}★
-				</span>
-			) : null}
-
-			{starRole ? (
-				<StarRoleIcon
-					starRole={starRole}
-					className="text-xs shrink-0 text-neutral-300"
-				/>
-			) : null}
+			<StarRoleIcon
+				starRole={starRole}
+				className="text-xs shrink-0 text-neutral-300"
+			/>
 		</IonChip>
 	)
 }
