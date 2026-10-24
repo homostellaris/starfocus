@@ -32,6 +32,14 @@ describe('workbench', () => {
 		cy.visit('/dev/components/sync-icon')
 		cy.contains('#workbench-main h1', 'Momentum & Inertia Sync Icon', { timeout: 15000 }).should('be.visible')
 
+		// Momentum Settings Cog
+		cy.visit('/dev/components/settings-icon')
+		cy.contains('#workbench-main h1', 'Momentum & Inertia Settings Cog', { timeout: 15000 }).should('be.visible')
+
+		// Curious Beacon Help Icon
+		cy.visit('/dev/components/help-icon')
+		cy.contains('#workbench-main h1', 'Curious Beacon Help Icon', { timeout: 15000 }).should('be.visible')
+
 		// Back to Sync Status
 		cy.visit('/dev/components/sync-status')
 		cy.contains('#workbench-main h1', 'Unified Sync Status Popover', { timeout: 15000 }).should('be.visible')
@@ -314,5 +322,50 @@ describe('workbench', () => {
 		cy.get('ion-header ion-back-button').click()
 		cy.url().should('include', '/dev/components')
 		cy.contains('Component Catalog', { timeout: 15000 }).should('be.visible')
+	})
+
+	it('displays the momentum & inertia settings cog with presets and simulator controls', () => {
+		cy.visit('/dev/components/settings-icon')
+		cy.contains('#workbench-main h1', 'Momentum & Inertia Settings Cog', { timeout: 15000 }).should('be.visible')
+		cy.get('[data-testid="workbench-canvas"]').should('be.visible')
+		cy.get('[data-testid="settings-icon"]').should('be.visible')
+
+		// Initial state is closed / idle
+		cy.get('[data-testid="settings-icon"]')
+			.should('have.attr', 'data-spinning', 'false')
+
+		// Click Open Menu preset -> starts spinning
+		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Open Menu').click()
+		cy.get('[data-testid="settings-icon"]').should('have.attr', 'data-spinning', 'true')
+
+		// Click Close Menu preset -> stops impulse and coasts to idle
+		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Close Menu').click()
+		cy.get('[data-testid="settings-icon"]').should('have.attr', 'data-spinning', 'false')
+	})
+
+	it('displays the curious beacon help icon with popover animation state toggling', () => {
+		cy.visit('/dev/components/help-icon')
+		cy.contains('#workbench-main h1', 'Curious Beacon Help Icon', { timeout: 15000 }).should('be.visible')
+		cy.get('[data-testid="workbench-canvas"]').should('be.visible')
+		cy.get('[data-testid="help-icon"]').should('be.visible')
+
+		// Default state in workbench has popover open (beacon active)
+		cy.get('[data-testid="help-icon"]')
+			.should('have.attr', 'data-active', 'true')
+			.and('have.attr', 'data-animation', 'curious-beacon')
+			.and('have.class', 'animate-curious-beacon')
+
+		// Click Close Popover preset -> switches to resting state
+		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Close Popover').click()
+		cy.get('[data-testid="help-icon"]')
+			.should('have.attr', 'data-active', 'false')
+			.and('have.attr', 'data-animation', 'none')
+			.and('not.have.class', 'animate-curious-beacon')
+
+		// Click Open Popover preset -> reactivates curious beacon loop
+		cy.get('[data-testid="workbench-presets-bar"]').contains('ion-chip', 'Open Popover').click()
+		cy.get('[data-testid="help-icon"]')
+			.should('have.attr', 'data-active', 'true')
+			.and('have.attr', 'data-animation', 'curious-beacon')
 	})
 })
