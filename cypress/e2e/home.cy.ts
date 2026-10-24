@@ -356,7 +356,7 @@ describe('help', () => {
 			.and('have.class', 'animate-curious-beacon')
 
 		// Dismiss popover by clicking backdrop or dismissing
-		cy.get('ion-popover').then(($el) => {
+		cy.get('ion-popover[trigger="help-popover"]').then(($el) => {
 			;($el[0] as any).dismiss?.()
 		})
 		cy.get('#help-popover [data-testid="help-icon"]')

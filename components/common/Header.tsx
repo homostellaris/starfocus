@@ -124,6 +124,7 @@ export const Header = ({
 								trigger="help-popover"
 								triggerAction="click"
 								onWillPresent={() => setIsHelpOpen(true)}
+								onWillDismiss={() => setIsHelpOpen(false)}
 								onDidDismiss={() => setIsHelpOpen(false)}
 							>
 								<IonContent class="ion-padding">

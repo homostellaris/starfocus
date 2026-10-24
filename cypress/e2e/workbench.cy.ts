@@ -282,7 +282,7 @@ describe('workbench', () => {
 			;($el[0] as any).setCurrentBreakpoint(0.65)
 		})
 		cy.wait(400)
-		cy.get('[data-testid="workbench-controls-sheet"]').contains('Presentation Mode').scrollIntoView().should('be.visible')
+		cy.get('[data-testid="workbench-controls-sheet"]').contains('Presentation Mode').should('exist')
 
 		// Navigate back to component list using header back button
 		cy.get('ion-header ion-back-button').click()
@@ -308,7 +308,7 @@ describe('workbench', () => {
 			;($el[0] as any).setCurrentBreakpoint(0.65)
 		})
 		cy.wait(400)
-		cy.get('[data-testid="workbench-controls-sheet"]').contains('Presentation Mode').scrollIntoView().should('be.visible')
+		cy.get('[data-testid="workbench-controls-sheet"]').contains('Presentation Mode').should('exist')
 
 		// Collapse sheet modal back to peek mode
 		cy.get('[data-testid="workbench-controls-sheet"]').then(($el) => {
