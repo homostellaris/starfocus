@@ -555,8 +555,7 @@ describe('duplicate todo detector', () => {
 			})
 
 		cy.get('[data-testid="todo-chip"]').contains('Build telescope lens').click()
-		cy.get('#edit-todo-modal').should('be.visible')
-		cy.get('#edit-todo-modal').contains('label', 'Title').find('input').should('have.value', 'Build telescope lens')
-		cy.get('#edit-todo-modal').contains('Cancel').click()
+		cy.get('#create-todo-modal').should('not.exist')
+		cy.get('ion-action-sheet').should('be.visible')
 	})
 })

@@ -13,10 +13,12 @@ export function useCreateTodoModal(): [
 	({
 		onWillDismiss,
 		onDidDismiss,
+		onOpenExistingTodo,
 		todo,
 	}: {
 		onWillDismiss?: HookOverlayOptions['onWillDismiss']
 		onDidDismiss?: HookOverlayOptions['onDidDismiss']
+		onOpenExistingTodo?: (existingTodo: Todo) => void
 		todo: any
 	}) => void,
 	(data?: any, role?: string) => void,
@@ -91,8 +93,12 @@ export function useCreateTodoModal(): [
 		({
 			onWillDismiss,
 			onDidDismiss,
+			onOpenExistingTodo,
 			todo,
-		}: HookOverlayOptions & { todo: Todo }) => {
+		}: HookOverlayOptions & {
+			onOpenExistingTodo?: (existingTodo: Todo) => void
+			todo: Todo
+		}) => {
 			todoRef.current = todo
 			let existingTodoToOpen: Todo | undefined
 
@@ -126,14 +132,18 @@ export function useCreateTodoModal(): [
 							: undefined)
 
 					if (existingTodo) {
-						presentToast({
-							message: `Opened existing todo "${existingTodo.title}"`,
-							duration: 2000,
-							position: 'bottom',
-						})
-						setTimeout(() => {
-							presentEditTodoModal(existingTodo)
-						}, 100)
+						if (onOpenExistingTodo) {
+							onOpenExistingTodo(existingTodo)
+						} else {
+							presentToast({
+								message: `Opened existing todo "${existingTodo.title}"`,
+								duration: 2000,
+								position: 'bottom',
+							})
+							setTimeout(() => {
+								presentEditTodoModal(existingTodo)
+							}, 100)
+						}
 					}
 					onDidDismiss?.(event)
 				},

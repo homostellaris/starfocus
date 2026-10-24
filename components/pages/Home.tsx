@@ -125,21 +125,31 @@ export const TodoLists = ({
 
 	// Creating todo stuff
 	const fab = useRef<HTMLIonFabElement>(null)
-	const { focusedStarRole } = useView()
+	const { focusedStarRole, inActiveStarRoles, query, setQuery } = useView()
 	const [presentCreateTodoModal] = useCreateTodoModal()
+	const [presentTodoActionSheet] = useTodoActionSheet()
 	const openCreateTodoModal = useCallback(() => {
 		presentCreateTodoModal({
 			onWillDismiss: () => {
 				if (fab.current) fab.current.activated = false
 			},
+			onOpenExistingTodo: (existingTodo: Todo) => {
+				setQuery(existingTodo.id)
+				setTimeout(() => {
+					const element =
+						document.getElementById(`todo-${existingTodo.id}`) ??
+						document.querySelector(`[data-todo-id="${existingTodo.id}"]`)
+					element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+					presentTodoActionSheet(existingTodo)
+				}, 150)
+			},
 			todo: {
 				starRole: focusedStarRole,
 			},
 		})
-	}, [fab, focusedStarRole, presentCreateTodoModal])
+	}, [fab, focusedStarRole, presentCreateTodoModal, presentTodoActionSheet, setQuery])
 
 	const wayfinderOrderMode = useSettings('#wayfinderOrderMode')
-	const { inActiveStarRoles, query } = useView()
 
 	const asteroidFieldCount = useLiveQuery(() => db.asteroidFieldOrder.count())
 	useEffect(() => {
@@ -161,7 +171,7 @@ export const TodoLists = ({
 				todo =>
 					!!todo.completedAt &&
 					matchesQuery(query, todo) &&
-					inActiveStarRoles(todo),
+					(Boolean(query) || inActiveStarRoles(todo)),
 			)
 			.limit(logLimit)
 			.toArray()
@@ -181,7 +191,9 @@ export const TodoLists = ({
 							visits: true as const,
 						}))
 						.filter(
-							todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
+							todo =>
+								matchesQuery(query, todo) &&
+								(Boolean(query) || inActiveStarRoles(todo)),
 						)
 				})
 			})
@@ -211,7 +223,9 @@ export const TodoLists = ({
 								snoozedUntil: wayfinderOrder[index].snoozedUntil,
 							}))
 							.filter(
-								todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
+								todo =>
+									matchesQuery(query, todo) &&
+									(Boolean(query) || inActiveStarRoles(todo)),
 							)
 						return starSort(filtered, starRoleOrderMap).map((todo, index) => ({
 							...todo,
@@ -231,7 +245,9 @@ export const TodoLists = ({
 								snoozedUntil: wayfinderOrder[index].snoozedUntil,
 							}))
 							.filter(
-								todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
+								todo =>
+									matchesQuery(query, todo) &&
+									(Boolean(query) || inActiveStarRoles(todo)),
 							)
 					})
 
@@ -244,7 +260,7 @@ export const TodoLists = ({
 							todo =>
 								todo.completedAt === undefined &&
 								matchesQuery(query, todo) &&
-								inActiveStarRoles(todo),
+								(Boolean(query) || inActiveStarRoles(todo)),
 						)
 						.toArray()
 						.then(todos =>
@@ -257,7 +273,7 @@ export const TodoLists = ({
 							todo =>
 								todo.completedAt === undefined &&
 								matchesQuery(query, todo) &&
-								inActiveStarRoles(todo),
+								(Boolean(query) || inActiveStarRoles(todo)),
 						)
 						.reverse()
 						.limit(databaseLimit)
@@ -351,7 +367,6 @@ export const TodoLists = ({
 		}
 	}, [contentRef, fab, nextTodoPosition, openCreateTodoModal, posthog])
 
-	const [presentTodoActionSheet] = useTodoActionSheet()
 	const [presentSnoozeTodoModal] = useSnoozeTodoModal()
 	const [presentCompletionPopover] = useTodoPopover()
 	const { helpEnabled } = useHelp()

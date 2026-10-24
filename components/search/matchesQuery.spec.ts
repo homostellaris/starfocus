@@ -100,3 +100,23 @@ describe('query by star points', () => {
 		).toBeTrue()
 	})
 })
+
+describe('query by todo id', () => {
+	test('matches todo when query equals todo id', () => {
+		expect(
+			matchesQuery('todo_abc123', {
+				id: 'todo_abc123',
+				title: 'Completely different title',
+			}),
+		).toBeTrue()
+	})
+
+	test('matches todo when query starts with id: prefix', () => {
+		expect(
+			matchesQuery('id:todo_abc123', {
+				id: 'todo_abc123',
+				title: 'Completely different title',
+			}),
+		).toBeTrue()
+	})
+})

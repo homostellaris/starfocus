@@ -18,7 +18,6 @@ import {
 	ComponentProps,
 	MutableRefObject,
 	useCallback,
-	useEffect,
 	useRef,
 	useState,
 } from 'react'
@@ -55,14 +54,6 @@ export default function TodoModal({
 		string | undefined
 	>(todo?.noteInitialContent)
 	const locationSelect = useRef<HTMLIonSelectElement>(null)
-
-	useEffect(() => {
-		setTitle(todo?.title)
-		setTitleIsValid(!!todo?.title)
-		setStarPoints(todo?.starPoints)
-		setStarRole(todo?.starRole)
-		setNoteInitialContent(todo?.noteInitialContent)
-	}, [todo])
 
 	const starRoles = useLiveQuery(() => db.starRoles.toArray(), [], [])
 	const { matches } = useDuplicateDetector(title, todo?.id)
