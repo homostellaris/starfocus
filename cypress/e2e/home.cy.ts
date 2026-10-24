@@ -517,7 +517,7 @@ function createTodo({
 }
 
 describe('duplicate todo detector', () => {
-	it('detects similar task inline and intercepts creation when confirming duplicate', () => {
+	it('shows ambient bottom hint for similar task without blocking creation', () => {
 		createTodo({ title: 'Plan starship expedition' })
 		cy.contains('[data-class="todo"]', 'Plan starship expedition').should('be.visible')
 
@@ -532,16 +532,10 @@ describe('duplicate todo detector', () => {
 			})
 
 		cy.get('[data-testid="duplicate-alert"]').should('be.visible')
-		cy.get('[data-testid="duplicate-alert"]').contains('Similar task found')
+		cy.get('[data-testid="duplicate-alert"]').contains('Plan starship expedition')
 
 		cy.get('#create-todo-modal').contains('Confirm').click()
-		cy.get('ion-alert').should('be.visible')
-		cy.get('ion-alert').contains('Similar Task Exists')
-
-		cy.get('ion-alert').contains('Cancel').click()
-		cy.get('#create-todo-modal').should('be.visible')
-
-		cy.get('#create-todo-modal').contains('Cancel').click()
 		cy.get('#create-todo-modal').should('not.exist')
+		cy.contains('[data-class="todo"]', 'Plan starship expedition!').should('be.visible')
 	})
 })

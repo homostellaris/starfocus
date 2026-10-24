@@ -12,7 +12,6 @@ import {
 	IonTextarea,
 	IonTitle,
 	IonToolbar,
-	useIonAlert,
 } from '@ionic/react'
 import { openSharp } from 'ionicons/icons'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -58,13 +57,9 @@ export default function TodoModal({
 	const locationSelect = useRef<HTMLIonSelectElement>(null)
 
 	const starRoles = useLiveQuery(() => db.starRoles.toArray(), [], [])
-	const { matches, highestActiveDuplicate } = useDuplicateDetector(
-		title,
-		todo?.id,
-	)
-	const [presentAlert] = useIonAlert()
+	const { matches } = useDuplicateDetector(title, todo?.id)
 
-	const executeDismiss = useCallback(() => {
+	const emitTodo = useCallback(() => {
 		dismiss(
 			{
 				todo: {
@@ -79,52 +74,6 @@ export default function TodoModal({
 			'confirm',
 		)
 	}, [dismiss, noteInitialContent, starPoints, starRole, todo, title])
-
-	const emitTodo = useCallback(() => {
-		if (highestActiveDuplicate) {
-			const locationName =
-				highestActiveDuplicate.location === 'wayfinder'
-					? 'Wayfinder'
-					: 'Database'
-			const matchPercentage = Math.round(
-				highestActiveDuplicate.similarityScore * 100,
-			)
-
-			presentAlert({
-				header: 'Similar Task Exists',
-				subHeader: `${matchPercentage}% match in ${locationName}`,
-				message: `"${highestActiveDuplicate.todo.title}" already exists. Would you like to open it instead?`,
-				buttons: [
-					{
-						text: 'Cancel',
-						role: 'cancel',
-					},
-					{
-						text: 'Create Anyway',
-						handler: () => {
-							executeDismiss()
-						},
-					},
-					{
-						text: 'Open Existing',
-						role: 'confirm',
-						handler: () => {
-							dismiss(
-								{
-									action: 'open_existing',
-									existingTodo: highestActiveDuplicate.todo,
-								},
-								'cancel',
-							)
-						},
-					},
-				],
-			})
-			return
-		}
-
-		executeDismiss()
-	}, [dismiss, executeDismiss, highestActiveDuplicate, presentAlert])
 
 	return (
 		<IonPage
@@ -171,18 +120,6 @@ export default function TodoModal({
 						setTitle(value ?? undefined)
 					}}
 					value={title}
-				/>
-				<DuplicateAlert
-					matches={matches}
-					onSelectExisting={existingTodo => {
-						dismiss(
-							{
-								action: 'open_existing',
-								existingTodo,
-							},
-							'cancel',
-						)
-					}}
 				/>
 				<IonSelect
 					fill="outline"
@@ -256,6 +193,18 @@ export default function TodoModal({
 				)}
 			</IonContent>
 			<IonFooter>
+				<DuplicateAlert
+					matches={matches}
+					onSelectExisting={existingTodo => {
+						dismiss(
+							{
+								action: 'open_existing',
+								existingTodo,
+							},
+							'cancel',
+						)
+					}}
+				/>
 				<IonToolbar>
 					<IonButtons slot="secondary">
 						<IonButton

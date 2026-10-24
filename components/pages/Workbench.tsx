@@ -1356,6 +1356,7 @@ function WorkbenchContent() {
 											</div>
 
 											<DuplicateAlert
+												className="rounded-lg border border-amber-500/30"
 												matches={workbenchSimulatedMatches}
 												onSelectExisting={(todo) => {
 													window.alert(`[Workbench] Navigate to existing task: "${todo.title}"`)
