@@ -1,5 +1,6 @@
 import { IonChip, IonIcon, IonLabel } from '@ionic/react'
 import { alertCircleOutline } from 'ionicons/icons'
+import { CSSProperties } from 'react'
 import { DuplicateMatch } from './detector'
 import { Todo } from '../../db'
 import { cn } from '../../common/cn'
@@ -31,14 +32,24 @@ export function DuplicateChips({
 					onClick={() => onSelectExisting(match.todo)}
 					color="warning"
 					outline={true}
-					className="cursor-pointer m-0 h-7 text-xs shrink-0 transition-colors hover:bg-amber-500/20"
+					style={
+						{
+							'--background': 'rgba(245, 158, 11, 0.12)',
+							'--color': '#fbbf24',
+							border: '1px solid rgba(245, 158, 11, 0.6)',
+						} as CSSProperties
+					}
+					className="cursor-pointer m-0 h-7 text-xs shrink-0 font-medium transition-colors hover:opacity-90 border border-amber-500/60"
 					data-testid="duplicate-chip"
 				>
-					<IonIcon icon={alertCircleOutline} />
-					<IonLabel className="truncate max-w-[110px] sm:max-w-[160px]">
+					<IonIcon
+						icon={alertCircleOutline}
+						className="text-amber-400"
+					/>
+					<IonLabel className="truncate max-w-[110px] sm:max-w-[160px] text-amber-200">
 						{match.todo.title}
 					</IonLabel>
-					<span className="text-[10px] opacity-80 font-mono ml-0.5">
+					<span className="text-[10px] text-amber-400/90 font-mono ml-0.5">
 						{Math.round(match.similarityScore * 100)}%
 					</span>
 				</IonChip>
