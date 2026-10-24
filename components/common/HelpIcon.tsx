@@ -47,8 +47,8 @@ export default function HelpIcon({
 			data-active={isOpen ? 'true' : 'false'}
 			data-animation={isOpen ? 'curious-beacon' : 'none'}
 			style={{
-				width: pixelSize ? `${pixelSize}px` : '1.45rem',
-				height: pixelSize ? `${pixelSize}px` : '1.45rem',
+				width: pixelSize ? `${pixelSize}px` : '1em',
+				height: pixelSize ? `${pixelSize}px` : '1em',
 				fontSize: pixelSize ? `${pixelSize}px` : undefined,
 				verticalAlign: 'middle',
 				...style,

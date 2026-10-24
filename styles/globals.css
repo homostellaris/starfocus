@@ -152,27 +152,34 @@ body::-webkit-scrollbar {
 	-webkit-backface-visibility: hidden;
 }
 
+ion-button svg[slot="icon-only"] {
+	font-size: clamp(15.104px, 1.6em, 43.008px);
+	width: 1em;
+	height: 1em;
+	box-sizing: content-box;
+}
+
 @keyframes curious-question {
 	0%, 100% {
-		transform: translateY(0px) rotate(0deg);
+		transform: translateY(0px) rotate(0deg) scale(1.24);
 	}
 	16% {
-		transform: translateY(-5px) rotate(-10deg);
+		transform: translateY(-6px) rotate(-13deg) scale(1.36);
 	}
 	32% {
-		transform: translateY(0px) rotate(0deg);
+		transform: translateY(0px) rotate(0deg) scale(1.26);
 	}
 	48% {
-		transform: translateY(-5px) rotate(10deg);
+		transform: translateY(-6px) rotate(13deg) scale(1.36);
 	}
 	64% {
-		transform: translateY(0px) rotate(0deg);
+		transform: translateY(0px) rotate(0deg) scale(1.26);
 	}
 	78% {
-		transform: translateY(-2px) rotate(-3deg);
+		transform: translateY(-3px) rotate(-5deg) scale(1.3);
 	}
 	88% {
-		transform: translateY(0px) rotate(0deg);
+		transform: translateY(0px) rotate(0deg) scale(1.24);
 	}
 }
 
@@ -187,6 +194,6 @@ body::-webkit-scrollbar {
 	.animate-curious-beacon .curious-question-mark,
 	.animate-curious-question {
 		animation: none;
-		transform: none;
+		transform: scale(1.18);
 	}
 }
