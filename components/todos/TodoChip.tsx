@@ -27,6 +27,8 @@ export function TodoChip({
 	return (
 		<IonChip
 			onClick={onClick}
+			role="button"
+			tabIndex={0}
 			style={
 				{
 					'--background': 'rgba(255, 255, 255, 0.08)',
@@ -35,14 +37,14 @@ export function TodoChip({
 				} as CSSProperties
 			}
 			className={cn(
-				'cursor-pointer m-0 h-7 text-xs shrink-0 font-medium transition-colors hover:bg-white/15 border border-neutral-700/60 flex items-center gap-1.5 pl-2.5 pr-3',
+				'cursor-pointer m-0 h-7 text-xs shrink-0 font-medium transition-all hover:bg-white/15 active:bg-white/25 active:scale-95 border border-neutral-700/60 flex items-center gap-1.5 pl-2.5 pr-3 select-none',
 				className,
 			)}
 			data-testid="todo-chip"
 		>
 			<span
 				className={cn(
-					'!font-mono shrink-0 text-xs font-semibold',
+					'!font-mono shrink-0 text-xs font-semibold pointer-events-none',
 					starColorClass,
 				)}
 				data-testid="todo-chip-star-points"
@@ -50,13 +52,13 @@ export function TodoChip({
 				{starPoints}
 			</span>
 
-			<IonLabel className="truncate max-w-[110px] sm:max-w-[160px] text-neutral-200">
+			<IonLabel className="truncate max-w-[110px] sm:max-w-[160px] text-neutral-200 pointer-events-none">
 				{todo.title}
 			</IonLabel>
 
 			<StarRoleIcon
 				starRole={starRole}
-				className="text-xs shrink-0 text-neutral-300"
+				className="text-xs shrink-0 text-neutral-300 pointer-events-none"
 				style={{ margin: 0, marginInlineStart: '-2px', marginInlineEnd: 0 }}
 			/>
 		</IonChip>

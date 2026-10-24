@@ -1,6 +1,6 @@
-import { useIonModal } from '@ionic/react'
+import { useIonModal, useIonToast } from '@ionic/react'
 import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
-import { useCallback, useRef } from 'react'
+import { ComponentProps, createElement, useCallback, useRef } from 'react'
 import { db, ListType, Todo, TodoInput } from '../../db'
 import { markdownExportService } from '../../export/markdownExportService'
 import { useObsidian } from '../../obsidian/useObsidian'
@@ -12,25 +12,36 @@ import { usePostHog } from 'posthog-js/react'
 export function useCreateTodoModal(): [
 	({
 		onWillDismiss,
+		onDidDismiss,
 		todo,
 	}: {
-		onWillDismiss: HookOverlayOptions['onWillDismiss']
+		onWillDismiss?: HookOverlayOptions['onWillDismiss']
+		onDidDismiss?: HookOverlayOptions['onDidDismiss']
 		todo: any
 	}) => void,
 	(data?: any, role?: string) => void,
 ] {
 	const posthog = usePostHog()
+	const [presentToast] = useIonToast()
 	const { isConfigured: isObsidianConfigured, createAndOpenNote } =
 		useObsidian()
 	const [presentEditTodoModal] = useEditTodoModal()
 	const titleInput = useRef<HTMLIonInputElement>(null)
 	const todoRef = useRef<Todo>(undefined)
-	const [present, dismiss] = useIonModal(CreateTodoModal, {
+
+	const CreateTodoModalContainer = useCallback(
+		(props: ComponentProps<typeof CreateTodoModal>) =>
+			createElement(CreateTodoModal, {
+				...props,
+				todo: todoRef.current,
+			}),
+		[],
+	)
+
+	const [present, dismiss] = useIonModal(CreateTodoModalContainer, {
 		dismiss: (data: string, role: string) => dismiss(data, role),
-		title: 'Create todo',
+		modalTitle: 'Create todo',
 		titleInput,
-		// eslint-disable-next-line react-hooks/refs -- Value is set before present() is called
-		todo: todoRef.current,
 	})
 
 	const createTodo = useCallback(
@@ -77,7 +88,11 @@ export function useCreateTodoModal(): [
 	)
 
 	return [
-		({ onWillDismiss, todo }: HookOverlayOptions & { todo: Todo }) => {
+		({
+			onWillDismiss,
+			onDidDismiss,
+			todo,
+		}: HookOverlayOptions & { todo: Todo }) => {
 			todoRef.current = todo
 			present({
 				onDidPresent: _event => {
@@ -93,13 +108,23 @@ export function useCreateTodoModal(): [
 							star_points: todo.starPoints,
 							has_note: !!todo.noteInitialContent,
 						})
-					} else if (
+					}
+					onWillDismiss?.(event)
+				},
+				onDidDismiss: event => {
+					if (
 						event.detail.data?.action === 'open_existing' &&
 						event.detail.data?.existingTodo
 					) {
-						presentEditTodoModal(event.detail.data.existingTodo)
+						const existingTodo = event.detail.data.existingTodo
+						presentToast({
+							message: `Opened existing todo "${existingTodo.title}"`,
+							duration: 2000,
+							position: 'bottom',
+						})
+						presentEditTodoModal(existingTodo)
 					}
-					onWillDismiss?.(event)
+					onDidDismiss?.(event)
 				},
 			})
 		},
