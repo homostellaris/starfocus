@@ -10,7 +10,6 @@ import {
 	IonSelect,
 	IonSelectOption,
 	IonTextarea,
-	IonTitle,
 	IonToolbar,
 } from '@ionic/react'
 import { openSharp } from 'ionicons/icons'
@@ -94,13 +93,10 @@ export default function TodoModal({
 		>
 			<IonHeader>
 				<IonToolbar>
-					<div
-						slot="start"
-						className="flex items-center gap-3 px-3 py-1 overflow-x-auto no-scrollbar max-w-full"
-					>
-						<IonTitle className="ion-no-padding shrink-0 font-bold text-base">
+					<div className="flex items-center gap-2.5 px-3 py-1 overflow-x-auto no-scrollbar w-full">
+						<span className="font-semibold text-base text-white shrink-0">
 							{modalTitle}
-						</IonTitle>
+						</span>
 						<DuplicateChips
 							matches={matches}
 							starRoles={starRoles}
