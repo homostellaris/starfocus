@@ -35,7 +35,7 @@ export function TodoChip({
 				} as CSSProperties
 			}
 			className={cn(
-				'cursor-pointer m-0 h-7 text-xs shrink-0 font-medium transition-colors hover:bg-white/15 border border-neutral-700/60 flex items-center gap-1.5 px-2.5',
+				'cursor-pointer m-0 h-7 text-xs shrink-0 font-medium transition-colors hover:bg-white/15 border border-neutral-700/60 flex items-center gap-1.5 pl-2.5 pr-3',
 				className,
 			)}
 			data-testid="todo-chip"
@@ -57,6 +57,7 @@ export function TodoChip({
 			<StarRoleIcon
 				starRole={starRole}
 				className="text-xs shrink-0 text-neutral-300"
+				style={{ margin: 0, marginInlineStart: '-2px', marginInlineEnd: 0 }}
 			/>
 		</IonChip>
 	)
