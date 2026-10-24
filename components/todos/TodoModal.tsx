@@ -93,11 +93,12 @@ export default function TodoModal({
 		>
 			<IonHeader>
 				<IonToolbar>
-					<div className="flex items-center gap-2.5 px-3 py-1 overflow-x-auto no-scrollbar w-full">
+					<div className="flex items-center gap-2.5 px-3 py-1 w-full min-w-0">
 						<span className="font-semibold text-base text-white shrink-0">
 							{modalTitle}
 						</span>
 						<DuplicateChips
+							className="min-w-0 flex-1"
 							matches={matches}
 							starRoles={starRoles}
 							onSelectExisting={existingTodo => {
