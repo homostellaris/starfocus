@@ -25,7 +25,7 @@ import {
 import { cn } from '../common/cn'
 import { db, ListType, Todo } from '../db'
 import { useObsidian } from '../obsidian/useObsidian'
-import { DuplicateAlert } from './duplicate/DuplicateAlert'
+import { DuplicateChips } from './duplicate/DuplicateAlert'
 import { useDuplicateDetector } from './duplicate/useDuplicateDetector'
 
 export default function TodoModal({
@@ -95,6 +95,20 @@ export default function TodoModal({
 			<IonHeader>
 				<IonToolbar>
 					<IonTitle slot="start">{modalTitle}</IonTitle>
+					<div slot="end" className="pr-2 max-w-[65vw]">
+						<DuplicateChips
+							matches={matches}
+							onSelectExisting={existingTodo => {
+								dismiss(
+									{
+										action: 'open_existing',
+										existingTodo,
+									},
+									'cancel',
+								)
+							}}
+						/>
+					</div>
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">
@@ -193,18 +207,6 @@ export default function TodoModal({
 				)}
 			</IonContent>
 			<IonFooter>
-				<DuplicateAlert
-					matches={matches}
-					onSelectExisting={existingTodo => {
-						dismiss(
-							{
-								action: 'open_existing',
-								existingTodo,
-							},
-							'cancel',
-						)
-					}}
-				/>
 				<IonToolbar>
 					<IonButtons slot="secondary">
 						<IonButton
