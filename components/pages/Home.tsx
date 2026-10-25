@@ -74,13 +74,15 @@ import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
 import { useTodoPopover } from '../todos/useTodoPopover'
 import { SettingsMenu } from '../settings/SettingsMenu'
 import useSettings from '../settings/useSettings'
-import { Search } from '../search'
+import { PEEK_BREAKPOINT, Search } from '../search'
 import { Journey } from '../starship/Journey'
 import { useHelp } from '../common/HelpContext'
 
 const Home = () => {
 	const searchModalRef = useRef<HTMLIonModalElement>(null)
-	const openSearchRef = useRef<((focus?: boolean) => Promise<void>) | null>(null)
+	const openSearchRef = useRef<
+		((focus?: boolean, breakpoint?: number, initialQuery?: string) => Promise<void>) | null
+	>(null)
 	useGlobalKeyboardShortcuts()
 
 	return (
@@ -110,7 +112,9 @@ export default Home
 export const TodoLists = ({
 	openSearchRef,
 }: {
-	openSearchRef: RefObject<((focus?: boolean) => Promise<void>) | null>
+	openSearchRef: RefObject<
+		((focus?: boolean, breakpoint?: number, initialQuery?: string) => Promise<void>) | null
+	>
 }) => {
 	const posthog = usePostHog()
 	// Initial loading & scrolling stuff
@@ -135,6 +139,7 @@ export const TodoLists = ({
 			},
 			onOpenExistingTodo: (existingTodo: Todo) => {
 				setQuery(existingTodo.id)
+				openSearchRef.current?.(false, PEEK_BREAKPOINT, existingTodo.id)
 				setTimeout(() => {
 					const element =
 						document.getElementById(`todo-${existingTodo.id}`) ??
@@ -147,7 +152,14 @@ export const TodoLists = ({
 				starRole: focusedStarRole,
 			},
 		})
-	}, [fab, focusedStarRole, presentCreateTodoModal, presentTodoActionSheet, setQuery])
+	}, [
+		fab,
+		focusedStarRole,
+		openSearchRef,
+		presentCreateTodoModal,
+		presentTodoActionSheet,
+		setQuery,
+	])
 
 	const wayfinderOrderMode = useSettings('#wayfinderOrderMode')
 
