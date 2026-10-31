@@ -31,7 +31,6 @@ import {
 	snowSharp,
 	timeSharp,
 } from 'ionicons/icons'
-import _ from 'lodash'
 import { usePostHog } from 'posthog-js/react'
 import React, {
 	ComponentProps,
@@ -70,6 +69,7 @@ import { useCreateTodoModal } from '../todos/create/useCreateTodoModal'
 import { groupByCompletedAt } from '../todos/groupTodosByCompletedAt'
 import todoRepository from '../todos/repository'
 import { starSort, StarRoleOrderMap } from '../todos/starSort'
+import { attachWayfinderMetadata } from '../todos/wayfinder'
 import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
 import { useTodoPopover } from '../todos/useTodoPopover'
 import { SettingsMenu } from '../settings/SettingsMenu'
@@ -148,6 +148,10 @@ export const TodoLists = ({
 		}
 	}, [asteroidFieldCount])
 
+	useEffect(() => {
+		todoRepository.pruneOrphanedWayfinderEntries()
+	}, [])
+
 	const data = useLiveQuery<{
 		log: LogTodoListItem[]
 		visits: LogTodoListItem[]
@@ -175,11 +179,17 @@ export const TodoLists = ({
 				const todoIds = visits.map(({ todoId }) => todoId)
 				return db.todos.bulkGet(todoIds).then(todosForvisits => {
 					return todosForvisits
-						.map((todoForvisit, index) => ({
-							...todoForvisit!,
-							completedAt: visits[index].date,
-							visits: true as const,
-						}))
+						.map((todoForvisit, index) => {
+							if (!todoForvisit) return null
+							return {
+								...todoForvisit,
+								completedAt: visits[index].date,
+								visits: true as const,
+							}
+						})
+						.filter(
+							(todo): todo is NonNullable<typeof todo> => todo !== null,
+						)
 						.filter(
 							todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
 						)
@@ -196,44 +206,36 @@ export const TodoLists = ({
 
 		const wayfinderOrder = await db.wayfinderOrder.orderBy('order').toArray()
 		const wayfinderTodoIds = wayfinderOrder.map(({ todoId }) => todoId)
-		const wayfinderTodosPromise =
-			wayfinderOrderMode === 'star'
-				? Promise.all([
-						db.todos.bulkGet(wayfinderTodoIds),
-						db.visits.where('todoId').anyOf(wayfinderTodoIds).toArray(),
-					]).then(([wayfinderTodos, visits]) => {
-						const visitsByTodoId = _.groupBy(visits, 'todoId')
-						const filtered = wayfinderTodos
-							.map((todo, index) => ({
-								...todo!,
-								visits: visitsByTodoId[todo!.id],
-								order: wayfinderOrder[index].order,
-								snoozedUntil: wayfinderOrder[index].snoozedUntil,
-							}))
-							.filter(
-								todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
-							)
-						return starSort(filtered, starRoleOrderMap).map((todo, index) => ({
-							...todo,
-							order: index.toString(),
-						}))
-					})
-				: Promise.all([
-						db.todos.bulkGet(wayfinderTodoIds),
-						db.visits.where('todoId').anyOf(wayfinderTodoIds).toArray(),
-					]).then(([wayfinderTodos, visits]) => {
-						const visitsByTodoId = _.groupBy(visits, 'todoId')
-						return wayfinderTodos
-							.map((todo, index) => ({
-								...todo!,
-								visits: visitsByTodoId[todo!.id],
-								order: wayfinderOrder[index].order,
-								snoozedUntil: wayfinderOrder[index].snoozedUntil,
-							}))
-							.filter(
-								todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
-							)
-					})
+		const wayfinderTodosPromise = Promise.all([
+			db.todos.bulkGet(wayfinderTodoIds),
+			db.visits.where('todoId').anyOf(wayfinderTodoIds).toArray(),
+		]).then(([wayfinderTodos, visits]) => {
+			const hasOrphanedWayfinderEntries = wayfinderTodos.some(
+				todo => todo === undefined,
+			)
+			if (hasOrphanedWayfinderEntries) {
+				setTimeout(() => {
+					todoRepository.pruneOrphanedWayfinderEntries()
+				}, 0)
+			}
+
+			const filtered = attachWayfinderMetadata(
+				wayfinderTodos,
+				visits,
+				wayfinderOrder,
+				query,
+				inActiveStarRoles,
+			)
+
+			if (wayfinderOrderMode === 'star') {
+				return starSort(filtered, starRoleOrderMap).map((todo, index) => ({
+					...todo,
+					order: index.toString(),
+				}))
+			}
+
+			return filtered
+		})
 
 		const databaseTodosPromise =
 			wayfinderOrderMode === 'star'
