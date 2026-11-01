@@ -17,6 +17,7 @@ import { db } from '../db'
 import ExportSettings from '../export/ExportSettings'
 import ObsidianSettings from '../obsidian/ObsidianSettings'
 import { ObsidianSettings as ObsidianSettingsType } from '../obsidian/useObsidian'
+import todoRepository from '../todos/repository'
 import useSettings from './useSettings'
 
 export const SettingsMenu = () => {
@@ -101,6 +102,8 @@ export const SettingsMenu = () => {
 							}))
 							db.wayfinderOrder.bulkAdd(records as any)
 						}
+
+						await todoRepository.pruneOrphanedWayfinderEntries()
 					}}
 				>
 					Clean database
