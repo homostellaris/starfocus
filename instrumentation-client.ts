@@ -27,3 +27,84 @@ if (posthogKey) {
 
 	identifyOnLoad()
 }
+
+const isDexieCloudNetworkError = (errorArguments: unknown[]): boolean => {
+	const error = errorArguments[0]
+	if (!error) return false
+
+	const errorObject = error as {
+		name?: string
+		message?: string
+		stack?: string
+	}
+	const message =
+		typeof errorObject.message === 'string'
+			? errorObject.message
+			: String(error)
+	const isFetchError =
+		(errorObject.name === 'TypeError' || error instanceof TypeError) &&
+		/failed to fetch/i.test(message)
+
+	if (isFetchError) {
+		const stack = errorObject.stack || ''
+		if (
+			stack.includes('dexie-cloud') ||
+			stack.includes('_sync') ||
+			stack.includes('performInitialSync') ||
+			stack.includes('LocalSyncWorker') ||
+			stack.includes('Generator.next')
+		) {
+			return true
+		}
+	}
+
+	if (typeof message === 'string' && message.includes('dexie.cloud')) {
+		return true
+	}
+
+	return false
+}
+
+if (typeof window !== 'undefined' && window.console) {
+	const originalConsoleError = console.error.bind(console)
+	const originalConsoleDebug = console.debug.bind(console)
+	let currentConsoleError = originalConsoleError
+
+	try {
+		Object.defineProperty(window.console, 'error', {
+			configurable: true,
+			enumerable: true,
+			get() {
+				return function interceptedConsoleError(
+					this: unknown,
+					...errorArguments: unknown[]
+				) {
+					if (isDexieCloudNetworkError(errorArguments)) {
+						originalConsoleDebug(
+							'Dexie Cloud background sync network event:',
+							...errorArguments
+						)
+						return
+					}
+					return currentConsoleError.apply(this, errorArguments)
+				}
+			},
+			set(newConsoleError: (...errorArguments: unknown[]) => void) {
+				currentConsoleError = newConsoleError
+			},
+		})
+	} catch (error) {
+		originalConsoleDebug('Failed to define console.error property:', error)
+	}
+
+	window.addEventListener('unhandledrejection', event => {
+		if (isDexieCloudNetworkError([event.reason])) {
+			event.preventDefault()
+			originalConsoleDebug(
+				'Dexie Cloud background sync network rejection handled:',
+				event.reason
+			)
+		}
+	})
+}
+
