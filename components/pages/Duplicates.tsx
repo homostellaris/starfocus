@@ -2,24 +2,28 @@ import {
 	IonBadge,
 	IonButton,
 	IonCard,
+	IonCardContent,
+	IonCardHeader,
+	IonCardTitle,
 	IonContent,
 	IonIcon,
-	IonList,
 	IonPage,
 	useIonToast,
 } from '@ionic/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { gitMergeOutline, sparklesSharp } from 'ionicons/icons'
 import { Header } from '../common/Header'
-import { db, StarRole, Todo } from '../db'
-import { TodoListItem } from '../todos'
+import { StarRoleIcon } from '../common/StarRoleIcon'
+import { cn } from '../common/cn'
+import starScale from '../common/starScale'
+import { db, StarRole } from '../db'
+import { TodoChip } from '../todos/TodoChip'
 import { useTodoActionSheet } from '../todos/TodoActionSheet'
 import { mergeDuplicateTodos } from '../todos/duplicate/actions'
 import {
 	detectAllDuplicateClusters,
 	DuplicateCluster,
 } from '../todos/duplicate/detector'
-import todoRepository from '../todos/repository'
 
 export default function Duplicates() {
 	const [presentActionSheet] = useTodoActionSheet()
@@ -81,14 +85,6 @@ export default function Duplicates() {
 		})
 	}
 
-	async function handleCompletionChange(todo: Todo) {
-		if (todo.completedAt) {
-			await todoRepository.uncomplete(todo)
-		} else {
-			await todoRepository.complete(todo)
-		}
-	}
-
 	return (
 		<IonPage id="main-content">
 			<Header
@@ -106,13 +102,13 @@ export default function Duplicates() {
 							<span>How Merging Works</span>
 						</div>
 						<p className="leading-relaxed">
-							Merging combines duplicates into the marked{' '}
+							Merging keeps the card&apos;s{' '}
 							<strong className="text-primary font-semibold">
 								Primary
 							</strong>{' '}
-							task. Any notes are combined, the highest star points and
-							star role are retained, and all check-in visits are reassigned
-							before duplicate entries are removed.
+							task and combines any notes, retains the highest star
+							points and star role, and reassigns check-in visits before
+							removing the duplicate tasks shown as chips.
 						</p>
 					</div>
 
@@ -144,69 +140,88 @@ export default function Duplicates() {
 							</IonButton>
 						</div>
 					) : (
-						queryData.clusters.map(cluster => (
-							<IonCard
-								key={cluster.identifier}
-								className="m-0 border border-neutral-800 bg-neutral-900/60 backdrop-blur overflow-hidden"
-								data-testid="duplicate-cluster-card"
-							>
-								<IonList className="!bg-transparent !py-0">
-									<TodoListItem
-										key={cluster.canonicalTodo.id}
-										todo={cluster.canonicalTodo}
-										starRole={queryData.starRoleMap.get(
-											cluster.canonicalTodo.starRole ?? '',
-										)}
-										onClick={() =>
-											presentActionSheet(cluster.canonicalTodo)
-										}
-										onCompletionChange={() =>
-											handleCompletionChange(cluster.canonicalTodo)
-										}
-									>
-										<div className="mt-1 flex items-center gap-1.5">
-											<IonBadge
-												color="primary"
-												className="text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5"
-												data-testid="primary-indicator"
+						queryData.clusters.map(cluster => {
+							const primaryStarPoints =
+								cluster.canonicalTodo.starPoints ?? 0
+							const primaryStarRole = queryData.starRoleMap.get(
+								cluster.canonicalTodo.starRole ?? '',
+							)
+
+							return (
+								<IonCard
+									key={cluster.identifier}
+									className="m-0 border border-neutral-800 bg-neutral-900/60 backdrop-blur overflow-hidden"
+									data-testid="duplicate-cluster-card"
+								>
+									<IonCardHeader className="pb-2">
+										<div className="flex items-center justify-between gap-3">
+											<div
+												className="flex items-center gap-2 grow min-w-0 cursor-pointer"
+												onClick={() =>
+													presentActionSheet(cluster.canonicalTodo)
+												}
+												data-testid="primary-todo-header"
 											>
-												Primary
-											</IonBadge>
+												{primaryStarPoints > 0 ? (
+													<span
+														className={cn(
+															'!font-mono text-sm font-semibold shrink-0',
+															starScale[primaryStarPoints]?.textColor,
+														)}
+													>
+														{primaryStarPoints}
+													</span>
+												) : null}
+												<IonCardTitle className="text-base font-semibold text-white truncate">
+													{cluster.canonicalTodo.title}
+												</IonCardTitle>
+												<StarRoleIcon
+													starRole={primaryStarRole}
+													className="shrink-0 text-sm"
+												/>
+												<IonBadge
+													color="primary"
+													className="text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 shrink-0"
+													data-testid="primary-indicator"
+												>
+													Primary
+												</IonBadge>
+											</div>
+
+											<IonButton
+												fill="solid"
+												color="primary"
+												size="small"
+												onClick={() => handleMergeCluster(cluster)}
+												data-testid="merge-cluster-btn"
+												className="shrink-0"
+											>
+												<IonIcon
+													slot="start"
+													icon={gitMergeOutline}
+												/>
+												<span>Merge</span>
+											</IonButton>
 										</div>
-									</TodoListItem>
+									</IonCardHeader>
 
-									{cluster.duplicateTodos.map(({ todo }) => (
-										<TodoListItem
-											key={todo.id}
-											todo={todo}
-											starRole={queryData.starRoleMap.get(
-												todo.starRole ?? '',
-											)}
-											onClick={() => presentActionSheet(todo)}
-											onCompletionChange={() =>
-												handleCompletionChange(todo)
-											}
-										/>
-									))}
-								</IonList>
-
-								<div className="flex justify-end p-2 border-t border-neutral-800/60 bg-neutral-950/20">
-									<IonButton
-										fill="solid"
-										color="primary"
-										size="small"
-										onClick={() => handleMergeCluster(cluster)}
-										data-testid="merge-cluster-btn"
-									>
-										<IonIcon
-											slot="start"
-											icon={gitMergeOutline}
-										/>
-										<span>Merge into Primary</span>
-									</IonButton>
-								</div>
-							</IonCard>
-						))
+									<IonCardContent className="pt-1">
+										<div className="flex flex-wrap gap-2 pt-1">
+											{cluster.duplicateTodos.map(({ todo }) => (
+												<TodoChip
+													key={todo.id}
+													todo={todo}
+													starRole={queryData.starRoleMap.get(
+														todo.starRole ?? '',
+													)}
+													onClick={() => presentActionSheet(todo)}
+												/>
+											))}
+										</div>
+									</IonCardContent>
+								</IonCard>
+							)
+						})
 					)}
 				</div>
 			</IonContent>
