@@ -90,6 +90,7 @@ export default function Duplicates() {
 			<Header
 				title="Duplicates"
 				backHref="/home"
+				hideActions
 			/>
 			<IonContent className="ion-padding">
 				<div className="max-w-2xl mx-auto space-y-4 pb-16">
