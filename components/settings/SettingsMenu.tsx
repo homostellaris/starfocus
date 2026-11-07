@@ -26,7 +26,6 @@ import ExportSettings from '../export/ExportSettings'
 import ObsidianSettings from '../obsidian/ObsidianSettings'
 import { ObsidianSettings as ObsidianSettingsType } from '../obsidian/useObsidian'
 import { detectAllDuplicateClusters } from '../todos/duplicate/detector'
-import { useDuplicateDetectorModal } from '../todos/duplicate/useDuplicateDetectorModal'
 import useSettings from './useSettings'
 
 export const SettingsMenu = () => {
@@ -37,7 +36,6 @@ export const SettingsMenu = () => {
 	const [localVault, setLocalVault] = useState<string | null>(null)
 	const [localFolder, setLocalFolder] = useState<string | null>(null)
 	const [showToast, setShowToast] = useState(false)
-	const [presentDuplicateDetectorModal] = useDuplicateDetectorModal()
 
 	const duplicateCount = useLiveQuery(
 		async () => {
@@ -144,9 +142,10 @@ export const SettingsMenu = () => {
 							fill="outline"
 							color={duplicateCount > 0 ? 'warning' : 'primary'}
 							size="small"
+							routerLink="/duplicates"
+							routerDirection="forward"
 							onClick={() => {
 								menuController.toggle('end')
-								presentDuplicateDetectorModal()
 							}}
 							data-testid="open-duplicate-detector-btn"
 						>
