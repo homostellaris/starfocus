@@ -90,7 +90,7 @@ export default function DevHub() {
 													className="text-xl"
 												/>
 											</div>
-											<IonBadge color="primary">8 Components</IonBadge>
+											<IonBadge color="primary">9 Components</IonBadge>
 										</div>
 										<IonCardTitle className="text-lg font-bold text-white">
 											Component Library
@@ -105,6 +105,16 @@ export default function DevHub() {
 										</p>
 										<div className="border-t border-neutral-800/80 pt-3">
 											<IonList lines="none" className="bg-transparent space-y-1 p-0">
+												<IonItem
+													routerLink="/dev/components/sync-icon"
+													button
+													detail={false}
+													className="[--background:transparent] hover:[--background:rgba(255,255,255,0.05)] rounded-lg text-xs"
+												>
+													<IonIcon slot="start" icon={syncSharp} className="text-sky-400 text-sm" />
+													<IonLabel className="text-xs text-neutral-300">Momentum & Inertia Sync Icon</IonLabel>
+													<IonIcon slot="end" icon={arrowForwardSharp} className="text-neutral-500 text-xs" />
+												</IonItem>
 												<IonItem
 													routerLink="/dev/components/sync-status"
 													button

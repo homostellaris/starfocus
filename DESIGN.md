@@ -103,12 +103,23 @@ Unless there is an explicit and documented technical reason, all UI layouts, pag
 
 ### Component Workbench Architecture Guidelines
 
-1. **Split Pane Layout**:
-   - Use `<IonSplitPane when="lg" contentId="...">` to flank the central canvas stage with the Component Catalog (start side) and the Simulator Controls (end side).
-   - On desktop viewports, all three panes remain accessible side-by-side.
-   - On mobile viewports, the side menus collapse into standard Ionic slide-in drawers accessible via `<IonMenuButton>`.
+The Component Workbench (`/dev/components/:component`) provides an isolated environment for developing, inspecting, and stress-testing individual components.
 
-2. **Presets as IonChips**:
-   - Presets belong in the Simulator / Knobs pane directly above the knobs, formatted as a row of `<IonChip>` elements.
-   - Presets must **only alter the knobs' underlying state**. Clicking an `<IonChip>` updates the knob values (e.g. toggles, selects, ranges), which in turn propagate down to the component under test.
-   - Avoid duplicating presets across floating pills or separate action sheets on the stage canvas.
+1. **Strict Canvas Isolation & Top Alignment**:
+   - **The Stage Canvas (`[data-testid="workbench-canvas"]`) is strictly and exclusively reserved for the component under test.**
+   - Do NOT place telemetry grids, debug HUDs, multiple variant comparison cards, mock surrounding apps, or floating test buttons on the canvas.
+   - **Top Alignment**: The component is aligned to the top of the canvas (`justify-start pt-8 md:pt-12`) rather than vertically centered. This ensures it remains clearly visible and unobstructed in the upper viewport even when the sheet modal is expanded up to adjust simulator knobs or inspect live telemetry.
+
+2. **Sheet Modal Architecture for Presets & Knobs**:
+   - Both Scenario Presets and Simulator Knobs are consolidated into an Ionic Sheet Modal (`<IonModal>` with `breakpoints={[0.16, 0.65, 0.95]}`).
+   - **Peek Mode by Default**: The sheet modal is presented at `initialBreakpoint={0.16}`. In peek mode, it displays only the grab handle, title/expand action, and the quick-action Scenario Presets (`[data-testid="workbench-presets-bar"]`).
+   - **Expanded Mode for Knobs & Telemetry**: Users can drag the handle or tap expand to reach breakpoints `0.65` or `0.95`, revealing the complete controls pane:
+     - Real-time Telemetry HUD (angular velocity, rotation angle, physics phase, data transmission status)
+     - Simulation Impulse Triggers (quick pulse, standard transfer, long transfer, continuous sync)
+     - Interactive Knobs (ranges, toggles, dropdown selects)
+   - **Non-dismissible Sheet**: The sheet modal does not include `0` in its breakpoints array, guaranteeing that presets always remain accessible in peek mode at the bottom of the viewport.
+   - **Non-blocking Backdrop in Peek Mode**: `backdropBreakpoint={0.65}` ensures no backdrop overlay exists when in peek mode, allowing full interactivity with the canvas above.
+
+3. **Presets Contract**:
+   - Presets must **only alter the simulator's underlying state**. Clicking an `<IonChip>` updates the simulator state (e.g. toggles, selects, impulse timers), which in turn propagates down to the component under test.
+   - Never add duplicate action buttons or floating trigger pills to the stage canvas.
