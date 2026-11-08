@@ -18,25 +18,8 @@ git config user.email "$GITHUB_BOT_GIT_EMAIL"
 
 ## Pushing
 
-Always push using the bot's installation token so the push is attributed to the bot rather than your personal account:
+Always verify uncommitted changes locally, then push directly to `master` using the bot's installation token:
 
 ```bash
-GH_TOKEN=$(bun run agent/scripts/github-app-token.ts) git push
+GH_TOKEN=$(bun run agent/scripts/github-app-token.ts) git push origin master
 ```
-
-Or for setting up a new remote tracking branch:
-
-```bash
-GH_TOKEN=$(bun run agent/scripts/github-app-token.ts) git push -u origin <branch>
-```
-
-## Pull requests
-
-Use `ghb` (not `gh`) for all PR operations so they are attributed to the bot:
-
-```bash
-ghb pr create --title "..." --body "..."
-ghb pr comment <number> --body "@homostellaris PR ready for review."
-```
-
-After raising or updating a PR, always post the review comment so @homostellaris receives a push notification.

@@ -4,7 +4,7 @@ export default defineConfig({
 	video: false,
 	screenshotOnRunFailure: false,
 	e2e: {
-		baseUrl: 'http://localhost:6603',
+		baseUrl: process.env.CYPRESS_BASE_URL || `http://localhost:${process.env.PORT || '6600'}`,
 		includeShadowDom: true,
 		setupNodeEvents(_on, _config) {
 			// implement node event listeners here

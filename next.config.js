@@ -3,16 +3,14 @@ const withVercelToolbar = require('@vercel/toolbar/plugins/next')()
 
 const nextConfig = withMDX({
 	allowedDevOrigins: [
-		'omarchy.tail29c7da.ts.net:8443',
-		'omarchy.tail29c7da.ts.net:6603',
+		'omarchy.tail29c7da.ts.net:*',
 		'omarchy.tail29c7da.ts.net',
-		'100.68.211.23:8443',
-		'100.68.211.23:6603',
+		'*.tail29c7da.ts.net:*',
+		'*.tail29c7da.ts.net',
+		'100.68.211.23:*',
 		'100.68.211.23',
-		'192.168.178.124:6603',
-		'192.168.178.124',
-		'localhost:6603',
-		'127.0.0.1:6603',
+		'localhost:*',
+		'127.0.0.1:*',
 	],
 	basePath: '',
 	pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
