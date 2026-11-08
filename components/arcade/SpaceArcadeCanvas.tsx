@@ -23,6 +23,7 @@ import type {
 } from '../assets/types'
 import {
 	buildArcadePlanetNodes,
+	calculateSlingshotImpulse,
 	detectProjectileCollisions,
 	spawnHardpointProjectiles,
 	stepShipPhysics,
@@ -73,14 +74,40 @@ export default function SpaceArcadeCanvas(props: SpaceArcadeCanvasProps) {
 		)
 	}
 
-	return <SpaceArcadeInteractiveCanvas {...props} />
+	const sectorSignature = computeSectorSignature(props)
+	return <SpaceArcadeInteractiveCanvas key={sectorSignature} {...props} />
+}
+
+const EMPTY_STAR_ROLES: StarRole[] = []
+const EMPTY_ANCHORED_POSITIONS: Record<string, { x: number; y: number }> = {}
+
+function computeSectorSignature(props: SpaceArcadeCanvasProps): string {
+	const todoKey = props.todos
+		.map(
+			todo =>
+				`${todo.id}:${todo.title}:${todo.starPoints ?? 0}:${todo.starRole ?? ''}`,
+		)
+		.join('|')
+	const roleKey = (props.starRoles ?? EMPTY_STAR_ROLES)
+		.map(role => `${role.id}:${role.title}`)
+		.join('|')
+	const anchorKey = Object.entries(
+		props.anchoredPositions ?? EMPTY_ANCHORED_POSITIONS,
+	)
+		.map(
+			([todoId, coords]) =>
+				`${todoId}:${Math.round(coords.x)},${Math.round(coords.y)}`,
+		)
+		.join('|')
+	const launchKey = `${props.initialShipPosition?.x ?? 160},${props.initialShipPosition?.y ?? 260},${props.initialShipPosition?.rotationDegrees ?? 0},${props.initialVelocity?.vx ?? 0},${props.initialVelocity?.vy ?? 0}`
+	return `${todoKey}::${roleKey}::${anchorKey}::${launchKey}`
 }
 
 function SpaceArcadeInteractiveCanvas({
 	active,
 	todos,
-	starRoles = [],
-	anchoredPositions = {},
+	starRoles = EMPTY_STAR_ROLES,
+	anchoredPositions = EMPTY_ANCHORED_POSITIONS,
 	initialShipPosition,
 	initialVelocity,
 	shipLoadout,
@@ -121,7 +148,22 @@ function SpaceArcadeInteractiveCanvas({
 		shotsFired: 0,
 	}))
 	const [lastHitTodoTitle, setLastHitTodoTitle] = useState<string | null>(null)
+	const [slingshotPull, setSlingshotPull] = useState<{
+		startX: number
+		startY: number
+		currentX: number
+		currentY: number
+	} | null>(null)
+	const slingshotPullRef = useRef<{
+		startX: number
+		startY: number
+		currentX: number
+		currentY: number
+	} | null>(null)
 
+	const planetNodesRef = useRef<ArcadePlanetNode[]>(planetNodes)
+	const shipStateRef = useRef<ArcadeShipState>(shipState)
+	const onSelectTodoPlanetRef = useRef(onSelectTodoPlanet)
 	const projectilesRef = useRef<ArcadeProjectile[]>([])
 	const particlePoolRef = useRef(createParticleRingPool())
 	const controlsRef = useRef({
@@ -132,37 +174,33 @@ function SpaceArcadeInteractiveCanvas({
 	const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
 	useEffect(() => {
-		setPlanetNodes(initialNodes)
-	}, [initialNodes])
+		planetNodesRef.current = planetNodes
+	}, [planetNodes])
 
 	useEffect(() => {
-		if (!active) return
-		setShipState(previous => ({
-			...previous,
-			x: initialShipPosition?.x ?? previous.x,
-			y: initialShipPosition?.y ?? previous.y,
-			velocityX: initialVelocity?.vx ?? previous.velocityX,
-			velocityY: initialVelocity?.vy ?? previous.velocityY,
-			angleDegrees:
-				initialShipPosition?.rotationDegrees ?? previous.angleDegrees,
-		}))
-	}, [active, initialShipPosition, initialVelocity])
+		shipStateRef.current = shipState
+	}, [shipState])
+
+	useEffect(() => {
+		onSelectTodoPlanetRef.current = onSelectTodoPlanet
+	}, [onSelectTodoPlanet])
 
 	const triggerFireHardpoints = useCallback(() => {
 		setShipState(previous => {
 			const { projectiles, nextShipState } = spawnHardpointProjectiles(
 				previous,
-				resolvedLoadout.palette.emissiveCockpitBlue,
+				resolvedLoadout.palette.cockpitGlow,
 			)
 			projectilesRef.current = [...projectilesRef.current, ...projectiles]
+			shipStateRef.current = nextShipState
 			return nextShipState
 		})
-	}, [resolvedLoadout.palette.emissiveCockpitBlue])
+	}, [resolvedLoadout.palette.cockpitGlow])
 
 	const triggerThrustStep = useCallback(
 		(direction: 'thrust' | 'left' | 'right') => {
-			setShipState(previous =>
-				stepShipPhysics(
+			setShipState(previous => {
+				const stepped = stepShipPhysics(
 					previous,
 					{
 						thrustForward: direction === 'thrust',
@@ -171,11 +209,64 @@ function SpaceArcadeInteractiveCanvas({
 					},
 					0.06,
 					{ width: 920, height: 540 },
-				),
-			)
+				)
+				shipStateRef.current = stepped
+				return stepped
+			})
 		},
 		[],
 	)
+
+	useEffect(() => {
+		if (typeof window === 'undefined') return
+
+		const handleWindowPointerMove = (event: PointerEvent) => {
+			if (!slingshotPullRef.current) return
+			const nextPull = {
+				...slingshotPullRef.current,
+				currentX: event.clientX,
+				currentY: event.clientY,
+			}
+			slingshotPullRef.current = nextPull
+			setSlingshotPull(nextPull)
+		}
+
+		const handleWindowPointerUp = (event: PointerEvent) => {
+			const activePull = slingshotPullRef.current
+			if (!activePull) return
+			slingshotPullRef.current = null
+			setSlingshotPull(null)
+
+			const impulse = calculateSlingshotImpulse(
+				{ startX: activePull.startX, startY: activePull.startY },
+				{ currentX: event.clientX, currentY: event.clientY },
+			)
+			if (impulse) {
+				setShipState(previous => {
+					const launched: ArcadeShipState = {
+						...previous,
+						velocityX: impulse.vx,
+						velocityY: impulse.vy,
+						angleDegrees: impulse.angleDegrees,
+					}
+					shipStateRef.current = launched
+					return launched
+				})
+			} else {
+				triggerFireHardpoints()
+			}
+		}
+
+		window.addEventListener('pointermove', handleWindowPointerMove)
+		window.addEventListener('pointerup', handleWindowPointerUp)
+		window.addEventListener('pointercancel', handleWindowPointerUp)
+
+		return () => {
+			window.removeEventListener('pointermove', handleWindowPointerMove)
+			window.removeEventListener('pointerup', handleWindowPointerUp)
+			window.removeEventListener('pointercancel', handleWindowPointerUp)
+		}
+	}, [triggerFireHardpoints])
 
 	useEffect(() => {
 		if (!active || typeof window === 'undefined') return
@@ -240,30 +331,35 @@ function SpaceArcadeInteractiveCanvas({
 		const deltaSeconds = intervalMs / 1000
 
 		const timerId = window.setInterval(() => {
-			setShipState(currentShip => {
-				const steppedShip = stepShipPhysics(
-					currentShip,
-					controlsRef.current,
-					deltaSeconds,
-					{ width: 920, height: 540 },
-				)
+			const previousShip = shipStateRef.current
+			const steppedShip = stepShipPhysics(
+				previousShip,
+				controlsRef.current,
+				deltaSeconds,
+				{ width: 920, height: 540 },
+			)
+			shipStateRef.current = steppedShip
 
-				if (
-					controlsRef.current.thrustForward &&
-					telemetry.tier === 'active'
-				) {
-					const angleRad = (steppedShip.angleDegrees * Math.PI) / 180
-					particlePoolRef.current.spawn({
-						x: steppedShip.x - Math.sin(angleRad) * 20,
-						y: steppedShip.y + Math.cos(angleRad) * 20,
-						velocityX: -Math.sin(angleRad) * 70 + (Math.random() - 0.5) * 25,
-						velocityY: Math.cos(angleRad) * 70 + (Math.random() - 0.5) * 25,
-						maxLife: 0.45,
-						size: 2.5,
-						color: resolvedLoadout.palette.emissiveCockpitBlue,
-					})
-				}
+			const isMovingFast =
+				Math.hypot(steppedShip.velocityX, steppedShip.velocityY) > 45
 
+			if (
+				(controlsRef.current.thrustForward || isMovingFast) &&
+				telemetry.tier === 'active'
+			) {
+				const angleRad = (steppedShip.angleDegrees * Math.PI) / 180
+				particlePoolRef.current.spawn({
+					x: steppedShip.x - Math.sin(angleRad) * 20,
+					y: steppedShip.y + Math.cos(angleRad) * 20,
+					velocityX: -Math.sin(angleRad) * 70 + (Math.random() - 0.5) * 25,
+					velocityY: Math.cos(angleRad) * 70 + (Math.random() - 0.5) * 25,
+					maxLife: 0.45,
+					size: 2.5,
+					color: resolvedLoadout.palette.thrusterPlume,
+				})
+			}
+
+			if (projectilesRef.current.length > 0) {
 				const movedProjectiles = projectilesRef.current
 					.map(bolt => ({
 						...bolt,
@@ -273,36 +369,42 @@ function SpaceArcadeInteractiveCanvas({
 					}))
 					.filter(bolt => bolt.remainingLifeSeconds > 0)
 
-				setPlanetNodes(currentPlanets => {
-					const collisionOutcome = detectProjectileCollisions(
-						movedProjectiles,
-						currentPlanets,
-					)
-					projectilesRef.current = collisionOutcome.survivingProjectiles
-					if (collisionOutcome.hitTodoIds.length > 0) {
-						const hitNode = collisionOutcome.updatedPlanets.find(
-							node => node.todoId === collisionOutcome.hitTodoIds[0],
-						)
-						if (hitNode) {
-							setLastHitTodoTitle(hitNode.title)
-							onSelectTodoPlanet?.(hitNode.todoId)
-						}
-					}
-					return collisionOutcome.updatedPlanets
-				})
+				const collisionOutcome = detectProjectileCollisions(
+					movedProjectiles,
+					planetNodesRef.current,
+				)
+				projectilesRef.current = collisionOutcome.survivingProjectiles
 
-				particlePoolRef.current.step(deltaSeconds)
-				return steppedShip
-			})
+				if (collisionOutcome.hitTodoIds.length > 0) {
+					planetNodesRef.current = collisionOutcome.updatedPlanets
+					setPlanetNodes(collisionOutcome.updatedPlanets)
+					const hitNode = collisionOutcome.updatedPlanets.find(
+						node => node.todoId === collisionOutcome.hitTodoIds[0],
+					)
+					if (hitNode) {
+						setLastHitTodoTitle(hitNode.title)
+						onSelectTodoPlanetRef.current?.(hitNode.todoId)
+					}
+				}
+			}
+
+			particlePoolRef.current.step(deltaSeconds)
+
+			const shipChanged =
+				Math.round(steppedShip.x) !== Math.round(previousShip.x) ||
+				Math.round(steppedShip.y) !== Math.round(previousShip.y) ||
+				Math.round(steppedShip.angleDegrees) !==
+					Math.round(previousShip.angleDegrees) ||
+				steppedShip.recoilOffsetPx !== previousShip.recoilOffsetPx ||
+				steppedShip.shotsFired !== previousShip.shotsFired
+
+			if (shipChanged) {
+				setShipState(steppedShip)
+			}
 		}, intervalMs)
 
 		return () => window.clearInterval(timerId)
-	}, [
-		active,
-		onSelectTodoPlanet,
-		resolvedLoadout.palette.emissiveCockpitBlue,
-		telemetry.tier,
-	])
+	}, [active, resolvedLoadout.palette.thrusterPlume, telemetry.tier])
 
 	useEffect(() => {
 		const canvasElement = canvasRef.current
@@ -316,7 +418,10 @@ function SpaceArcadeInteractiveCanvas({
 			const baked = bakePlanetBitmap(node.spec, { enableDithering: true })
 			const drawDiameter = node.radius * 2.2
 
-			if (node.spec.celestialClass !== 'asteroid') {
+			if (
+				node.spec.celestialClass !== 'asteroid' &&
+				node.spec.celestialClass !== 'dwarf_planet'
+			) {
 				const glowBitmap = getAdditiveGlowBitmap(
 					node.spec.palette.emissiveOrAtmos,
 					64,
@@ -346,15 +451,6 @@ function SpaceArcadeInteractiveCanvas({
 			}
 
 			context.save()
-			context.strokeStyle = active ? '#FFB703' : '#38bdf8'
-			context.lineWidth = 1.6
-			context.setLineDash([6, 4])
-			context.beginPath()
-			context.arc(node.x, node.y, node.radius + 8, 0, Math.PI * 2)
-			context.stroke()
-			context.restore()
-
-			context.save()
 			context.fillStyle = '#f8fafc'
 			context.font = '600 11px ui-monospace, SFMono-Regular, monospace'
 			context.textAlign = 'center'
@@ -363,7 +459,7 @@ function SpaceArcadeInteractiveCanvas({
 			context.fillText(
 				`[${node.starPoints}pt] ${truncatedTitle}`,
 				node.x,
-				node.y + node.radius + 22,
+				node.y + node.radius + 18,
 			)
 			context.restore()
 		}
@@ -399,9 +495,53 @@ function SpaceArcadeInteractiveCanvas({
 			context.restore()
 		}
 
+		if (slingshotPull) {
+			const pullDeltaX = slingshotPull.currentX - slingshotPull.startX
+			const pullDeltaY = slingshotPull.currentY - slingshotPull.startY
+			const pullDistance = Math.hypot(pullDeltaX, pullDeltaY)
+			if (pullDistance >= 8) {
+				const clampedPull = Math.min(120, pullDistance)
+				const unitX = -pullDeltaX / pullDistance
+				const unitY = -pullDeltaY / pullDistance
+
+				context.save()
+				context.strokeStyle = 'rgba(251, 191, 36, 0.75)'
+				context.lineWidth = 2
+				context.setLineDash([5, 4])
+				context.beginPath()
+				context.moveTo(shipState.x, shipState.y)
+				context.lineTo(
+					shipState.x - unitX * clampedPull * 0.7,
+					shipState.y - unitY * clampedPull * 0.7,
+				)
+				context.stroke()
+
+				context.strokeStyle = '#38bdf8'
+				context.lineWidth = 2.5
+				context.setLineDash([])
+				context.beginPath()
+				context.moveTo(shipState.x, shipState.y)
+				context.lineTo(
+					shipState.x + unitX * clampedPull * 1.15,
+					shipState.y + unitY * clampedPull * 1.15,
+				)
+				context.stroke()
+				context.restore()
+			}
+		}
+
+		const displayAngle = (() => {
+			if (!slingshotPull) return shipState.angleDegrees
+			const impulse = calculateSlingshotImpulse(
+				{ startX: slingshotPull.startX, startY: slingshotPull.startY },
+				{ currentX: slingshotPull.currentX, currentY: slingshotPull.currentY },
+			)
+			return impulse ? impulse.angleDegrees : shipState.angleDegrees
+		})()
+
 		context.save()
 		context.translate(shipState.x, shipState.y)
-		context.rotate((shipState.angleDegrees * Math.PI) / 180)
+		context.rotate((displayAngle * Math.PI) / 180)
 		context.translate(-32, -32)
 		paintModularShipToContext({
 			context,
@@ -411,7 +551,14 @@ function SpaceArcadeInteractiveCanvas({
 			thrusterActive: true,
 		})
 		context.restore()
-	}, [active, planetNodes, resolvedLoadout, shipState, thrusterFrame])
+	}, [
+		active,
+		planetNodes,
+		resolvedLoadout,
+		shipState,
+		slingshotPull,
+		thrusterFrame,
+	])
 
 	return (
 		<div
@@ -430,8 +577,17 @@ function SpaceArcadeInteractiveCanvas({
 				ref={canvasRef}
 				width={920}
 				height={540}
-				onClick={triggerFireHardpoints}
-				className="block h-full w-full cursor-crosshair"
+				onPointerDown={event => {
+					const initialPull = {
+						startX: event.clientX,
+						startY: event.clientY,
+						currentX: event.clientX,
+						currentY: event.clientY,
+					}
+					slingshotPullRef.current = initialPull
+					setSlingshotPull(initialPull)
+				}}
+				className="block h-full w-full cursor-grab touch-none active:cursor-grabbing"
 			/>
 			{active && (
 				<div
@@ -443,13 +599,16 @@ function SpaceArcadeInteractiveCanvas({
 							Arcade Flight Mode
 						</span>
 						<span className="text-neutral-300">
-							Sector Planets: <strong>{planetNodes.length}</strong>
+							Sector Bodies: <strong>{planetNodes.length}</strong>
 						</span>
 						<span className="text-neutral-300">
-							Shots: <strong data-testid="arcade-shots-count">{shipState.shotsFired}</strong>
+							Shots:{' '}
+							<strong data-testid="arcade-shots-count">
+								{shipState.shotsFired}
+							</strong>
 						</span>
 						<span className="text-neutral-400">
-							Tier: <strong>{telemetry.tier} ({telemetry.targetFps}fps)</strong>
+							Drag to Slingshot • WASD / Space
 						</span>
 						{lastHitTodoTitle && (
 							<span

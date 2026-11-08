@@ -193,7 +193,9 @@ export function useBatteryTierTicker({
 		lastActivityTimestampRef.current = Date.now()
 		const handleUserActivity = () => {
 			lastActivityTimestampRef.current = Date.now()
-			setIdleMilliseconds(0)
+			setIdleMilliseconds(previous =>
+				previous >= idleThresholdMs ? 0 : previous,
+			)
 		}
 
 		window.addEventListener('pointermove', handleUserActivity, {
@@ -207,7 +209,11 @@ export function useBatteryTierTicker({
 
 		const activityMonitor = window.setInterval(() => {
 			const elapsed = Date.now() - lastActivityTimestampRef.current
-			setIdleMilliseconds(elapsed)
+			setIdleMilliseconds(previous => {
+				const wasIdle = previous >= idleThresholdMs
+				const isNowIdle = elapsed >= idleThresholdMs
+				return wasIdle !== isNowIdle ? elapsed : previous
+			})
 		}, 250)
 
 		return () => {
@@ -217,7 +223,7 @@ export function useBatteryTierTicker({
 			window.removeEventListener('keydown', handleUserActivity)
 			window.clearInterval(activityMonitor)
 		}
-	}, [])
+	}, [idleThresholdMs])
 
 	useEffect(() => {
 		if (typeof window === 'undefined') return

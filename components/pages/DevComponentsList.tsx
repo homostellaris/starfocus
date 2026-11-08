@@ -8,7 +8,6 @@ import {
 	IonCardTitle,
 	IonContent,
 	IonIcon,
-	IonPage,
 	IonBadge,
 	IonButton,
 } from '@ionic/react'
@@ -42,6 +41,28 @@ interface ComponentCatalogItem {
 }
 
 const CATALOG_ITEMS: ComponentCatalogItem[] = [
+	{
+		key: 'celestial-body',
+		title: 'Celestial Body',
+		subtitle: 'Procedural Todo Planets, Stars & Black Holes',
+		description:
+			'Deterministic 128×128 celestial bodies seeded by todo ID, tiered by Fibonacci Star Points (1pt Asteroid → 2pt Dwarf Planet → 3pt Medium Planet → 5pt Gas Giant → 8pt Star → 13pt Black Hole), and themed by Star Role.',
+		icon: planetSharp,
+		iconColor: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+		badge: 'Procedural',
+		tags: ['Fibonacci 1-13', 'Simplex Noise', 'Bayer Dither', 'Star Roles'],
+	},
+	{
+		key: 'starship',
+		title: 'Starship',
+		subtitle: 'Selectable Spacecraft Models, Skins & Slingshot Launch',
+		description:
+			'High-craft birds-eye spacecraft renderer with whole selectable ship hulls (Vanguard, Phantom, Helios, Atlas, Valkyrie), custom paint skins, animated ion thrusters, and interactive slingshot launch physics.',
+		icon: rocketSharp,
+		iconColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+		badge: 'Spacecraft',
+		tags: ['Whole Ships', 'Skins & Themes', 'Thruster Plumes', 'Slingshot Physics'],
+	},
 	{
 		key: 'sync-status',
 		title: 'Unified Sync Status Popover',
@@ -174,104 +195,93 @@ const CATALOG_ITEMS: ComponentCatalogItem[] = [
 		badge: 'Audio',
 		tags: ['Audio Player', 'Ambient Music', 'Chill / Hype', 'Keyboard Shortcuts'],
 	},
-	{
-		key: 'procedural-assets',
-		title: 'Procedural Visual Assets & Modular Ships',
-		subtitle: 'Deterministic 128×128 Todo Planets & Paper-Doll Spacecraft',
-		description:
-			'Generates cached 128×128 offscreen bitmap celestial bodies seeded by todo.id with 4×4 Bayer dithering, biome palettes, and 5-layer modular spacecraft assembly.',
-		icon: planetSharp,
-		iconColor: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
-		badge: 'Procedural',
-		tags: ['Simplex Noise', 'Bayer Dither', 'Paper-Doll Sockets', '128x128 Cache'],
-	},
 ]
 
 export default function DevComponentsList() {
 	return (
-		<IonPage id="main-content">
-				<Header
-					title="Components"
-					backHref="/dev"
-					hideActions
-				/>
-				<IonContent fullscreen>
-					<div className="mx-auto max-w-4xl px-4 py-8">
-						{/* Intro Section */}
-						<div className="mb-6">
-							<div className="mb-1 flex items-center gap-2">
-								<IonIcon icon={cubeSharp} className="text-blue-400" />
-								<span className="text-xs font-semibold tracking-wider text-blue-400 uppercase">
-									Design System & Catalog
-								</span>
-							</div>
-							<h1 className="text-2xl font-bold tracking-tight text-white">
-								Component Catalog
-							</h1>
-							<p className="mt-1 text-sm text-neutral-400">
-								Select a component below to open its dedicated interactive workbench with live state controls, simulation knobs, and viewport testing.
-							</p>
+		<div className="ion-page" id="main-content">
+			<Header
+				title="Components"
+				backHref="/dev"
+				hideActions
+			/>
+			<IonContent fullscreen>
+				<div className="mx-auto max-w-4xl px-4 py-8">
+					{/* Intro Section */}
+					<div className="mb-6">
+						<div className="mb-1 flex items-center gap-2">
+							<IonIcon icon={cubeSharp} className="text-blue-400" />
+							<span className="text-xs font-semibold tracking-wider text-blue-400 uppercase">
+								Design System & Catalog
+							</span>
 						</div>
-
-						{/* Component List */}
-						<div className="space-y-4">
-							{CATALOG_ITEMS.map((item) => (
-								<IonCard
-									key={item.key}
-									className="m-0 border border-neutral-800 bg-neutral-900/90 transition hover:border-neutral-700"
-								>
-									<IonCardHeader className="pb-2">
-										<div className="flex flex-wrap items-center justify-between gap-2">
-											<div className="flex items-center gap-3">
-												<div
-													className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border ${item.iconColor}`}
-												>
-													<IonIcon icon={item.icon} className="text-xl" />
-												</div>
-												<div>
-													<IonCardTitle className="text-base font-bold text-white sm:text-lg">
-														{item.title}
-													</IonCardTitle>
-													<IonCardSubtitle className="text-xs text-neutral-400">
-														{item.subtitle}
-													</IonCardSubtitle>
-												</div>
-											</div>
-											<IonBadge color="primary">{item.badge}</IonBadge>
-										</div>
-									</IonCardHeader>
-									<IonCardContent>
-										<p className="mb-3 text-sm text-neutral-300">
-											{item.description}
-										</p>
-										<div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-800/80 pt-3">
-											<div className="flex flex-wrap items-center gap-1.5">
-												{item.tags.map((tag) => (
-													<IonBadge
-														key={tag}
-														color="medium"
-														className="text-[10px] font-mono px-2 py-0.5"
-													>
-														{tag}
-													</IonBadge>
-												))}
-											</div>
-											<IonButton
-												routerLink={`/dev/components/${item.key}`}
-												fill="outline"
-												size="small"
-												color="primary"
-											>
-												<span>Open in Workbench</span>
-												<IonIcon slot="end" icon={arrowForwardSharp} />
-											</IonButton>
-										</div>
-									</IonCardContent>
-								</IonCard>
-							))}
-						</div>
+						<h1 className="text-2xl font-bold tracking-tight text-white">
+							Component Catalog
+						</h1>
+						<p className="mt-1 text-sm text-neutral-400">
+							Select a component below to open its dedicated interactive workbench with live state controls, simulation knobs, and viewport testing.
+						</p>
 					</div>
-				</IonContent>
-			</IonPage>
+
+					{/* Component List */}
+					<div className="space-y-4">
+						{CATALOG_ITEMS.map((item) => (
+							<IonCard
+								key={item.key}
+								className="m-0 border border-neutral-800 bg-neutral-900/90 transition hover:border-neutral-700"
+							>
+								<IonCardHeader className="pb-2">
+									<div className="flex flex-wrap items-center justify-between gap-2">
+										<div className="flex items-center gap-3">
+											<div
+												className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border ${item.iconColor}`}
+											>
+												<IonIcon icon={item.icon} className="text-xl" />
+											</div>
+											<div>
+												<IonCardTitle className="text-base font-bold text-white sm:text-lg">
+													{item.title}
+												</IonCardTitle>
+												<IonCardSubtitle className="text-xs text-neutral-400">
+													{item.subtitle}
+												</IonCardSubtitle>
+											</div>
+										</div>
+										<IonBadge color="primary">{item.badge}</IonBadge>
+									</div>
+								</IonCardHeader>
+								<IonCardContent>
+									<p className="mb-3 text-sm text-neutral-300">
+										{item.description}
+									</p>
+									<div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-800/80 pt-3">
+										<div className="flex flex-wrap items-center gap-1.5">
+											{item.tags.map((tag) => (
+												<IonBadge
+													key={tag}
+													color="medium"
+													className="text-[10px] font-mono px-2 py-0.5"
+												>
+													{tag}
+												</IonBadge>
+											))}
+										</div>
+										<IonButton
+											routerLink={`/dev/components/${item.key}`}
+											fill="outline"
+											size="small"
+											color="primary"
+										>
+											<span>Open in Workbench</span>
+											<IonIcon slot="end" icon={arrowForwardSharp} />
+										</IonButton>
+									</div>
+								</IonCardContent>
+							</IonCard>
+						))}
+					</div>
+				</div>
+			</IonContent>
+		</div>
 	)
 }

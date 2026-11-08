@@ -266,19 +266,24 @@ export function buildArcadePlanetNodes({
 			(prng() - 0.5) * 28
 
 		const radius =
-			spec.celestialClass === 'gas_giant'
-				? 32
-				: spec.celestialClass === 'emissive'
-					? 27
-					: spec.celestialClass === 'terrestrial'
-						? 24
-						: 20
-		const maxHitPoints = Math.max(1, Math.min(8, Math.ceil((todo.starPoints || 1) / 2)))
+			spec.celestialClass === 'black_hole'
+				? 36
+				: spec.celestialClass === 'star'
+					? 33
+					: spec.celestialClass === 'gas_giant'
+						? 30
+						: spec.celestialClass === 'terrestrial'
+							? 25
+							: spec.celestialClass === 'dwarf_planet'
+								? 21
+								: 18
+		const clampedPoints = Math.min(13, Math.max(1, todo.starPoints || 1))
+		const maxHitPoints = Math.max(1, Math.min(7, Math.ceil(clampedPoints / 2)))
 
 		return {
 			todoId: todo.id,
 			title: todo.title,
-			starPoints: todo.starPoints ?? 0,
+			starPoints: clampedPoints,
 			x: anchored ? anchored.x : defaultX,
 			y: anchored ? anchored.y : defaultY,
 			radius,

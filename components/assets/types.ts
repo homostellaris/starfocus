@@ -1,8 +1,10 @@
 export type CelestialClass =
 	| 'asteroid'
+	| 'dwarf_planet'
 	| 'terrestrial'
-	| 'emissive'
 	| 'gas_giant'
+	| 'star'
+	| 'black_hole'
 
 export type EmissiveSubType = 'cryo' | 'bioluminescent' | 'volcanic'
 
@@ -40,8 +42,6 @@ export interface ProceduralPlanetSpec {
 	cloudCoverage: number
 	ringTiltDegrees: number
 	hasRings: boolean
-	orbitingMoonCount: number
-	hudReticleRotationDegrees: number
 }
 
 export interface PlanetBakeMetrics {
@@ -53,9 +53,17 @@ export interface PlanetBakeMetrics {
 
 export type ShipArchetypeId =
 	| 'interceptor_vanguard_mk1'
-	| 'hauler_atlas_mk1'
-	| 'science_helios_mk1'
 	| 'striker_wraith_mk1'
+	| 'science_helios_mk1'
+	| 'hauler_atlas_mk1'
+	| 'valkyrie_crescent_mk1'
+
+export type ShipSkinId =
+	| 'vanguard_cyan'
+	| 'solar_ember'
+	| 'terran_sage'
+	| 'nebula_violet'
+	| 'stealth_obsidian'
 
 export type ThrusterPlumeType =
 	| 'cyan_ion'
@@ -94,12 +102,19 @@ export interface ShipSocketManifest {
 }
 
 export interface ShipColorPalette {
-	id: string
+	id: ShipSkinId
 	name: string
+	tagline: string
 	primaryHullRed: string
 	secondaryTrimGreen: string
 	emissiveCockpitBlue: string
 	outlineDark: string
+	hullPrimary: string
+	hullSecondary: string
+	hullHighlight: string
+	accentStripe: string
+	cockpitGlow: string
+	thrusterPlume: string
 }
 
 export interface ShipLoadoutConfig {
@@ -109,6 +124,7 @@ export interface ShipLoadoutConfig {
 	hardpointArchetype: ShipArchetypeId
 	thrusterType: ThrusterPlumeType
 	palette: ShipColorPalette
+	skinId: ShipSkinId
 }
 
 export interface AssembledShipLayer {

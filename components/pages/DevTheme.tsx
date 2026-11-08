@@ -8,7 +8,6 @@ import {
 	IonCardTitle,
 	IonContent,
 	IonIcon,
-	IonPage,
 	IonBadge,
 	IonButton,
 } from '@ionic/react'
@@ -131,7 +130,7 @@ export default function DevTheme() {
 	}
 
 	return (
-		<IonPage id="main-content">
+		<div className="ion-page" id="main-content">
 				<Header
 					title="Theme"
 					backHref="/dev"
@@ -445,6 +444,6 @@ export default function DevTheme() {
 						</section>
 					</div>
 				</IonContent>
-			</IonPage>
+			</div>
 	)
 }

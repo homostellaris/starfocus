@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useRef } from 'react'
+import React, { useState, useMemo, useRef, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import {
 	IonBadge,
@@ -38,8 +38,28 @@ import {
 import dayjs from 'dayjs'
 import { Header } from '../common/Header'
 import PlanetAsset from '../assets/PlanetAsset'
+import {
+	BIOME_PALETTES,
+	CELESTIAL_CLASS_LABELS,
+	CELESTIAL_POINT_TIERS,
+	generateProceduralPlanetSpec,
+} from '../assets/planetGenerator'
 import ModularStarship from '../assets/ModularStarship'
-import type { BiomePaletteId, ShipArchetypeId } from '../assets/types'
+import {
+	SHIP_ARCHETYPE_IDS,
+	SHIP_ARCHETYPE_LIST,
+	SHIP_CATALOG,
+	SHIP_COLOR_PALETTES,
+	SHIP_SKINS,
+	SHIP_SOCKET_MANIFESTS,
+} from '../assets/shipAssembler'
+import SpaceArcadeCanvas from '../arcade/SpaceArcadeCanvas'
+import { calculateSlingshotImpulse } from '../arcade/arcadePhysics'
+import type {
+	BiomePaletteId,
+	ShipArchetypeId,
+	ShipSkinId,
+} from '../assets/types'
 import SyncStatus, { CloudSyncStatusBadge, MarkdownSyncStatusBadge } from '../common/SyncStatus'
 import MomentumSyncIcon, {
 	type MomentumTelemetry,
@@ -74,6 +94,8 @@ const WORKBENCH_SAMPLE_TODOS: Todo[] = [
 ]
 
 type ComponentKey =
+	| 'celestial-body'
+	| 'starship'
 	| 'sync-status'
 	| 'sync-icon'
 	| 'settings-icon'
@@ -86,7 +108,6 @@ type ComponentKey =
 	| 'pulse-graph'
 	| 'mood-player'
 	| 'duplicate-detector'
-	| 'procedural-assets'
 
 interface CatalogItem {
 	key: ComponentKey
@@ -220,14 +241,24 @@ const CATALOG_ITEMS: CatalogItem[] = [
 		badge: 'Database',
 	},
 	{
-		key: 'procedural-assets',
-		title: 'Procedural Visual Assets & Modular Ships',
-		subtitle: 'Deterministic 128×128 Todo Planets & Paper-Doll Spacecraft',
+		key: 'celestial-body',
+		title: 'Celestial Body',
+		subtitle: 'Procedural Todo Planets, Stars & Black Holes',
 		description:
-			'Deterministic celestial body generator and 5-layer paper-doll spacecraft renderer.',
+			'Deterministic 128×128 celestial bodies seeded by todo ID, tiered by Fibonacci Star Points (1pt Asteroid → 2pt Dwarf Planet → 3pt Medium Planet → 5pt Gas Giant → 8pt Star → 13pt Black Hole), and themed by Star Role.',
 		icon: planetSharp,
 		iconColor: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
 		badge: 'Procedural',
+	},
+	{
+		key: 'starship',
+		title: 'Starship',
+		subtitle: 'Selectable Spacecraft Models, Skins & Slingshot Launch',
+		description:
+			'High-craft birds-eye spacecraft renderer with whole selectable ship hulls (Vanguard, Phantom, Helios, Atlas, Valkyrie), custom paint skins, animated ion thrusters, and interactive slingshot launch physics.',
+		icon: rocketSharp,
+		iconColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+		badge: 'Spacecraft',
 	},
 ]
 
@@ -241,14 +272,61 @@ const COMPONENT_DESCRIPTIONS: Record<ComponentKey, string> = Object.fromEntries(
 	CATALOG_ITEMS.map((item) => [item.key, item.description])
 ) as Record<ComponentKey, string>
 
+const STAR_POINT_TIERS = [
+	{ points: 1, shortLabel: '1pt Asteroid', emoji: '🪨' },
+	{ points: 2, shortLabel: '2pt Dwarf Planet', emoji: '🌑' },
+	{ points: 3, shortLabel: '3pt Medium Planet', emoji: '🌍' },
+	{ points: 5, shortLabel: '5pt Gas Giant', emoji: '🪐' },
+	{ points: 8, shortLabel: '8pt Star', emoji: '☀️' },
+	{ points: 13, shortLabel: '13pt Black Hole', emoji: '🕳️' },
+] as const
+
+const WORKBENCH_ARCADE_TODOS: Todo[] = [
+	{
+		id: 'tds0Q5i__n4r2jYrf8JQB_p2z|ucom',
+		title: 'Procedural game-friendly visual assets',
+		starPoints: 13,
+	},
+	{
+		id: 'todo-star-8',
+		title: 'Ignite stellar fusion core',
+		starPoints: 8,
+	},
+	{
+		id: 'todo-gas-giant-5',
+		title: 'Chart Jovian ring system',
+		starPoints: 5,
+	},
+	{
+		id: 'todo-terrestrial-3',
+		title: 'Establish orbital biosphere',
+		starPoints: 3,
+	},
+	{
+		id: 'todo-dwarf-2',
+		title: 'Survey cratered dwarf world',
+		starPoints: 2,
+	},
+	{
+		id: 'todo-asteroid-1',
+		title: 'Mine regolith fragment',
+		starPoints: 1,
+	},
+]
+
 function WorkbenchContent() {
 	const params = useParams<{ component?: string }>()
 	const { mode, setMode } = useMood()
 
+	const resolvedComponentParam =
+		params.component === 'procedural-assets'
+			? 'celestial-body'
+			: params.component
+
 	const activeComponent: ComponentKey =
-		params.component &&
-		VALID_COMPONENTS.includes(params.component as ComponentKey)
-			? (params.component as ComponentKey)
+		resolvedComponentParam &&
+		VALID_COMPONENTS.includes(resolvedComponentParam as ComponentKey)
+			? (resolvedComponentParam as ComponentKey)
 			: 'sync-status'
 
 	// --- State Simulator Knobs for Sync Menu ---
@@ -333,14 +411,123 @@ function WorkbenchContent() {
 	// --- Starship & Trajectory Knobs ---
 	const [starshipPosition, setStarshipPosition] = useState(120)
 	const [starshipRotation, setStarshipRotation] = useState(180)
+
+	// --- Celestial Body Knobs ---
 	const [workbenchPlanetPoints, setWorkbenchPlanetPoints] = useState(13)
 	const [workbenchPlanetBiome, setWorkbenchPlanetBiome] =
 		useState<BiomePaletteId>('engineering')
-	const [workbenchPlanetHud, setWorkbenchPlanetHud] = useState<
-		'productivity' | 'arcade' | 'none'
-	>('productivity')
+	const [workbenchPlanetSeed, setWorkbenchPlanetSeed] = useState(
+		'tds0Q5i__n4r2jYrf8JQB_p2z|ucom',
+	)
+	const [workbenchPlanetSize, setWorkbenchPlanetSize] = useState(148)
+	const [workbenchPlanetDithering, setWorkbenchPlanetDithering] = useState(true)
+	const [workbenchPlanetGlow, setWorkbenchPlanetGlow] = useState(true)
+	const [workbenchShowTierLineup, setWorkbenchShowTierLineup] = useState(true)
+
+	// --- Starship Knobs ---
 	const [workbenchShipArchetype, setWorkbenchShipArchetype] =
 		useState<ShipArchetypeId>('interceptor_vanguard_mk1')
+	const [workbenchShipSkin, setWorkbenchShipSkin] =
+		useState<ShipSkinId>('vanguard_cyan')
+	const [workbenchShipSize, setWorkbenchShipSize] = useState(144)
+	const [workbenchShipRotation, setWorkbenchShipRotation] = useState(0)
+	const [workbenchShipThrusterActive, setWorkbenchShipThrusterActive] =
+		useState(true)
+	const [workbenchShipFlightMode, setWorkbenchShipFlightMode] = useState(false)
+	const [workbenchShipLaunchVelocity, setWorkbenchShipLaunchVelocity] =
+		useState<{ vx: number; vy: number } | undefined>(undefined)
+	const [workbenchSlingshotDrag, setWorkbenchSlingshotDrag] = useState<{
+		startX: number
+		startY: number
+		currentX: number
+		currentY: number
+	} | null>(null)
+	const workbenchSlingshotDragRef = useRef<{
+		startX: number
+		startY: number
+		currentX: number
+		currentY: number
+	} | null>(null)
+
+	const startWorkbenchSlingshot = (clientX: number, clientY: number) => {
+		const initialDrag = {
+			startX: clientX,
+			startY: clientY,
+			currentX: clientX,
+			currentY: clientY,
+		}
+		workbenchSlingshotDragRef.current = initialDrag
+		setWorkbenchSlingshotDrag(initialDrag)
+	}
+
+	useEffect(() => {
+		if (typeof window === 'undefined') return
+
+		const handlePointerMove = (event: PointerEvent) => {
+			if (!workbenchSlingshotDragRef.current) return
+			const nextDrag = {
+				...workbenchSlingshotDragRef.current,
+				currentX: event.clientX,
+				currentY: event.clientY,
+			}
+			workbenchSlingshotDragRef.current = nextDrag
+			setWorkbenchSlingshotDrag(nextDrag)
+		}
+
+		const handlePointerUp = (event: PointerEvent) => {
+			const activeDrag = workbenchSlingshotDragRef.current
+			if (!activeDrag) return
+			workbenchSlingshotDragRef.current = null
+			setWorkbenchSlingshotDrag(null)
+
+			const impulse = calculateSlingshotImpulse(
+				{ startX: activeDrag.startX, startY: activeDrag.startY },
+				{ currentX: event.clientX, currentY: event.clientY },
+			)
+			if (impulse) {
+				setWorkbenchShipRotation(Math.round(impulse.angleDegrees))
+				setWorkbenchShipLaunchVelocity({ vx: impulse.vx, vy: impulse.vy })
+				if (activeComponent === 'starship-trajectory') {
+					setStarshipRotation(Math.round(impulse.angleDegrees))
+					setStarshipPosition(previous =>
+						Math.max(10, Math.min(280, Math.round(previous + impulse.vy * 0.35))),
+					)
+				} else {
+					setWorkbenchShipFlightMode(true)
+				}
+			}
+		}
+
+		window.addEventListener('pointermove', handlePointerMove)
+		window.addEventListener('pointerup', handlePointerUp)
+		window.addEventListener('pointercancel', handlePointerUp)
+		return () => {
+			window.removeEventListener('pointermove', handlePointerMove)
+			window.removeEventListener('pointerup', handlePointerUp)
+			window.removeEventListener('pointercancel', handlePointerUp)
+		}
+	}, [activeComponent])
+
+	const workbenchPlanetSpec = useMemo(
+		() =>
+			generateProceduralPlanetSpec({
+				todo: {
+					id: workbenchPlanetSeed,
+					title: 'Procedural Celestial Body',
+					starPoints: workbenchPlanetPoints,
+				},
+				biomeOverride: workbenchPlanetBiome,
+			}),
+		[workbenchPlanetBiome, workbenchPlanetPoints, workbenchPlanetSeed],
+	)
+
+	const workbenchSlingshotPull = useMemo(() => {
+		if (!workbenchSlingshotDrag) return null
+		const dx = workbenchSlingshotDrag.currentX - workbenchSlingshotDrag.startX
+		const dy = workbenchSlingshotDrag.currentY - workbenchSlingshotDrag.startY
+		const distance = Math.hypot(dx, dy)
+		return { dx, dy, distance }
+	}, [workbenchSlingshotDrag])
 
 	// --- Pulse Graph Knobs ---
 	const [pulseStarPoints, setPulseStarPoints] = useState(5)
@@ -875,47 +1062,42 @@ function WorkbenchContent() {
 				},
 			]
 		}
-		if (activeComponent === 'procedural-assets') {
+		if (activeComponent === 'celestial-body') {
 			return [
+				...STAR_POINT_TIERS.map(tier => ({
+					id: `celestial-pts-${tier.points}`,
+					label: `${tier.emoji} ${tier.shortLabel}`,
+					action: () => setWorkbenchPlanetPoints(tier.points),
+					active: workbenchPlanetPoints === tier.points,
+				})),
 				{
-					id: 'proc-gas-giant',
-					label: '🪐 21pt Gas Giant',
-					action: () => {
-						setWorkbenchPlanetPoints(21)
-						setWorkbenchPlanetBiome('strategy')
-						setWorkbenchPlanetHud('productivity')
-					},
-					active: workbenchPlanetPoints === 21,
+					id: 'celestial-random-seed',
+					label: '🎲 Randomize Seed',
+					action: () =>
+						setWorkbenchPlanetSeed(
+							`todo-seed-${Math.random().toString(36).slice(2, 10)}`,
+						),
+					active: false,
 				},
-				{
-					id: 'proc-emissive',
-					label: '🌋 13pt Emissive World',
+			]
+		}
+		if (activeComponent === 'starship') {
+			return [
+				...SHIP_ARCHETYPE_IDS.map(archetypeId => ({
+					id: `ship-preset-${archetypeId}`,
+					label: `🚀 ${SHIP_SOCKET_MANIFESTS[archetypeId].name}`,
 					action: () => {
-						setWorkbenchPlanetPoints(13)
-						setWorkbenchPlanetBiome('urgent')
-						setWorkbenchPlanetHud('arcade')
+						setWorkbenchShipArchetype(archetypeId)
 					},
-					active: workbenchPlanetPoints === 13,
-				},
+					active: workbenchShipArchetype === archetypeId && !workbenchShipFlightMode,
+				})),
 				{
-					id: 'proc-terrestrial',
-					label: '🌍 5pt Terrestrial',
-					action: () => {
-						setWorkbenchPlanetPoints(5)
-						setWorkbenchPlanetBiome('growth')
-						setWorkbenchPlanetHud('productivity')
-					},
-					active: workbenchPlanetPoints === 5,
-				},
-				{
-					id: 'proc-asteroid',
-					label: '☄️ 1pt Asteroid',
-					action: () => {
-						setWorkbenchPlanetPoints(1)
-						setWorkbenchPlanetBiome('engineering')
-						setWorkbenchPlanetHud('productivity')
-					},
-					active: workbenchPlanetPoints === 1,
+					id: 'ship-toggle-flight',
+					label: workbenchShipFlightMode
+						? '🛑 Exit Flight Arena'
+						: '🎯 Slingshot Flight Arena',
+					action: () => setWorkbenchShipFlightMode(previous => !previous),
+					active: workbenchShipFlightMode,
 				},
 			]
 		}
@@ -1558,7 +1740,7 @@ function WorkbenchContent() {
 						</div>
 						<IonRange
 							min={1}
-							max={21}
+							max={13}
 							value={pulseStarPoints}
 							onIonChange={(e) => setPulseStarPoints(e.detail.value as number)}
 						/>
@@ -1616,54 +1798,237 @@ function WorkbenchContent() {
 				</div>
 			)}
 
-			{/* Procedural Visual Assets Knobs */}
-			{activeComponent === 'procedural-assets' && (
+			{/* Celestial Body Knobs */}
+			{activeComponent === 'celestial-body' && (
 				<div className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
 					<h4 className="font-semibold text-neutral-300">
-						Procedural Asset & Ship Simulator
+						Celestial Body Controls
 					</h4>
 					<div>
-						<span className="mb-1 block text-neutral-400">
-							Star Points ({workbenchPlanetPoints} pts)
+						<span className="mb-1.5 block text-neutral-400">
+							Star Points Tier (1–13 pts)
 						</span>
 						<div className="flex flex-wrap gap-1.5">
-							{[1, 3, 5, 8, 13, 21].map(pts => (
+							{STAR_POINT_TIERS.map(tier => (
 								<IonChip
-									key={pts}
-									onClick={() => setWorkbenchPlanetPoints(pts)}
-									color={workbenchPlanetPoints === pts ? 'primary' : 'medium'}
-									outline={workbenchPlanetPoints !== pts}
+									key={tier.points}
+									data-testid={`celestial-points-chip-${tier.points}`}
+									onClick={() => setWorkbenchPlanetPoints(tier.points)}
+									color={
+										workbenchPlanetPoints === tier.points ? 'primary' : 'medium'
+									}
+									outline={workbenchPlanetPoints !== tier.points}
 									className="m-0 cursor-pointer font-mono text-xs"
 								>
-									<IonLabel>{pts}pt</IonLabel>
+									<IonLabel>{tier.shortLabel}</IonLabel>
 								</IonChip>
 							))}
 						</div>
 					</div>
 					<div>
-						<span className="mb-1 block text-neutral-400">
-							Ship Archetype
+						<span className="mb-1.5 block text-neutral-400">
+							Star Role / Biome Theme
 						</span>
 						<div className="flex flex-wrap gap-1.5">
 							{(
-								[
-									'interceptor_vanguard_mk1',
-									'hauler_atlas_mk1',
-									'science_helios_mk1',
-									'striker_wraith_mk1',
-								] as const
-							).map(arch => (
+								['engineering', 'urgent', 'growth', 'strategy'] as const
+							).map(biomeKey => (
 								<IonChip
-									key={arch}
-									onClick={() => setWorkbenchShipArchetype(arch)}
-									color={workbenchShipArchetype === arch ? 'secondary' : 'medium'}
-									outline={workbenchShipArchetype !== arch}
-									className="m-0 cursor-pointer font-mono text-xs"
+									key={biomeKey}
+									data-testid={`celestial-biome-chip-${biomeKey}`}
+									onClick={() => setWorkbenchPlanetBiome(biomeKey)}
+									color={
+										workbenchPlanetBiome === biomeKey ? 'secondary' : 'medium'
+									}
+									outline={workbenchPlanetBiome !== biomeKey}
+									className="m-0 cursor-pointer text-xs"
 								>
-									<IonLabel>{arch.split('_')[1]}</IonLabel>
+									<IonLabel>
+										{biomeKey}: {BIOME_PALETTES[biomeKey].label}
+									</IonLabel>
 								</IonChip>
 							))}
 						</div>
+					</div>
+					<div>
+						<div className="flex items-center justify-between">
+							<span className="text-neutral-400">Todo Seed ID</span>
+							<IonButton
+								size="small"
+								fill="clear"
+								data-testid="celestial-randomize-seed"
+								onClick={() =>
+									setWorkbenchPlanetSeed(
+										`todo-seed-${Math.random().toString(36).slice(2, 10)}`,
+									)
+								}
+							>
+								Randomize
+							</IonButton>
+						</div>
+						<IonInput
+							data-testid="celestial-seed-input"
+							className="mt-1 rounded border border-neutral-800 bg-neutral-900 px-2 font-mono text-white"
+							value={workbenchPlanetSeed}
+							onIonInput={event =>
+								setWorkbenchPlanetSeed(String(event.detail.value ?? ''))
+							}
+						/>
+					</div>
+					<div>
+						<div className="flex justify-between text-neutral-400">
+							<span>Display Size</span>
+							<span>{workbenchPlanetSize}px</span>
+						</div>
+						<IonRange
+							min={48}
+							max={200}
+							value={workbenchPlanetSize}
+							onIonChange={event =>
+								setWorkbenchPlanetSize(event.detail.value as number)
+							}
+						/>
+					</div>
+					<div className="flex items-center justify-between">
+						<span className="text-neutral-400">4×4 Bayer Ordered Dithering</span>
+						<IonToggle
+							data-testid="celestial-dither-toggle"
+							checked={workbenchPlanetDithering}
+							onIonChange={event =>
+								setWorkbenchPlanetDithering(event.detail.checked)
+							}
+						/>
+					</div>
+					<div className="flex items-center justify-between">
+						<span className="text-neutral-400">Atmosphere & Corona Glow</span>
+						<IonToggle
+							data-testid="celestial-glow-toggle"
+							checked={workbenchPlanetGlow}
+							onIonChange={event =>
+								setWorkbenchPlanetGlow(event.detail.checked)
+							}
+						/>
+					</div>
+					<div className="flex items-center justify-between">
+						<span className="text-neutral-400">
+							Show All 6 Star Point Tiers (1–13 pts)
+						</span>
+						<IonToggle
+							data-testid="celestial-lineup-toggle"
+							checked={workbenchShowTierLineup}
+							onIonChange={event =>
+								setWorkbenchShowTierLineup(event.detail.checked)
+							}
+						/>
+					</div>
+				</div>
+			)}
+
+			{/* Starship Knobs */}
+			{activeComponent === 'starship' && (
+				<div className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+					<h4 className="font-semibold text-neutral-300">
+						Starship Model & Skin Controls
+					</h4>
+					<div>
+						<span className="mb-1.5 block text-neutral-400">
+							Starship Hull Model (Whole Ship)
+						</span>
+						<div className="flex flex-wrap gap-1.5">
+							{SHIP_ARCHETYPE_IDS.map(archetypeId => (
+								<IonChip
+									key={archetypeId}
+									data-testid={`starship-model-chip-${archetypeId}`}
+									onClick={() => setWorkbenchShipArchetype(archetypeId)}
+									color={
+										workbenchShipArchetype === archetypeId
+											? 'primary'
+											: 'medium'
+									}
+									outline={workbenchShipArchetype !== archetypeId}
+									className="m-0 cursor-pointer text-xs"
+								>
+									<IonLabel>
+										{SHIP_SOCKET_MANIFESTS[archetypeId].name}
+									</IonLabel>
+								</IonChip>
+							))}
+						</div>
+					</div>
+					<div>
+						<span className="mb-1.5 block text-neutral-400">
+							Ship Skin / Livery Theme
+						</span>
+						<div className="flex flex-wrap gap-1.5">
+							{SHIP_COLOR_PALETTES.map(skin => (
+								<IonChip
+									key={skin.id}
+									data-testid={`starship-skin-chip-${skin.id}`}
+									onClick={() => setWorkbenchShipSkin(skin.id)}
+									color={
+										workbenchShipSkin === skin.id ? 'secondary' : 'medium'
+									}
+									outline={workbenchShipSkin !== skin.id}
+									className="m-0 cursor-pointer text-xs"
+								>
+									<span
+										className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full"
+										style={{ backgroundColor: skin.accentStripe }}
+									/>
+									<IonLabel>{skin.name}</IonLabel>
+								</IonChip>
+							))}
+						</div>
+					</div>
+					<div>
+						<div className="flex justify-between text-neutral-400">
+							<span>Ship Heading / Rotation</span>
+							<span>{workbenchShipRotation}°</span>
+						</div>
+						<IonRange
+							min={0}
+							max={360}
+							value={workbenchShipRotation}
+							onIonChange={event =>
+								setWorkbenchShipRotation(event.detail.value as number)
+							}
+						/>
+					</div>
+					<div>
+						<div className="flex justify-between text-neutral-400">
+							<span>Display Size</span>
+							<span>{workbenchShipSize}px</span>
+						</div>
+						<IonRange
+							min={56}
+							max={200}
+							value={workbenchShipSize}
+							onIonChange={event =>
+								setWorkbenchShipSize(event.detail.value as number)
+							}
+						/>
+					</div>
+					<div className="flex items-center justify-between">
+						<span className="text-neutral-400">Active Thruster Plumes</span>
+						<IonToggle
+							data-testid="starship-thruster-toggle"
+							checked={workbenchShipThrusterActive}
+							onIonChange={event =>
+								setWorkbenchShipThrusterActive(event.detail.checked)
+							}
+						/>
+					</div>
+					<div className="flex items-center justify-between">
+						<span className="text-neutral-400">
+							Playable Slingshot & Flight Arena
+						</span>
+						<IonToggle
+							data-testid="starship-flight-mode-toggle"
+							checked={workbenchShipFlightMode}
+							onIonChange={event =>
+								setWorkbenchShipFlightMode(event.detail.checked)
+							}
+						/>
 					</div>
 				</div>
 			)}
@@ -2119,24 +2484,84 @@ function WorkbenchContent() {
 								)}
 
 								{activeComponent === 'starship-trajectory' && (
-									<div className="flex items-center justify-center p-8">
-										<div
-											id="workbench-starship"
-											className="relative h-[320px] w-[60px] flex justify-center"
-										>
-											<Tracjectory
-												currentPosition={starshipPosition}
-												orientation="vertical"
-											/>
-											<div
-												className="absolute left-1/2 -translate-x-1/2 transition-transform duration-300 ease-out w-[56px] h-[56px]"
-												style={{
-													transform: `translate(-50%, ${starshipPosition}px) rotate(${starshipRotation}deg)`,
-												}}
-											>
-												<Starship />
+									<div className="flex flex-col items-center justify-center gap-4 p-8">
+										{workbenchShipFlightMode ? (
+											<div className="w-full max-w-2xl">
+												<SpaceArcadeCanvas
+													active={true}
+													todos={WORKBENCH_ARCADE_TODOS}
+													shipLoadout={{
+														hullArchetype: workbenchShipArchetype,
+														skinId: workbenchShipSkin,
+													}}
+													initialVelocity={workbenchShipLaunchVelocity}
+													onExitArcade={() => setWorkbenchShipFlightMode(false)}
+												/>
 											</div>
-										</div>
+										) : (
+											<>
+												<div
+													id="workbench-starship"
+													data-testid="workbench-starship-slingshot"
+													onPointerDown={(event) => {
+														startWorkbenchSlingshot(event.clientX, event.clientY)
+													}}
+													className="relative h-[320px] w-[140px] flex justify-center cursor-grab active:cursor-grabbing select-none touch-none"
+												>
+													<Tracjectory
+														currentPosition={starshipPosition}
+														orientation="vertical"
+													/>
+													{workbenchSlingshotPull && (
+														<svg
+															className="pointer-events-none absolute inset-0 overflow-visible z-20"
+															width="140"
+															height="320"
+															viewBox="0 0 140 320"
+														>
+															<line
+																x1={70}
+																y1={starshipPosition + 28}
+																x2={70 + workbenchSlingshotPull.dx}
+																y2={starshipPosition + 28 + workbenchSlingshotPull.dy}
+																stroke="#f59e0b"
+																strokeWidth="2.5"
+																strokeDasharray="4 4"
+															/>
+															<line
+																x1={70}
+																y1={starshipPosition + 28}
+																x2={70 - workbenchSlingshotPull.dx * 1.4}
+																y2={starshipPosition + 28 - workbenchSlingshotPull.dy * 1.4}
+																stroke="#38bdf8"
+																strokeWidth="2.5"
+															/>
+														</svg>
+													)}
+													<div
+														className="absolute left-1/2 -translate-x-1/2 transition-transform duration-150 ease-out w-[64px] h-[64px]"
+														style={{
+															transform: `translate(calc(-50% + ${workbenchSlingshotPull ? workbenchSlingshotPull.dx * 0.25 : 0}px), ${starshipPosition + (workbenchSlingshotPull ? workbenchSlingshotPull.dy * 0.25 : 0)}px) rotate(${
+																workbenchSlingshotPull && workbenchSlingshotPull.distance >= 18
+																	? (Math.atan2(-workbenchSlingshotPull.dy, -workbenchSlingshotPull.dx) * 180) / Math.PI + 90
+																	: starshipRotation
+															}deg)`,
+														}}
+													>
+														<Starship
+															loadout={{
+																hullArchetype: workbenchShipArchetype,
+																skinId: workbenchShipSkin,
+															}}
+															size={64}
+														/>
+													</div>
+												</div>
+												<span className="text-[11px] text-neutral-400">
+													Pull back on the starship to slingshot launch into flight mode
+												</span>
+											</>
+										)}
 									</div>
 								)}
 
@@ -2193,27 +2618,208 @@ function WorkbenchContent() {
 									</div>
 								)}
 
-								{activeComponent === 'procedural-assets' && (
+								{activeComponent === 'celestial-body' && (
 									<div
-										id="workbench-procedural-assets"
-										className="flex flex-wrap items-center justify-center gap-8 rounded-2xl border border-neutral-800 bg-neutral-900/80 p-8 shadow-2xl backdrop-blur-md"
+										id="workbench-celestial-body"
+										data-testid="workbench-celestial-body"
+										className="flex flex-col items-center justify-center gap-6 w-full max-w-3xl"
 									>
-										<PlanetAsset
-											todo={{
-												id: 'tds0Q5i__n4r2jYrf8JQB_p2z|ucom',
-												title: 'Procedural game-friendly visual assets',
-												starPoints: workbenchPlanetPoints,
-											}}
-											biomeOverride={workbenchPlanetBiome}
-											visitCount={2}
-											size={120}
-											hudMode={workbenchPlanetHud}
-										/>
-										<ModularStarship
-											loadout={{ hullArchetype: workbenchShipArchetype }}
-											size={112}
-											hudMode={workbenchPlanetHud}
-										/>
+										<div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-neutral-800 bg-neutral-950/90 p-8 shadow-2xl backdrop-blur-md">
+											<PlanetAsset
+												todo={{
+													id: workbenchPlanetSeed,
+													title: 'Procedural Celestial Body',
+													starPoints: workbenchPlanetPoints,
+												}}
+												biomeOverride={workbenchPlanetBiome}
+												size={workbenchPlanetSize}
+												enableDithering={workbenchPlanetDithering}
+												enableAtmosphereGlow={workbenchPlanetGlow}
+											/>
+											<div className="flex items-center gap-2 text-xs text-neutral-300 font-medium">
+												<span className="rounded-md bg-sky-500/15 border border-sky-400/30 px-2 py-0.5 text-sky-300 font-mono">
+													{workbenchPlanetPoints} {workbenchPlanetPoints === 1 ? 'pt' : 'pts'}
+												</span>
+												<span>{CELESTIAL_CLASS_LABELS[workbenchPlanetSpec.celestialClass]}</span>
+												<span className="text-neutral-600">•</span>
+												<span className="text-neutral-400">{BIOME_PALETTES[workbenchPlanetBiome].label}</span>
+											</div>
+										</div>
+
+										{workbenchShowTierLineup && (
+											<div
+												data-testid="celestial-tier-lineup"
+												className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 w-full"
+											>
+												{CELESTIAL_POINT_TIERS.map((tierPoints) => {
+													const tierSpec = generateProceduralPlanetSpec({
+														todo: {
+															id: `${workbenchPlanetSeed}-tier-${tierPoints}`,
+															title: 'Procedural Celestial Body',
+															starPoints: tierPoints,
+														},
+														biomeOverride: workbenchPlanetBiome,
+													})
+													const isSelected = workbenchPlanetPoints === tierPoints
+													return (
+														<button
+															key={tierPoints}
+															type="button"
+															data-testid={`celestial-tier-card-${tierPoints}`}
+															onClick={() => setWorkbenchPlanetPoints(tierPoints)}
+															className={`flex flex-col items-center justify-between gap-2 rounded-xl border p-3 transition-all ${
+																isSelected
+																	? 'border-sky-400/60 bg-sky-500/10 shadow-lg'
+																	: 'border-neutral-800 bg-neutral-950/75 hover:border-neutral-700'
+															}`}
+														>
+															<span className="text-[11px] font-mono font-semibold text-sky-300">
+																{tierPoints} {tierPoints === 1 ? 'pt' : 'pts'}
+															</span>
+															<div className="flex items-center justify-center h-[88px]">
+																<PlanetAsset
+																	todo={{
+																		id: `${workbenchPlanetSeed}-tier-${tierPoints}`,
+																		title: 'Procedural Celestial Body',
+																		starPoints: tierPoints,
+																	}}
+																	biomeOverride={workbenchPlanetBiome}
+																	size={tierPoints >= 8 ? 84 : tierPoints >= 5 ? 78 : 68}
+																	enableDithering={workbenchPlanetDithering}
+																	enableAtmosphereGlow={workbenchPlanetGlow}
+																/>
+															</div>
+															<span className="text-[11px] text-neutral-300 font-medium text-center leading-tight">
+																{CELESTIAL_CLASS_LABELS[tierSpec.celestialClass]}
+															</span>
+														</button>
+													)
+												})}
+											</div>
+										)}
+									</div>
+								)}
+
+								{activeComponent === 'starship' && (
+									<div
+										id="workbench-starship-showcase"
+										data-testid="workbench-starship-showcase"
+										className="flex flex-col items-center justify-center gap-6 w-full max-w-3xl"
+									>
+										{workbenchShipFlightMode ? (
+											<div className="w-full">
+												<SpaceArcadeCanvas
+													active={true}
+													todos={WORKBENCH_ARCADE_TODOS}
+													shipLoadout={{
+														hullArchetype: workbenchShipArchetype,
+														skinId: workbenchShipSkin,
+													}}
+													initialVelocity={workbenchShipLaunchVelocity}
+													onExitArcade={() => setWorkbenchShipFlightMode(false)}
+												/>
+											</div>
+										) : (
+											<>
+												<div
+													data-testid="starship-slingshot-stage"
+													onPointerDown={(event) => {
+														startWorkbenchSlingshot(event.clientX, event.clientY)
+													}}
+													className="relative flex flex-col items-center justify-center gap-3 rounded-2xl border border-neutral-800 bg-neutral-950/90 p-10 shadow-2xl backdrop-blur-md cursor-grab active:cursor-grabbing select-none touch-none"
+												>
+													{workbenchSlingshotPull && (
+														<svg
+															className="pointer-events-none absolute inset-0 overflow-visible z-20"
+															width="100%"
+															height="100%"
+														>
+															<line
+																x1="50%"
+																y1="45%"
+																x2={`calc(50% + ${workbenchSlingshotPull.dx}px)`}
+																y2={`calc(45% + ${workbenchSlingshotPull.dy}px)`}
+																stroke="#f59e0b"
+																strokeWidth="2.5"
+																strokeDasharray="5 4"
+															/>
+															<line
+																x1="50%"
+																y1="45%"
+																x2={`calc(50% - ${workbenchSlingshotPull.dx * 1.35}px)`}
+																y2={`calc(45% - ${workbenchSlingshotPull.dy * 1.35}px)`}
+																stroke="#38bdf8"
+																strokeWidth="3"
+															/>
+														</svg>
+													)}
+													<div
+														style={{
+															transform: `translate(${workbenchSlingshotPull ? workbenchSlingshotPull.dx * 0.28 : 0}px, ${workbenchSlingshotPull ? workbenchSlingshotPull.dy * 0.28 : 0}px) rotate(${
+																workbenchSlingshotPull && workbenchSlingshotPull.distance >= 18
+																	? (Math.atan2(-workbenchSlingshotPull.dy, -workbenchSlingshotPull.dx) * 180) / Math.PI + 90
+																	: workbenchShipRotation
+															}deg)`,
+														}}
+														className="transition-transform duration-75"
+													>
+														<ModularStarship
+															loadout={{
+																hullArchetype: workbenchShipArchetype,
+																skinId: workbenchShipSkin,
+															}}
+															size={workbenchShipSize}
+															thrusterFrame={workbenchShipThrusterActive ? 1 : 0}
+														/>
+													</div>
+													<div className="flex flex-col items-center gap-1 mt-2">
+														<div className="flex items-center gap-2 text-xs text-neutral-200 font-semibold">
+															<span>{SHIP_CATALOG[workbenchShipArchetype].name}</span>
+															<span className="text-neutral-600">•</span>
+															<span className="text-sky-300">{SHIP_SKINS[workbenchShipSkin].name}</span>
+														</div>
+														<span className="text-[11px] text-neutral-400">
+															Drag & release ship to slingshot into interactive flight arena
+														</span>
+													</div>
+												</div>
+
+												<div
+													data-testid="starship-hull-lineup"
+													className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 w-full"
+												>
+													{SHIP_ARCHETYPE_LIST.map((hullId) => {
+														const shipDef = SHIP_CATALOG[hullId]
+														const isSelected = workbenchShipArchetype === hullId
+														return (
+															<button
+																key={hullId}
+																type="button"
+																data-testid={`starship-hull-card-${hullId}`}
+																onClick={() => setWorkbenchShipArchetype(hullId)}
+																className={`flex flex-col items-center gap-2 rounded-xl border p-3 transition-all ${
+																	isSelected
+																		? 'border-sky-400/60 bg-sky-500/10 shadow-lg'
+																		: 'border-neutral-800 bg-neutral-950/75 hover:border-neutral-700'
+																}`}
+															>
+																<ModularStarship
+																	loadout={{
+																		hullArchetype: hullId,
+																		skinId: workbenchShipSkin,
+																	}}
+																	size={64}
+																	thrusterFrame={workbenchShipThrusterActive ? 1 : 0}
+																/>
+																<span className="text-[11px] font-medium text-neutral-200 text-center leading-tight">
+																	{shipDef.name}
+																</span>
+															</button>
+														)
+													})}
+												</div>
+											</>
+										)}
 									</div>
 								)}
 							</div>

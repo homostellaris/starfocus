@@ -6,17 +6,15 @@ import {
 	resolveBiomePalette,
 	resolveCelestialClass,
 } from './planetGenerator'
-import PlanetAsset from './PlanetAsset'
+import PlanetAsset, { CelestialBody } from './PlanetAsset'
 
-test('resolveCelestialClass maps Fibonacci starPoints to the 4 canonical celestial classes', () => {
+test('resolveCelestialClass maps each Fibonacci starPoints tier (1, 2, 3, 5, 8, 13) to a distinct celestial body class', () => {
 	expect(resolveCelestialClass(1)).toBe('asteroid')
-	expect(resolveCelestialClass(2)).toBe('asteroid')
+	expect(resolveCelestialClass(2)).toBe('dwarf_planet')
 	expect(resolveCelestialClass(3)).toBe('terrestrial')
-	expect(resolveCelestialClass(5)).toBe('terrestrial')
-	expect(resolveCelestialClass(8)).toBe('emissive')
-	expect(resolveCelestialClass(13, 0, 10)).toBe('emissive')
-	expect(resolveCelestialClass(13, 2, 10)).toBe('gas_giant')
-	expect(resolveCelestialClass(21)).toBe('gas_giant')
+	expect(resolveCelestialClass(5)).toBe('gas_giant')
+	expect(resolveCelestialClass(8)).toBe('star')
+	expect(resolveCelestialClass(13)).toBe('black_hole')
 })
 
 test('resolveBiomePalette maps Engineering, Urgent, Growth, and Strategy roles to their 4-color palettes', () => {
@@ -68,7 +66,7 @@ test('resolveBiomePalette maps Engineering, Urgent, Growth, and Strategy roles t
 	expect(strategyPalette.highlight).toBe('#C77DFF')
 })
 
-test('generateProceduralPlanetSpec is 100% deterministic for a given Todo and caches offscreen bake metrics', () => {
+test('generateProceduralPlanetSpec is 100% deterministic and bakes distinct 128x128 bitmaps for all 6 star point tiers', () => {
 	const sampleTodo = {
 		id: 'tds0Q5i__n4r2jYrf8JQB_p2z|ucom',
 		title: 'Procedural game-friendly visual assets',
@@ -85,19 +83,16 @@ test('generateProceduralPlanetSpec is 100% deterministic for a given Todo and ca
 		todo: sampleTodo,
 		starRole: sampleRole,
 		starRoleGroupTitle: 'Reality sculptor',
-		visitCount: 3,
 	})
 	const secondSpec = generateProceduralPlanetSpec({
 		todo: sampleTodo,
 		starRole: sampleRole,
 		starRoleGroupTitle: 'Reality sculptor',
-		visitCount: 3,
 	})
 
 	expect(firstSpec).toEqual(secondSpec)
-	expect(firstSpec.celestialClass).toBe('gas_giant')
+	expect(firstSpec.celestialClass).toBe('black_hole')
 	expect(firstSpec.hasRings).toBe(true)
-	expect(firstSpec.orbitingMoonCount).toBe(3)
 	expect(firstSpec.biomeId).toBe('engineering')
 
 	const firstBake = bakePlanetBitmap(firstSpec)
@@ -106,12 +101,24 @@ test('generateProceduralPlanetSpec is 100% deterministic for a given Todo and ca
 	expect(firstBake.metrics.resolution).toBe(128)
 	expect(firstBake.metrics.cacheKey).toBe(secondBake.metrics.cacheKey)
 	expect(secondBake.metrics.cacheHit).toBe(true)
+
+	const tierPointValues = [1, 2, 3, 5, 8, 13] as const
+	const resolvedClasses = tierPointValues.map(points => {
+		const spec = generateProceduralPlanetSpec({
+			todo: { id: 'same-seed-id', title: 'Tier test', starPoints: points },
+			biomeOverride: 'engineering',
+		})
+		const baked = bakePlanetBitmap(spec)
+		expect(baked.rgbaPixels.length).toBe(128 * 128 * 4)
+		return spec.celestialClass
+	})
+	expect(new Set(resolvedClasses).size).toBe(6)
 })
 
-test('PlanetAsset component renders deterministic data attributes for celestial class, biome, and HUD mode', () => {
-	const element = PlanetAsset({
+test('CelestialBody and PlanetAsset render raw celestial body data attributes without HUD reticle overlays', () => {
+	const element = CelestialBody({
 		todo: {
-			id: 'todo-emissive-8',
+			id: 'todo-star-8',
 			title: 'Deep work engine refactor',
 			starPoints: 8,
 			starRole: 'role-eng',
@@ -121,17 +128,15 @@ test('PlanetAsset component renders deterministic data attributes for celestial 
 			title: 'Engineer',
 			icon: { type: 'ionicon', name: 'flashSharp' },
 		},
-		visitCount: 2,
 		size: 96,
-		hudMode: 'arcade',
 	})
 
 	expect(element.props['data-testid']).toBe('planet-asset')
-	expect(element.props['data-todo-id']).toBe('todo-emissive-8')
-	expect(element.props['data-celestial-class']).toBe('emissive')
+	expect(element.props['data-todo-id']).toBe('todo-star-8')
+	expect(element.props['data-celestial-class']).toBe('star')
 	expect(element.props['data-biome-id']).toBe('engineering')
-	expect(element.props['data-hud-mode']).toBe('arcade')
-	expect(element.props['data-orbiting-moons']).toBe(2)
+	expect(element.props['data-star-points']).toBe(8)
+	expect(PlanetAsset).toBe(CelestialBody)
 })
 
 test('resolveCelestialClass and resolveBiomePalette handle undefined starPoints and missing starRole gracefully', () => {
@@ -142,18 +147,16 @@ test('resolveCelestialClass and resolveBiomePalette handle undefined starPoints 
 	expect(Object.keys(BIOME_PALETTES)).toContain(fallbackPalette.id)
 })
 
-test('generateProceduralPlanetSpec clamps negative or extreme starPoints and visitCount to safe ranges', () => {
+test('generateProceduralPlanetSpec clamps negative or above-13 starPoints to the valid [1..13] range', () => {
 	const negativeSpec = generateProceduralPlanetSpec({
 		todo: { id: '', title: '', starPoints: -15 },
-		visitCount: -4,
 	})
+	expect(negativeSpec.starPoints).toBe(1)
 	expect(negativeSpec.celestialClass).toBe('asteroid')
-	expect(negativeSpec.orbitingMoonCount).toBe(0)
 
 	const extremeSpec = generateProceduralPlanetSpec({
 		todo: { id: 'extreme-milestone', title: 'Hyperstructure', starPoints: 9999 },
-		visitCount: 500,
 	})
-	expect(extremeSpec.celestialClass).toBe('gas_giant')
-	expect(extremeSpec.orbitingMoonCount).toBeLessThanOrEqual(8)
+	expect(extremeSpec.starPoints).toBe(13)
+	expect(extremeSpec.celestialClass).toBe('black_hole')
 })

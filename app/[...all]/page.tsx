@@ -21,6 +21,8 @@ export async function generateStaticParams() {
 		{ all: ['dev', 'components', 'pulse-graph'] },
 		{ all: ['dev', 'components', 'mood-player'] },
 		{ all: ['dev', 'components', 'duplicate-detector'] },
+		{ all: ['dev', 'components', 'celestial-body'] },
+		{ all: ['dev', 'components', 'starship'] },
 		{ all: ['dev', 'components', 'procedural-assets'] },
 		{ all: ['dev', 'theme'] },
 		{ all: ['dev', 'assets'] },

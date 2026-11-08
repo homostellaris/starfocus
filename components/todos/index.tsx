@@ -52,11 +52,6 @@ export const TodoListItem = forwardRef<
 	ref,
 ) {
 	const [debug] = useDebug()
-	const visitCount = Array.isArray(todo.visits)
-		? todo.visits.length
-		: todo.visits === true
-			? 1
-			: 0
 
 	return (
 		<div
@@ -93,8 +88,6 @@ export const TodoListItem = forwardRef<
 						starRole: todo.starRole,
 					}}
 					starRole={starRole}
-					visitCount={visitCount}
-					hudMode="productivity"
 				/>
 				{starPoints ? (
 					<span
@@ -182,7 +175,6 @@ export function TodoCard({
 						size={22}
 						className="me-2"
 						todo={todo}
-						hudMode="productivity"
 					/>
 					<span
 						className={cn(

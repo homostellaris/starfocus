@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test'
 import {
+	SHIP_ARCHETYPE_IDS,
 	SHIP_COLOR_PALETTES,
 	SHIP_SOCKET_MANIFESTS,
 	applyRgbMaskPalette,
@@ -8,34 +9,28 @@ import {
 } from './shipAssembler'
 import ModularStarship from './ModularStarship'
 
-test('assembleShipLayers returns strictly ordered z:0..z:4 layers for all 4 canonical ship archetypes', () => {
-	const archetypeIds = [
-		'interceptor_vanguard_mk1',
-		'hauler_atlas_mk1',
-		'science_helios_mk1',
-		'striker_wraith_mk1',
-	] as const
+test('resolveShipLoadout and assembleShipLayers support all 5 whole starship models and 5 skins', () => {
+	expect(SHIP_ARCHETYPE_IDS.length).toBe(5)
+	expect(SHIP_COLOR_PALETTES.length).toBe(5)
 
-	for (const archetypeId of archetypeIds) {
-		const loadout = resolveShipLoadout({ hullArchetype: archetypeId })
-		const layers = assembleShipLayers(loadout, {
-			recoilOffsetPx: 0,
-			thrusterFrame: 0,
-		})
+	for (const archetypeId of SHIP_ARCHETYPE_IDS) {
+		for (const skin of SHIP_COLOR_PALETTES) {
+			const loadout = resolveShipLoadout({
+				hullArchetype: archetypeId,
+				skinId: skin.id,
+			})
+			expect(loadout.hullArchetype).toBe(archetypeId)
+			expect(loadout.skinId).toBe(skin.id)
+			expect(loadout.palette.id).toBe(skin.id)
 
-		const zIndices = layers.map(layer => layer.zIndex)
-		const sortedZIndices = [...zIndices].sort((first, second) => first - second)
-		expect(zIndices).toEqual(sortedZIndices)
-		expect(new Set<number>(zIndices)).toEqual(new Set([0, 1, 2, 3, 4]))
-
-		const thrusterLayers = layers.filter(layer => layer.zIndex === 0)
-		for (const thrusterLayer of thrusterLayers) {
-			expect(thrusterLayer.blendMode).toBe('lighter')
+			const layers = assembleShipLayers(loadout, {
+				recoilOffsetPx: 0,
+				thrusterFrame: 0,
+			})
+			const zIndices = layers.map(layer => layer.zIndex)
+			const sortedZIndices = [...zIndices].sort((first, second) => first - second)
+			expect(zIndices).toEqual(sortedZIndices)
 		}
-
-		const wingLayers = layers.filter(layer => layer.zIndex === 1)
-		expect(wingLayers.some(wing => wing.mirrorX === false)).toBe(true)
-		expect(wingLayers.some(wing => wing.mirrorX === true)).toBe(true)
 	}
 })
 
@@ -79,27 +74,27 @@ test('applyRgbMaskPalette maps 4-channel indexed mask values to configured hex p
 	expect(coloredPixels[1][2]).toBe('#ffffff')
 })
 
-test('ModularStarship component renders with data attributes for hull archetype, thruster type, and recoil', () => {
+test('ModularStarship component renders whole starship model and skin data attributes', () => {
 	const element = ModularStarship({
 		loadout: {
 			hullArchetype: 'striker_wraith_mk1',
+			skinId: 'solar_ember',
 			thrusterType: 'crimson_afterburner',
 		},
 		hardpointRecoilOffsetPx: 2,
-		hudMode: 'arcade',
 	})
 
 	expect(element.props['data-testid']).toBe('modular-starship')
 	expect(element.props['data-hull-archetype']).toBe('striker_wraith_mk1')
+	expect(element.props['data-skin-id']).toBe('solar_ember')
 	expect(element.props['data-thruster-type']).toBe('crimson_afterburner')
-	expect(element.props['data-hud-mode']).toBe('arcade')
 	expect(element.props['data-recoil-offset']).toBe(2)
 })
 
 test('resolveShipLoadout falls back to interceptor_vanguard_mk1 defaults when partial fields are omitted', () => {
 	const defaultLoadout = resolveShipLoadout(undefined)
 	expect(defaultLoadout.hullArchetype).toBe('interceptor_vanguard_mk1')
-	expect(defaultLoadout.wingArchetype).toBe('interceptor_vanguard_mk1')
+	expect(defaultLoadout.skinId).toBe('vanguard_cyan')
 	expect(defaultLoadout.thrusterType).toBe('cyan_ion')
 	expect(SHIP_SOCKET_MANIFESTS[defaultLoadout.hullArchetype].dimensions).toEqual({
 		width: 64,
@@ -107,11 +102,13 @@ test('resolveShipLoadout falls back to interceptor_vanguard_mk1 defaults when pa
 	})
 })
 
-test('assembleShipLayers and applyRgbMaskPalette sanitize out-of-range recoil offsets and invalid hex strings', () => {
+test('assembleShipLayers and resolveShipLoadout sanitize out-of-range recoil offsets and unknown archetypes', () => {
 	const loadout = resolveShipLoadout({
 		hullArchetype: 'unknown_archetype' as any,
+		skinId: 'unknown_skin' as any,
 	})
 	expect(loadout.hullArchetype).toBe('interceptor_vanguard_mk1')
+	expect(loadout.skinId).toBe('vanguard_cyan')
 
 	const clampedNegative = assembleShipLayers(loadout, {
 		recoilOffsetPx: -25,

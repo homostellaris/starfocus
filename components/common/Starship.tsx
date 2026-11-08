@@ -7,10 +7,23 @@ const Starship = forwardRef<
 	HTMLDivElement,
 	{
 		className?: string
+		size?: number
+		rotationDegrees?: number
+		thrusterActive?: boolean
 		loadout?: Partial<ShipLoadoutConfig>
 		onDoubleClick?: React.MouseEventHandler<HTMLDivElement>
 	}
->(function Starship({ className, loadout, onDoubleClick }, ref) {
+>(function Starship(
+	{
+		className,
+		size = 56,
+		rotationDegrees = 0,
+		thrusterActive = true,
+		loadout,
+		onDoubleClick,
+	},
+	ref,
+) {
 	return (
 		<div
 			ref={ref}
@@ -23,7 +36,9 @@ const Starship = forwardRef<
 		>
 			<ModularStarship
 				loadout={loadout}
-				size={56}
+				size={size}
+				rotationDegrees={rotationDegrees}
+				thrusterActive={thrusterActive}
 				onDoubleClick={onDoubleClick}
 			/>
 		</div>
