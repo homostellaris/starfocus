@@ -84,6 +84,24 @@ export function findHighestActiveFuzzyDuplicate(
 	)
 }
 
+interface ProcessedTodo {
+	todo: Todo
+	normalized: string
+	tokens: Set<string>
+	length: number
+}
+
+let rowBufferA = new Int32Array(512)
+let rowBufferB = new Int32Array(512)
+
+function ensureRowBufferCapacity(length: number) {
+	if (rowBufferA.length <= length) {
+		const newCapacity = Math.max(length + 1, rowBufferA.length * 2)
+		rowBufferA = new Int32Array(newCapacity)
+		rowBufferB = new Int32Array(newCapacity)
+	}
+}
+
 export function detectAllDuplicateClusters(
 	todos: Todo[],
 	wayfinderIdentifiers: Set<string>,
@@ -101,27 +119,47 @@ export function detectAllDuplicateClusters(
 		todoMap.set(todo.id, todo)
 	}
 
-	for (let firstIndex = 0; firstIndex < todos.length; firstIndex++) {
-		const firstTodo = todos[firstIndex]
-		for (let secondIndex = firstIndex + 1; secondIndex < todos.length; secondIndex++) {
-			const secondTodo = todos[secondIndex]
-			const pairKey = createPairKey(firstTodo.id, secondTodo.id)
+	const processedTodos: ProcessedTodo[] = todos.map(todo => {
+		const normalized = normalizeTitle(todo.title)
+		const tokens = tokenizeTitle(normalized)
+		return {
+			todo,
+			normalized,
+			tokens,
+			length: normalized.length,
+		}
+	})
+
+	for (let firstIndex = 0; firstIndex < processedTodos.length; firstIndex++) {
+		const firstItem = processedTodos[firstIndex]
+		if (!firstItem.normalized) continue
+
+		for (let secondIndex = firstIndex + 1; secondIndex < processedTodos.length; secondIndex++) {
+			const secondItem = processedTodos[secondIndex]
+			if (!secondItem.normalized) continue
+
+			if (firstItem.todo.completedAt && secondItem.todo.completedAt) {
+				continue
+			}
+
+			const pairKey = createPairKey(firstItem.todo.id, secondItem.todo.id)
 
 			if (dismissedPairKeys.has(pairKey)) {
 				continue
 			}
 
-			const { similarityScore, matchType } = calculateTitleSimilarity(
-				firstTodo.title,
-				secondTodo.title,
+			const { similarityScore, matchType } = calculatePreprocessedSimilarity(
+				firstItem,
+				secondItem,
+				threshold,
 			)
 
 			if (similarityScore >= threshold) {
-				adjacencyMap.get(firstTodo.id)!.set(secondTodo.id, {
+				adjacencyMap.get(firstItem.todo.id)!.set(secondItem.todo.id, {
 					score: similarityScore,
 					type: matchType,
 				})
-				adjacencyMap.get(secondTodo.id)!.set(firstTodo.id, {
+				adjacencyMap.get(secondItem.todo.id)!.set(firstItem.todo.id, {
 					score: similarityScore,
 					type: matchType,
 				})
@@ -216,6 +254,64 @@ export function detectAllDuplicateClusters(
 			secondCluster.highestSimilarityScore -
 			firstCluster.highestSimilarityScore,
 	)
+}
+
+function calculatePreprocessedSimilarity(
+	firstItem: ProcessedTodo,
+	secondItem: ProcessedTodo,
+	threshold = 0.75,
+): { similarityScore: number; matchType: DuplicateMatchType } {
+	if (firstItem.normalized === secondItem.normalized) {
+		return { similarityScore: 1, matchType: 'exact' }
+	}
+
+	const minLength = Math.min(firstItem.length, secondItem.length)
+	const maxLength = Math.max(firstItem.length, secondItem.length)
+	const maximumDistance = Math.floor(maxLength * (1 - threshold))
+	const lengthDifference = maxLength - minLength
+
+	const tokenSimilarity = calculateTokenJaccard(
+		firstItem.tokens,
+		secondItem.tokens,
+	)
+
+	let containmentScore = 0
+	if (minLength / maxLength >= threshold) {
+		if (
+			firstItem.length < secondItem.length &&
+			secondItem.normalized.includes(firstItem.normalized)
+		) {
+			containmentScore = minLength / maxLength
+		} else if (
+			secondItem.length < firstItem.length &&
+			firstItem.normalized.includes(secondItem.normalized)
+		) {
+			containmentScore = minLength / maxLength
+		}
+	}
+
+	let levenshteinSimilarity = 0
+	if (lengthDifference <= maximumDistance) {
+		levenshteinSimilarity = calculateLevenshteinSimilarity(
+			firstItem.normalized,
+			secondItem.normalized,
+			threshold,
+		)
+	}
+
+	const blendedScore = Math.max(
+		levenshteinSimilarity,
+		tokenSimilarity * 0.95,
+		containmentScore,
+		tokenSimilarity * 0.5 + levenshteinSimilarity * 0.5,
+	)
+
+	const roundedScore = Math.round(blendedScore * 100) / 100
+
+	return {
+		similarityScore: roundedScore,
+		matchType: categorizeScore(roundedScore, false),
+	}
 }
 
 export function calculateTitleSimilarity(
@@ -360,11 +456,20 @@ function calculateTokenJaccard(
 function calculateLevenshteinSimilarity(
 	source: string,
 	target: string,
+	threshold = 0,
 ): number {
-	const distance = calculateLevenshteinDistance(source, target)
 	const maximumLength = Math.max(source.length, target.length)
 	if (maximumLength === 0) {
 		return 1
+	}
+	const maximumDistance = Math.floor(maximumLength * (1 - threshold))
+	const distance = calculateLevenshteinDistance(
+		source,
+		target,
+		maximumDistance,
+	)
+	if (distance > maximumDistance) {
+		return 0
 	}
 	return (maximumLength - distance) / maximumLength
 }
@@ -372,38 +477,54 @@ function calculateLevenshteinSimilarity(
 function calculateLevenshteinDistance(
 	source: string,
 	target: string,
+	maximumDistance: number = Number.MAX_SAFE_INTEGER,
 ): number {
 	const sourceLength = source.length
 	const targetLength = target.length
 
+	if (Math.abs(sourceLength - targetLength) > maximumDistance) {
+		return maximumDistance + 1
+	}
 	if (sourceLength === 0) return targetLength
 	if (targetLength === 0) return sourceLength
 
-	let previousRow = Array.from({ length: targetLength + 1 }, (_, index) => index)
-	let currentRow = new Array(targetLength + 1)
+	ensureRowBufferCapacity(targetLength + 1)
+
+	for (let targetIndex = 0; targetIndex <= targetLength; targetIndex++) {
+		rowBufferA[targetIndex] = targetIndex
+	}
 
 	for (let sourceIndex = 1; sourceIndex <= sourceLength; sourceIndex++) {
-		currentRow[0] = sourceIndex
-		const sourceCharacter = source[sourceIndex - 1]
+		rowBufferB[0] = sourceIndex
+		const sourceCharacter = source.charCodeAt(sourceIndex - 1)
+		let minimumInRow = rowBufferB[0]
 
 		for (let targetIndex = 1; targetIndex <= targetLength; targetIndex++) {
-			const targetCharacter = target[targetIndex - 1]
+			const targetCharacter = target.charCodeAt(targetIndex - 1)
 			const substitutionCost =
 				sourceCharacter === targetCharacter ? 0 : 1
 
-			currentRow[targetIndex] = Math.min(
-				currentRow[targetIndex - 1] + 1,
-				previousRow[targetIndex] + 1,
-				previousRow[targetIndex - 1] + substitutionCost,
+			const value = Math.min(
+				rowBufferB[targetIndex - 1] + 1,
+				rowBufferA[targetIndex] + 1,
+				rowBufferA[targetIndex - 1] + substitutionCost,
 			)
+			rowBufferB[targetIndex] = value
+			if (value < minimumInRow) {
+				minimumInRow = value
+			}
 		}
 
-		const temporarySwap = previousRow
-		previousRow = currentRow
-		currentRow = temporarySwap
+		if (minimumInRow > maximumDistance) {
+			return maximumDistance + 1
+		}
+
+		for (let targetIndex = 0; targetIndex <= targetLength; targetIndex++) {
+			rowBufferA[targetIndex] = rowBufferB[targetIndex]
+		}
 	}
 
-	return previousRow[targetLength]
+	return rowBufferA[targetLength]
 }
 
 function calculateContainmentScore(
