@@ -197,3 +197,9 @@ ion-button svg[slot="icon-only"] {
 		transform: scale(1.18);
 	}
 }
+
+vercel-live-feedback {
+	position: fixed !important;
+	z-index: 2147483647 !important;
+	pointer-events: auto !important;
+}

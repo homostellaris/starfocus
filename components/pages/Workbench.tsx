@@ -33,9 +33,13 @@ import {
 	alertCircleOutline,
 	settingsSharp,
 	helpCircleSharp,
+	planetSharp,
 } from 'ionicons/icons'
 import dayjs from 'dayjs'
 import { Header } from '../common/Header'
+import PlanetAsset from '../assets/PlanetAsset'
+import ModularStarship from '../assets/ModularStarship'
+import type { BiomePaletteId, ShipArchetypeId } from '../assets/types'
 import SyncStatus, { CloudSyncStatusBadge, MarkdownSyncStatusBadge } from '../common/SyncStatus'
 import MomentumSyncIcon, {
 	type MomentumTelemetry,
@@ -82,6 +86,7 @@ type ComponentKey =
 	| 'pulse-graph'
 	| 'mood-player'
 	| 'duplicate-detector'
+	| 'procedural-assets'
 
 interface CatalogItem {
 	key: ComponentKey
@@ -214,6 +219,16 @@ const CATALOG_ITEMS: CatalogItem[] = [
 		iconColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
 		badge: 'Database',
 	},
+	{
+		key: 'procedural-assets',
+		title: 'Procedural Visual Assets & Modular Ships',
+		subtitle: 'Deterministic 128×128 Todo Planets & Paper-Doll Spacecraft',
+		description:
+			'Deterministic celestial body generator and 5-layer paper-doll spacecraft renderer.',
+		icon: planetSharp,
+		iconColor: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+		badge: 'Procedural',
+	},
 ]
 
 const VALID_COMPONENTS: ComponentKey[] = CATALOG_ITEMS.map((item) => item.key)
@@ -318,6 +333,14 @@ function WorkbenchContent() {
 	// --- Starship & Trajectory Knobs ---
 	const [starshipPosition, setStarshipPosition] = useState(120)
 	const [starshipRotation, setStarshipRotation] = useState(180)
+	const [workbenchPlanetPoints, setWorkbenchPlanetPoints] = useState(13)
+	const [workbenchPlanetBiome, setWorkbenchPlanetBiome] =
+		useState<BiomePaletteId>('engineering')
+	const [workbenchPlanetHud, setWorkbenchPlanetHud] = useState<
+		'productivity' | 'arcade' | 'none'
+	>('productivity')
+	const [workbenchShipArchetype, setWorkbenchShipArchetype] =
+		useState<ShipArchetypeId>('interceptor_vanguard_mk1')
 
 	// --- Pulse Graph Knobs ---
 	const [pulseStarPoints, setPulseStarPoints] = useState(5)
@@ -849,6 +872,50 @@ function WorkbenchContent() {
 						setDuplicateSimulatedTitle('Embark to Alpha Centauri')
 					},
 					active: duplicatePreset === 'clean',
+				},
+			]
+		}
+		if (activeComponent === 'procedural-assets') {
+			return [
+				{
+					id: 'proc-gas-giant',
+					label: '🪐 21pt Gas Giant',
+					action: () => {
+						setWorkbenchPlanetPoints(21)
+						setWorkbenchPlanetBiome('strategy')
+						setWorkbenchPlanetHud('productivity')
+					},
+					active: workbenchPlanetPoints === 21,
+				},
+				{
+					id: 'proc-emissive',
+					label: '🌋 13pt Emissive World',
+					action: () => {
+						setWorkbenchPlanetPoints(13)
+						setWorkbenchPlanetBiome('urgent')
+						setWorkbenchPlanetHud('arcade')
+					},
+					active: workbenchPlanetPoints === 13,
+				},
+				{
+					id: 'proc-terrestrial',
+					label: '🌍 5pt Terrestrial',
+					action: () => {
+						setWorkbenchPlanetPoints(5)
+						setWorkbenchPlanetBiome('growth')
+						setWorkbenchPlanetHud('productivity')
+					},
+					active: workbenchPlanetPoints === 5,
+				},
+				{
+					id: 'proc-asteroid',
+					label: '☄️ 1pt Asteroid',
+					action: () => {
+						setWorkbenchPlanetPoints(1)
+						setWorkbenchPlanetBiome('engineering')
+						setWorkbenchPlanetHud('productivity')
+					},
+					active: workbenchPlanetPoints === 1,
 				},
 			]
 		}
@@ -1549,6 +1616,58 @@ function WorkbenchContent() {
 				</div>
 			)}
 
+			{/* Procedural Visual Assets Knobs */}
+			{activeComponent === 'procedural-assets' && (
+				<div className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+					<h4 className="font-semibold text-neutral-300">
+						Procedural Asset & Ship Simulator
+					</h4>
+					<div>
+						<span className="mb-1 block text-neutral-400">
+							Star Points ({workbenchPlanetPoints} pts)
+						</span>
+						<div className="flex flex-wrap gap-1.5">
+							{[1, 3, 5, 8, 13, 21].map(pts => (
+								<IonChip
+									key={pts}
+									onClick={() => setWorkbenchPlanetPoints(pts)}
+									color={workbenchPlanetPoints === pts ? 'primary' : 'medium'}
+									outline={workbenchPlanetPoints !== pts}
+									className="m-0 cursor-pointer font-mono text-xs"
+								>
+									<IonLabel>{pts}pt</IonLabel>
+								</IonChip>
+							))}
+						</div>
+					</div>
+					<div>
+						<span className="mb-1 block text-neutral-400">
+							Ship Archetype
+						</span>
+						<div className="flex flex-wrap gap-1.5">
+							{(
+								[
+									'interceptor_vanguard_mk1',
+									'hauler_atlas_mk1',
+									'science_helios_mk1',
+									'striker_wraith_mk1',
+								] as const
+							).map(arch => (
+								<IonChip
+									key={arch}
+									onClick={() => setWorkbenchShipArchetype(arch)}
+									color={workbenchShipArchetype === arch ? 'secondary' : 'medium'}
+									outline={workbenchShipArchetype !== arch}
+									className="m-0 cursor-pointer font-mono text-xs"
+								>
+									<IonLabel>{arch.split('_')[1]}</IonLabel>
+								</IonChip>
+							))}
+						</div>
+					</div>
+				</div>
+			)}
+
 			{/* Star Roles Knobs */}
 			{activeComponent === 'star-roles' && (
 				<div className="space-y-4 pt-1 text-xs">
@@ -2071,6 +2190,30 @@ function WorkbenchContent() {
 												</div>
 											)}
 										</div>
+									</div>
+								)}
+
+								{activeComponent === 'procedural-assets' && (
+									<div
+										id="workbench-procedural-assets"
+										className="flex flex-wrap items-center justify-center gap-8 rounded-2xl border border-neutral-800 bg-neutral-900/80 p-8 shadow-2xl backdrop-blur-md"
+									>
+										<PlanetAsset
+											todo={{
+												id: 'tds0Q5i__n4r2jYrf8JQB_p2z|ucom',
+												title: 'Procedural game-friendly visual assets',
+												starPoints: workbenchPlanetPoints,
+											}}
+											biomeOverride={workbenchPlanetBiome}
+											visitCount={2}
+											size={120}
+											hudMode={workbenchPlanetHud}
+										/>
+										<ModularStarship
+											loadout={{ hullArchetype: workbenchShipArchetype }}
+											size={112}
+											hudMode={workbenchPlanetHud}
+										/>
 									</div>
 								)}
 							</div>

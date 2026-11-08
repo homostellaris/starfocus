@@ -22,6 +22,7 @@ import {
 	syncSharp,
 	bookOutline,
 	sparklesSharp,
+	planetSharp,
 } from 'ionicons/icons'
 import { Header } from '../common/Header'
 
@@ -71,6 +72,15 @@ export default function DevHub() {
 										>
 											<IonIcon slot="start" icon={colorPaletteSharp} />
 											Theme
+										</IonButton>
+										<IonButton
+											routerLink="/dev/assets"
+											color="secondary"
+											fill="outline"
+											size="small"
+										>
+											<IonIcon slot="start" icon={planetSharp} />
+											Procedural Assets
 										</IonButton>
 									</div>
 								</div>
@@ -212,6 +222,46 @@ export default function DevHub() {
 										size="small"
 									>
 										<span>Explore Theme Showcase</span>
+										<IonIcon slot="end" icon={arrowForwardSharp} />
+									</IonButton>
+								</div>
+							</IonCard>
+
+							{/* Procedural Visual Assets & Arcade Card */}
+							<IonCard className="m-0 flex flex-col justify-between border border-neutral-800 bg-neutral-900/90 transition hover:border-neutral-700 md:col-span-2">
+								<div>
+									<IonCardHeader>
+										<div className="mb-3 flex items-center justify-between">
+											<div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+												<IonIcon
+													icon={planetSharp}
+													className="text-xl"
+												/>
+											</div>
+											<IonBadge color="primary">Procedural Engine & Arcade</IonBadge>
+										</div>
+										<IonCardTitle className="text-lg font-bold text-white">
+											Procedural Visual Assets & Modular Ships
+										</IonCardTitle>
+										<IonCardSubtitle className="text-xs text-neutral-400">
+											Deterministic 128×128 Todo Planets, 4×4 Bayer Dithering & Paper-Doll Spacecraft
+										</IonCardSubtitle>
+									</IonCardHeader>
+									<IonCardContent>
+										<p className="mb-3 text-sm text-neutral-300">
+											Inspect deterministic celestial bodies generated for test todos across all Fibonacci Star Point tiers and Star Role biome palettes, customize modular 5-layer spacecraft sockets, and test the 3-tier battery arcade loop.
+										</p>
+									</IonCardContent>
+								</div>
+								<div className="border-t border-neutral-800/80 p-4">
+									<IonButton
+										routerLink="/dev/assets"
+										expand="block"
+										fill="outline"
+										color="primary"
+										size="small"
+									>
+										<span>Open Procedural Assets Lab</span>
 										<IonIcon slot="end" icon={arrowForwardSharp} />
 									</IonButton>
 								</div>

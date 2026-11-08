@@ -26,6 +26,7 @@ import {
 	duplicateOutline,
 	settingsSharp,
 	helpCircleSharp,
+	planetSharp,
 } from 'ionicons/icons'
 import { Header } from '../common/Header'
 
@@ -172,6 +173,17 @@ const CATALOG_ITEMS: ComponentCatalogItem[] = [
 		iconColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
 		badge: 'Audio',
 		tags: ['Audio Player', 'Ambient Music', 'Chill / Hype', 'Keyboard Shortcuts'],
+	},
+	{
+		key: 'procedural-assets',
+		title: 'Procedural Visual Assets & Modular Ships',
+		subtitle: 'Deterministic 128×128 Todo Planets & Paper-Doll Spacecraft',
+		description:
+			'Generates cached 128×128 offscreen bitmap celestial bodies seeded by todo.id with 4×4 Bayer dithering, biome palettes, and 5-layer modular spacecraft assembly.',
+		icon: planetSharp,
+		iconColor: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+		badge: 'Procedural',
+		tags: ['Simplex Noise', 'Bayer Dither', 'Paper-Doll Sockets', '128x128 Cache'],
 	},
 ]
 

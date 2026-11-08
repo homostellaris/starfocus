@@ -77,6 +77,7 @@ import useSettings from '../settings/useSettings'
 import { PEEK_BREAKPOINT, Search } from '../search'
 import { Journey } from '../starship/Journey'
 import { useHelp } from '../common/HelpContext'
+import SpaceArcadeCanvas from '../arcade/SpaceArcadeCanvas'
 
 const Home = () => {
 	const searchModalRef = useRef<HTMLIonModalElement>(null)
@@ -340,11 +341,70 @@ export const TodoLists = ({
 	}, [nextTodo, setNextTodoPosition, data]) // The todos dep is used as an imperfect proxy for one the position of the next todo changes
 
 	// Keyboard shortcut stuff
+	const [isArcadeMode, setIsArcadeMode] = useState(false)
+	const [arcadeLaunchVelocity, setArcadeLaunchVelocity] = useState<
+		{ vx: number; vy: number } | undefined
+	>(undefined)
+	const [anchoredPlanetPositions, setAnchoredPlanetPositions] = useState<
+		Record<string, { x: number; y: number }>
+	>({})
+
+	const handleLaunchArcade = useCallback(
+		(initialVelocity?: { vx: number; vy: number }) => {
+			if (typeof document !== 'undefined') {
+				const captured: Record<string, { x: number; y: number }> = {}
+				const elements = document.querySelectorAll('[data-todo-id]')
+				elements.forEach(element => {
+					const todoId = element.getAttribute('data-todo-id')
+					if (!todoId) return
+					const rect = element.getBoundingClientRect()
+					if (rect.width > 0 && rect.height > 0) {
+						captured[todoId] = {
+							x: Math.max(80, Math.min(840, rect.left + rect.width * 0.35)),
+							y: Math.max(70, Math.min(480, rect.top + rect.height / 2)),
+						}
+					}
+				})
+				setAnchoredPlanetPositions(captured)
+			}
+			setArcadeLaunchVelocity(initialVelocity)
+			setIsArcadeMode(true)
+		},
+		[],
+	)
+
+	const arcadeSectorTodos = useMemo(() => {
+		const combined = [...(data?.wayfinder ?? []), ...(data?.database ?? [])]
+		if (combined.length > 0) {
+			return combined
+		}
+		return [
+			{
+				id: 'sector-beacon-alpha',
+				title: 'Create your first Wayfinder objective',
+				starPoints: 5,
+			},
+			{
+				id: 'sector-beacon-beta',
+				title: 'Explore deep work planets in StarFocus',
+				starPoints: 13,
+			},
+		]
+	}, [data?.database, data?.wayfinder])
+
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (event.target !== document.body) return
 
-			if (event.key === 'c') {
+			if (event.key === 'g' || event.key === 'G') {
+				event.preventDefault()
+				setIsArcadeMode(previous => {
+					if (!previous) {
+						handleLaunchArcade()
+					}
+					return !previous
+				})
+			} else if (event.key === 'c') {
 				event.preventDefault()
 				openCreateTodoModal()
 				if (fab.current) fab.current.activated = true
@@ -375,7 +435,14 @@ export const TodoLists = ({
 		return () => {
 			document.removeEventListener('keydown', handleKeyDown)
 		}
-	}, [contentRef, fab, nextTodoPosition, openCreateTodoModal, posthog])
+	}, [
+		contentRef,
+		fab,
+		handleLaunchArcade,
+		nextTodoPosition,
+		openCreateTodoModal,
+		posthog,
+	])
 
 	const [presentSnoozeTodoModal] = useSnoozeTodoModal()
 	const [presentCompletionPopover] = useTodoPopover()
@@ -439,6 +506,42 @@ export const TodoLists = ({
 					<IonIcon icon={add}></IonIcon>
 				</IonFabButton>
 			</IonFab>
+			{isArcadeMode && (
+				<div
+					data-testid="home-arcade-stage"
+					className="fixed inset-x-0 top-14 bottom-0 z-30 p-3 sm:p-6"
+				>
+					<SpaceArcadeCanvas
+						active={isArcadeMode}
+						todos={arcadeSectorTodos}
+						starRoles={starRoles ?? []}
+						anchoredPositions={anchoredPlanetPositions}
+						initialVelocity={arcadeLaunchVelocity}
+						onExitArcade={() => setIsArcadeMode(false)}
+						onSelectTodoPlanet={todoId => {
+							const matched = arcadeSectorTodos.find(
+								candidate => candidate.id === todoId,
+							)
+							if (matched && (data?.wayfinder?.length || data?.database?.length)) {
+								setIsArcadeMode(false)
+								presentTodoActionSheet(matched)
+							}
+						}}
+						className="h-full w-full shadow-2xl"
+					/>
+				</div>
+			)}
+			<div
+				id="home-productivity-overlay"
+				data-testid="home-productivity-overlay"
+				data-arcade-mode={String(isArcadeMode)}
+				style={{ opacity: isArcadeMode ? 0 : 1 }}
+				className={
+					isArcadeMode
+						? 'pointer-events-none h-full opacity-0 transition-opacity duration-300'
+						: 'h-full opacity-100 transition-opacity duration-300'
+				}
+			>
 			<IonGrid className="h-full ion-no-padding">
 				<IonRow className="h-full">
 					<IonCol
@@ -446,7 +549,10 @@ export const TodoLists = ({
 						size="auto"
 						sizeLg="3"
 					>
-						<Journey commonAncestor={contentRef} />
+						<Journey
+							commonAncestor={contentRef}
+							onLaunchArcade={handleLaunchArcade}
+						/>
 					</IonCol>
 					<IonCol sizeLg="6">
 						{/* TODO: Use suspense instead */}
@@ -868,6 +974,7 @@ export const TodoLists = ({
 					</IonCol>
 				</IonRow>
 			</IonGrid>
+			</div>
 		</IonContent>
 	)
 }

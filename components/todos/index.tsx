@@ -20,9 +20,10 @@ import {
 	type PropsWithChildren,
 } from 'react'
 import { cn } from '../common/cn'
+import PlanetAsset from '../assets/PlanetAsset'
 import { StarRoleIcon } from '../common/StarRoleIcon'
 import starScale from '../common/starScale'
-import type { StarRole, Todo as TodoType } from '../db'
+import type { StarRole, Todo as TodoType, Visit } from '../db'
 import { useDebug } from '../useDebug'
 
 export const TodoListItem = forwardRef<
@@ -30,7 +31,11 @@ export const TodoListItem = forwardRef<
 	PropsWithChildren<
 		{
 			starRole?: StarRole
-			todo: TodoType & { order?: string; snoozedUntil?: Date }
+			todo: TodoType & {
+				order?: string
+				snoozedUntil?: Date
+				visits?: Visit[] | true
+			}
 			onCompletionChange: ComponentProps<typeof IonCheckbox>['onIonChange']
 			onClick: MouseEventHandler<HTMLIonItemElement>
 		} & JSX.IntrinsicElements['div']
@@ -47,6 +52,11 @@ export const TodoListItem = forwardRef<
 	ref,
 ) {
 	const [debug] = useDebug()
+	const visitCount = Array.isArray(todo.visits)
+		? todo.visits.length
+		: todo.visits === true
+			? 1
+			: 0
 
 	return (
 		<div
@@ -71,6 +81,20 @@ export const TodoListItem = forwardRef<
 						event.stopPropagation()
 					}}
 					onIonChange={onCompletionChange}
+				/>
+				<PlanetAsset
+					slot="start"
+					className="mr-2"
+					size={28}
+					todo={{
+						id: todo.id,
+						title: todo.title,
+						starPoints,
+						starRole: todo.starRole,
+					}}
+					starRole={starRole}
+					visitCount={visitCount}
+					hudMode="productivity"
 				/>
 				{starPoints ? (
 					<span
@@ -153,7 +177,13 @@ export function TodoCard({
 			{...props}
 		>
 			<IonCardHeader>
-				<IonCardTitle className="text-sm">
+				<IonCardTitle className="flex items-center text-sm">
+					<PlanetAsset
+						size={22}
+						className="me-2"
+						todo={todo}
+						hudMode="productivity"
+					/>
 					<span
 						className={cn(
 							'!font-mono grow-0 min-w-[2ch] text-base me-4',

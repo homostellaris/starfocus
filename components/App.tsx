@@ -12,6 +12,7 @@ import Workbench from './pages/Workbench'
 import DevHub from './pages/DevHub'
 import DevComponentsList from './pages/DevComponentsList'
 import DevTheme from './pages/DevTheme'
+import DevProceduralAssets from './pages/DevProceduralAssets'
 import { db } from './db'
 import { useEffect } from 'react'
 import todoRepository from './todos/repository'
@@ -91,6 +92,11 @@ const App = () => {
 							exact
 							path="/dev/theme"
 							render={() => <DevTheme />}
+						/>
+						<Route
+							exact
+							path="/dev/assets"
+							render={() => <DevProceduralAssets />}
 						/>
 						<Route
 							render={params => {

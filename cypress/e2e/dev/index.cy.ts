@@ -36,5 +36,15 @@ describe('/dev - Developer Hub', () => {
 		cy.url().should('include', '/dev/theme')
 		cy.contains('StarFocus Theme & Palettes', { timeout: 15000 }).should('be.visible')
 	})
+
+	it('navigates from /dev to /dev/assets', () => {
+		cy.visit('/dev')
+		cy.get('ion-toolbar', { timeout: 15000 }).should('be.visible')
+		cy.contains('Open Procedural Assets Lab').click()
+		cy.url().should('include', '/dev/assets')
+		cy.contains('Procedural Game-Friendly Visual Assets Laboratory', {
+			timeout: 15000,
+		}).should('be.visible')
+	})
 })
 
