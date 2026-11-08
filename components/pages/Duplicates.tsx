@@ -8,6 +8,7 @@ import {
 	IonContent,
 	IonIcon,
 	IonPage,
+	IonSpinner,
 	useIonToast,
 } from '@ionic/react'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -64,10 +65,7 @@ export default function Duplicates() {
 			}
 		},
 		[],
-		{
-			clusters: [] as DuplicateCluster[],
-			starRoleMap: new Map<string, StarRole>(),
-		},
+		undefined,
 	)
 
 	async function handleMergeCluster(cluster: DuplicateCluster) {
@@ -113,7 +111,20 @@ export default function Duplicates() {
 						</p>
 					</div>
 
-					{queryData.clusters.length === 0 ? (
+					{!queryData ? (
+						<div
+							className="flex flex-col items-center justify-center py-24 text-center space-y-3"
+							data-testid="duplicates-loading-spinner"
+						>
+							<IonSpinner
+								name="crescent"
+								className="w-8 h-8 text-sky-400"
+							/>
+							<p className="text-xs text-neutral-400">
+								Scanning tasks for duplicates...
+							</p>
+						</div>
+					) : queryData.clusters.length === 0 ? (
 						<div
 							className="flex flex-col items-center justify-center py-20 text-center"
 							data-testid="no-duplicates-placeholder"
