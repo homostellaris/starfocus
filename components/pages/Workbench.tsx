@@ -39,11 +39,16 @@ import dayjs from 'dayjs'
 import { Header } from '../common/Header'
 import PlanetAsset from '../assets/PlanetAsset'
 import {
-	BIOME_PALETTES,
 	CELESTIAL_CLASS_LABELS,
 	CELESTIAL_POINT_TIERS,
 	generateProceduralPlanetSpec,
 } from '../assets/planetGenerator'
+import {
+	STAR_POINTS_THEMES,
+	STAR_POINTS_THEME_IDS,
+	type StarPointsThemeId,
+	useStarPointsTheme,
+} from '../theme/starPointsThemes'
 import ModularStarship from '../assets/ModularStarship'
 import {
 	SHIP_ARCHETYPE_IDS,
@@ -56,7 +61,6 @@ import {
 import SpaceArcadeCanvas from '../arcade/SpaceArcadeCanvas'
 import { calculateSlingshotImpulse } from '../arcade/arcadePhysics'
 import type {
-	BiomePaletteId,
 	ShipArchetypeId,
 	ShipSkinId,
 } from '../assets/types'
@@ -412,10 +416,13 @@ function WorkbenchContent() {
 	const [starshipPosition, setStarshipPosition] = useState(120)
 	const [starshipRotation, setStarshipRotation] = useState(180)
 
-	// --- Celestial Body Knobs ---
+	// --- Celestial Body & Whole-App Star Points Theme Knobs ---
+	const {
+		themeId: activeStarThemeId,
+		theme: activeStarTheme,
+		setThemeId: setActiveStarThemeId,
+	} = useStarPointsTheme()
 	const [workbenchPlanetPoints, setWorkbenchPlanetPoints] = useState(13)
-	const [workbenchPlanetBiome, setWorkbenchPlanetBiome] =
-		useState<BiomePaletteId>('engineering')
 	const [workbenchPlanetSeed, setWorkbenchPlanetSeed] = useState(
 		'tds0Q5i__n4r2jYrf8JQB_p2z|ucom',
 	)
@@ -448,6 +455,11 @@ function WorkbenchContent() {
 		currentX: number
 		currentY: number
 	} | null>(null)
+
+	const handleSelectStarTheme = (nextThemeId: StarPointsThemeId) => {
+		setActiveStarThemeId(nextThemeId)
+		setWorkbenchShipSkin(STAR_POINTS_THEMES[nextThemeId].shipSkinId)
+	}
 
 	const startWorkbenchSlingshot = (clientX: number, clientY: number) => {
 		const initialDrag = {
@@ -516,9 +528,9 @@ function WorkbenchContent() {
 					title: 'Procedural Celestial Body',
 					starPoints: workbenchPlanetPoints,
 				},
-				biomeOverride: workbenchPlanetBiome,
+				themeId: activeStarThemeId,
 			}),
-		[workbenchPlanetBiome, workbenchPlanetPoints, workbenchPlanetSeed],
+		[activeStarThemeId, workbenchPlanetPoints, workbenchPlanetSeed],
 	)
 
 	const workbenchSlingshotPull = useMemo(() => {
@@ -1827,27 +1839,26 @@ function WorkbenchContent() {
 					</div>
 					<div>
 						<span className="mb-1.5 block text-neutral-400">
-							Star Role / Biome Theme
+							Whole-App Star Points Theme Palette
 						</span>
 						<div className="flex flex-wrap gap-1.5">
-							{(
-								['engineering', 'urgent', 'growth', 'strategy'] as const
-							).map(biomeKey => (
-								<IonChip
-									key={biomeKey}
-									data-testid={`celestial-biome-chip-${biomeKey}`}
-									onClick={() => setWorkbenchPlanetBiome(biomeKey)}
-									color={
-										workbenchPlanetBiome === biomeKey ? 'secondary' : 'medium'
-									}
-									outline={workbenchPlanetBiome !== biomeKey}
-									className="m-0 cursor-pointer text-xs"
-								>
-									<IonLabel>
-										{biomeKey}: {BIOME_PALETTES[biomeKey].label}
-									</IonLabel>
-								</IonChip>
-							))}
+							{STAR_POINTS_THEME_IDS.map(candidateId => {
+								const candidate = STAR_POINTS_THEMES[candidateId]
+								return (
+									<IonChip
+										key={candidateId}
+										data-testid={`celestial-theme-chip-${candidateId}`}
+										onClick={() => handleSelectStarTheme(candidateId)}
+										color={
+											activeStarThemeId === candidateId ? 'secondary' : 'medium'
+										}
+										outline={activeStarThemeId !== candidateId}
+										className="m-0 cursor-pointer text-xs"
+									>
+										<IonLabel>{candidate.name}</IonLabel>
+									</IonChip>
+								)
+							})}
 						</div>
 					</div>
 					<div>
@@ -2631,19 +2642,62 @@ function WorkbenchContent() {
 													title: 'Procedural Celestial Body',
 													starPoints: workbenchPlanetPoints,
 												}}
-												biomeOverride={workbenchPlanetBiome}
+												themeId={activeStarThemeId}
 												size={workbenchPlanetSize}
 												enableDithering={workbenchPlanetDithering}
 												enableAtmosphereGlow={workbenchPlanetGlow}
 											/>
 											<div className="flex items-center gap-2 text-xs text-neutral-300 font-medium">
-												<span className="rounded-md bg-sky-500/15 border border-sky-400/30 px-2 py-0.5 text-sky-300 font-mono">
-													{workbenchPlanetPoints} {workbenchPlanetPoints === 1 ? 'pt' : 'pts'}
+												<span
+													className="inline-flex items-center gap-1.5 rounded-md border border-white/20 px-2 py-0.5 font-mono text-black font-bold"
+													style={{
+														backgroundColor: workbenchPlanetSpec.palette.highlight,
+													}}
+												>
+													★ {workbenchPlanetPoints} {workbenchPlanetPoints === 1 ? 'pt' : 'pts'}
 												</span>
 												<span>{CELESTIAL_CLASS_LABELS[workbenchPlanetSpec.celestialClass]}</span>
 												<span className="text-neutral-600">•</span>
-												<span className="text-neutral-400">{BIOME_PALETTES[workbenchPlanetBiome].label}</span>
+												<span className="font-mono text-neutral-400">
+													{workbenchPlanetSpec.palette.highlight} ({activeStarTheme.name})
+												</span>
 											</div>
+										</div>
+
+										<div
+											data-testid="celestial-theme-switcher"
+											className="flex flex-wrap items-center justify-center gap-2"
+										>
+											{STAR_POINTS_THEME_IDS.map((candidateId) => {
+												const candidate = STAR_POINTS_THEMES[candidateId]
+												const isSelected = candidateId === activeStarThemeId
+												return (
+													<button
+														key={candidateId}
+														type="button"
+														data-testid={`workbench-theme-btn-${candidateId}`}
+														onClick={() => handleSelectStarTheme(candidateId)}
+														className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+															isSelected
+																? 'border-sky-400 bg-sky-500/15 text-sky-300 shadow'
+																: 'border-neutral-800 bg-neutral-950/80 text-neutral-300 hover:border-neutral-700'
+														}`}
+													>
+														<span className="flex items-center gap-0.5">
+															{CELESTIAL_POINT_TIERS.map((tier) => (
+																<span
+																	key={tier}
+																	className="h-2.5 w-2.5 rounded-full"
+																	style={{
+																		backgroundColor: candidate.starColors[tier],
+																	}}
+																/>
+															))}
+														</span>
+														<span>{candidate.name}</span>
+													</button>
+												)
+											})}
 										</div>
 
 										{workbenchShowTierLineup && (
@@ -2658,7 +2712,7 @@ function WorkbenchContent() {
 															title: 'Procedural Celestial Body',
 															starPoints: tierPoints,
 														},
-														biomeOverride: workbenchPlanetBiome,
+														themeId: activeStarThemeId,
 													})
 													const isSelected = workbenchPlanetPoints === tierPoints
 													return (
@@ -2673,8 +2727,13 @@ function WorkbenchContent() {
 																	: 'border-neutral-800 bg-neutral-950/75 hover:border-neutral-700'
 															}`}
 														>
-															<span className="text-[11px] font-mono font-semibold text-sky-300">
-																{tierPoints} {tierPoints === 1 ? 'pt' : 'pts'}
+															<span
+																className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-mono font-bold text-black"
+																style={{
+																	backgroundColor: tierSpec.palette.highlight,
+																}}
+															>
+																★ {tierPoints} {tierPoints === 1 ? 'pt' : 'pts'}
 															</span>
 															<div className="flex items-center justify-center h-[88px]">
 																<PlanetAsset
@@ -2683,7 +2742,7 @@ function WorkbenchContent() {
 																		title: 'Procedural Celestial Body',
 																		starPoints: tierPoints,
 																	}}
-																	biomeOverride={workbenchPlanetBiome}
+																	themeId={activeStarThemeId}
 																	size={tierPoints >= 8 ? 84 : tierPoints >= 5 ? 78 : 68}
 																	enableDithering={workbenchPlanetDithering}
 																	enableAtmosphereGlow={workbenchPlanetGlow}
@@ -2768,6 +2827,7 @@ function WorkbenchContent() {
 																hullArchetype: workbenchShipArchetype,
 																skinId: workbenchShipSkin,
 															}}
+															themeId={activeStarThemeId}
 															size={workbenchShipSize}
 															thrusterFrame={workbenchShipThrusterActive ? 1 : 0}
 														/>
@@ -2782,6 +2842,37 @@ function WorkbenchContent() {
 															Drag & release ship to slingshot into interactive flight arena
 														</span>
 													</div>
+												</div>
+
+												<div
+													data-testid="starship-theme-switcher"
+													className="flex flex-wrap items-center justify-center gap-2"
+												>
+													{STAR_POINTS_THEME_IDS.map((candidateId) => {
+														const candidate = STAR_POINTS_THEMES[candidateId]
+														const isSelected = candidateId === activeStarThemeId
+														return (
+															<button
+																key={candidateId}
+																type="button"
+																data-testid={`starship-theme-btn-${candidateId}`}
+																onClick={() => handleSelectStarTheme(candidateId)}
+																className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+																	isSelected
+																		? 'border-sky-400 bg-sky-500/15 text-sky-300 shadow'
+																		: 'border-neutral-800 bg-neutral-950/80 text-neutral-300 hover:border-neutral-700'
+																}`}
+															>
+																<span
+																	className="h-2.5 w-2.5 rounded-full"
+																	style={{
+																		backgroundColor: candidate.shipPalette.cockpitGlow,
+																	}}
+																/>
+																<span>{candidate.name}</span>
+															</button>
+														)
+													})}
 												</div>
 
 												<div
@@ -2808,6 +2899,7 @@ function WorkbenchContent() {
 																		hullArchetype: hullId,
 																		skinId: workbenchShipSkin,
 																	}}
+																	themeId={activeStarThemeId}
 																	size={64}
 																	thrusterFrame={workbenchShipThrusterActive ? 1 : 0}
 																/>

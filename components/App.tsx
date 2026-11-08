@@ -16,6 +16,7 @@ import { db } from './db'
 import { useEffect } from 'react'
 import todoRepository from './todos/repository'
 import { HelpProvider } from './common/HelpContext'
+import { applyStarPointsThemeToDocument } from './theme/starPointsThemes'
 
 const isCypressEnvironment =
 	typeof window !== 'undefined' && Boolean((window as any).Cypress)
@@ -38,6 +39,7 @@ const App = () => {
 	useEffect(() => {
 		window.db = db
 		window.todoRepository = todoRepository
+		applyStarPointsThemeToDocument()
 	}, [])
 	return (
 		<HelpProvider>

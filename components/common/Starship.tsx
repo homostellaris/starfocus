@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react'
 import ModularStarship from '../assets/ModularStarship'
 import type { ShipLoadoutConfig } from '../assets/types'
+import { useStarPointsTheme } from '../theme/starPointsThemes'
 import { cn } from './cn'
 
 const Starship = forwardRef<
@@ -24,6 +25,7 @@ const Starship = forwardRef<
 	},
 	ref,
 ) {
+	const { themeId } = useStarPointsTheme()
 	return (
 		<div
 			ref={ref}
@@ -36,6 +38,7 @@ const Starship = forwardRef<
 		>
 			<ModularStarship
 				loadout={loadout}
+				themeId={themeId}
 				size={size}
 				rotationDegrees={rotationDegrees}
 				thrusterActive={thrusterActive}

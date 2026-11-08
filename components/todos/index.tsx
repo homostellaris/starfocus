@@ -24,6 +24,7 @@ import PlanetAsset from '../assets/PlanetAsset'
 import { StarRoleIcon } from '../common/StarRoleIcon'
 import starScale from '../common/starScale'
 import type { StarRole, Todo as TodoType, Visit } from '../db'
+import { useStarPointsTheme } from '../theme/starPointsThemes'
 import { useDebug } from '../useDebug'
 
 export const TodoListItem = forwardRef<
@@ -52,6 +53,7 @@ export const TodoListItem = forwardRef<
 	ref,
 ) {
 	const [debug] = useDebug()
+	const { themeId } = useStarPointsTheme()
 
 	return (
 		<div
@@ -81,13 +83,12 @@ export const TodoListItem = forwardRef<
 					slot="start"
 					className="mr-2"
 					size={28}
+					themeId={themeId}
 					todo={{
 						id: todo.id,
 						title: todo.title,
 						starPoints,
-						starRole: todo.starRole,
 					}}
-					starRole={starRole}
 				/>
 				{starPoints ? (
 					<span
@@ -163,6 +164,7 @@ export function TodoCard({
 	todo,
 	...props
 }: { todo: TodoType } & ComponentProps<typeof IonCard>) {
+	const { themeId } = useStarPointsTheme()
 	return (
 		<IonCard
 			className="cursor-pointer ion-no-margin"
@@ -174,6 +176,7 @@ export function TodoCard({
 					<PlanetAsset
 						size={22}
 						className="me-2"
+						themeId={themeId}
 						todo={todo}
 					/>
 					<span

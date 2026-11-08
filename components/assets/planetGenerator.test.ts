@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test'
+import { STAR_POINTS_THEMES } from '../theme/starPointsThemes'
 import {
 	BIOME_PALETTES,
 	bakePlanetBitmap,
@@ -17,83 +18,71 @@ test('resolveCelestialClass maps each Fibonacci starPoints tier (1, 2, 3, 5, 8, 
 	expect(resolveCelestialClass(13)).toBe('black_hole')
 })
 
-test('resolveBiomePalette maps Engineering, Urgent, Growth, and Strategy roles to their 4-color palettes', () => {
-	const engineeringPalette = resolveBiomePalette(
-		{ id: 'todo-1', starRole: 'role-eng' },
-		{
-			id: 'role-eng',
-			title: 'Starfocuser',
-			icon: { type: 'ionicon', name: 'planetSharp' },
-		},
-		'Reality sculptor',
-	)
-	expect(engineeringPalette.id).toBe('engineering')
-	expect(engineeringPalette.deepShadow).toBe('#0B1D3A')
-	expect(engineeringPalette.highlight).toBe('#45D9FD')
+test('resolveBiomePalette and generateProceduralPlanetSpec match the primary hue to starPoints rather than starRole and adapt to the active theme', () => {
+	const engRole = {
+		id: 'role-eng',
+		title: 'Starfocuser',
+		icon: { type: 'ionicon' as const, name: 'planetSharp' as const },
+	}
+	const urgentRole = {
+		id: 'role-bug',
+		title: 'Bug Squasher',
+		icon: { type: 'ionicon' as const, name: 'flameSharp' as const },
+	}
 
-	const urgentPalette = resolveBiomePalette(
-		{ id: 'todo-2', starRole: 'role-bug' },
-		{
-			id: 'role-bug',
-			title: 'Bug Squasher',
-			icon: { type: 'ionicon', name: 'flameSharp' },
-		},
-	)
-	expect(urgentPalette.id).toBe('urgent')
-	expect(urgentPalette.highlight).toBe('#E63946')
-	expect(urgentPalette.emissiveOrAtmos).toBe('#FFB703')
+	const specWithEngRole = generateProceduralPlanetSpec({
+		todo: { id: 'todo-a', title: 'Task A', starPoints: 5, starRole: 'role-eng' },
+		starRole: engRole,
+		themeId: 'redshift',
+	})
+	const specWithUrgentRole = generateProceduralPlanetSpec({
+		todo: { id: 'todo-b', title: 'Task B', starPoints: 5, starRole: 'role-bug' },
+		starRole: urgentRole,
+		themeId: 'redshift',
+	})
 
-	const growthPalette = resolveBiomePalette(
-		{ id: 'todo-3', starRole: 'role-father' },
-		{
-			id: 'role-father',
-			title: 'Father',
-			icon: { type: 'ionicon', name: 'maleSharp' },
-		},
+	expect(specWithEngRole.palette.highlight).toBe(
+		STAR_POINTS_THEMES.redshift.starColors[5],
 	)
-	expect(growthPalette.id).toBe('growth')
-	expect(growthPalette.highlight).toBe('#74C69D')
+	expect(specWithUrgentRole.palette.highlight).toBe(
+		STAR_POINTS_THEMES.redshift.starColors[5],
+	)
 
-	const strategyPalette = resolveBiomePalette(
-		{ id: 'todo-4', starRole: 'role-captain' },
-		{
-			id: 'role-captain',
-			title: 'Captain',
-			icon: { type: 'ionicon', name: 'starSharp' },
-		},
+	const synthwaveSpec = generateProceduralPlanetSpec({
+		todo: { id: 'todo-a', title: 'Task A', starPoints: 5 },
+		themeId: 'outrun_synthwave',
+	})
+	expect(synthwaveSpec.palette.highlight).toBe(
+		STAR_POINTS_THEMES.outrun_synthwave.starColors[5],
 	)
-	expect(strategyPalette.id).toBe('strategy')
-	expect(strategyPalette.highlight).toBe('#C77DFF')
+	expect(synthwaveSpec.palette.highlight).not.toBe(
+		specWithEngRole.palette.highlight,
+	)
 })
 
-test('generateProceduralPlanetSpec is 100% deterministic and bakes distinct 128x128 bitmaps for all 6 star point tiers', () => {
+test('generateProceduralPlanetSpec is 100% deterministic and bakes distinct 128x128 bitmaps for all 6 star point tiers with distinct primary hues', () => {
 	const sampleTodo = {
 		id: 'tds0Q5i__n4r2jYrf8JQB_p2z|ucom',
 		title: 'Procedural game-friendly visual assets',
 		starPoints: 13,
 		starRole: 'role-starfocuser',
 	}
-	const sampleRole = {
-		id: 'role-starfocuser',
-		title: 'Starfocuser',
-		icon: { type: 'ionicon' as const, name: 'flashSharp' as const },
-	}
 
 	const firstSpec = generateProceduralPlanetSpec({
 		todo: sampleTodo,
-		starRole: sampleRole,
-		starRoleGroupTitle: 'Reality sculptor',
+		themeId: 'redshift',
 	})
 	const secondSpec = generateProceduralPlanetSpec({
 		todo: sampleTodo,
-		starRole: sampleRole,
-		starRoleGroupTitle: 'Reality sculptor',
+		themeId: 'redshift',
 	})
 
 	expect(firstSpec).toEqual(secondSpec)
 	expect(firstSpec.celestialClass).toBe('black_hole')
 	expect(firstSpec.hasRings).toBe(true)
-	expect(firstSpec.biomeId).toBe('engineering')
+	expect(firstSpec.palette.highlight).toBe(
+		STAR_POINTS_THEMES.redshift.starColors[13],
+	)
 
 	const firstBake = bakePlanetBitmap(firstSpec)
 	const secondBake = bakePlanetBitmap(firstSpec)
@@ -103,19 +92,24 @@ test('generateProceduralPlanetSpec is 100% deterministic and bakes distinct 128x
 	expect(secondBake.metrics.cacheHit).toBe(true)
 
 	const tierPointValues = [1, 2, 3, 5, 8, 13] as const
-	const resolvedClasses = tierPointValues.map(points => {
+	const resolvedClasses = new Set<string>()
+	const resolvedPrimaryHues = new Set<string>()
+
+	for (const points of tierPointValues) {
 		const spec = generateProceduralPlanetSpec({
 			todo: { id: 'same-seed-id', title: 'Tier test', starPoints: points },
-			biomeOverride: 'engineering',
+			themeId: 'redshift',
 		})
 		const baked = bakePlanetBitmap(spec)
 		expect(baked.rgbaPixels.length).toBe(128 * 128 * 4)
-		return spec.celestialClass
-	})
-	expect(new Set(resolvedClasses).size).toBe(6)
+		resolvedClasses.add(spec.celestialClass)
+		resolvedPrimaryHues.add(spec.palette.highlight)
+	}
+	expect(resolvedClasses.size).toBe(6)
+	expect(resolvedPrimaryHues.size).toBe(6)
 })
 
-test('CelestialBody and PlanetAsset render raw celestial body data attributes without HUD reticle overlays', () => {
+test('CelestialBody and PlanetAsset render raw celestial body data attributes and primary Star Points color without HUD reticle overlays', () => {
 	const element = CelestialBody({
 		todo: {
 			id: 'todo-star-8',
@@ -123,19 +117,17 @@ test('CelestialBody and PlanetAsset render raw celestial body data attributes wi
 			starPoints: 8,
 			starRole: 'role-eng',
 		},
-		starRole: {
-			id: 'role-eng',
-			title: 'Engineer',
-			icon: { type: 'ionicon', name: 'flashSharp' },
-		},
+		themeId: 'redshift',
 		size: 96,
 	})
 
 	expect(element.props['data-testid']).toBe('planet-asset')
 	expect(element.props['data-todo-id']).toBe('todo-star-8')
 	expect(element.props['data-celestial-class']).toBe('star')
-	expect(element.props['data-biome-id']).toBe('engineering')
 	expect(element.props['data-star-points']).toBe(8)
+	expect(element.props['data-primary-color']).toBe(
+		STAR_POINTS_THEMES.redshift.starColors[8],
+	)
 	expect(PlanetAsset).toBe(CelestialBody)
 })
 

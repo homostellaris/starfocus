@@ -1,5 +1,9 @@
 import type { StarRole, Todo } from '../db'
 import {
+	type StarPointsThemeId,
+	resolveStarPointCelestialPalette,
+} from '../theme/starPointsThemes'
+import {
 	createSeededRandom,
 	hashStringToSeed,
 	sampleFractalNoise2D,
@@ -69,13 +73,6 @@ export const CELESTIAL_CLASS_LABELS: Record<CelestialClass, string> = {
 	black_hole: 'Black Hole',
 }
 
-const BIOME_ORDER: BiomePaletteId[] = [
-	'engineering',
-	'urgent',
-	'growth',
-	'strategy',
-]
-
 interface CachedPlanetEntry {
 	canvas: HTMLCanvasElement | null
 	pixelBuffer: Uint8ClampedArray
@@ -110,112 +107,26 @@ export function resolveCelestialClass(starPoints?: number): CelestialClass {
 }
 
 export function resolveBiomePalette(
-	todo: Pick<Todo, 'id' | 'starRole'>,
-	starRole?: StarRole,
-	starRoleGroupTitle?: string,
+	todo: Pick<Todo, 'id' | 'starPoints' | 'starRole'>,
+	_starRole?: StarRole,
+	_starRoleGroupTitle?: string,
+	themeId?: StarPointsThemeId,
 ): BiomePalette {
-	const combinedText = [
-		starRole?.title ?? '',
-		starRoleGroupTitle ?? '',
-		starRole?.icon?.name ?? '',
-	]
-		.join(' ')
-		.toLowerCase()
-
-	if (
-		matchesAnyKeyword(combinedText, [
-			'engineer',
-			'code',
-			'dev',
-			'deep',
-			'focus',
-			'starfocuser',
-			'sculptor',
-			'tech',
-			'build',
-			'terminal',
-			'flashsharp',
-			'planetsharp',
-		])
-	) {
-		return BIOME_PALETTES.engineering
-	}
-
-	if (
-		matchesAnyKeyword(combinedText, [
-			'urgent',
-			'admin',
-			'bug',
-			'fix',
-			'ops',
-			'chore',
-			'security',
-			'flamesharp',
-			'bugsharp',
-			'warningsharp',
-			'hammersharp',
-		])
-	) {
-		return BIOME_PALETTES.urgent
-	}
-
-	if (
-		matchesAnyKeyword(combinedText, [
-			'health',
-			'personal',
-			'growth',
-			'father',
-			'partner',
-			'family',
-			'botanist',
-			'life',
-			'wellness',
-			'heartsharp',
-			'leafsharp',
-			'malesharp',
-			'sparklessharp',
-		])
-	) {
-		return BIOME_PALETTES.growth
-	}
-
-	if (
-		matchesAnyKeyword(combinedText, [
-			'strategy',
-			'plan',
-			'captain',
-			'navigator',
-			'vision',
-			'research',
-			'marketing',
-			'starsharp',
-			'compasssharp',
-			'rocketsharp',
-			'layerssharp',
-		])
-	) {
-		return BIOME_PALETTES.strategy
-	}
-
-	const fallbackSeed = hashStringToSeed(
-		starRole?.id || todo.starRole || todo.id || 'default-biome',
-	)
-	const paletteIndex = fallbackSeed % BIOME_ORDER.length
-	return BIOME_PALETTES[BIOME_ORDER[paletteIndex]]
+	return resolveStarPointCelestialPalette(todo?.starPoints, themeId)
 }
 
 export function generateProceduralPlanetSpec({
 	todo,
-	starRole,
-	starRoleGroupTitle,
 	celestialClassOverride,
 	biomeOverride,
+	themeId,
 }: {
 	todo: Pick<Todo, 'id' | 'title' | 'starPoints' | 'starRole'>
 	starRole?: StarRole
 	starRoleGroupTitle?: string
 	celestialClassOverride?: CelestialClass
 	biomeOverride?: BiomePaletteId
+	themeId?: StarPointsThemeId
 }): ProceduralPlanetSpec {
 	const safeId = todo.id || todo.title || 'starfocus-planet'
 	const seed = hashStringToSeed(safeId)
@@ -231,7 +142,7 @@ export function generateProceduralPlanetSpec({
 
 	const palette = biomeOverride
 		? BIOME_PALETTES[biomeOverride]
-		: resolveBiomePalette(todo, starRole, starRoleGroupTitle)
+		: resolveStarPointCelestialPalette(safeStarPoints, themeId)
 
 	const emissiveSubType = resolveEmissiveSubType(palette.id, randomGenerator)
 	const craterCount =
@@ -297,7 +208,7 @@ export function bakePlanetBitmap(
 	metrics: PlanetBakeMetrics
 } {
 	const enableDithering = options?.enableDithering ?? true
-	const cacheKey = `${spec.seed}:${spec.celestialClass}:${spec.emissiveSubType}:${spec.biomeId}:${spec.ringTiltDegrees}:${enableDithering ? 1 : 0}`
+	const cacheKey = `${spec.seed}:${spec.celestialClass}:${spec.palette.highlight}:${spec.palette.midtone}:${spec.ringTiltDegrees}:${enableDithering ? 1 : 0}`
 
 	const existingEntry = planetBitmapCache.get(cacheKey)
 	if (existingEntry) {
@@ -1198,15 +1109,6 @@ function resolveEmissiveSubType(
 	if (roll < 0.34) return 'cryo'
 	if (roll < 0.67) return 'bioluminescent'
 	return 'volcanic'
-}
-
-function matchesAnyKeyword(text: string, keywords: string[]): boolean {
-	for (const keyword of keywords) {
-		if (text.includes(keyword)) {
-			return true
-		}
-	}
-	return false
 }
 
 function parseHexToRgb(hexColor: string): {

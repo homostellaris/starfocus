@@ -1,11 +1,48 @@
 /* Colors */
-:root {
-	--star-1: #ff7878;
-	--star-2: #f77baf;
-	--star-5: #e04573;
-	--star-3: #5fbff7;
-	--star-8: #2068ef;
-	--star-13: #9a7bf7;
+:root,
+:root[data-star-theme='redshift'] {
+	--star-1: #fb7185;
+	--star-2: #f472b6;
+	--star-3: #e879f9;
+	--star-5: #a78bfa;
+	--star-8: #60a5fa;
+	--star-13: #38bdf8;
+}
+
+:root[data-star-theme='stellar_spectrum'] {
+	--star-1: #ef4444;
+	--star-2: #f97316;
+	--star-3: #eab308;
+	--star-5: #10b981;
+	--star-8: #06b6d4;
+	--star-13: #8b5cf6;
+}
+
+:root[data-star-theme='outrun_synthwave'] {
+	--star-1: #facc15;
+	--star-2: #fb923c;
+	--star-3: #f43f5e;
+	--star-5: #d946ef;
+	--star-8: #8b5cf6;
+	--star-13: #00f5d4;
+}
+
+:root[data-star-theme='bioluminescent_abyss'] {
+	--star-1: #a3e635;
+	--star-2: #34d399;
+	--star-3: #2dd4bf;
+	--star-5: #38bdf8;
+	--star-8: #818cf8;
+	--star-13: #e879f9;
+}
+
+:root[data-star-theme='solar_forge'] {
+	--star-1: #d97706;
+	--star-2: #f97316;
+	--star-3: #fbbf24;
+	--star-5: #ef4444;
+	--star-8: #fb7185;
+	--star-13: #fef08a;
 }
 
 /* Ionic Variables and Theming. For more info, please see:

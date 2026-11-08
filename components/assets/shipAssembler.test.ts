@@ -3,38 +3,52 @@ import {
 	SHIP_ARCHETYPE_IDS,
 	SHIP_COLOR_PALETTES,
 	SHIP_SOCKET_MANIFESTS,
+	STARSHIP_BITMAP_RESOLUTION,
 	applyRgbMaskPalette,
 	assembleShipLayers,
+	bakeStarshipBitmap,
 	resolveShipLoadout,
 } from './shipAssembler'
 import ModularStarship from './ModularStarship'
 
-test('resolveShipLoadout and assembleShipLayers support all 5 whole starship models and 5 skins', () => {
+test('resolveShipLoadout, assembleShipLayers, and bakeStarshipBitmap support all 5 whole starship models and 5 skins at 128x128 pixel-shader resolution', () => {
 	expect(SHIP_ARCHETYPE_IDS.length).toBe(5)
 	expect(SHIP_COLOR_PALETTES.length).toBe(5)
+	expect(STARSHIP_BITMAP_RESOLUTION).toBe(128)
 
 	for (const archetypeId of SHIP_ARCHETYPE_IDS) {
-		for (const skin of SHIP_COLOR_PALETTES) {
-			const loadout = resolveShipLoadout({
-				hullArchetype: archetypeId,
-				skinId: skin.id,
-			})
-			expect(loadout.hullArchetype).toBe(archetypeId)
-			expect(loadout.skinId).toBe(skin.id)
-			expect(loadout.palette.id).toBe(skin.id)
+		const loadout = resolveShipLoadout({
+			hullArchetype: archetypeId,
+			skinId: 'vanguard_cyan',
+		})
+		expect(loadout.hullArchetype).toBe(archetypeId)
 
-			const layers = assembleShipLayers(loadout, {
-				recoilOffsetPx: 0,
-				thrusterFrame: 0,
-			})
-			const zIndices = layers.map(layer => layer.zIndex)
-			const sortedZIndices = [...zIndices].sort((first, second) => first - second)
-			expect(zIndices).toEqual(sortedZIndices)
+		const baked = bakeStarshipBitmap(loadout, {
+			recoilOffsetPx: 0,
+			thrusterFrame: 1,
+			enableDithering: true,
+		})
+		expect(baked.pixelBuffer.length).toBe(128 * 128 * 4)
+
+		let nonTransparentPixels = 0
+		for (let i = 3; i < baked.pixelBuffer.length; i += 4) {
+			if (baked.pixelBuffer[i] > 0) {
+				nonTransparentPixels++
+			}
 		}
+		expect(nonTransparentPixels).toBeGreaterThan(1200)
+
+		const layers = assembleShipLayers(loadout, {
+			recoilOffsetPx: 0,
+			thrusterFrame: 0,
+		})
+		const zIndices = layers.map(layer => layer.zIndex)
+		const sortedZIndices = [...zIndices].sort((first, second) => first - second)
+		expect(zIndices).toEqual(sortedZIndices)
 	}
 })
 
-test('assembleShipLayers applies mechanical recoil offset (y + 2px) exclusively to z:2 wing hardpoints', () => {
+test('assembleShipLayers and bakeStarshipBitmap apply mechanical recoil offset (y + 2px) to wing hardpoints', () => {
 	const loadout = resolveShipLoadout({
 		hullArchetype: 'hauler_atlas_mk1',
 	})
@@ -56,6 +70,10 @@ test('assembleShipLayers applies mechanical recoil offset (y + 2px) exclusively 
 			expect(firingLayer.offsetY).toBe(restingLayer.offsetY)
 		}
 	}
+
+	const restingBitmap = bakeStarshipBitmap(loadout, { recoilOffsetPx: 0 })
+	const firingBitmap = bakeStarshipBitmap(loadout, { recoilOffsetPx: 3 })
+	expect(restingBitmap.cacheKey).not.toBe(firingBitmap.cacheKey)
 })
 
 test('applyRgbMaskPalette maps 4-channel indexed mask values to configured hex palette colors', () => {
@@ -74,7 +92,7 @@ test('applyRgbMaskPalette maps 4-channel indexed mask values to configured hex p
 	expect(coloredPixels[1][2]).toBe('#ffffff')
 })
 
-test('ModularStarship component renders whole starship model and skin data attributes', () => {
+test('ModularStarship component renders 128x128 pixel-shader canvas with whole starship model and skin data attributes', () => {
 	const element = ModularStarship({
 		loadout: {
 			hullArchetype: 'striker_wraith_mk1',

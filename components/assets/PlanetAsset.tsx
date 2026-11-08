@@ -3,6 +3,10 @@
 import React from 'react'
 import type { StarRole, Todo } from '../db'
 import {
+	type StarPointsThemeId,
+	getActiveStarPointsThemeId,
+} from '../theme/starPointsThemes'
+import {
 	bakePlanetBitmap,
 	generateProceduralPlanetSpec,
 	getAdditiveGlowBitmap,
@@ -23,6 +27,7 @@ export interface CelestialBodyProps {
 	enableAtmosphereGlow?: boolean
 	celestialClassOverride?: CelestialClass
 	biomeOverride?: BiomePaletteId
+	themeId?: StarPointsThemeId
 	onBakeMetrics?: (metrics: PlanetBakeMetrics) => void
 	className?: string
 	slot?: string
@@ -37,16 +42,19 @@ export function CelestialBody({
 	enableAtmosphereGlow = true,
 	celestialClassOverride,
 	biomeOverride,
+	themeId,
 	onBakeMetrics,
 	className = '',
 	slot,
 }: CelestialBodyProps) {
+	const resolvedThemeId = themeId ?? getActiveStarPointsThemeId()
 	const spec = generateProceduralPlanetSpec({
 		todo,
 		starRole,
 		starRoleGroupTitle,
 		celestialClassOverride,
 		biomeOverride,
+		themeId: resolvedThemeId,
 	})
 
 	const bakeResult = bakePlanetBitmap(spec, { enableDithering })
@@ -64,6 +72,8 @@ export function CelestialBody({
 			data-celestial-class={spec.celestialClass}
 			data-emissive-subtype={spec.emissiveSubType}
 			data-biome-id={spec.biomeId}
+			data-primary-color={spec.palette.highlight}
+			data-star-theme={resolvedThemeId}
 			data-cache-hit={String(bakeResult.metrics.cacheHit)}
 			title={`${spec.title} (${spec.celestialClass} • ${spec.palette.label})`}
 			className={`relative inline-flex shrink-0 items-center justify-center select-none ${className}`}

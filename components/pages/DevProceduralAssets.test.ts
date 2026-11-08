@@ -6,11 +6,11 @@ import DevProceduralAssets, {
 	createCustomTestTodoItem,
 } from './DevProceduralAssets'
 
-test('DEFAULT_TEST_TODOS covers all 6 celestial classes (1, 2, 3, 5, 8, 13 pts) and all 4 biome palettes', () => {
+test('DEFAULT_TEST_TODOS covers all 6 celestial classes (1, 2, 3, 5, 8, 13 pts) with 6 distinct Star Points primary hues', () => {
 	expect(DEFAULT_TEST_TODOS.length).toBe(6)
 
 	const resolvedClasses = new Set<string>()
-	const resolvedBiomes = new Set<string>()
+	const resolvedPrimaryHues = new Set<string>()
 
 	for (const item of DEFAULT_TEST_TODOS) {
 		const role = TEST_STAR_ROLES.find(
@@ -22,7 +22,7 @@ test('DEFAULT_TEST_TODOS covers all 6 celestial classes (1, 2, 3, 5, 8, 13 pts) 
 			starRoleGroupTitle: item.starRoleGroupTitle,
 		})
 		resolvedClasses.add(spec.celestialClass)
-		resolvedBiomes.add(spec.biomeId)
+		resolvedPrimaryHues.add(spec.palette.highlight)
 	}
 
 	expect(resolvedClasses).toEqual(
@@ -35,9 +35,7 @@ test('DEFAULT_TEST_TODOS covers all 6 celestial classes (1, 2, 3, 5, 8, 13 pts) 
 			'black_hole',
 		]),
 	)
-	expect(resolvedBiomes).toEqual(
-		new Set(['engineering', 'urgent', 'growth', 'strategy']),
-	)
+	expect(resolvedPrimaryHues.size).toBe(6)
 })
 
 test('createCustomTestTodoItem builds a valid test todo entry with deterministic spec attributes', () => {

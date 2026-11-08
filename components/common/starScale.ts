@@ -6,33 +6,33 @@ const starScale = {
 	},
 	1: {
 		ionicColor: 'medium',
-		textColor: 'text-rose-400',
-		tailwindBgColors: 'bg-rose-200',
+		textColor: 'text-[color:var(--star-1)]',
+		tailwindBgColors: 'bg-[color:var(--star-1)]',
 	},
 	2: {
 		ionicColor: 'danger',
-		textColor: 'text-pink-400',
-		tailwindBgColors: 'bg-pink-200',
+		textColor: 'text-[color:var(--star-2)]',
+		tailwindBgColors: 'bg-[color:var(--star-2)]',
 	},
 	3: {
 		ionicColor: 'warning',
-		textColor: 'text-fuchsia-400',
-		tailwindBgColors: 'bg-fuchsia-200',
+		textColor: 'text-[color:var(--star-3)]',
+		tailwindBgColors: 'bg-[color:var(--star-3)]',
 	},
 	5: {
 		ionicColor: 'tertiary',
-		textColor: 'text-violet-400',
-		tailwindBgColors: 'bg-violet-200',
+		textColor: 'text-[color:var(--star-5)]',
+		tailwindBgColors: 'bg-[color:var(--star-5)]',
 	},
 	8: {
 		ionicColor: 'secondary',
-		textColor: 'text-indigo-400',
-		tailwindBgColors: 'bg-indigo-200',
+		textColor: 'text-[color:var(--star-8)]',
+		tailwindBgColors: 'bg-[color:var(--star-8)]',
 	},
 	13: {
 		ionicColor: 'primary',
-		textColor: 'text-blue-400',
-		tailwindBgColors: 'bg-blue-200',
+		textColor: 'text-[color:var(--star-13)]',
+		tailwindBgColors: 'bg-[color:var(--star-13)]',
 	},
 }
 
