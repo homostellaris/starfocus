@@ -29,6 +29,8 @@ import {
 	rocketSharp,
 	pulseSharp,
 	musicalNotesSharp,
+	duplicateOutline,
+	alertCircleOutline,
 	settingsSharp,
 	helpCircleSharp,
 } from 'ionicons/icons'
@@ -47,8 +49,25 @@ import Tracjectory from '../starship/Trajectory'
 import PulseGraph from '../todos/PulseGraph'
 import Mood from '../mood'
 import { MoodProvider, useMood } from '../mood/MoodContext'
+import { DuplicateAlert } from '../todos/duplicate/DuplicateAlert'
+import {
+	findDuplicatesForTitle,
+	type DuplicateMatch,
+} from '../todos/duplicate/detector'
 import type { ExportStatus } from '../export/useMarkdownExport'
-import type { Visit } from '../db'
+import type { Todo, Visit } from '../db'
+
+const WORKBENCH_SAMPLE_TODOS: Todo[] = [
+	{ id: 'sample-1', title: 'Buy oat milk', starPoints: 2 },
+	{
+		id: 'sample-2',
+		title: 'Prepare quarterly goals',
+		starPoints: 5,
+		noteInitialContent: 'Target 20% expansion',
+	},
+	{ id: 'sample-3', title: 'Fix critical auth bug', starPoints: 3 },
+	{ id: 'sample-4', title: 'Auth critical bug fix', starPoints: 1 },
+]
 
 type ComponentKey =
 	| 'sync-status'
@@ -62,6 +81,7 @@ type ComponentKey =
 	| 'starship-trajectory'
 	| 'pulse-graph'
 	| 'mood-player'
+	| 'duplicate-detector'
 
 interface CatalogItem {
 	key: ComponentKey
@@ -184,6 +204,16 @@ const CATALOG_ITEMS: CatalogItem[] = [
 		iconColor: 'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/20',
 		badge: 'Audio',
 	},
+	{
+		key: 'duplicate-detector',
+		title: 'Duplicate Todo Detector',
+		subtitle: 'Fuzzy Matching & Prevention Interface',
+		description:
+			'Detects, prevents, and resolves duplicate or similar tasks across active and completed lists using fuzzy token-set Jaccard and edit distance clustering.',
+		icon: duplicateOutline,
+		iconColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+		badge: 'Database',
+	},
 ]
 
 const VALID_COMPONENTS: ComponentKey[] = CATALOG_ITEMS.map((item) => item.key)
@@ -292,6 +322,22 @@ function WorkbenchContent() {
 	// --- Pulse Graph Knobs ---
 	const [pulseStarPoints, setPulseStarPoints] = useState(5)
 	const [pulsePreset, setPulsePreset] = useState<'streak' | 'recent' | 'sporadic' | 'empty'>('streak')
+
+	// --- Duplicate Detector Knobs ---
+	const [duplicateSimulatedTitle, setDuplicateSimulatedTitle] = useState('Buy oatmilk')
+	const [duplicatePreset, setDuplicatePreset] = useState<'fuzzy' | 'exact' | 'mixed' | 'clean'>('fuzzy')
+	const [duplicatePreventionActive, setDuplicatePreventionActive] = useState(true)
+
+	const workbenchSimulatedMatches: DuplicateMatch[] = useMemo(() => {
+		if (!duplicateSimulatedTitle.trim()) return []
+		return findDuplicatesForTitle(
+			duplicateSimulatedTitle,
+			WORKBENCH_SAMPLE_TODOS,
+			undefined,
+			new Set(['sample-1', 'sample-2']),
+			0.7,
+		)
+	}, [duplicateSimulatedTitle])
 
 	const simulatedVisits: Visit[] = useMemo(() => {
 		const list: Visit[] = []
@@ -763,6 +809,46 @@ function WorkbenchContent() {
 					label: '⚡ Hype Synthwave',
 					action: () => applyPreset('mood-hype'),
 					active: mode === 'hype',
+				},
+			]
+		}
+		if (activeComponent === 'duplicate-detector') {
+			return [
+				{
+					id: 'dup-fuzzy',
+					label: '🔍 Fuzzy Match (91%)',
+					action: () => {
+						setDuplicatePreset('fuzzy')
+						setDuplicateSimulatedTitle('Buy oatmilk')
+					},
+					active: duplicatePreset === 'fuzzy',
+				},
+				{
+					id: 'dup-exact',
+					label: '🎯 Exact Match (100%)',
+					action: () => {
+						setDuplicatePreset('exact')
+						setDuplicateSimulatedTitle('Prepare quarterly goals')
+					},
+					active: duplicatePreset === 'exact',
+				},
+				{
+					id: 'dup-mixed',
+					label: '🌌 Multiple Matches',
+					action: () => {
+						setDuplicatePreset('mixed')
+						setDuplicateSimulatedTitle('Fix critical auth bug')
+					},
+					active: duplicatePreset === 'mixed',
+				},
+				{
+					id: 'dup-clean',
+					label: '✨ Orbit Clear (0 Matches)',
+					action: () => {
+						setDuplicatePreset('clean')
+						setDuplicateSimulatedTitle('Embark to Alpha Centauri')
+					},
+					active: duplicatePreset === 'clean',
 				},
 			]
 		}
@@ -1436,6 +1522,33 @@ function WorkbenchContent() {
 				</div>
 			)}
 
+			{/* Duplicate Detector Knobs */}
+			{activeComponent === 'duplicate-detector' && (
+				<div className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3 text-xs">
+					<h4 className="font-semibold text-neutral-300">Duplicate Simulator Controls</h4>
+					<div>
+						<IonLabel className="text-neutral-400">Candidate Todo Title</IonLabel>
+						<IonInput
+							className="mt-1 border border-neutral-800 rounded bg-neutral-900 px-2 text-white"
+							value={duplicateSimulatedTitle}
+							onIonInput={(e) => setDuplicateSimulatedTitle(e.detail.value ?? '')}
+							placeholder="Type todo title..."
+						/>
+					</div>
+					<div className="flex items-center justify-between">
+						<span className="text-neutral-400">Creation Intercept Prevention</span>
+						<IonToggle
+							checked={duplicatePreventionActive}
+							onIonChange={(e) => setDuplicatePreventionActive(e.detail.checked)}
+						/>
+					</div>
+					<div className="text-[11px] text-neutral-400 space-y-1">
+						<p>• High-confidence matches (≥82%) trigger prevention</p>
+						<p>• Ambient hints appear when similarity ≥70%</p>
+					</div>
+				</div>
+			)}
+
 			{/* Star Roles Knobs */}
 			{activeComponent === 'star-roles' && (
 				<div className="space-y-4 pt-1 text-xs">
@@ -1917,6 +2030,47 @@ function WorkbenchContent() {
 								{activeComponent === 'mood-player' && (
 									<div id="workbench-mood-player" className="flex items-center justify-center p-12">
 										<Mood />
+									</div>
+								)}
+
+								{activeComponent === 'duplicate-detector' && (
+									<div className="w-full max-w-xl space-y-6">
+										<div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-6 shadow-2xl backdrop-blur-md space-y-4">
+											<div className="flex items-center justify-between">
+												<div className="flex items-center gap-2">
+													<IonIcon icon={alertCircleOutline} className="text-amber-400 text-lg" />
+													<h3 className="font-semibold text-white text-sm">
+														Real-Time Creation & Prevention
+													</h3>
+												</div>
+												<IonBadge color="primary">In-Flight Detection</IonBadge>
+											</div>
+
+											<div className="space-y-2">
+												<label className="text-xs text-neutral-400">Todo Title Input (Type to test)</label>
+												<IonInput
+													fill="outline"
+													value={duplicateSimulatedTitle}
+													onIonInput={(e) => setDuplicateSimulatedTitle(e.detail.value ?? '')}
+													className="bg-neutral-950/60"
+													placeholder="e.g. Buy oatmilk..."
+												/>
+											</div>
+
+											<DuplicateAlert
+												matches={workbenchSimulatedMatches}
+												onSelectExisting={(todo) => {
+													window.alert(`[Workbench] Navigate to existing task: "${todo.title}"`)
+												}}
+											/>
+
+											{workbenchSimulatedMatches.length === 0 && duplicateSimulatedTitle.trim().length > 0 && (
+												<div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald-300">
+													<IonIcon icon={sparklesSharp} className="text-emerald-400" />
+													<span>Title is unique. No duplicates detected in database.</span>
+												</div>
+											)}
+										</div>
 									</div>
 								)}
 							</div>

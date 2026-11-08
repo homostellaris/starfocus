@@ -36,14 +36,21 @@ jobs:
           if [[ ! "$URL" =~ ^https?:// ]]; then
             URL="https://$URL"
           fi
-          # Whitelist the PR alias
-          HOSTNAME=$(echo "$URL" | sed 's|https://||')
-          PR_ALIAS=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v13/deployments/$HOSTNAME" \
-            | jq -r '.meta.branchAlias // empty')
+          # Extract hostname and port, stripping protocol
+          RAW_HOST=$(echo "$URL" | sed -E 's|^https?://||')
+          HOSTNAME=$(echo "$RAW_HOST" | cut -d: -f1)
+
+          PR_ALIAS=""
+          if [ -n "$VERCEL_TOKEN" ]; then
+            PR_ALIAS=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v13/deployments/$HOSTNAME" \
+              | jq -r '.meta.branchAlias // empty' 2>/dev/null || true)
+          fi
+
           if [ -n "$PR_ALIAS" ]; then
             echo "Whitelisting PR alias: https://$PR_ALIAS"
             npx dexie-cloud whitelist "https://$PR_ALIAS"
-          else
-            echo "No PR alias found"
           fi
+
+          echo "Whitelisting target origin: $URL"
+          npx dexie-cloud whitelist "$URL"

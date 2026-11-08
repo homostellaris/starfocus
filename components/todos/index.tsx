@@ -52,6 +52,8 @@ export const TodoListItem = forwardRef<
 		<div
 			key={todo.id}
 			ref={ref}
+			id={`todo-${todo.id}`}
+			data-todo-id={todo.id}
 			{...props}
 		>
 			<IonItem

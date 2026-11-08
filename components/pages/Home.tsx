@@ -74,13 +74,15 @@ import { useSnoozeTodoModal } from '../todos/snooze/useSnoozeTodoModal'
 import { useTodoPopover } from '../todos/useTodoPopover'
 import { SettingsMenu } from '../settings/SettingsMenu'
 import useSettings from '../settings/useSettings'
-import { Search } from '../search'
+import { PEEK_BREAKPOINT, Search } from '../search'
 import { Journey } from '../starship/Journey'
 import { useHelp } from '../common/HelpContext'
 
 const Home = () => {
 	const searchModalRef = useRef<HTMLIonModalElement>(null)
-	const openSearchRef = useRef<((focus?: boolean) => Promise<void>) | null>(null)
+	const openSearchRef = useRef<
+		((focus?: boolean, breakpoint?: number, initialQuery?: string) => Promise<void>) | null
+	>(null)
 	useGlobalKeyboardShortcuts()
 
 	return (
@@ -110,7 +112,9 @@ export default Home
 export const TodoLists = ({
 	openSearchRef,
 }: {
-	openSearchRef: RefObject<((focus?: boolean) => Promise<void>) | null>
+	openSearchRef: RefObject<
+		((focus?: boolean, breakpoint?: number, initialQuery?: string) => Promise<void>) | null
+	>
 }) => {
 	const posthog = usePostHog()
 	// Initial loading & scrolling stuff
@@ -125,21 +129,39 @@ export const TodoLists = ({
 
 	// Creating todo stuff
 	const fab = useRef<HTMLIonFabElement>(null)
-	const { focusedStarRole } = useView()
+	const { focusedStarRole, inActiveStarRoles, query, setQuery } = useView()
 	const [presentCreateTodoModal] = useCreateTodoModal()
+	const [presentTodoActionSheet] = useTodoActionSheet()
 	const openCreateTodoModal = useCallback(() => {
 		presentCreateTodoModal({
 			onWillDismiss: () => {
 				if (fab.current) fab.current.activated = false
 			},
+			onOpenExistingTodo: (existingTodo: Todo) => {
+				setQuery(existingTodo.id)
+				openSearchRef.current?.(false, PEEK_BREAKPOINT, existingTodo.id)
+				setTimeout(() => {
+					const element =
+						document.getElementById(`todo-${existingTodo.id}`) ??
+						document.querySelector(`[data-todo-id="${existingTodo.id}"]`)
+					element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+					presentTodoActionSheet(existingTodo)
+				}, 150)
+			},
 			todo: {
 				starRole: focusedStarRole,
 			},
 		})
-	}, [fab, focusedStarRole, presentCreateTodoModal])
+	}, [
+		fab,
+		focusedStarRole,
+		openSearchRef,
+		presentCreateTodoModal,
+		presentTodoActionSheet,
+		setQuery,
+	])
 
 	const wayfinderOrderMode = useSettings('#wayfinderOrderMode')
-	const { inActiveStarRoles, query } = useView()
 
 	const asteroidFieldCount = useLiveQuery(() => db.asteroidFieldOrder.count())
 	useEffect(() => {
@@ -165,7 +187,7 @@ export const TodoLists = ({
 				todo =>
 					!!todo.completedAt &&
 					matchesQuery(query, todo) &&
-					inActiveStarRoles(todo),
+					(Boolean(query) || inActiveStarRoles(todo)),
 			)
 			.limit(logLimit)
 			.toArray()
@@ -191,7 +213,9 @@ export const TodoLists = ({
 							(todo): todo is NonNullable<typeof todo> => todo !== null,
 						)
 						.filter(
-							todo => matchesQuery(query, todo) && inActiveStarRoles(todo),
+							todo =>
+								matchesQuery(query, todo) &&
+								(Boolean(query) || inActiveStarRoles(todo)),
 						)
 				})
 			})
@@ -246,7 +270,7 @@ export const TodoLists = ({
 							todo =>
 								todo.completedAt === undefined &&
 								matchesQuery(query, todo) &&
-								inActiveStarRoles(todo),
+								(Boolean(query) || inActiveStarRoles(todo)),
 						)
 						.toArray()
 						.then(todos =>
@@ -259,7 +283,7 @@ export const TodoLists = ({
 							todo =>
 								todo.completedAt === undefined &&
 								matchesQuery(query, todo) &&
-								inActiveStarRoles(todo),
+								(Boolean(query) || inActiveStarRoles(todo)),
 						)
 						.reverse()
 						.limit(databaseLimit)
@@ -353,7 +377,6 @@ export const TodoLists = ({
 		}
 	}, [contentRef, fab, nextTodoPosition, openCreateTodoModal, posthog])
 
-	const [presentTodoActionSheet] = useTodoActionSheet()
 	const [presentSnoozeTodoModal] = useSnoozeTodoModal()
 	const [presentCompletionPopover] = useTodoPopover()
 	const { helpEnabled } = useHelp()

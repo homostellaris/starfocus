@@ -23,7 +23,7 @@ export function attachWayfinderMetadata(
 			snoozedUntil: wayfinderOrder[index].snoozedUntil,
 		}
 
-		if (matchesQuery(query, candidateItem) && inActiveStarRoles(candidateItem)) {
+		if (matchesQuery(query, candidateItem) && (Boolean(query) || inActiveStarRoles(candidateItem))) {
 			items.push(candidateItem)
 		}
 	}

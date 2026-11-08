@@ -1,14 +1,22 @@
 import { menuController } from '@ionic/core/components'
 import {
+	IonBadge,
 	IonButton,
 	IonButtons,
+	IonCard,
+	IonCardContent,
+	IonCardHeader,
+	IonCardTitle,
 	IonContent,
 	IonFooter,
 	IonHeader,
+	IonIcon,
 	IonMenu,
 	IonToast,
 	IonToolbar,
 } from '@ionic/react'
+import { duplicateOutline } from 'ionicons/icons'
+import { useLiveQuery } from 'dexie-react-hooks'
 import _ from 'lodash'
 import { useState } from 'react'
 import { starMudder } from '../common/order'
@@ -17,6 +25,7 @@ import { db } from '../db'
 import ExportSettings from '../export/ExportSettings'
 import ObsidianSettings from '../obsidian/ObsidianSettings'
 import { ObsidianSettings as ObsidianSettingsType } from '../obsidian/useObsidian'
+import { detectAllDuplicateClusters } from '../todos/duplicate/detector'
 import todoRepository from '../todos/repository'
 import useSettings from './useSettings'
 
@@ -28,6 +37,34 @@ export const SettingsMenu = () => {
 	const [localVault, setLocalVault] = useState<string | null>(null)
 	const [localFolder, setLocalFolder] = useState<string | null>(null)
 	const [showToast, setShowToast] = useState(false)
+
+	const duplicateCount = useLiveQuery(
+		async () => {
+			const [todos, wayfinderEntries, dismissedPairsSetting] =
+				await Promise.all([
+					db.todos.toArray(),
+					db.wayfinderOrder.toArray(),
+					db.settings.get('#dismissedDuplicatePairs'),
+				])
+			const wayfinderIdentifiers = new Set(
+				wayfinderEntries.map(entry => entry.todoId),
+			)
+			const dismissedPairs = new Set<string>(
+				Array.isArray(dismissedPairsSetting?.value)
+					? dismissedPairsSetting.value
+					: [],
+			)
+			const clusters = detectAllDuplicateClusters(
+				todos,
+				wayfinderIdentifiers,
+				dismissedPairs,
+				0.75,
+			)
+			return clusters.length
+		},
+		[],
+		0,
+	)
 
 	const vault = localVault ?? storedObsidianSettings?.vault ?? ''
 	const folder = localFolder ?? storedObsidianSettings?.folder ?? ''
@@ -72,6 +109,59 @@ export const SettingsMenu = () => {
 						onFolderChange={setLocalFolder}
 					/>
 				</form>
+				<IonCard className="m-0 border border-neutral-800 bg-neutral-900/60 backdrop-blur">
+					<IonCardHeader className="pb-2">
+						<div className="flex items-center justify-between">
+							<IonCardTitle className="text-base font-bold text-white">
+								Duplicate Detector
+							</IonCardTitle>
+							{duplicateCount > 0 ? (
+								<IonBadge
+									color="warning"
+									className="font-mono"
+								>
+									{duplicateCount}{' '}
+									{duplicateCount === 1 ? 'cluster' : 'clusters'}
+								</IonBadge>
+							) : (
+								<IonBadge
+									color="success"
+									className="font-mono"
+								>
+									0 duplicates
+								</IonBadge>
+							)}
+						</div>
+					</IonCardHeader>
+					<IonCardContent className="space-y-3 pt-0">
+						<p className="text-xs text-neutral-400">
+							Scan and resolve similar or duplicate tasks across your
+							galaxy.
+						</p>
+						<IonButton
+							expand="block"
+							fill="outline"
+							color={duplicateCount > 0 ? 'warning' : 'primary'}
+							size="small"
+							routerLink="/duplicates"
+							routerDirection="forward"
+							onClick={() => {
+								menuController.toggle('end')
+							}}
+							data-testid="open-duplicate-detector-btn"
+						>
+							<IonIcon
+								slot="start"
+								icon={duplicateOutline}
+							/>
+							<span>
+								{duplicateCount > 0
+									? 'Review Duplicates'
+									: 'Scan Database'}
+							</span>
+						</IonButton>
+					</IonCardContent>
+				</IonCard>
 				<IonButton
 					id="clean-database"
 					className="hidden"

@@ -9,47 +9,45 @@ const fatherRole: StarRole = {
 	icon: { type: 'ionicon', name: 'maleSharp' },
 }
 
-describe('StarRoleIcon', () => {
-	it('renders with light color when no star role is provided', () => {
-		cy.mount(
-			<IonApp>
-				<StarRoleIcon />
-			</IonApp>,
-		)
-		cy.get('[data-class="star-role-icon"]').should('have.attr', 'color', 'light')
-	})
+it('renders with role metadata when a star role is provided', () => {
+	cy.mount(
+		<IonApp>
+			<StarRoleIcon starRole={fatherRole} />
+		</IonApp>,
+	)
+	cy.get('[data-class="star-role-icon"]').should(
+		'have.attr',
+		'data-star-role',
+		'Father',
+	)
+	cy.get('[data-class="star-role-icon"]').should('not.have.attr', 'color')
+})
 
-	it('renders with dark color when a star role is provided', () => {
-		cy.mount(
-			<IonApp>
-				<StarRoleIcon starRole={fatherRole} />
-			</IonApp>,
-		)
-		cy.get('[data-class="star-role-icon"]').should('have.attr', 'color', 'dark')
-	})
+it('allows explicit color prop overrides', () => {
+	cy.mount(
+		<IonApp>
+			<StarRoleIcon
+				color="primary"
+				starRole={fatherRole}
+			/>
+		</IonApp>,
+	)
+	cy.get('[data-class="star-role-icon"]').should(
+		'have.attr',
+		'color',
+		'primary',
+	)
+})
 
-	it('sets data-star-role to the role title', () => {
-		cy.mount(
-			<IonApp>
-				<StarRoleIcon starRole={fatherRole} />
-			</IonApp>,
-		)
-		cy.get('[data-class="star-role-icon"]').should(
-			'have.attr',
-			'data-star-role',
-			'Father',
-		)
-	})
-
-	it('does not set data-star-role when no star role is provided', () => {
-		cy.mount(
-			<IonApp>
-				<StarRoleIcon />
-			</IonApp>,
-		)
-		cy.get('[data-class="star-role-icon"]').should(
-			'not.have.attr',
-			'data-star-role',
-		)
-	})
+it('does not set data-star-role or hardcoded color when no star role is provided', () => {
+	cy.mount(
+		<IonApp>
+			<StarRoleIcon />
+		</IonApp>,
+	)
+	cy.get('[data-class="star-role-icon"]').should(
+		'not.have.attr',
+		'data-star-role',
+	)
+	cy.get('[data-class="star-role-icon"]').should('not.have.attr', 'color')
 })

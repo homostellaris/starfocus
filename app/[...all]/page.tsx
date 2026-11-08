@@ -3,6 +3,7 @@ import App from './App'
 export async function generateStaticParams() {
 	return [
 		{ all: ['home'] },
+		{ all: ['duplicates'] },
 		{ all: ['constellation'] },
 		{ all: ['settings'] },
 		{ all: ['test'] },
@@ -19,6 +20,7 @@ export async function generateStaticParams() {
 		{ all: ['dev', 'components', 'starship-trajectory'] },
 		{ all: ['dev', 'components', 'pulse-graph'] },
 		{ all: ['dev', 'components', 'mood-player'] },
+		{ all: ['dev', 'components', 'duplicate-detector'] },
 		{ all: ['dev', 'theme'] },
 	]
 }

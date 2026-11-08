@@ -9,19 +9,22 @@ import { SearchSuggestions } from './SearchSuggestions'
 // MODAL_HEIGHT = handle area (10px) + searchbar (42px) + list (310px) = 362px
 const MODAL_HEIGHT = 362
 const PEEK_HEIGHT = 52 // handle (10px) + searchbar (42px)
-const PEEK_BREAKPOINT = parseFloat((PEEK_HEIGHT / MODAL_HEIGHT).toFixed(4))
+export const PEEK_BREAKPOINT = parseFloat((PEEK_HEIGHT / MODAL_HEIGHT).toFixed(4))
 
 export function Search({
 	modalRef,
 	openRef,
 }: {
 	modalRef: RefObject<HTMLIonModalElement | null>
-	openRef?: RefObject<((focus?: boolean) => Promise<void>) | null>
+	openRef?: RefObject<
+		((focus?: boolean, breakpoint?: number, initialQuery?: string) => Promise<void>) | null
+	>
 }) {
 	const searchbarRef = useRef<HTMLIonSearchbarElement>(null)
 	const { query, setQuery } = useView()
 	const posthog = usePostHog()
 	const [focusedSuggestionIndex, setFocusedSuggestionIndex] = useState(-1)
+	const [initialBreakpoint, setInitialBreakpoint] = useState(1)
 
 	// Ref so keyboard handlers always read the latest query without needing to re-register.
 	// Updated in a layout effect (for external changes) and immediately in onIonInput (so the
@@ -30,6 +33,17 @@ export function Search({
 	useLayoutEffect(() => {
 		queryRef.current = query
 	})
+
+	useEffect(() => {
+		if (searchbarRef.current && searchbarRef.current.value !== query) {
+			searchbarRef.current.value = query
+			searchbarRef.current.getInputElement().then(input => {
+				if (input && input.value !== query) {
+					input.value = query
+				}
+			})
+		}
+	}, [query])
 
 	const blurSearchInput = useCallback(() => {
 		searchbarRef.current?.getInputElement().then(input => input?.blur())
@@ -58,25 +72,65 @@ export function Search({
 	// Set synchronously before modal.present() so onDidPresent reads the right value.
 	const shouldFocusOnPresentRef = useRef(true)
 
-	const openModal = useCallback(async (focus = true) => {
-		const modal = modalRef.current
-		if (!modal) return
-		if (modal.classList.contains('overlay-hidden')) {
-			shouldFocusOnPresentRef.current = focus
-			await modal.present()
-			// onDidPresent reads shouldFocusOnPresentRef
-		} else {
-			const currentBreakpoint = parseFloat(modal.dataset.breakpoint ?? '0')
-			if (currentBreakpoint >= 1) return
-			setFocusedSuggestionIndex(-1)
-			await modal.setCurrentBreakpoint(1)
-			if (focus) {
-				await focusAndRestore()
-			} else {
-				modal.setAttribute('data-presented', '')
+	const openModal = useCallback(
+		async (focus = true, breakpoint = 1, initialQuery?: string) => {
+			const modal = modalRef.current
+			if (!modal) return
+			if (initialQuery !== undefined) {
+				queryRef.current = initialQuery
+				setQuery(initialQuery)
+				if (searchbarRef.current) {
+					searchbarRef.current.value = initialQuery
+					searchbarRef.current.getInputElement().then(input => {
+						if (input) input.value = initialQuery
+					})
+				}
 			}
-		}
-	}, [focusAndRestore, modalRef])
+			const targetBreakpoint = breakpoint ?? 1
+			if (modal.classList.contains('overlay-hidden')) {
+				shouldFocusOnPresentRef.current = focus
+				setInitialBreakpoint(targetBreakpoint)
+				;(modal as any).initialBreakpoint = targetBreakpoint
+				await modal.present()
+				await modal.setCurrentBreakpoint(targetBreakpoint)
+				if (focus) {
+					await focusAndRestore()
+				} else {
+					if (searchbarRef.current) {
+						searchbarRef.current.value = queryRef.current
+						searchbarRef.current.getInputElement().then(input => {
+							if (input) input.value = queryRef.current
+						})
+					}
+					if (targetBreakpoint >= 1) {
+						modal.setAttribute('data-presented', '')
+					}
+				}
+			} else {
+				const currentBreakpoint = parseFloat(modal.dataset.breakpoint ?? '0')
+				if (currentBreakpoint !== targetBreakpoint) {
+					if (targetBreakpoint === 1) {
+						setFocusedSuggestionIndex(-1)
+					}
+					await modal.setCurrentBreakpoint(targetBreakpoint)
+				}
+				if (focus) {
+					await focusAndRestore()
+				} else {
+					if (searchbarRef.current) {
+						searchbarRef.current.value = queryRef.current
+						searchbarRef.current.getInputElement().then(input => {
+							if (input) input.value = queryRef.current
+						})
+					}
+					if (targetBreakpoint >= 1) {
+						modal.setAttribute('data-presented', '')
+					}
+				}
+			}
+		},
+		[focusAndRestore, modalRef, setQuery],
+	)
 
 	useLayoutEffect(() => {
 		if (openRef) openRef.current = openModal
@@ -158,7 +212,7 @@ export function Search({
 			backdropBreakpoint={PEEK_BREAKPOINT}
 			canDismiss={canDismiss}
 			handle={true}
-			initialBreakpoint={1}
+			initialBreakpoint={initialBreakpoint}
 			style={{ '--height': `calc(${MODAL_HEIGHT}px + env(safe-area-inset-bottom, 0px))` }}
 			onIonBreakpointDidChange={e => {
 				if (modalRef.current) {
@@ -173,7 +227,24 @@ export function Search({
 				if (shouldFocusOnPresentRef.current) {
 					focusAndRestore()
 				} else {
-					modalRef.current?.setAttribute('data-presented', '')
+					if (searchbarRef.current) {
+						searchbarRef.current.value = queryRef.current
+						searchbarRef.current.getInputElement().then(input => {
+							if (input) input.value = queryRef.current
+						})
+					}
+					const currentBreakpoint = parseFloat(
+						modalRef.current?.dataset.breakpoint ?? '1',
+					)
+					if (currentBreakpoint >= 1) {
+						modalRef.current?.setAttribute('data-presented', '')
+					}
+				}
+			}}
+			onDidDismiss={() => {
+				setInitialBreakpoint(1)
+				if (modalRef.current) {
+					;(modalRef.current as any).initialBreakpoint = 1
 				}
 			}}
 		>

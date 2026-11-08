@@ -1,5 +1,5 @@
 import { useIonModal } from '@ionic/react'
-import { useCallback, useRef } from 'react'
+import { ComponentProps, createElement, useCallback, useEffect, useRef } from 'react'
 import { ListType, Todo, db } from '../../db'
 import { markdownExportService } from '../../export/markdownExportService'
 import { EditTodoModal } from './modal'
@@ -13,12 +13,20 @@ export function useEditTodoModal(): [
 	const posthog = usePostHog()
 	const titleInput = useRef<HTMLIonInputElement>(null)
 	const todoRef = useRef<Todo>(undefined)
-	const [present, dismiss] = useIonModal(EditTodoModal, {
+
+	const EditTodoModalContainer = useCallback(
+		(props: ComponentProps<typeof EditTodoModal>) =>
+			createElement(EditTodoModal, {
+				...props,
+				todo: todoRef.current,
+			}),
+		[],
+	)
+
+	const [present, dismiss] = useIonModal(EditTodoModalContainer, {
 		dismiss: (data: string, role: string) => dismiss(data, role),
-		title: 'Edit todo',
+		modalTitle: 'Edit todo',
 		titleInput,
-		// eslint-disable-next-line react-hooks/refs -- Value is set before present() is called
-		todo: todoRef.current,
 	})
 
 	const editTodo = useCallback(async (updatedTodo: any, location: ListType) => {
@@ -52,15 +60,24 @@ export function useEditTodoModal(): [
 		)
 	}, [])
 
-	return [
+	const openEditModalRef = useRef<(todo: Todo) => void>(() => {})
+
+	const openEditModal = useCallback(
 		(todo: Todo) => {
 			todoRef.current = todo
+			let existingTodoToOpen: Todo | undefined
+
 			present({
 				onDidPresent: _event => {
 					titleInput.current?.setFocus()
 				},
 				onWillDismiss: event => {
-					if (event.detail.role === 'confirm') {
+					if (
+						event.detail.data?.action === 'open_existing' &&
+						event.detail.data?.existingTodo
+					) {
+						existingTodoToOpen = event.detail.data.existingTodo
+					} else if (event.detail.role === 'confirm') {
 						const { todo, location } = event.detail.data
 						const originalTodo = todoRef.current
 						editTodo(todo, location)
@@ -71,8 +88,27 @@ export function useEditTodoModal(): [
 						})
 					}
 				},
+				onDidDismiss: event => {
+					const existingTodo =
+						existingTodoToOpen ??
+						(event.detail.data?.action === 'open_existing'
+							? event.detail.data.existingTodo
+							: undefined)
+
+					if (existingTodo) {
+						setTimeout(() => {
+							openEditModalRef.current(existingTodo)
+						}, 100)
+					}
+				},
 			})
 		},
-		dismiss,
-	]
+		[editTodo, posthog, present],
+	)
+
+	useEffect(() => {
+		openEditModalRef.current = openEditModal
+	}, [openEditModal])
+
+	return [openEditModal, dismiss]
 }

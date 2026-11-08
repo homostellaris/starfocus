@@ -5,6 +5,7 @@ import { IonReactRouter } from '@ionic/react-router'
 import { Redirect, Route } from 'react-router-dom'
 import Home from './pages/Home'
 import Constellation from './pages/Constellation'
+import Duplicates from './pages/Duplicates'
 import ErrorBoundary from './ErrorBoundary'
 import Test from './pages/Test'
 import Workbench from './pages/Workbench'
@@ -57,6 +58,10 @@ const App = () => {
 						<Route
 							path="/home"
 							render={() => <Home />}
+						/>
+						<Route
+							path="/duplicates"
+							render={() => <Duplicates />}
 						/>
 						<Route
 							path="/test"

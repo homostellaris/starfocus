@@ -548,3 +548,47 @@ function createTodo({
 	cy.get('#create-todo-modal').contains('Confirm').click()
 	cy.get('#create-todo-modal').should('not.exist')
 }
+
+describe('duplicate todo detector', () => {
+	it('shows ambient chips in modal top bar for similar tasks without blocking creation', () => {
+		createTodo({ title: 'Plan starship expedition' })
+		cy.contains('[data-class="todo"]', 'Plan starship expedition').should('be.visible')
+
+		cy.get('ion-fab>ion-fab-button').click()
+		cy.get('#create-todo-modal')
+			.should('be.visible')
+			.within(() => {
+				cy.contains('label', 'Title')
+					.find('input')
+					.should('be.visible')
+					.type('Plan starship expedition!')
+			})
+
+		cy.get('[data-testid="duplicate-chips-bar"]').contains('Duplicates').should('be.visible')
+		cy.get('[data-testid="todo-chip"]').should('be.visible')
+		cy.get('[data-testid="todo-chip"]').contains('Plan starship expedition')
+
+		cy.get('#create-todo-modal').contains('Confirm').click()
+		cy.get('#create-todo-modal').should('not.exist')
+		cy.contains('[data-class="todo"]', 'Plan starship expedition!').should('be.visible')
+	})
+
+	it('opens existing todo when clicking duplicate chip in top bar', () => {
+		createTodo({ title: 'Build telescope lens' })
+		cy.contains('[data-class="todo"]', 'Build telescope lens').should('be.visible')
+
+		cy.get('ion-fab>ion-fab-button').click()
+		cy.get('#create-todo-modal')
+			.should('be.visible')
+			.within(() => {
+				cy.contains('label', 'Title')
+					.find('input')
+					.should('be.visible')
+					.type('Build telescope lenses')
+			})
+
+		cy.get('[data-testid="todo-chip"]').contains('Build telescope lens').click()
+		cy.get('#create-todo-modal').should('not.exist')
+		cy.get('ion-action-sheet').should('be.visible')
+	})
+})

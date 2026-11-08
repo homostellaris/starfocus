@@ -10,7 +10,6 @@ import {
 	IonSelect,
 	IonSelectOption,
 	IonTextarea,
-	IonTitle,
 	IonToolbar,
 } from '@ionic/react'
 import { openSharp } from 'ionicons/icons'
@@ -25,16 +24,18 @@ import {
 import { cn } from '../common/cn'
 import { db, ListType, Todo } from '../db'
 import { useObsidian } from '../obsidian/useObsidian'
+import { DuplicateChips } from './duplicate/DuplicateAlert'
+import { useDuplicateDetector } from './duplicate/useDuplicateDetector'
 
 export default function TodoModal({
 	dismiss,
-	modalTitle,
+	modalTitle: _modalTitle,
 	titleInput,
 	todo = {},
 	...props
 }: {
 	dismiss: (data?: any, role?: string) => void
-	modalTitle: string
+	modalTitle?: string
 	titleInput: MutableRefObject<HTMLIonInputElement | null>
 	todo?: Partial<Todo>
 } & ComponentProps<typeof IonPage>) {
@@ -55,6 +56,7 @@ export default function TodoModal({
 	const locationSelect = useRef<HTMLIonSelectElement>(null)
 
 	const starRoles = useLiveQuery(() => db.starRoles.toArray(), [], [])
+	const { matches } = useDuplicateDetector(title, todo?.id)
 
 	const emitTodo = useCallback(() => {
 		dismiss(
@@ -91,7 +93,22 @@ export default function TodoModal({
 		>
 			<IonHeader>
 				<IonToolbar>
-					<IonTitle slot="start">{modalTitle}</IonTitle>
+					<div className="flex items-center gap-2.5 px-3 py-1 w-full min-w-0">
+						<DuplicateChips
+							className="min-w-0 flex-1"
+							matches={matches}
+							starRoles={starRoles}
+							onSelectExisting={existingTodo => {
+								dismiss(
+									{
+										action: 'open_existing',
+										existingTodo,
+									},
+									'cancel',
+								)
+							}}
+						/>
+					</div>
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="space-y-4 ion-padding">

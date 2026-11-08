@@ -27,8 +27,14 @@ export function matchesQuery(
 					todo.snoozedUntil &&
 						dayjs(todo.snoozedUntil).isSameOrAfter(dayjs(), 'day'),
 				)
+		} else if (token.startsWith('id:')) {
+			const targetIdentifier = token.slice(3)
+			return todo => todo.id === targetIdentifier
 		} else {
-			return todo => (todo?.title ?? '').toLowerCase().includes(query)
+			const normalizedToken = token.toLowerCase()
+			return todo =>
+				(todo?.title ?? '').toLowerCase().includes(normalizedToken) ||
+				todo.id === token
 		}
 	})
 	return matchers.every(matcher => matcher(todo))
