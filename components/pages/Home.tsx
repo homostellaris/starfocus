@@ -312,6 +312,12 @@ export const TodoLists = ({
 		logLimit,
 	)
 
+	const journeyTodos = useMemo(() => {
+		if (!data) return []
+		const logTodos = logGroups.flatMap(group => group.todos)
+		return [...logTodos, ...todayGroup.todos, ...data.wayfinder]
+	}, [data, logGroups, todayGroup.todos])
+
 	const starRoles = useLiveQuery(() => db.starRoles.toArray())
 
 	const nextTodo = useRef<HTMLIonItemElement>(null)
@@ -552,6 +558,8 @@ export const TodoLists = ({
 						<Journey
 							commonAncestor={contentRef}
 							onLaunchArcade={handleLaunchArcade}
+							todos={journeyTodos}
+							activeTodoId={data?.wayfinder?.[0]?.id}
 						/>
 					</IonCol>
 					<IonCol sizeLg="6">

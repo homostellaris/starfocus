@@ -53,7 +53,6 @@ export const TodoListItem = forwardRef<
 	ref,
 ) {
 	const [debug] = useDebug()
-	const { themeId } = useStarPointsTheme()
 
 	return (
 		<div
@@ -78,17 +77,6 @@ export const TodoListItem = forwardRef<
 						event.stopPropagation()
 					}}
 					onIonChange={onCompletionChange}
-				/>
-				<PlanetAsset
-					slot="start"
-					className="mr-2"
-					size={28}
-					themeId={themeId}
-					todo={{
-						id: todo.id,
-						title: todo.title,
-						starPoints,
-					}}
 				/>
 				{starPoints ? (
 					<span

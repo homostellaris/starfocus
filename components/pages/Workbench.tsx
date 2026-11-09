@@ -1841,22 +1841,38 @@ function WorkbenchContent() {
 						<span className="mb-1.5 block text-neutral-400">
 							Whole-App Star Points Theme Palette
 						</span>
-						<div className="flex flex-wrap gap-1.5">
-							{STAR_POINTS_THEME_IDS.map(candidateId => {
+						<div
+							data-testid="celestial-theme-switcher"
+							className="flex flex-wrap gap-1.5"
+						>
+							{STAR_POINTS_THEME_IDS.map((candidateId) => {
 								const candidate = STAR_POINTS_THEMES[candidateId]
+								const isSelected = candidateId === activeStarThemeId
 								return (
-									<IonChip
+									<button
 										key={candidateId}
-										data-testid={`celestial-theme-chip-${candidateId}`}
+										type="button"
+										data-testid={`workbench-theme-btn-${candidateId}`}
 										onClick={() => handleSelectStarTheme(candidateId)}
-										color={
-											activeStarThemeId === candidateId ? 'secondary' : 'medium'
-										}
-										outline={activeStarThemeId !== candidateId}
-										className="m-0 cursor-pointer text-xs"
+										className={`flex items-center gap-2 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all ${
+											isSelected
+												? 'border-sky-400 bg-sky-500/15 text-sky-300 shadow'
+												: 'border-neutral-800 bg-neutral-900 text-neutral-300 hover:border-neutral-700'
+										}`}
 									>
-										<IonLabel>{candidate.name}</IonLabel>
-									</IonChip>
+										<span className="flex items-center gap-0.5">
+											{CELESTIAL_POINT_TIERS.map((tier) => (
+												<span
+													key={tier}
+													className="h-2 w-2 rounded-full"
+													style={{
+														backgroundColor: candidate.starColors[tier],
+													}}
+												/>
+											))}
+										</span>
+										<span>{candidate.name}</span>
+									</button>
 								)
 							})}
 						</div>
@@ -1920,17 +1936,75 @@ function WorkbenchContent() {
 							}
 						/>
 					</div>
-					<div className="flex items-center justify-between">
-						<span className="text-neutral-400">
-							Show All 6 Star Point Tiers (1–13 pts)
-						</span>
-						<IonToggle
-							data-testid="celestial-lineup-toggle"
-							checked={workbenchShowTierLineup}
-							onIonChange={event =>
-								setWorkbenchShowTierLineup(event.detail.checked)
-							}
-						/>
+					<div>
+						<div className="flex items-center justify-between mb-2">
+							<span className="text-neutral-400">
+								All 6 Star Point Tiers (1–13 pts)
+							</span>
+							<IonToggle
+								data-testid="celestial-lineup-toggle"
+								checked={workbenchShowTierLineup}
+								onIonChange={event =>
+									setWorkbenchShowTierLineup(event.detail.checked)
+								}
+							/>
+						</div>
+						{workbenchShowTierLineup && (
+							<div
+								data-testid="celestial-tier-lineup"
+								className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 w-full pt-1"
+							>
+								{CELESTIAL_POINT_TIERS.map((tierPoints) => {
+									const tierSpec = generateProceduralPlanetSpec({
+										todo: {
+											id: `${workbenchPlanetSeed}-tier-${tierPoints}`,
+											title: 'Procedural Celestial Body',
+											starPoints: tierPoints,
+										},
+										themeId: activeStarThemeId,
+									})
+									const isSelected = workbenchPlanetPoints === tierPoints
+									return (
+										<button
+											key={tierPoints}
+											type="button"
+											data-testid={`celestial-tier-card-${tierPoints}`}
+											onClick={() => setWorkbenchPlanetPoints(tierPoints)}
+											className={`flex flex-col items-center justify-between gap-1.5 rounded-xl border p-2 transition-all ${
+												isSelected
+													? 'border-sky-400/60 bg-sky-500/10 shadow-lg'
+													: 'border-neutral-800 bg-neutral-900/80 hover:border-neutral-700'
+											}`}
+										>
+											<span
+												className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-mono font-bold text-black"
+												style={{
+													backgroundColor: tierSpec.palette.highlight,
+												}}
+											>
+												★ {tierPoints} {tierPoints === 1 ? 'pt' : 'pts'}
+											</span>
+											<div className="flex items-center justify-center h-[56px]">
+												<PlanetAsset
+													todo={{
+														id: `${workbenchPlanetSeed}-tier-${tierPoints}`,
+														title: 'Procedural Celestial Body',
+														starPoints: tierPoints,
+													}}
+													themeId={activeStarThemeId}
+													size={tierPoints >= 8 ? 56 : tierPoints >= 5 ? 50 : 44}
+													enableDithering={workbenchPlanetDithering}
+													enableAtmosphereGlow={workbenchPlanetGlow}
+												/>
+											</div>
+											<span className="text-[10px] text-neutral-300 font-medium text-center leading-tight">
+												{CELESTIAL_CLASS_LABELS[tierSpec.celestialClass]}
+											</span>
+										</button>
+									)
+								})}
+							</div>
+						)}
 					</div>
 				</div>
 			)}
@@ -2019,6 +2093,83 @@ function WorkbenchContent() {
 							}
 						/>
 					</div>
+					<div>
+						<span className="mb-1.5 block text-neutral-400">
+							Starship Theme Palette
+						</span>
+						<div
+							data-testid="starship-theme-switcher"
+							className="flex flex-wrap gap-1.5"
+						>
+							{STAR_POINTS_THEME_IDS.map((candidateId) => {
+								const candidate = STAR_POINTS_THEMES[candidateId]
+								const isSelected = candidateId === activeStarThemeId
+								return (
+									<button
+										key={candidateId}
+										type="button"
+										data-testid={`starship-theme-btn-${candidateId}`}
+										onClick={() => handleSelectStarTheme(candidateId)}
+										className={`flex items-center gap-2 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all ${
+											isSelected
+												? 'border-sky-400 bg-sky-500/15 text-sky-300 shadow'
+												: 'border-neutral-800 bg-neutral-900 text-neutral-300 hover:border-neutral-700'
+										}`}
+									>
+										<span
+											className="h-2 w-2 rounded-full"
+											style={{
+												backgroundColor: candidate.shipPalette.cockpitGlow,
+											}}
+										/>
+										<span>{candidate.name}</span>
+									</button>
+								)
+							})}
+						</div>
+					</div>
+
+					<div>
+						<span className="mb-1.5 block text-neutral-400">
+							Starship Hull Models (Lineup)
+						</span>
+						<div
+							data-testid="starship-hull-lineup"
+							className="grid grid-cols-2 sm:grid-cols-5 gap-2 w-full pt-1"
+						>
+							{SHIP_ARCHETYPE_LIST.map((hullId) => {
+								const shipDef = SHIP_CATALOG[hullId]
+								const isSelected = workbenchShipArchetype === hullId
+								return (
+									<button
+										key={hullId}
+										type="button"
+										data-testid={`starship-hull-card-${hullId}`}
+										onClick={() => setWorkbenchShipArchetype(hullId)}
+										className={`flex flex-col items-center gap-1.5 rounded-xl border p-2 transition-all ${
+											isSelected
+												? 'border-sky-400/60 bg-sky-500/10 shadow-lg'
+												: 'border-neutral-800 bg-neutral-900/80 hover:border-neutral-700'
+										}`}
+									>
+										<ModularStarship
+											loadout={{
+												hullArchetype: hullId,
+												skinId: workbenchShipSkin,
+											}}
+											themeId={activeStarThemeId}
+											size={48}
+											thrusterFrame={workbenchShipThrusterActive ? 1 : 0}
+										/>
+										<span className="text-[10px] font-medium text-neutral-200 text-center leading-tight">
+											{shipDef.name}
+										</span>
+									</button>
+								)
+							})}
+						</div>
+					</div>
+
 					<div className="flex items-center justify-between">
 						<span className="text-neutral-400">Active Thruster Plumes</span>
 						<IonToggle
@@ -2663,99 +2814,6 @@ function WorkbenchContent() {
 												</span>
 											</div>
 										</div>
-
-										<div
-											data-testid="celestial-theme-switcher"
-											className="flex flex-wrap items-center justify-center gap-2"
-										>
-											{STAR_POINTS_THEME_IDS.map((candidateId) => {
-												const candidate = STAR_POINTS_THEMES[candidateId]
-												const isSelected = candidateId === activeStarThemeId
-												return (
-													<button
-														key={candidateId}
-														type="button"
-														data-testid={`workbench-theme-btn-${candidateId}`}
-														onClick={() => handleSelectStarTheme(candidateId)}
-														className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-															isSelected
-																? 'border-sky-400 bg-sky-500/15 text-sky-300 shadow'
-																: 'border-neutral-800 bg-neutral-950/80 text-neutral-300 hover:border-neutral-700'
-														}`}
-													>
-														<span className="flex items-center gap-0.5">
-															{CELESTIAL_POINT_TIERS.map((tier) => (
-																<span
-																	key={tier}
-																	className="h-2.5 w-2.5 rounded-full"
-																	style={{
-																		backgroundColor: candidate.starColors[tier],
-																	}}
-																/>
-															))}
-														</span>
-														<span>{candidate.name}</span>
-													</button>
-												)
-											})}
-										</div>
-
-										{workbenchShowTierLineup && (
-											<div
-												data-testid="celestial-tier-lineup"
-												className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 w-full"
-											>
-												{CELESTIAL_POINT_TIERS.map((tierPoints) => {
-													const tierSpec = generateProceduralPlanetSpec({
-														todo: {
-															id: `${workbenchPlanetSeed}-tier-${tierPoints}`,
-															title: 'Procedural Celestial Body',
-															starPoints: tierPoints,
-														},
-														themeId: activeStarThemeId,
-													})
-													const isSelected = workbenchPlanetPoints === tierPoints
-													return (
-														<button
-															key={tierPoints}
-															type="button"
-															data-testid={`celestial-tier-card-${tierPoints}`}
-															onClick={() => setWorkbenchPlanetPoints(tierPoints)}
-															className={`flex flex-col items-center justify-between gap-2 rounded-xl border p-3 transition-all ${
-																isSelected
-																	? 'border-sky-400/60 bg-sky-500/10 shadow-lg'
-																	: 'border-neutral-800 bg-neutral-950/75 hover:border-neutral-700'
-															}`}
-														>
-															<span
-																className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-mono font-bold text-black"
-																style={{
-																	backgroundColor: tierSpec.palette.highlight,
-																}}
-															>
-																★ {tierPoints} {tierPoints === 1 ? 'pt' : 'pts'}
-															</span>
-															<div className="flex items-center justify-center h-[88px]">
-																<PlanetAsset
-																	todo={{
-																		id: `${workbenchPlanetSeed}-tier-${tierPoints}`,
-																		title: 'Procedural Celestial Body',
-																		starPoints: tierPoints,
-																	}}
-																	themeId={activeStarThemeId}
-																	size={tierPoints >= 8 ? 84 : tierPoints >= 5 ? 78 : 68}
-																	enableDithering={workbenchPlanetDithering}
-																	enableAtmosphereGlow={workbenchPlanetGlow}
-																/>
-															</div>
-															<span className="text-[11px] text-neutral-300 font-medium text-center leading-tight">
-																{CELESTIAL_CLASS_LABELS[tierSpec.celestialClass]}
-															</span>
-														</button>
-													)
-												})}
-											</div>
-										)}
 									</div>
 								)}
 
@@ -2779,138 +2837,69 @@ function WorkbenchContent() {
 												/>
 											</div>
 										) : (
-											<>
-												<div
-													data-testid="starship-slingshot-stage"
-													onPointerDown={(event) => {
-														startWorkbenchSlingshot(event.clientX, event.clientY)
-													}}
-													className="relative flex flex-col items-center justify-center gap-3 rounded-2xl border border-neutral-800 bg-neutral-950/90 p-10 shadow-2xl backdrop-blur-md cursor-grab active:cursor-grabbing select-none touch-none"
-												>
-													{workbenchSlingshotPull && (
-														<svg
-															className="pointer-events-none absolute inset-0 overflow-visible z-20"
-															width="100%"
-															height="100%"
-														>
-															<line
-																x1="50%"
-																y1="45%"
-																x2={`calc(50% + ${workbenchSlingshotPull.dx}px)`}
-																y2={`calc(45% + ${workbenchSlingshotPull.dy}px)`}
-																stroke="#f59e0b"
-																strokeWidth="2.5"
-																strokeDasharray="5 4"
-															/>
-															<line
-																x1="50%"
-																y1="45%"
-																x2={`calc(50% - ${workbenchSlingshotPull.dx * 1.35}px)`}
-																y2={`calc(45% - ${workbenchSlingshotPull.dy * 1.35}px)`}
-																stroke="#38bdf8"
-																strokeWidth="3"
-															/>
-														</svg>
-													)}
-													<div
-														style={{
-															transform: `translate(${workbenchSlingshotPull ? workbenchSlingshotPull.dx * 0.28 : 0}px, ${workbenchSlingshotPull ? workbenchSlingshotPull.dy * 0.28 : 0}px) rotate(${
-																workbenchSlingshotPull && workbenchSlingshotPull.distance >= 18
-																	? (Math.atan2(-workbenchSlingshotPull.dy, -workbenchSlingshotPull.dx) * 180) / Math.PI + 90
-																	: workbenchShipRotation
-															}deg)`,
-														}}
-														className="transition-transform duration-75"
+											<div
+												data-testid="starship-slingshot-stage"
+												onPointerDown={(event) => {
+													startWorkbenchSlingshot(event.clientX, event.clientY)
+												}}
+												className="relative flex flex-col items-center justify-center gap-3 rounded-2xl border border-neutral-800 bg-neutral-950/90 p-10 shadow-2xl backdrop-blur-md cursor-grab active:cursor-grabbing select-none touch-none"
+											>
+												{workbenchSlingshotPull && (
+													<svg
+														className="pointer-events-none absolute inset-0 overflow-visible z-20"
+														width="100%"
+														height="100%"
 													>
-														<ModularStarship
-															loadout={{
-																hullArchetype: workbenchShipArchetype,
-																skinId: workbenchShipSkin,
-															}}
-															themeId={activeStarThemeId}
-															size={workbenchShipSize}
-															thrusterFrame={workbenchShipThrusterActive ? 1 : 0}
+														<line
+															x1="50%"
+															y1="45%"
+															x2={`calc(50% + ${workbenchSlingshotPull.dx}px)`}
+															y2={`calc(45% + ${workbenchSlingshotPull.dy}px)`}
+															stroke="#f59e0b"
+															strokeWidth="2.5"
+															strokeDasharray="5 4"
 														/>
-													</div>
-													<div className="flex flex-col items-center gap-1 mt-2">
-														<div className="flex items-center gap-2 text-xs text-neutral-200 font-semibold">
-															<span>{SHIP_CATALOG[workbenchShipArchetype].name}</span>
-															<span className="text-neutral-600">•</span>
-															<span className="text-sky-300">{SHIP_SKINS[workbenchShipSkin].name}</span>
-														</div>
-														<span className="text-[11px] text-neutral-400">
-															Drag & release ship to slingshot into interactive flight arena
-														</span>
-													</div>
-												</div>
-
+														<line
+															x1="50%"
+															y1="45%"
+															x2={`calc(50% - ${workbenchSlingshotPull.dx * 1.35}px)`}
+															y2={`calc(45% - ${workbenchSlingshotPull.dy * 1.35}px)`}
+															stroke="#38bdf8"
+															strokeWidth="3"
+														/>
+													</svg>
+												)}
 												<div
-													data-testid="starship-theme-switcher"
-													className="flex flex-wrap items-center justify-center gap-2"
+													style={{
+														transform: `translate(${workbenchSlingshotPull ? workbenchSlingshotPull.dx * 0.28 : 0}px, ${workbenchSlingshotPull ? workbenchSlingshotPull.dy * 0.28 : 0}px) rotate(${
+															workbenchSlingshotPull && workbenchSlingshotPull.distance >= 18
+																? (Math.atan2(-workbenchSlingshotPull.dy, -workbenchSlingshotPull.dx) * 180) / Math.PI + 90
+																: workbenchShipRotation
+														}deg)`,
+													}}
+													className="transition-transform duration-75"
 												>
-													{STAR_POINTS_THEME_IDS.map((candidateId) => {
-														const candidate = STAR_POINTS_THEMES[candidateId]
-														const isSelected = candidateId === activeStarThemeId
-														return (
-															<button
-																key={candidateId}
-																type="button"
-																data-testid={`starship-theme-btn-${candidateId}`}
-																onClick={() => handleSelectStarTheme(candidateId)}
-																className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-																	isSelected
-																		? 'border-sky-400 bg-sky-500/15 text-sky-300 shadow'
-																		: 'border-neutral-800 bg-neutral-950/80 text-neutral-300 hover:border-neutral-700'
-																}`}
-															>
-																<span
-																	className="h-2.5 w-2.5 rounded-full"
-																	style={{
-																		backgroundColor: candidate.shipPalette.cockpitGlow,
-																	}}
-																/>
-																<span>{candidate.name}</span>
-															</button>
-														)
-													})}
+													<ModularStarship
+														loadout={{
+															hullArchetype: workbenchShipArchetype,
+															skinId: workbenchShipSkin,
+														}}
+														themeId={activeStarThemeId}
+														size={workbenchShipSize}
+														thrusterFrame={workbenchShipThrusterActive ? 1 : 0}
+													/>
 												</div>
-
-												<div
-													data-testid="starship-hull-lineup"
-													className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 w-full"
-												>
-													{SHIP_ARCHETYPE_LIST.map((hullId) => {
-														const shipDef = SHIP_CATALOG[hullId]
-														const isSelected = workbenchShipArchetype === hullId
-														return (
-															<button
-																key={hullId}
-																type="button"
-																data-testid={`starship-hull-card-${hullId}`}
-																onClick={() => setWorkbenchShipArchetype(hullId)}
-																className={`flex flex-col items-center gap-2 rounded-xl border p-3 transition-all ${
-																	isSelected
-																		? 'border-sky-400/60 bg-sky-500/10 shadow-lg'
-																		: 'border-neutral-800 bg-neutral-950/75 hover:border-neutral-700'
-																}`}
-															>
-																<ModularStarship
-																	loadout={{
-																		hullArchetype: hullId,
-																		skinId: workbenchShipSkin,
-																	}}
-																	themeId={activeStarThemeId}
-																	size={64}
-																	thrusterFrame={workbenchShipThrusterActive ? 1 : 0}
-																/>
-																<span className="text-[11px] font-medium text-neutral-200 text-center leading-tight">
-																	{shipDef.name}
-																</span>
-															</button>
-														)
-													})}
+												<div className="flex flex-col items-center gap-1 mt-2">
+													<div className="flex items-center gap-2 text-xs text-neutral-200 font-semibold">
+														<span>{SHIP_CATALOG[workbenchShipArchetype].name}</span>
+														<span className="text-neutral-600">•</span>
+														<span className="text-sky-300">{SHIP_SKINS[workbenchShipSkin].name}</span>
+													</div>
+													<span className="text-[11px] text-neutral-400">
+														Drag & release ship to slingshot into interactive flight arena
+													</span>
 												</div>
-											</>
+											</div>
 										)}
 									</div>
 								)}
@@ -2922,6 +2911,7 @@ function WorkbenchContent() {
 				<IonModal
 					ref={controlsSheetRef}
 					isOpen={true}
+					keepContentsMounted={true}
 					canDismiss={false}
 					breakpoints={[0.08, 0.65, 0.95]}
 					initialBreakpoint={0.08}

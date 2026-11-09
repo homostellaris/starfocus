@@ -1,6 +1,9 @@
 import React, { RefObject, useEffect, useRef, useState } from 'react'
+import PlanetAsset from '../assets/PlanetAsset'
 import { calculateSlingshotImpulse } from '../arcade/arcadePhysics'
 import Starship from '../common/Starship'
+import type { Todo } from '../db'
+import { useStarPointsTheme } from '../theme/starPointsThemes'
 import useTodoContext from '../todos/TodoContext'
 import Tracjectory from './Trajectory'
 import { useStarshipYPosition } from './useStarshipYPosition'
@@ -8,21 +11,67 @@ import { useStarshipYPosition } from './useStarshipYPosition'
 export const Journey = ({
 	commonAncestor,
 	onLaunchArcade,
+	todos = [],
+	activeTodoId,
 }: {
 	commonAncestor: RefObject<HTMLElement | null>
 	onLaunchArcade?: (initialVelocity?: { vx: number; vy: number }) => void
+	todos?: Array<Pick<Todo, 'id' | 'title' | 'starPoints' | 'starRole'>>
+	activeTodoId?: string
 }) => {
+	const { themeId } = useStarPointsTheme()
+	const journeyContainer = useRef<HTMLDivElement>(null)
+	const [todoPositions, setTodoPositions] = useState<Record<string, number>>({})
+
 	const {
 		nextTodo: {
 			position: [nextTodoPosition],
 		},
 	} = useTodoContext()
 	const starship = useRef<HTMLDivElement>(null)
-	const [starshipY] = useStarshipYPosition(
+	const [fallbackStarshipY] = useStarshipYPosition(
 		starship,
 		nextTodoPosition,
 		commonAncestor,
 	)
+
+	useEffect(() => {
+		if (typeof window === 'undefined') return
+
+		const updatePositions = () => {
+			if (!journeyContainer.current) return
+			const containerRect = journeyContainer.current.getBoundingClientRect()
+			const calculatedPositions: Record<string, number> = {}
+
+			todos.forEach(todo => {
+				const itemElement = document.getElementById(`todo-${todo.id}`)
+				if (itemElement) {
+					const itemRect = itemElement.getBoundingClientRect()
+					const itemCenterY =
+						itemRect.top - containerRect.top + itemRect.height / 2
+					calculatedPositions[todo.id] = itemCenterY - 28
+				}
+			})
+
+			setTodoPositions(calculatedPositions)
+		}
+
+		updatePositions()
+		const animationFrameIdentifier = requestAnimationFrame(updatePositions)
+		const timerIdentifier = setTimeout(updatePositions, 150)
+		window.addEventListener('resize', updatePositions)
+
+		return () => {
+			cancelAnimationFrame(animationFrameIdentifier)
+			clearTimeout(timerIdentifier)
+			window.removeEventListener('resize', updatePositions)
+		}
+	}, [todos])
+
+	const starshipY =
+		activeTodoId && todoPositions[activeTodoId] !== undefined
+			? todoPositions[activeTodoId]
+			: fallbackStarshipY
 
 	const [slingshotDrag, setSlingshotDrag] = useState<{
 		startX: number
@@ -91,11 +140,37 @@ export const Journey = ({
 		: null
 
 	return (
-		<div className="min-w-[56px]">
+		<div ref={journeyContainer} className="relative h-full min-w-[56px]">
 			<Tracjectory
-				className="absolute right-[27px]"
+				className="absolute right-[27px] z-0"
 				currentPosition={starshipY}
 			/>
+			{todos.map(todo => {
+				const position = todoPositions[todo.id]
+				if (position === undefined) return null
+				return (
+					<div
+						key={todo.id}
+						data-testid={`gutter-celestial-body-${todo.id}`}
+						data-todo-id={todo.id}
+						className="pointer-events-none absolute right-0 z-0 flex h-[56px] w-[56px] items-center justify-center transition-transform duration-500 ease-in-out"
+						style={{
+							transform: `translateY(${position}px)`,
+						}}
+					>
+						<PlanetAsset
+							size={36}
+							themeId={themeId}
+							todo={{
+								id: todo.id,
+								title: todo.title,
+								starPoints: todo.starPoints,
+								starRole: todo.starRole,
+							}}
+						/>
+					</div>
+				)
+			})}
 			<div
 				id="starship"
 				data-testid="home-starship"
@@ -114,7 +189,7 @@ export const Journey = ({
 					slingshotDragRef.current = initialDrag
 					setSlingshotDrag(initialDrag)
 				}}
-				className={`absolute right-0 h-[56px] w-[56px] cursor-grab touch-none select-none active:cursor-grabbing ${
+				className={`absolute right-0 z-10 h-[56px] w-[56px] cursor-grab touch-none select-none active:cursor-grabbing ${
 					slingshotDrag ? '' : 'transition-transform duration-500 ease-in-out'
 				}`}
 				style={{
@@ -154,18 +229,6 @@ export const Journey = ({
 					ref={starship}
 				/>
 			</div>
-			{onLaunchArcade && (
-				<button
-					type="button"
-					data-testid="arcade-launch-button"
-					onClick={() => onLaunchArcade()}
-					style={{ transform: `translateY(${starshipY + 60}px)` }}
-					className="absolute right-0.5 z-10 rounded border border-sky-500/30 bg-neutral-950/90 px-1.5 py-0.5 font-mono text-[10px] text-sky-300 transition hover:border-amber-400/60 hover:text-amber-300"
-					title="Launch Seamless Arcade Mode (G)"
-				>
-					Play
-				</button>
-			)}
 		</div>
 	)
 }
