@@ -1,5 +1,5 @@
 import { expect, it } from 'bun:test'
-import { DexieStarfocus, Todo, WayfinderOrder } from '../db'
+import { DexieStarfocus, ListType, Todo, WayfinderOrder } from '../db'
 import { TodoRepository } from './repository'
 
 function createTodo(identifier: string, title = identifier): Todo {
@@ -179,4 +179,147 @@ it('returns empty array when pruning with an empty wayfinder table', async () =>
 	const pruned = await repository.pruneOrphanedWayfinderEntries()
 
 	expect(pruned).toEqual([])
+})
+
+it('preserves existing wayfinder order when editing a wayfinder todo', async () => {
+	let updatedTodoProperties: Record<string, unknown> | undefined
+	let wayfinderOrderPutCalled = false
+	const existingWayfinderOrder = { todoId: 'todo-middle', order: 'm' }
+
+	const fakeDatabase = {
+		transaction: async (_mode: string, ...argumentsList: unknown[]) => {
+			const callback = argumentsList[argumentsList.length - 1] as () => Promise<void>
+			return await callback()
+		},
+		todos: {
+			update: async (identifier: string, updates: Record<string, unknown>) => {
+				updatedTodoProperties = updates
+			},
+		},
+		wayfinderOrder: {
+			get: async (identifier: string) =>
+				identifier === 'todo-middle' ? existingWayfinderOrder : undefined,
+			put: async () => {
+				wayfinderOrderPutCalled = true
+			},
+			orderBy: () => ({
+				first: async () => ({ todoId: 'todo-first', order: 'a' }),
+			}),
+		},
+		asteroidFieldOrder: {
+			where: () => ({
+				delete: async () => {},
+			}),
+		},
+	} as unknown as DexieStarfocus
+
+	const repository = new TodoRepository(fakeDatabase)
+	await repository.edit(
+		{
+			id: 'todo-middle',
+			title: 'Updated title',
+			starPoints: 5,
+			starRole: 'role-1',
+		},
+		ListType.wayfinder,
+	)
+
+	expect(updatedTodoProperties).toEqual({
+		title: 'Updated title',
+		starPoints: 5,
+		starRole: 'role-1',
+	})
+	expect(wayfinderOrderPutCalled).toBe(false)
+})
+
+it('adds a database todo to the top of wayfinder when location changed to wayfinder', async () => {
+	let insertedWayfinderEntry: WayfinderOrder | undefined
+
+	const fakeDatabase = {
+		transaction: async (_mode: string, ...argumentsList: unknown[]) => {
+			const callback = argumentsList[argumentsList.length - 1] as () => Promise<void>
+			return await callback()
+		},
+		todos: {
+			update: async () => {},
+		},
+		wayfinderOrder: {
+			get: async () => undefined,
+			put: async (entry: WayfinderOrder) => {
+				insertedWayfinderEntry = entry
+			},
+			orderBy: () => ({
+				first: async () => ({ todoId: 'todo-first', order: 'm' }),
+			}),
+		},
+		asteroidFieldOrder: {
+			where: () => ({
+				delete: async () => {},
+			}),
+		},
+	} as unknown as DexieStarfocus
+
+	const repository = new TodoRepository(fakeDatabase)
+	await repository.edit(
+		{
+			id: 'database-todo',
+			title: 'Moving to wayfinder',
+		},
+		ListType.wayfinder,
+	)
+
+	expect(insertedWayfinderEntry).toBeDefined()
+	expect(insertedWayfinderEntry?.todoId).toBe('database-todo')
+})
+
+it('removes a wayfinder todo from wayfinder order when location changed to database', async () => {
+	let deletedWayfinderTodoIdentifier: string | undefined
+
+	const fakeDatabase = {
+		transaction: async (_mode: string, ...argumentsList: unknown[]) => {
+			const callback = argumentsList[argumentsList.length - 1] as () => Promise<void>
+			return await callback()
+		},
+		todos: {
+			update: async () => {},
+		},
+		wayfinderOrder: {
+			where: ({ todoId }: { todoId: string }) => ({
+				delete: async () => {
+					deletedWayfinderTodoIdentifier = todoId
+				},
+			}),
+		},
+		asteroidFieldOrder: {
+			where: () => ({
+				delete: async () => {},
+			}),
+		},
+	} as unknown as DexieStarfocus
+
+	const repository = new TodoRepository(fakeDatabase)
+	await repository.edit(
+		{
+			id: 'wayfinder-todo',
+			title: 'Moving to database',
+		},
+		ListType.database,
+	)
+
+	expect(deletedWayfinderTodoIdentifier).toBe('wayfinder-todo')
+})
+
+it('throws a TypeError when editing a todo without a title', async () => {
+	const fakeDatabase = {} as unknown as DexieStarfocus
+	const repository = new TodoRepository(fakeDatabase)
+
+	expect(
+		repository.edit(
+			{
+				id: 'todo-without-title',
+				title: '',
+			},
+			ListType.wayfinder,
+		),
+	).rejects.toThrow(new TypeError('Title is required'))
 })

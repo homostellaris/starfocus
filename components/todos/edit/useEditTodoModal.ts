@@ -13,11 +13,13 @@ export function useEditTodoModal(): [
 	const posthog = usePostHog()
 	const titleInput = useRef<HTMLIonInputElement>(null)
 	const todoRef = useRef<Todo>(undefined)
+	const locationRef = useRef<ListType>(ListType.wayfinder)
 
 	const EditTodoModalContainer = useCallback(
 		(props: ComponentProps<typeof EditTodoModal>) =>
 			createElement(EditTodoModal, {
 				...props,
+				initialLocation: locationRef.current,
 				todo: todoRef.current,
 			}),
 		[],
@@ -30,41 +32,19 @@ export function useEditTodoModal(): [
 	})
 
 	const editTodo = useCallback(async (updatedTodo: any, location: ListType) => {
-		if (!updatedTodo.title) throw new TypeError('Title is required')
-
 		await markdownExportService.requestPermissionIfNeeded()
-		await db.transaction(
-			'rw',
-			db.asteroidFieldOrder,
-			db.wayfinderOrder,
-			db.todos,
-			async () => {
-				await db.todos.update(updatedTodo.id, {
-					createdAt: new Date(),
-					starPoints: updatedTodo.starPoints,
-					starRole: updatedTodo.starRole,
-					title: updatedTodo.title,
-				})
-				if (location === ListType.wayfinder) {
-					await Promise.all([
-						todoRepository.addToTopOfWayfinder(updatedTodo.id),
-						db.asteroidFieldOrder.where({ todoId: updatedTodo.id }).delete(),
-					])
-				} else if (location === ListType.database) {
-					await Promise.all([
-						db.asteroidFieldOrder.where({ todoId: updatedTodo.id }).delete(),
-						db.wayfinderOrder.where({ todoId: updatedTodo.id }).delete(),
-					])
-				}
-			},
-		)
+		await todoRepository.edit(updatedTodo, location)
 	}, [])
 
 	const openEditModalRef = useRef<(todo: Todo) => void>(() => {})
 
 	const openEditModal = useCallback(
-		(todo: Todo) => {
+		async (todo: Todo) => {
 			todoRef.current = todo
+			const isWayfinder =
+				(todo as any).order !== undefined ||
+				(await db.wayfinderOrder.get(todo.id)) !== undefined
+			locationRef.current = isWayfinder ? ListType.wayfinder : ListType.database
 			let existingTodoToOpen: Todo | undefined
 
 			present({

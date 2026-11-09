@@ -177,7 +177,28 @@ describe('wayfinder', () => {
 		])
 	})
 
-	it.skip('can edit todos')
+	it('preserves todo position in wayfinder when edited', () => {
+		createTodo({ title: 'todo first' })
+		createTodo({ title: 'todo second' })
+		assertList('wayfinder', ['todo second', 'todo first'])
+
+		cy.get('#wayfinder [data-class="todo"]').last().click()
+		cy.get('#todo-action-sheet').contains('Edit').click()
+
+		cy.get('#edit-todo-modal')
+			.should('be.visible')
+			.within(() => {
+				cy.contains('label', 'Title')
+					.find('input')
+					.should('be.visible')
+					.clear()
+					.type('todo first updated')
+			})
+		cy.get('#edit-todo-modal').contains('Confirm').click()
+		cy.get('#edit-todo-modal').should('not.exist')
+
+		assertList('wayfinder', ['todo second', 'todo first updated'])
+	})
 	it('can reorder todos in wayfinder and triggers rebalancing when needed', () => {
 		createTodo({ title: 'todo A' })
 		createTodo({ title: 'todo B' })

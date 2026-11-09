@@ -29,12 +29,14 @@ import { useDuplicateDetector } from './duplicate/useDuplicateDetector'
 
 export default function TodoModal({
 	dismiss,
+	initialLocation,
 	modalTitle: _modalTitle,
 	titleInput,
 	todo = {},
 	...props
 }: {
 	dismiss: (data?: any, role?: string) => void
+	initialLocation?: ListType
 	modalTitle?: string
 	titleInput: MutableRefObject<HTMLIonInputElement | null>
 	todo?: Partial<Todo>
@@ -53,41 +55,48 @@ export default function TodoModal({
 	const [noteInitialContent, setNoteInitialContent] = useState<
 		string | undefined
 	>(todo?.noteInitialContent)
+	const defaultLocation =
+		initialLocation ??
+		((todo as any)?.order !== undefined
+			? ListType.wayfinder
+			: ListType.wayfinder)
+	const [location, setLocation] = useState<ListType>(defaultLocation)
 	const locationSelect = useRef<HTMLIonSelectElement>(null)
 
 	const starRoles = useLiveQuery(() => db.starRoles.toArray(), [], [])
 	const { matches } = useDuplicateDetector(title, todo?.id)
 
-	const emitTodo = useCallback(() => {
-		dismiss(
-			{
-				todo: {
-					...todo,
-					noteInitialContent,
-					starPoints,
-					starRole,
-					title,
+	const emitTodo = useCallback(
+		(targetLocation?: ListType) => {
+			dismiss(
+				{
+					todo: {
+						...todo,
+						noteInitialContent,
+						starPoints,
+						starRole,
+						title,
+					},
+					location:
+						targetLocation ?? locationSelect.current?.value ?? location,
 				},
-				location: locationSelect.current?.value,
-			},
-			'confirm',
-		)
-	}, [dismiss, noteInitialContent, starPoints, starRole, todo, title])
+				'confirm',
+			)
+		},
+		[dismiss, location, noteInitialContent, starPoints, starRole, todo, title],
+	)
 
 	return (
 		<IonPage
 			{...props}
 			onKeyDown={event => {
-				if (event.metaKey) {
-					locationSelect.current!.value = ListType.database
-				} else if (event.key === 'Enter') {
+				if (event.key === 'Enter') {
 					event.preventDefault()
-					emitTodo()
-				}
-			}}
-			onKeyUp={event => {
-				if (!event.metaKey) {
-					locationSelect.current!.value = ListType.wayfinder
+					if (event.metaKey) {
+						emitTodo(ListType.database)
+					} else {
+						emitTodo()
+					}
 				}
 			}}
 		>
@@ -231,7 +240,12 @@ export default function TodoModal({
 						fill="outline"
 						ref={locationSelect}
 						slot="end"
-						value={ListType.wayfinder}
+						value={location}
+						onIonChange={event => {
+							if (event.detail.value) {
+								setLocation(event.detail.value)
+							}
+						}}
 					>
 						<IonSelectOption value={ListType.database}>
 							Database

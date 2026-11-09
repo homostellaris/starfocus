@@ -1,5 +1,5 @@
 import order, { starMudder, MAX_ORDER_KEY_LENGTH } from '../common/order'
-import { db, DexieStarfocus, Todo } from '../db'
+import { db, DexieStarfocus, ListType, Todo } from '../db'
 import posthog from 'posthog-js'
 
 export class TodoRepository {
@@ -103,6 +103,52 @@ export class TodoRepository {
 			async () => {
 				await this.db.todos.update(todo.id, { completedAt: undefined })
 				await this.addToTopOfWayfinder(todo.id)
+			},
+		)
+	}
+
+	async edit(
+		updatedTodo: {
+			id: string
+			title: string
+			starPoints?: number
+			starRole?: string
+		},
+		location: ListType,
+	): Promise<void> {
+		if (!updatedTodo.title) throw new TypeError('Title is required')
+
+		await this.db.transaction(
+			'rw',
+			this.db.asteroidFieldOrder,
+			this.db.wayfinderOrder,
+			this.db.todos,
+			async () => {
+				await this.db.todos.update(updatedTodo.id, {
+					starPoints: updatedTodo.starPoints,
+					starRole: updatedTodo.starRole,
+					title: updatedTodo.title,
+				})
+				if (location === ListType.wayfinder) {
+					const existingWayfinderOrder = await this.db.wayfinderOrder.get(
+						updatedTodo.id,
+					)
+					if (!existingWayfinderOrder) {
+						await this.addToTopOfWayfinder(updatedTodo.id)
+					}
+					await this.db.asteroidFieldOrder
+						.where({ todoId: updatedTodo.id })
+						.delete()
+				} else if (location === ListType.database) {
+					await Promise.all([
+						this.db.asteroidFieldOrder
+							.where({ todoId: updatedTodo.id })
+							.delete(),
+						this.db.wayfinderOrder
+							.where({ todoId: updatedTodo.id })
+							.delete(),
+					])
+				}
 			},
 		)
 	}
