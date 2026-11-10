@@ -38,15 +38,41 @@ describe('orbitalMechanics', () => {
 		expect(Math.abs(frontState.offsetY)).toBeLessThanOrEqual(26)
 	})
 
-	test('lagrange_parking holds station at L4 equilibrium with scanner beam', () => {
-		const state = computeOrbitalState({
+	test('lagrange_parking holds stationary shoulder post with zero ambient drift', () => {
+		const state1 = computeOrbitalState({
 			mode: 'lagrange_parking',
-			elapsedSeconds: 2.0,
+			elapsedSeconds: 0,
+			isLandscape: false,
 		})
-		expect(state.isBehind).toBe(false)
-		expect(state.scannerBeamTarget).toEqual({ x: 0, y: 0 })
-		expect(state.offsetX).toBeLessThan(-18) // Off upper-left shoulder
-		expect(state.offsetY).toBeLessThan(-10)
+		const state2 = computeOrbitalState({
+			mode: 'lagrange_parking',
+			elapsedSeconds: 10.0,
+			isLandscape: false,
+		})
+
+		expect(state1.offsetX).toBe(state2.offsetX)
+		expect(state1.offsetY).toBe(state2.offsetY)
+		expect(state1.isBehind).toBe(false)
+		expect(state1.scannerBeamTarget).toBeNull()
+		expect(state1.showOrbitGuide).toBe(false)
+		expect(state1.headingDegrees).toBe(180)
+	})
+
+	test('lagrange_parking expands to wider companion corridor in landscape', () => {
+		const portraitState = computeOrbitalState({
+			mode: 'lagrange_parking',
+			elapsedSeconds: 1.0,
+			isLandscape: false,
+		})
+		const landscapeState = computeOrbitalState({
+			mode: 'lagrange_parking',
+			elapsedSeconds: 1.0,
+			isLandscape: true,
+		})
+
+		expect(Math.abs(landscapeState.offsetX)).toBeGreaterThan(
+			Math.abs(portraitState.offsetX),
+		)
 	})
 
 	test('gravity_flyby executes accelerated eccentric loop', () => {

@@ -191,11 +191,30 @@ export const Journey = ({
 			)
 		: null
 
+	const [isNavigating, setIsNavigating] = useState(false)
+	const previousStarshipYRef = useRef(starshipY)
+
+	useEffect(() => {
+		if (Math.abs(starshipY - previousStarshipYRef.current) > 2) {
+			previousStarshipYRef.current = starshipY
+			const frameIdentifier = requestAnimationFrame(() => {
+				setIsNavigating(true)
+			})
+			const timeoutIdentifier = setTimeout(() => {
+				setIsNavigating(false)
+			}, 550)
+			return () => {
+				cancelAnimationFrame(frameIdentifier)
+				clearTimeout(timeoutIdentifier)
+			}
+		}
+	}, [starshipY])
+
 	const isOrbitingActiveTodo =
 		Boolean(activeTodoId) && todoPositions[activeTodoId as string] !== undefined
 
 	const orbitalState = computeOrbitalState({
-		mode: isOrbitingActiveTodo ? stagingMode : 'kepler_orbit',
+		mode: isOrbitingActiveTodo ? stagingMode : 'lagrange_parking',
 		elapsedSeconds,
 		isLandscape,
 		isDragging: Boolean(slingshotDrag) || !isOrbitingActiveTodo,
@@ -317,13 +336,19 @@ export const Journey = ({
 					setSlingshotDrag(initialDrag)
 				}}
 				className={`absolute right-0 h-[56px] w-[56px] cursor-pointer touch-none select-none active:cursor-grabbing ${
-					slingshotDrag ? '' : 'transition-transform duration-75 ease-out'
+					slingshotDrag ? '' : 'transition-transform duration-500 ease-out'
 				} ${orbitalState.isBehind ? 'z-0' : 'z-10'}`}
 				style={{
 					transform: `translate(${dragDeltaX + orbitalState.offsetX}px, ${starshipY + dragDeltaY + orbitalState.offsetY}px)`,
 					opacity: orbitalState.opacity,
 				}}
 			>
+				{isNavigating && !slingshotDrag && (
+					<div
+						className="pointer-events-none absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-4 rounded-full bg-gradient-to-b from-sky-300 via-sky-500 to-transparent blur-[2px] opacity-90 animate-pulse"
+						aria-hidden="true"
+					/>
+				)}
 				{slingshotDrag && (
 					<svg
 						viewBox="-60 -60 120 120"

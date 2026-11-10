@@ -13,32 +13,32 @@ export interface FlightStagingDefinition {
 
 export const FLIGHT_STAGING_MODES: FlightStagingDefinition[] = [
 	{
-		id: 'kepler_orbit',
-		name: 'Kepler Orbit',
-		tagline: 'Idea 1: 2.5D Elliptical Orbit',
-		description:
-			'Tilted 2.5D elliptical orbit around the planet with dynamic z-depth occlusion, scaling, and tangential banking.',
-	},
-	{
 		id: 'lagrange_parking',
 		name: 'Lagrange Station',
-		tagline: 'Idea 2: L4 Equilibrium & Scanner',
+		tagline: 'Stationary Shoulder Parking',
 		description:
-			'Maintains station at the L4 equilibrium point with subtle thruster stabilization and a live telemetry survey beam.',
-	},
-	{
-		id: 'gravity_flyby',
-		name: 'Hyperbolic Flyby',
-		tagline: 'Idea 3: Gravitational Assist',
-		description:
-			'Sweeps close to periapsis with accelerated transit and dramatic orbital swing-by mechanics.',
+			'Maintains a stationary post alongside the celestial body with zero idle movement, animating smoothly only during task transitions and user inputs.',
 	},
 	{
 		id: 'dual_staging',
 		name: 'Dual Staging',
-		tagline: 'Idea 4: Adaptive Landscape Escort',
+		tagline: 'Portrait Shoulder / Landscape Flight Bay',
 		description:
-			'Runs tight micro-orbit in portrait, then automatically opens into a wide companion flight corridor in landscape.',
+			'Stationary shoulder parking in portrait and companion flight bay in landscape orientation.',
+	},
+	{
+		id: 'gravity_flyby',
+		name: 'Hyperbolic Flyby',
+		tagline: 'Static Approach Vector',
+		description:
+			'Static approach vector tangent to the celestial body.',
+	},
+	{
+		id: 'kepler_orbit',
+		name: 'Kepler Orbit',
+		tagline: 'Dynamic Elliptical Orbit',
+		description:
+			'Tilted 2.5D elliptical orbit around the planet.',
 	},
 ]
 
@@ -79,30 +79,38 @@ export function computeOrbitalState({
 
 	const resolvedMode: FlightStagingMode =
 		mode === 'dual_staging'
-			? isLandscape
-				? 'dual_staging'
-				: 'kepler_orbit'
+			? 'dual_staging'
 			: mode
 
 	switch (resolvedMode) {
 		case 'lagrange_parking': {
-			const baseX = -22
-			const baseY = -14
-			const driftX = Math.sin(elapsedSeconds * 1.2) * 1.2
-			const driftY = Math.cos(elapsedSeconds * 0.9) * 0.9
-			const offsetX = baseX + driftX
-			const offsetY = baseY + driftY
-			const angleToPlanetRad = Math.atan2(-offsetY, -offsetX)
-			const headingDegrees = (angleToPlanetRad * 180) / Math.PI + 90
+			const offsetX = isLandscape ? -40 : -24
+			const offsetY = isLandscape ? 0 : -16
 
 			return {
 				offsetX,
 				offsetY,
-				scale: 0.88,
-				headingDegrees,
+				scale: 0.92,
+				headingDegrees: 180,
 				isBehind: false,
 				opacity: 1,
-				scannerBeamTarget: { x: 0, y: 0 },
+				scannerBeamTarget: null,
+				showOrbitGuide: false,
+			}
+		}
+
+		case 'dual_staging': {
+			const offsetX = isLandscape ? -42 : -24
+			const offsetY = isLandscape ? 0 : -16
+
+			return {
+				offsetX,
+				offsetY,
+				scale: 0.92,
+				headingDegrees: 180,
+				isBehind: false,
+				opacity: 1,
+				scannerBeamTarget: null,
 				showOrbitGuide: false,
 			}
 		}

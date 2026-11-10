@@ -22,7 +22,7 @@ const CUSTOMIZATION_EVENT_NAME = 'starfocus-starship-change'
 
 export function getStoredFlightStagingMode(): FlightStagingMode {
 	if (typeof localStorage === 'undefined') {
-		return 'kepler_orbit'
+		return 'lagrange_parking'
 	}
 	try {
 		const stored = localStorage.getItem(STAGING_STORAGE_KEY)
@@ -35,7 +35,7 @@ export function getStoredFlightStagingMode(): FlightStagingMode {
 	} catch {
 		// Ignore local storage errors
 	}
-	return 'kepler_orbit'
+	return 'lagrange_parking'
 }
 
 export function setStoredFlightStagingMode(mode: FlightStagingMode): void {
