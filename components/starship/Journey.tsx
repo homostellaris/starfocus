@@ -263,25 +263,43 @@ export const Journey = ({
 							}}
 						/>
 
-						{isActiveTodo && orbitalState.showOrbitGuide && !slingshotDrag && (
-							<svg
-								viewBox="-28 -28 56 56"
-								className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
-								aria-hidden="true"
-							>
-								<ellipse
-									cx="0"
-									cy="0"
-									rx={stagingMode === 'dual_staging' && isLandscape ? 48 : 23.5}
-									ry={stagingMode === 'dual_staging' && isLandscape ? 16 : 9.5}
-									transform="rotate(-14)"
-									fill="none"
-									stroke="#38bdf8"
-									strokeWidth="1"
-									strokeDasharray="2 3"
-									opacity="0.3"
+						{isActiveTodo && (
+							<>
+								<div
+									className="pointer-events-none absolute h-11 w-11 rounded-full celestial-aura"
+									style={{
+										background: `radial-gradient(circle, var(--star-${todo.starPoints || 1}) 0%, transparent 70%)`,
+									}}
+									aria-hidden="true"
 								/>
-							</svg>
+								<svg
+									viewBox="-28 -28 56 56"
+									className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+									aria-hidden="true"
+								>
+									<path
+										d="M-13.5,-12 L-13.5,-7 M-16,-9.5 L-11,-9.5"
+										stroke="var(--star-13)"
+										strokeWidth="1"
+										strokeLinecap="round"
+										className="sparkle-1"
+									/>
+									<path
+										d="M12.5,-16 L12.5,-11 M10,-13.5 L15,-13.5"
+										stroke="var(--star-3)"
+										strokeWidth="1"
+										strokeLinecap="round"
+										className="sparkle-2"
+									/>
+									<path
+										d="M-9.5,10 L-9.5,15 M-12,12.5 L-7,12.5"
+										stroke="var(--star-8)"
+										strokeWidth="1"
+										strokeLinecap="round"
+										className="sparkle-3"
+									/>
+								</svg>
+							</>
 						)}
 
 						{isActiveTodo && orbitalState.scannerBeamTarget && !slingshotDrag && (
@@ -377,7 +395,9 @@ export const Journey = ({
 					</svg>
 				)}
 				<div
-					className="h-full w-full flex items-center justify-center pointer-events-none"
+					className={`relative h-full w-full flex items-center justify-center pointer-events-none ${
+						slingshotDrag ? '' : 'starship-idle-glow'
+					}`}
 					style={{
 						transform: `scale(${orbitalState.scale})`,
 						transition: 'transform 100ms ease-out',
@@ -391,6 +411,18 @@ export const Journey = ({
 						}
 						ref={starship}
 					/>
+					{!slingshotDrag && (
+						<>
+							<span
+								className="pointer-events-none absolute top-[20px] left-[13px] h-[2px] w-[2px] rounded-full bg-red-400 nav-strobe-port"
+								aria-hidden="true"
+							/>
+							<span
+								className="pointer-events-none absolute top-[20px] right-[13px] h-[2px] w-[2px] rounded-full bg-emerald-400 nav-strobe-starboard"
+								aria-hidden="true"
+							/>
+						</>
+					)}
 				</div>
 			</div>
 

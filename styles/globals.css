@@ -237,4 +237,92 @@ vercel-live-feedback {
 	}
 }
 
+@keyframes starship-idle-hum {
+	0%, 100% {
+		filter: drop-shadow(0 0 3px rgba(56, 189, 248, 0.45)) drop-shadow(0 3px 6px rgba(56, 189, 248, 0.2));
+	}
+	50% {
+		filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.75)) drop-shadow(0 5px 10px rgba(56, 189, 248, 0.35));
+	}
+}
+
+.starship-idle-glow {
+	animation: starship-idle-hum 3.4s ease-in-out infinite;
+	will-change: filter;
+}
+
+@keyframes nav-beacon-strobe {
+	0%, 86%, 100% {
+		opacity: 0.15;
+		transform: scale(0.85);
+	}
+	90%, 95% {
+		opacity: 1;
+		transform: scale(1.35);
+		box-shadow: 0 0 4px 1.5px currentColor;
+	}
+}
+
+.nav-strobe-port {
+	animation: nav-beacon-strobe 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+	color: #ef4444;
+}
+
+.nav-strobe-starboard {
+	animation: nav-beacon-strobe 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite 0.12s;
+	color: #10b981;
+}
+
+@keyframes celestial-halo-breathe {
+	0%, 100% {
+		opacity: 0.35;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.72;
+		transform: scale(1.08);
+	}
+}
+
+.celestial-aura {
+	animation: celestial-halo-breathe 4.2s ease-in-out infinite;
+	will-change: opacity, transform;
+}
+
+@keyframes sparkle-twinkle {
+	0%, 100% {
+		opacity: 0;
+		transform: scale(0.2) rotate(0deg);
+	}
+	50% {
+		opacity: 0.95;
+		transform: scale(1) rotate(45deg);
+	}
+}
+
+.sparkle-1 {
+	animation: sparkle-twinkle 2.9s ease-in-out infinite 0.3s;
+}
+
+.sparkle-2 {
+	animation: sparkle-twinkle 3.5s ease-in-out infinite 1.5s;
+}
+
+.sparkle-3 {
+	animation: sparkle-twinkle 3.2s ease-in-out infinite 0.8s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.starship-idle-glow,
+	.nav-strobe-port,
+	.nav-strobe-starboard,
+	.celestial-aura,
+	.sparkle-1,
+	.sparkle-2,
+	.sparkle-3 {
+		animation: none;
+	}
+}
+
+
 
