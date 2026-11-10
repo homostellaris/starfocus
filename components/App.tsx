@@ -4,6 +4,7 @@ import { StatusBar, Style } from '@capacitor/status-bar'
 import { IonReactRouter } from '@ionic/react-router'
 import { Redirect, Route } from 'react-router-dom'
 import Home from './pages/Home'
+import Shipyard from './pages/Shipyard'
 import Constellation from './pages/Constellation'
 import Duplicates from './pages/Duplicates'
 import ErrorBoundary from './ErrorBoundary'
@@ -60,6 +61,10 @@ const App = () => {
 						<Route
 							path="/home"
 							render={() => <Home />}
+						/>
+						<Route
+							path="/shipyard"
+							render={() => <Shipyard />}
 						/>
 						<Route
 							path="/duplicates"
