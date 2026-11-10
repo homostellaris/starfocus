@@ -201,10 +201,21 @@ export const Journey = ({
 		isDragging: Boolean(slingshotDrag) || !isOrbitingActiveTodo,
 	})
 
+	const maxTodoPosition = Object.values(todoPositions).reduce(
+		(maximum, position) => Math.max(maximum, position),
+		0,
+	)
+
 	return (
-		<div ref={journeyContainer} className="relative h-full min-w-[56px]">
+		<div
+			ref={journeyContainer}
+			className="relative h-full min-h-full min-w-[56px]"
+			style={{
+				minHeight: maxTodoPosition > 0 ? `${maxTodoPosition + 140}px` : '100%',
+			}}
+		>
 			<Tracjectory
-				className="absolute right-[27px] z-0"
+				className="absolute top-0 bottom-0 right-[27px] z-0 min-h-full"
 				currentPosition={starshipY}
 			/>
 			{todos.map(todo => {

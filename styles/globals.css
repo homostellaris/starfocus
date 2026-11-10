@@ -209,3 +209,9 @@ vercel-live-feedback {
 	padding: 14px 16px 10px 16px !important;
 }
 
+.starship-customizer-popover::part(content) {
+	max-height: 88vh;
+	overflow-y: auto !important;
+	-webkit-overflow-scrolling: touch;
+}
+

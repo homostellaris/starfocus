@@ -26,23 +26,33 @@ export default function Tracjectory({
 			<div
 				className={cn(
 					'bg-[linear-gradient(theme(colors.rose.400),theme(colors.pink.400),theme(colors.fuchsia.400),theme(colors.violet.400),theme(colors.indigo.400),theme(colors.blue.400))]',
-					"[mask-image:repeating-linear-gradient(180deg,black,transparent_10px),url('/black-rectangle-svgrepo-com.svg')] [mask-repeat:no-repeat] [mask-position:left_top,left_top]",
-					orientation === 'vertical' ? 'h-full w-[2px]' : 'w-full h-[2px]',
+					'[mask-image:repeating-linear-gradient(180deg,black_0px,black_4px,transparent_4px,transparent_10px)]',
+					orientation === 'vertical'
+						? 'top-0 bottom-0 min-h-full h-full w-[2px]'
+						: 'left-0 right-0 min-w-full w-full h-[2px]',
 					className,
 				)}
 			></div>
 			<div
 				className={cn(
 					gradientColors[mode],
-					orientation === 'vertical' ? 'h-full w-[2px]' : 'w-full h-[2px]',
-					'transition-transform duration-500 ease-in-out',
+					orientation === 'vertical' ? 'w-[2px] top-0' : 'h-[2px] left-0',
+					'transition-all duration-500 ease-in-out',
 					'shadow-[0_10px_10px]',
 					shadowColor[mode],
 					className,
 				)}
-				style={{
-					transform: `translate(0, calc(calc(100% - ${currentPosition + 20}px) * -1))`,
-				}}
+				style={
+					orientation === 'vertical'
+						? {
+								top: 0,
+								height: `${Math.max(0, currentPosition + 28)}px`,
+						  }
+						: {
+								left: 0,
+								width: `${Math.max(0, currentPosition + 28)}px`,
+						  }
+				}
 			></div>
 		</>
 	)

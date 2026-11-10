@@ -469,48 +469,50 @@ export const TodoLists = ({
 				horizontal="start"
 				vertical="bottom"
 			>
-				<div className="flex flex-col items-center">
-					<IonButton
-						onClick={
-							isScrolling
-								? () => {
-										const y = nextTodoPosition ? nextTodoPosition.top + 32 : 0
-										contentRef.current?.scrollToPoint(undefined, y, 500)
-									}
-								: () => openSearchRef.current?.(false)
-						}
-						shape="round"
+				<div className="flex flex-col lg:flex-row items-center lg:items-end gap-1 lg:-translate-x-[calc(100%-56px)]">
+					<div className="flex flex-col lg:flex-row items-center gap-1">
+						<IonButton
+							onClick={
+								isScrolling
+									? () => {
+											const y = nextTodoPosition ? nextTodoPosition.top + 32 : 0
+											contentRef.current?.scrollToPoint(undefined, y, 500)
+										}
+									: () => openSearchRef.current?.(false)
+							}
+							shape="round"
+							size="small"
+						>
+							<IonIcon slot="icon-only" icon={isScrolling ? rocketSharp : searchSharp} />
+						</IonButton>
+						<IonButton
+							id="view-menu-button"
+							onClick={
+								isScrolling
+									? () =>
+											document
+												.getElementById('database')
+												?.scrollIntoView({ behavior: 'smooth' })
+									: () => menuController.toggle('start')
+							}
+							shape="round"
+							size="small"
+							color="secondary"
+						>
+							<IonIcon
+								slot="icon-only"
+								icon={isScrolling ? snowSharp : filterSharp}
+							></IonIcon>
+						</IonButton>
+					</div>
+					<IonFabButton
+						color="success"
+						onClick={openCreateTodoModal}
 						size="small"
 					>
-						<IonIcon slot="icon-only" icon={isScrolling ? rocketSharp : searchSharp} />
-					</IonButton>
-					<IonButton
-						id="view-menu-button"
-						onClick={
-							isScrolling
-								? () =>
-										document
-											.getElementById('database')
-											?.scrollIntoView({ behavior: 'smooth' })
-								: () => menuController.toggle('start')
-						}
-						shape="round"
-						size="small"
-						color="secondary"
-					>
-						<IonIcon
-							slot="icon-only"
-							icon={isScrolling ? snowSharp : filterSharp}
-						></IonIcon>
-					</IonButton>
+						<IonIcon icon={add}></IonIcon>
+					</IonFabButton>
 				</div>
-				<IonFabButton
-					color="success"
-					onClick={openCreateTodoModal}
-					size="small"
-				>
-					<IonIcon icon={add}></IonIcon>
-				</IonFabButton>
 			</IonFab>
 			{isArcadeMode && (
 				<div
@@ -548,10 +550,10 @@ export const TodoLists = ({
 						: 'h-full opacity-100 transition-opacity duration-300'
 				}
 			>
-			<IonGrid className="h-full ion-no-padding">
-				<IonRow className="h-full">
+			<IonGrid className="h-full min-h-full ion-no-padding">
+				<IonRow className="h-full min-h-full">
 					<IonCol
-						className="relative"
+						className="relative h-full min-h-full"
 						size="auto"
 						sizeMd="3"
 						sizeLg="3"

@@ -2,7 +2,6 @@
 
 import {
 	IonButton,
-	IonContent,
 	IonIcon,
 	IonPopover,
 } from '@ionic/react'
@@ -81,17 +80,9 @@ export function StarshipCustomizerPopover({
 				} as React.CSSProperties
 			}
 		>
-			<IonContent
-				className="text-neutral-100"
-				style={
-					{
-						'--background': '#0b0f17',
-						'--padding-top': '16px',
-						'--padding-bottom': '24px',
-						'--padding-start': '18px',
-						'--padding-end': '18px',
-					} as React.CSSProperties
-				}
+			<div
+				className="overflow-y-auto max-h-[85vh] overscroll-contain text-neutral-100 p-4 sm:p-5"
+				style={{ background: '#0b0f17' }}
 			>
 				{/* Header */}
 				<div className="flex items-start justify-between gap-3 border-b border-neutral-800 pb-3 mb-4">
@@ -414,7 +405,7 @@ export function StarshipCustomizerPopover({
 						})}
 					</div>
 				</div>
-			</IonContent>
+			</div>
 		</IonPopover>
 	)
 }
