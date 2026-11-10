@@ -4,6 +4,7 @@ import {
 	useIonToast,
 } from '@ionic/react'
 import { HookOverlayOptions } from '@ionic/react/dist/types/hooks/HookOverlayOptions'
+import { createRoot, Root } from 'react-dom/client'
 import { Todo, db } from '../db'
 import { markdownExportService } from '../export/markdownExportService'
 import { useEditTodoModal } from './edit/useEditTodoModal'
@@ -16,21 +17,39 @@ import {
 import { usePostHog } from 'posthog-js/react'
 import { generateFilename } from '../export/markdown'
 import { useObsidian } from '../obsidian/useObsidian'
+import { TodoActionSheetHeader } from './TodoActionSheetHeader'
 
 // TODO: Make this so that todo is never null, action sheet doesn't make sense to be open if its null
 export function useTodoActionSheet() {
 	const posthog = usePostHog()
 	const { isConfigured: isObsidianConfigured, openNote: openObsidianNote } =
 		useObsidian()
-	// Using controller action sheet rather than inline because I was re-inventing what it was doing allowing dynamic options to be passed easily
 	const [presentActionSheet, dismissActionSheet] = useIonActionSheet()
 	const [presentToast] = useIonToast()
-	// Using controller modal rather than inline because the trigger prop doesn't work with an ID on a controller-based action sheet button
 	const [presentEditTodoModal] = useEditTodoModal()
 
 	return [
-		(todo: Todo, options?: ActionSheetOptions & HookOverlayOptions) => {
+		async (todo: Todo, options?: ActionSheetOptions & HookOverlayOptions) => {
+			const starRole = todo.starRole
+				? await db.starRoles.get(todo.starRole)
+				: undefined
+
+			let headerRoot: Root | null = null
+
+			const mountRichHeader = (actionSheetElement: Element | null) => {
+				if (!actionSheetElement || headerRoot) return
+				const titleElement =
+					actionSheetElement.querySelector('.action-sheet-title')
+				if (!titleElement) return
+				titleElement.textContent = ''
+				headerRoot = createRoot(titleElement)
+				headerRoot.render(
+					<TodoActionSheetHeader todo={todo} starRole={starRole} />,
+				)
+			}
+
 			presentActionSheet({
+				...options,
 				buttons: [
 					...(isObsidianConfigured
 						? [
@@ -105,7 +124,23 @@ export function useTodoActionSheet() {
 					...(options?.buttons || []),
 				],
 				header: todo.title,
+				cssClass: `todo-rich-action-sheet ${options?.cssClass || ''}`.trim(),
 				id: 'todo-action-sheet',
+				onWillPresent: event => {
+					mountRichHeader(event.target as Element)
+					options?.onWillPresent?.(event)
+				},
+				onDidPresent: event => {
+					mountRichHeader(event.target as Element)
+					options?.onDidPresent?.(event)
+				},
+				onDidDismiss: event => {
+					if (headerRoot) {
+						headerRoot.unmount()
+						headerRoot = null
+					}
+					options?.onDidDismiss?.(event)
+				},
 			})
 		},
 		dismissActionSheet,

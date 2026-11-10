@@ -7,6 +7,7 @@ import { useStarPointsTheme } from '../theme/starPointsThemes'
 import useTodoContext from '../todos/TodoContext'
 import Tracjectory from './Trajectory'
 import { useStarshipYPosition } from './useStarshipYPosition'
+import { StarshipCustomizerPopover } from './StarshipCustomizerPopover'
 
 export const Journey = ({
 	commonAncestor,
@@ -22,6 +23,7 @@ export const Journey = ({
 	const { themeId } = useStarPointsTheme()
 	const journeyContainer = useRef<HTMLDivElement>(null)
 	const [todoPositions, setTodoPositions] = useState<Record<string, number>>({})
+	const didLaunchSlingshotRef = useRef(false)
 
 	const {
 		nextTodo: {
@@ -106,12 +108,22 @@ export const Journey = ({
 			slingshotDragRef.current = null
 			setSlingshotDrag(null)
 
-			const impulse = calculateSlingshotImpulse(
-				{ startX: activeDrag.startX, startY: activeDrag.startY },
-				{ currentX: event.clientX, currentY: event.clientY },
+			const distance = Math.hypot(
+				event.clientX - activeDrag.startX,
+				event.clientY - activeDrag.startY,
 			)
-			if (impulse) {
-				onLaunchArcade?.({ vx: impulse.vx, vy: impulse.vy })
+
+			if (distance >= 18) {
+				const impulse = calculateSlingshotImpulse(
+					{ startX: activeDrag.startX, startY: activeDrag.startY },
+					{ currentX: event.clientX, currentY: event.clientY },
+				)
+				if (impulse) {
+					didLaunchSlingshotRef.current = true
+					onLaunchArcade?.({ vx: impulse.vx, vy: impulse.vy })
+				}
+			} else if (distance < 12) {
+				setIsCustomizerOpen(true)
 			}
 		}
 
@@ -127,10 +139,16 @@ export const Journey = ({
 	}, [onLaunchArcade])
 
 	const dragDeltaX = slingshotDrag
-		? Math.max(-42, Math.min(42, (slingshotDrag.currentX - slingshotDrag.startX) * 0.35))
+		? Math.max(
+				-42,
+				Math.min(42, (slingshotDrag.currentX - slingshotDrag.startX) * 0.35),
+			)
 		: 0
 	const dragDeltaY = slingshotDrag
-		? Math.max(-42, Math.min(42, (slingshotDrag.currentY - slingshotDrag.startY) * 0.35))
+		? Math.max(
+				-42,
+				Math.min(42, (slingshotDrag.currentY - slingshotDrag.startY) * 0.35),
+			)
 		: 0
 	const activeImpulse = slingshotDrag
 		? calculateSlingshotImpulse(
@@ -175,7 +193,17 @@ export const Journey = ({
 				id="starship"
 				data-testid="home-starship"
 				data-slingshot-ready={String(Boolean(activeImpulse))}
-				title="Pull back & release to slingshot into Arcade Mode (or double-click / press G)"
+				title="Tap to customize ship & theme. Pull back & release to slingshot into Arcade Mode (or press G)"
+				onClick={() => {
+					if (didLaunchSlingshotRef.current) {
+						didLaunchSlingshotRef.current = false
+						return
+					}
+					const popover = document.getElementById(
+						'starship-customizer-popover',
+					) as any
+					popover?.present()
+				}}
 				onDoubleClick={() => onLaunchArcade?.()}
 				onDragStart={event => event.preventDefault()}
 				onPointerDown={event => {
@@ -189,7 +217,7 @@ export const Journey = ({
 					slingshotDragRef.current = initialDrag
 					setSlingshotDrag(initialDrag)
 				}}
-				className={`absolute right-0 z-10 h-[56px] w-[56px] cursor-grab touch-none select-none active:cursor-grabbing ${
+				className={`absolute right-0 z-10 h-[56px] w-[56px] cursor-pointer touch-none select-none active:cursor-grabbing ${
 					slingshotDrag ? '' : 'transition-transform duration-500 ease-in-out'
 				}`}
 				style={{
@@ -229,6 +257,8 @@ export const Journey = ({
 					ref={starship}
 				/>
 			</div>
+
+			<StarshipCustomizerPopover trigger="starship" />
 		</div>
 	)
 }
