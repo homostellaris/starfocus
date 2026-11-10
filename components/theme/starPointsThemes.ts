@@ -14,6 +14,7 @@ export type StarPointsThemeId =
 	| 'outrun_synthwave'
 	| 'bioluminescent_abyss'
 	| 'solar_forge'
+	| (string & {})
 
 export type StarPointTier = 1 | 2 | 3 | 5 | 8 | 13
 
@@ -208,8 +209,18 @@ export function isValidStarPointsThemeId(
 ): candidate is StarPointsThemeId {
 	return (
 		typeof candidate === 'string' &&
-		STAR_POINTS_THEME_IDS.includes(candidate as StarPointsThemeId)
+		(STAR_POINTS_THEME_IDS.includes(candidate as StarPointsThemeId) ||
+			Boolean(STAR_POINTS_THEMES[candidate as StarPointsThemeId]))
 	)
+}
+
+export function registerRuntimeStarPointsTheme(
+	theme: StarPointsThemeDefinition,
+): void {
+	STAR_POINTS_THEMES[theme.id] = theme
+	if (!STAR_POINTS_THEME_IDS.includes(theme.id)) {
+		STAR_POINTS_THEME_IDS.push(theme.id)
+	}
 }
 
 export function getActiveStarPointsThemeId(): StarPointsThemeId {
@@ -259,14 +270,23 @@ export function applyStarPointsThemeToDocument(
 		? themeId
 		: 'redshift'
 	const theme = STAR_POINTS_THEMES[resolvedId]
+	if (!theme) return
+	applyThemeColorsToDocument(theme.starColors, resolvedId)
+}
+
+export function applyThemeColorsToDocument(
+	starColors: Record<StarPointTier, string>,
+	themeId: string = 'custom',
+): void {
+	if (typeof document === 'undefined') return
 	const root = document.documentElement
-	root.setAttribute('data-star-theme', resolvedId)
-	root.style.setProperty('--star-1', theme.starColors[1])
-	root.style.setProperty('--star-2', theme.starColors[2])
-	root.style.setProperty('--star-3', theme.starColors[3])
-	root.style.setProperty('--star-5', theme.starColors[5])
-	root.style.setProperty('--star-8', theme.starColors[8])
-	root.style.setProperty('--star-13', theme.starColors[13])
+	root.setAttribute('data-star-theme', themeId)
+	root.style.setProperty('--star-1', starColors[1])
+	root.style.setProperty('--star-2', starColors[2])
+	root.style.setProperty('--star-3', starColors[3])
+	root.style.setProperty('--star-5', starColors[5])
+	root.style.setProperty('--star-8', starColors[8])
+	root.style.setProperty('--star-13', starColors[13])
 }
 
 export function snapToStarPointTier(starPoints?: number): StarPointTier {

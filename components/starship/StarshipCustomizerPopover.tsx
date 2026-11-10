@@ -49,13 +49,13 @@ export function StarshipCustomizerPopover({
 		themeId,
 	)
 
-	const handleNavigateToShipyard = (event: React.MouseEvent) => {
+	const handleNavigateToLoadout = (event: React.MouseEvent) => {
 		const popover = (event.target as HTMLElement).closest('ion-popover')
 		if (popover && typeof (popover as any).dismiss === 'function') {
 			;(popover as any).dismiss()
 		}
 		onDismiss?.()
-		history.push('/shipyard')
+		history.push('/loadout')
 	}
 
 	return (
@@ -112,7 +112,7 @@ export function StarshipCustomizerPopover({
 					expand="block"
 					size="small"
 					color="primary"
-					onClick={handleNavigateToShipyard}
+					onClick={handleNavigateToLoadout}
 					className="font-semibold tracking-wide m-0"
 				>
 					<IonIcon icon={constructSharp} slot="start" />

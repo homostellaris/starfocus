@@ -4,7 +4,7 @@ import { StatusBar, Style } from '@capacitor/status-bar'
 import { IonReactRouter } from '@ionic/react-router'
 import { Redirect, Route } from 'react-router-dom'
 import Home from './pages/Home'
-import Shipyard from './pages/Shipyard'
+import Loadout from './pages/Loadout'
 import Constellation from './pages/Constellation'
 import Duplicates from './pages/Duplicates'
 import ErrorBoundary from './ErrorBoundary'
@@ -13,6 +13,7 @@ import Workbench from './pages/Workbench'
 import DevHub from './pages/DevHub'
 import DevComponentsList from './pages/DevComponentsList'
 import DevTheme from './pages/DevTheme'
+import DevThemeBuilder from './pages/DevThemeBuilder'
 import { db } from './db'
 import { useEffect } from 'react'
 import todoRepository from './todos/repository'
@@ -63,9 +64,15 @@ const App = () => {
 							render={() => <Home />}
 						/>
 						<Route
-							path="/shipyard"
-							render={() => <Shipyard />}
+							path="/loadout"
+							render={() => <Loadout />}
 						/>
+						<Route
+							exact
+							path="/shipyard"
+						>
+							<Redirect to="/loadout" />
+						</Route>
 						<Route
 							path="/duplicates"
 							render={() => <Duplicates />}
@@ -99,6 +106,17 @@ const App = () => {
 							path="/dev/theme"
 							render={() => <DevTheme />}
 						/>
+						<Route
+							exact
+							path="/dev/themes/builder"
+							render={() => <DevThemeBuilder />}
+						/>
+						<Route
+							exact
+							path="/dev/theme/builder"
+						>
+							<Redirect to="/dev/themes/builder" />
+						</Route>
 						<Route
 							exact
 							path="/dev/assets"

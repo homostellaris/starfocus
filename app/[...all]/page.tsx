@@ -3,6 +3,7 @@ import App from './App'
 export async function generateStaticParams() {
 	return [
 		{ all: ['home'] },
+		{ all: ['loadout'] },
 		{ all: ['shipyard'] },
 		{ all: ['duplicates'] },
 		{ all: ['constellation'] },
@@ -26,6 +27,8 @@ export async function generateStaticParams() {
 		{ all: ['dev', 'components', 'starship'] },
 		{ all: ['dev', 'components', 'procedural-assets'] },
 		{ all: ['dev', 'theme'] },
+		{ all: ['dev', 'themes', 'builder'] },
+		{ all: ['dev', 'theme', 'builder'] },
 		{ all: ['dev', 'assets'] },
 	]
 }

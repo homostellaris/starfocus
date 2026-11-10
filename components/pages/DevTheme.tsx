@@ -123,12 +123,25 @@ export default function DevTheme() {
 								Design System & Tokens
 							</span>
 						</div>
-						<h1 className="text-2xl font-bold tracking-tight text-white">
-							StarFocus Theme & Palettes
-						</h1>
-						<p className="mt-1 text-sm text-neutral-400">
-							Experiment with whole-app Star Point theme palettes. Switching a theme updates the 1–13 Star Point color scale, every celestial body’s primary hue, and the starship fleet livery across the app.
-						</p>
+						<div className="flex flex-wrap items-center justify-between gap-4">
+							<div>
+								<h1 className="text-2xl font-bold tracking-tight text-white">
+									StarFocus Theme & Palettes
+								</h1>
+								<p className="mt-1 text-sm text-neutral-400">
+									Experiment with whole-app Star Point theme palettes. Switching a theme updates the 1–13 Star Point color scale, every celestial body’s primary hue, and the starship fleet livery across the app.
+								</p>
+							</div>
+							<IonButton
+								routerLink="/dev/themes/builder"
+								color="secondary"
+								size="default"
+								className="font-semibold shrink-0"
+							>
+								<IonIcon icon={colorPaletteSharp} slot="start" />
+								Open Theme Builder
+							</IonButton>
+						</div>
 					</div>
 
 					{/* Interactive Whole-App Theme Switcher */}
