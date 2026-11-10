@@ -123,7 +123,10 @@ export const Journey = ({
 					onLaunchArcade?.({ vx: impulse.vx, vy: impulse.vy })
 				}
 			} else if (distance < 12) {
-				setIsCustomizerOpen(true)
+				const popover = document.getElementById(
+					'starship-customizer-popover',
+				) as any
+				popover?.present()
 			}
 		}
 

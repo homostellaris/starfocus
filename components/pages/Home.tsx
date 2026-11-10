@@ -553,6 +553,7 @@ export const TodoLists = ({
 					<IonCol
 						className="relative"
 						size="auto"
+						sizeMd="3"
 						sizeLg="3"
 					>
 						<Journey
@@ -562,7 +563,10 @@ export const TodoLists = ({
 							activeTodoId={data?.wayfinder?.[0]?.id}
 						/>
 					</IonCol>
-					<IonCol sizeLg="6">
+					<IonCol
+						sizeMd="6"
+						sizeLg="6"
+					>
 						{/* TODO: Use suspense instead */}
 						{loading ? (
 							<div className="flex items-center justify-center h-full">
@@ -972,6 +976,7 @@ export const TodoLists = ({
 					</IonCol>
 					<IonCol
 						size="0"
+						sizeMd="3"
 						sizeLg="3"
 					>
 						{focusedStarRole && (

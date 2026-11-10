@@ -154,9 +154,9 @@ export function generateProceduralPlanetSpec({
 
 	const maxCraterRadialOffset =
 		celestialClass === 'asteroid'
-			? 13
+			? 11
 			: celestialClass === 'dwarf_planet'
-				? 19
+				? 16
 				: 22
 
 	const craters: CraterStamp[] = Array.from({ length: craterCount }, () => {
@@ -167,8 +167,10 @@ export function generateProceduralPlanetSpec({
 			centerY: Math.sin(angle) * distance,
 			radius:
 				celestialClass === 'asteroid'
-					? 3 + randomGenerator() * 4.5
-					: 3.5 + randomGenerator() * 6,
+					? 2.5 + randomGenerator() * 3.5
+					: celestialClass === 'dwarf_planet'
+						? 3 + randomGenerator() * 4.5
+						: 3.5 + randomGenerator() * 6,
 			depth: 0.45 + randomGenerator() * 0.45,
 		}
 	})
@@ -329,12 +331,12 @@ function renderPlanetPixels(
 
 	const baseRadius =
 		spec.celestialClass === 'asteroid'
-			? 22
+			? 18
 			: spec.celestialClass === 'dwarf_planet'
-				? 29
+				? 25
 				: spec.celestialClass === 'terrestrial'
-					? 38
-					: 36
+					? 33
+					: 40
 
 	const darkOutlineRgb = { red: 9, green: 9, blue: 11 }
 	const deepShadowRgb = parseHexToRgb(spec.palette.deepShadow)
@@ -486,8 +488,8 @@ function renderStarPixels(
 	const resolution = PLANET_BITMAP_RESOLUTION
 	const buffer = new Uint8ClampedArray(resolution * resolution * 4)
 	const center = resolution / 2
-	const starRadius = 35
-	const coronaOuterRadius = 60
+	const starRadius = 46
+	const coronaOuterRadius = 61
 
 	const midtoneRgb = parseHexToRgb(spec.palette.midtone)
 	const highlightRgb = parseHexToRgb(spec.palette.highlight)
@@ -594,10 +596,10 @@ function renderBlackHolePixels(
 	const buffer = new Uint8ClampedArray(resolution * resolution * 4)
 	const center = resolution / 2
 
-	const horizonRadius = 19.5
-	const photonRingInner = 19.8
-	const photonRingOuter = 23.2
-	const lensedHaloOuter = 35
+	const horizonRadius = 32
+	const photonRingInner = 32.5
+	const photonRingOuter = 37.5
+	const lensedHaloOuter = 53
 
 	const voidBlackRgb = { red: 3, green: 3, blue: 8 }
 	const deepShadowRgb = parseHexToRgb(spec.palette.deepShadow)
@@ -738,15 +740,15 @@ function evaluateAccretionDiskSample({
 	temperature: number
 	alpha: number
 } {
-	const aspectRatio = 3.8
+	const aspectRatio = 3.6
 	const diskWarpY =
 		rotatedY < 0
 			? rotatedY * 0.76 -
-				Math.exp(-Math.abs(rotatedX) / 22) * 4.5
+				Math.exp(-Math.abs(rotatedX) / 24) * 4.5
 			: rotatedY * 1.05
 	const ellipticalRadius = Math.hypot(rotatedX, diskWarpY * aspectRatio)
-	const innerDisk = horizonRadius * 1.15
-	const outerDisk = 60
+	const innerDisk = horizonRadius * 1.12
+	const outerDisk = 62
 
 	if (ellipticalRadius < innerDisk || ellipticalRadius > outerDisk) {
 		return {
