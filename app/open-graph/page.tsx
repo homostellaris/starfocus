@@ -1,3 +1,5 @@
+'use client'
+
 import Starship from '../../components/common/Starship'
 
 export default function Page() {
