@@ -68,22 +68,24 @@ export function TodoActionSheetHeader({
 
 			<span
 				data-testid="todo-action-sheet-title"
-				className="text-base font-medium leading-snug text-neutral-100 truncate"
+				className="text-base font-medium leading-snug text-neutral-100 flex-1 min-w-0 truncate"
 			>
 				{todo.title}
 			</span>
 
 			{starRole ? (
-				<StarRoleIcon
-					data-testid="todo-action-sheet-star-role"
-					starRole={starRole}
-					className="text-base shrink-0 opacity-90"
-					style={{
-						margin: 0,
-						marginInlineStart: 0,
-						marginInlineEnd: 0,
-					}}
-				/>
+				<div className="shrink-0 ml-auto flex items-center justify-center">
+					<StarRoleIcon
+						data-testid="todo-action-sheet-star-role"
+						starRole={starRole}
+						className="text-base shrink-0 opacity-90"
+						style={{
+							margin: 0,
+							marginInlineStart: 0,
+							marginInlineEnd: 0,
+						}}
+					/>
+				</div>
 			) : null}
 		</div>
 	)

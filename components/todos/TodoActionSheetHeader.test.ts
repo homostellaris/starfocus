@@ -19,9 +19,17 @@ describe('TodoActionSheetHeader', () => {
 		const element = TodoActionSheetHeader({ todo, starRole })
 		expect(element.props['data-testid']).toBe('todo-action-sheet-header')
 
-		// Children contain celestial body container and title / meta container
+		// Children contain celestial body, star points, title, and right-aligned star role container
 		const children = element.props.children
 		expect(children).toBeDefined()
+		const titleChild = children.find(
+			(child: any) => child?.props?.['data-testid'] === 'todo-action-sheet-title',
+		)
+		expect(titleChild.props.className).toContain('flex-1')
+		expect(titleChild.props.className).toContain('min-w-0')
+
+		const rightContainer = children[children.length - 1]
+		expect(rightContainer.props.className).toContain('ml-auto')
 	})
 
 	test('handles todo without starRole or zero starPoints safely', () => {
