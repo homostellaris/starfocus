@@ -21,6 +21,9 @@ import {
 	STAR_POINT_TIERS,
 	useStarPointsTheme,
 } from '../theme/starPointsThemes'
+import {
+	FLIGHT_STAGING_MODES,
+} from './orbitalMechanics'
 import { useStarshipCustomization } from './useStarshipCustomization'
 
 const CELESTIAL_TIER_DETAILS: Record<
@@ -49,8 +52,14 @@ export function StarshipCustomizerPopover({
 	trigger,
 }: StarshipCustomizerPopoverProps) {
 	const { themeId, theme, setThemeId } = useStarPointsTheme()
-	const { archetypeId, skinId, setArchetypeId, setSkinId } =
-		useStarshipCustomization()
+	const {
+		archetypeId,
+		skinId,
+		stagingMode,
+		setArchetypeId,
+		setSkinId,
+		setStagingMode,
+	} = useStarshipCustomization()
 
 	return (
 		<IonPopover
@@ -305,7 +314,7 @@ export function StarshipCustomizerPopover({
 				</div>
 
 				{/* Section 4: Starship Skin Selection */}
-				<div>
+				<div className="mb-5">
 					<div className="flex items-baseline justify-between mb-2">
 						<h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-300">
 							Hull Livery / Skin
@@ -349,6 +358,57 @@ export function StarshipCustomizerPopover({
 									}`}
 								>
 									{label}
+								</button>
+							)
+						})}
+					</div>
+				</div>
+
+				{/* Section 5: Planetary Staging Mode (Showcasing all 4 concepts) */}
+				<div>
+					<div className="flex items-baseline justify-between mb-2">
+						<h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-300">
+							Planetary Flight Staging
+						</h3>
+						<span className="text-[11px] text-neutral-400">
+							Orbital interaction style
+						</span>
+					</div>
+
+					<div
+						data-testid="flight-staging-selector"
+						className="grid grid-cols-1 sm:grid-cols-2 gap-2"
+					>
+						{FLIGHT_STAGING_MODES.map(mode => {
+							const isSelected = stagingMode === mode.id
+							return (
+								<button
+									key={mode.id}
+									type="button"
+									data-testid={`staging-mode-${mode.id}`}
+									onClick={() => setStagingMode(mode.id)}
+									className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all ${
+										isSelected
+											? 'bg-neutral-800/90 border-sky-400 shadow-md ring-1 ring-sky-400/30'
+											: 'bg-neutral-950/60 border-neutral-800/80 hover:bg-neutral-900/60 hover:border-neutral-700'
+									}`}
+								>
+									<div className="flex items-center justify-between w-full mb-1">
+										<span className="text-xs font-semibold text-white">
+											{mode.name}
+										</span>
+										{isSelected && (
+											<span className="text-[10px] font-medium text-sky-400 bg-sky-950/80 px-1.5 py-0.2 rounded border border-sky-500/30">
+												Active
+											</span>
+										)}
+									</div>
+									<div className="text-[10px] text-sky-300 font-mono mb-1">
+										{mode.tagline}
+									</div>
+									<div className="text-[11px] text-neutral-400 leading-tight">
+										{mode.description}
+									</div>
 								</button>
 							)
 						})}

@@ -5,9 +5,11 @@ import Starship from '../common/Starship'
 import type { Todo } from '../db'
 import { useStarPointsTheme } from '../theme/starPointsThemes'
 import useTodoContext from '../todos/TodoContext'
-import Tracjectory from './Trajectory'
-import { useStarshipYPosition } from './useStarshipYPosition'
+import { computeOrbitalState } from './orbitalMechanics'
 import { StarshipCustomizerPopover } from './StarshipCustomizerPopover'
+import Tracjectory from './Trajectory'
+import { useStarshipCustomization } from './useStarshipCustomization'
+import { useStarshipYPosition } from './useStarshipYPosition'
 
 export const Journey = ({
 	commonAncestor,
@@ -21,9 +23,38 @@ export const Journey = ({
 	activeTodoId?: string
 }) => {
 	const { themeId } = useStarPointsTheme()
+	const { stagingMode } = useStarshipCustomization()
 	const journeyContainer = useRef<HTMLDivElement>(null)
 	const [todoPositions, setTodoPositions] = useState<Record<string, number>>({})
+	const [elapsedSeconds, setElapsedSeconds] = useState(0)
+	const [isLandscape, setIsLandscape] = useState(false)
 	const didLaunchSlingshotRef = useRef(false)
+
+	useEffect(() => {
+		if (typeof window === 'undefined') return
+
+		const updateOrientation = () => {
+			setIsLandscape(window.innerWidth >= 840)
+		}
+		updateOrientation()
+		window.addEventListener('resize', updateOrientation)
+
+		let animationFrameIdentifier: number
+		const startTime = performance.now()
+
+		const tick = (currentTime: number) => {
+			if (!document.hidden) {
+				setElapsedSeconds((currentTime - startTime) / 1000)
+			}
+			animationFrameIdentifier = requestAnimationFrame(tick)
+		}
+		animationFrameIdentifier = requestAnimationFrame(tick)
+
+		return () => {
+			cancelAnimationFrame(animationFrameIdentifier)
+			window.removeEventListener('resize', updateOrientation)
+		}
+	}, [])
 
 	const {
 		nextTodo: {
@@ -160,6 +191,16 @@ export const Journey = ({
 			)
 		: null
 
+	const isOrbitingActiveTodo =
+		Boolean(activeTodoId) && todoPositions[activeTodoId as string] !== undefined
+
+	const orbitalState = computeOrbitalState({
+		mode: isOrbitingActiveTodo ? stagingMode : 'kepler_orbit',
+		elapsedSeconds,
+		isLandscape,
+		isDragging: Boolean(slingshotDrag) || !isOrbitingActiveTodo,
+	})
+
 	return (
 		<div ref={journeyContainer} className="relative h-full min-w-[56px]">
 			<Tracjectory
@@ -169,12 +210,14 @@ export const Journey = ({
 			{todos.map(todo => {
 				const position = todoPositions[todo.id]
 				if (position === undefined) return null
+				const isActiveTodo = todo.id === activeTodoId
+
 				return (
 					<div
 						key={todo.id}
 						data-testid={`gutter-celestial-body-${todo.id}`}
 						data-todo-id={todo.id}
-						className="pointer-events-none absolute right-0 z-0 flex h-[56px] w-[56px] items-center justify-center transition-transform duration-500 ease-in-out"
+						className="pointer-events-none absolute right-0 z-[2] flex h-[56px] w-[56px] items-center justify-center transition-transform duration-500 ease-in-out"
 						style={{
 							transform: `translateY(${position}px)`,
 						}}
@@ -189,6 +232,46 @@ export const Journey = ({
 								starRole: todo.starRole,
 							}}
 						/>
+
+						{isActiveTodo && orbitalState.showOrbitGuide && !slingshotDrag && (
+							<svg
+								viewBox="-28 -28 56 56"
+								className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+								aria-hidden="true"
+							>
+								<ellipse
+									cx="0"
+									cy="0"
+									rx={stagingMode === 'dual_staging' && isLandscape ? 48 : 23.5}
+									ry={stagingMode === 'dual_staging' && isLandscape ? 16 : 9.5}
+									transform="rotate(-14)"
+									fill="none"
+									stroke="#38bdf8"
+									strokeWidth="1"
+									strokeDasharray="2 3"
+									opacity="0.3"
+								/>
+							</svg>
+						)}
+
+						{isActiveTodo && orbitalState.scannerBeamTarget && !slingshotDrag && (
+							<svg
+								viewBox="-28 -28 56 56"
+								className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+								aria-hidden="true"
+							>
+								<line
+									x1={orbitalState.offsetX}
+									y1={orbitalState.offsetY}
+									x2="0"
+									y2="0"
+									stroke="#38bdf8"
+									strokeWidth="1.5"
+									strokeDasharray="3 2"
+									opacity="0.75"
+								/>
+							</svg>
+						)}
 					</div>
 				)
 			})}
@@ -196,6 +279,8 @@ export const Journey = ({
 				id="starship"
 				data-testid="home-starship"
 				data-slingshot-ready={String(Boolean(activeImpulse))}
+				data-orbit-behind={String(orbitalState.isBehind)}
+				data-flight-staging={stagingMode}
 				title="Tap to customize ship & theme. Pull back & release to slingshot into Arcade Mode (or press G)"
 				onClick={() => {
 					if (didLaunchSlingshotRef.current) {
@@ -220,11 +305,12 @@ export const Journey = ({
 					slingshotDragRef.current = initialDrag
 					setSlingshotDrag(initialDrag)
 				}}
-				className={`absolute right-0 z-10 h-[56px] w-[56px] cursor-pointer touch-none select-none active:cursor-grabbing ${
-					slingshotDrag ? '' : 'transition-transform duration-500 ease-in-out'
-				}`}
+				className={`absolute right-0 h-[56px] w-[56px] cursor-pointer touch-none select-none active:cursor-grabbing ${
+					slingshotDrag ? '' : 'transition-transform duration-75 ease-out'
+				} ${orbitalState.isBehind ? 'z-0' : 'z-10'}`}
 				style={{
-					transform: `translate(${dragDeltaX}px, ${starshipY + dragDeltaY}px)`,
+					transform: `translate(${dragDeltaX + orbitalState.offsetX}px, ${starshipY + dragDeltaY + orbitalState.offsetY}px)`,
+					opacity: orbitalState.opacity,
 				}}
 			>
 				{slingshotDrag && (
@@ -254,11 +340,22 @@ export const Journey = ({
 						)}
 					</svg>
 				)}
-				<Starship
-					className={activeImpulse ? '' : 'rotate-180'}
-					rotationDegrees={activeImpulse ? activeImpulse.angleDegrees : undefined}
-					ref={starship}
-				/>
+				<div
+					className="h-full w-full flex items-center justify-center pointer-events-none"
+					style={{
+						transform: `scale(${orbitalState.scale})`,
+						transition: 'transform 100ms ease-out',
+					}}
+				>
+					<Starship
+						rotationDegrees={
+							activeImpulse
+								? activeImpulse.angleDegrees
+								: orbitalState.headingDegrees
+						}
+						ref={starship}
+					/>
+				</div>
 			</div>
 
 			<StarshipCustomizerPopover trigger="starship" />

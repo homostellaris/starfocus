@@ -31,6 +31,7 @@ import type {
 } from '../assets/types'
 import { Header } from '../common/Header'
 import type { StarRole, Todo } from '../db'
+import OrbitalStagingShowcase from '../starship/OrbitalStagingShowcase'
 
 export interface TestTodoShowcaseItem {
 	todo: Todo
@@ -313,6 +314,8 @@ export default function DevProceduralAssets() {
 							</div>
 						</IonCardContent>
 					</IonCard>
+
+					<OrbitalStagingShowcase />
 				</div>
 			</IonContent>
 		</IonPage>
