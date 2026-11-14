@@ -22,9 +22,9 @@ export const Journey = ({
 	)
 
 	return (
-		<div className="min-w-[56px]">
+		<div className="relative h-full min-h-full min-w-[56px]">
 			<Tracjectory
-				className="absolute right-[27px]"
+				className="absolute top-0 bottom-0 right-[27px] z-0 min-h-full"
 				currentPosition={starshipY}
 			/>
 			<div

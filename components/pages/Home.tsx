@@ -235,7 +235,7 @@ export const TodoLists = ({
 			db.visits.where('todoId').anyOf(wayfinderTodoIds).toArray(),
 		]).then(([wayfinderTodos, visits]) => {
 			const hasOrphanedWayfinderEntries = wayfinderTodos.some(
-				todo => todo === undefined,
+				todo => todo === undefined || Boolean(todo.completedAt),
 			)
 			if (hasOrphanedWayfinderEntries) {
 				setTimeout(() => {
@@ -439,16 +439,21 @@ export const TodoLists = ({
 					<IonIcon icon={add}></IonIcon>
 				</IonFabButton>
 			</IonFab>
-			<IonGrid className="h-full ion-no-padding">
-				<IonRow className="h-full">
+			<IonGrid className="h-full min-h-full ion-no-padding">
+				<IonRow className="h-full min-h-full flex-nowrap">
 					<IonCol
-						className="relative"
+						className="relative h-full min-h-full shrink-0"
 						size="auto"
+						sizeMd="3"
 						sizeLg="3"
 					>
 						<Journey commonAncestor={contentRef} />
 					</IonCol>
-					<IonCol sizeLg="6">
+					<IonCol
+						className="min-w-0 flex-1"
+						sizeMd="6"
+						sizeLg="6"
+					>
 						{/* TODO: Use suspense instead */}
 						{loading ? (
 							<div className="flex items-center justify-center h-full">
@@ -857,7 +862,9 @@ export const TodoLists = ({
 						)}
 					</IonCol>
 					<IonCol
+						className="hidden md:block min-w-0"
 						size="0"
+						sizeMd="3"
 						sizeLg="3"
 					>
 						{focusedStarRole && (
@@ -932,9 +939,7 @@ export const Database = ({ todos }: { todos: Todo[] }) => {
 						},
 						handler: async () => {
 							await markdownExportService.requestPermissionIfNeeded()
-							await db.todos.update(todo.id, {
-								completedAt: new Date(),
-							})
+							await todoRepository.complete(todo)
 						},
 					},
 				],

@@ -613,3 +613,56 @@ describe('duplicate todo detector', () => {
 		cy.get('ion-action-sheet').should('be.visible')
 	})
 })
+
+describe('mobile visual gutter layout', () => {
+	it('keeps the 56px visual gutter beside the list on Pixel 10 portrait even with wide todos and visits', () => {
+		cy.viewport(412, 915)
+
+		cy.db(async db => {
+			const roleId = (await db.starRoles.add({
+				title: 'Engineering',
+				icon: { type: 'ionicon', name: 'rocketSharp' },
+			})) as string
+
+			const wayfinderId = (await db.todos.add({
+				title: 'ContractSendingAutomationWithVeryLongUnbrokenSegmentAndPulseGraph',
+				starPoints: 5,
+				starRole: roleId,
+			})) as string
+
+			const completedId = (await db.todos.add({
+				title: 'ADR 32',
+				starPoints: 1,
+				starRole: roleId,
+				completedAt: new Date(),
+			})) as string
+
+			await db.wayfinderOrder.add({
+				todoId: wayfinderId,
+				order: 'a0',
+				snoozedUntil: new Date(),
+			})
+
+			await db.visits.bulkAdd([
+				{ todoId: wayfinderId, date: new Date() },
+				{ todoId: completedId, date: new Date() },
+			])
+		})
+
+		cy.contains('[data-class="todo"]', 'ContractSendingAutomation').should('be.visible')
+		cy.get('#starship').should('be.visible')
+
+		cy.get('#main-content ion-grid > ion-row > ion-col').then(columns => {
+			const gutterRect = columns[0].getBoundingClientRect()
+			const listRect = columns[1].getBoundingClientRect()
+
+			expect(gutterRect.left).to.equal(0)
+			expect(gutterRect.width).to.be.at.least(56)
+			expect(gutterRect.height).to.be.greaterThan(100)
+
+			expect(listRect.top).to.equal(gutterRect.top)
+			expect(listRect.left).to.equal(gutterRect.right)
+			expect(listRect.width).to.be.closeTo(412 - gutterRect.width, 1)
+		})
+	})
+})

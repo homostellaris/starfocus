@@ -93,7 +93,7 @@ export const TodoListItem = forwardRef<
 					</IonText>
 				)}
 				<div
-					className="grow"
+					className="grow min-w-0"
 					onClick={onClick}
 				>
 					<IonLabel data-class="title">{todo?.title}</IonLabel>
