@@ -78,6 +78,29 @@ it('filters by query and star role', () => {
 	expect(result[0].id).toBe('todo-1')
 })
 
+it('excludes completed todos even when they still have wayfinder order entries', () => {
+	const todos: (Todo | undefined)[] = [
+		createTodo('todo-1', 'Uncompleted First'),
+		{ ...createTodo('todo-2', 'Completed Middle'), completedAt: new Date() },
+		createTodo('todo-3', 'Uncompleted Last'),
+	]
+	const wayfinderOrder: WayfinderOrder[] = [
+		createWayfinderOrder('todo-1', 'a'),
+		createWayfinderOrder('todo-2', 'b'),
+		createWayfinderOrder('todo-3', 'c'),
+	]
+
+	const result = attachWayfinderMetadata(
+		todos,
+		[],
+		wayfinderOrder,
+		'',
+		allowAllStarRoles,
+	)
+
+	expect(result.map(item => item.id)).toEqual(['todo-1', 'todo-3'])
+})
+
 it('handles undefined todos without throwing when orphaned entries exist', () => {
 	const todos: (Todo | undefined)[] = [
 		createTodo('todo-1', 'Existing Todo'),

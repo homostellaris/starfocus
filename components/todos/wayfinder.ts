@@ -14,7 +14,7 @@ export function attachWayfinderMetadata(
 
 	for (let index = 0; index < wayfinderTodos.length; index++) {
 		const todo = wayfinderTodos[index]
-		if (!todo) continue
+		if (!todo || todo.completedAt) continue
 
 		const candidateItem: WayfinderTodoListItem = {
 			...todo,

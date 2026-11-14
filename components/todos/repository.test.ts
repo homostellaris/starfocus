@@ -323,3 +323,64 @@ it('throws a TypeError when editing a todo without a title', async () => {
 		),
 	).rejects.toThrow(new TypeError('Title is required'))
 })
+
+it('excludes completed todos from wayfinderTodos', async () => {
+	const orderEntries: WayfinderOrder[] = [
+		createWayfinderOrder('todo-1', 'a'),
+		createWayfinderOrder('completed-todo', 'b'),
+		createWayfinderOrder('todo-3', 'c'),
+	]
+	const todosById = new Map<string, Todo>([
+		['todo-1', createTodo('todo-1')],
+		['completed-todo', { ...createTodo('completed-todo'), completedAt: new Date() }],
+		['todo-3', createTodo('todo-3')],
+	])
+
+	const fakeDatabase = {
+		wayfinderOrder: {
+			orderBy: () => ({
+				toArray: async () => orderEntries,
+			}),
+		},
+		todos: {
+			bulkGet: async (identifiers: string[]) =>
+				identifiers.map(identifier => todosById.get(identifier)),
+		},
+	} as unknown as DexieStarfocus
+
+	const repository = new TodoRepository(fakeDatabase)
+	const result = await repository.wayfinderTodos()
+
+	expect(result.map(item => item.todoId)).toEqual(['todo-1', 'todo-3'])
+})
+
+it('prunes wayfinder entries whose todos are completed', async () => {
+	const orderEntries: WayfinderOrder[] = [
+		createWayfinderOrder('todo-1', 'a'),
+		createWayfinderOrder('completed-todo', 'b'),
+	]
+	const todosById = new Map<string, Todo>([
+		['todo-1', createTodo('todo-1')],
+		['completed-todo', { ...createTodo('completed-todo'), completedAt: new Date() }],
+	])
+	let deletedIdentifiers: string[] = []
+
+	const fakeDatabase = {
+		wayfinderOrder: {
+			toArray: async () => orderEntries,
+			bulkDelete: async (identifiers: string[]) => {
+				deletedIdentifiers = identifiers
+			},
+		},
+		todos: {
+			bulkGet: async (identifiers: string[]) =>
+				identifiers.map(identifier => todosById.get(identifier)),
+		},
+	} as unknown as DexieStarfocus
+
+	const repository = new TodoRepository(fakeDatabase)
+	const prunedIdentifiers = await repository.pruneOrphanedWayfinderEntries()
+
+	expect(prunedIdentifiers).toEqual(['completed-todo'])
+	expect(deletedIdentifiers).toEqual(['completed-todo'])
+})

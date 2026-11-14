@@ -159,7 +159,7 @@ export class TodoRepository {
 		const todos = await this.db.todos.bulkGet(todoIds)
 		return todos
 			.map((todo, index) => {
-				if (!todo) return null
+				if (!todo || todo.completedAt) return null
 				return {
 					...wayfinderOrder[index],
 					...todo,
@@ -175,7 +175,10 @@ export class TodoRepository {
 		const todoIds = wayfinderEntries.map(entry => entry.todoId)
 		const todos = await this.db.todos.bulkGet(todoIds)
 		const orphanedTodoIds = wayfinderEntries
-			.filter((_, index) => todos[index] === undefined)
+			.filter(
+				(_, index) =>
+					todos[index] === undefined || Boolean(todos[index]?.completedAt),
+			)
 			.map(entry => entry.todoId)
 
 		if (orphanedTodoIds.length > 0) {
