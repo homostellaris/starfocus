@@ -261,7 +261,7 @@ describe('workbench', () => {
 			;($el[0] as any).setCurrentBreakpoint(0.65)
 		})
 		cy.wait(400)
-		cy.contains('Simulation Triggers').should('be.visible')
+		cy.contains('Simulation Triggers').scrollIntoView().should('be.visible')
 		cy.contains('Active State:').should('be.visible')
 	})
 

@@ -608,7 +608,7 @@ describe('duplicate todo detector', () => {
 					.type('Build telescope lenses')
 			})
 
-		cy.get('[data-testid="todo-chip"]').contains('Build telescope lens').click()
+		cy.contains('[data-testid="todo-chip"]', 'Build telescope lens').click()
 		cy.get('#create-todo-modal').should('not.exist')
 		cy.get('ion-action-sheet').should('be.visible')
 	})
@@ -661,8 +661,9 @@ describe('mobile visual gutter layout', () => {
 			expect(gutterRect.height).to.be.greaterThan(100)
 
 			expect(listRect.top).to.equal(gutterRect.top)
+			const rowRect = columns[0].parentElement!.getBoundingClientRect()
 			expect(listRect.left).to.equal(gutterRect.right)
-			expect(listRect.width).to.be.closeTo(412 - gutterRect.width, 1)
+			expect(listRect.width).to.be.closeTo(rowRect.width - gutterRect.width, 1)
 		})
 	})
 })

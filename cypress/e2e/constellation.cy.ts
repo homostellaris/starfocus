@@ -65,7 +65,7 @@ describe('star role description', () => {
 	})
 
 	it('persists description when creating a star role', () => {
-		cy.get('ion-fab>ion-fab-button').click()
+		cy.get('ion-fab>ion-fab-button').filter(':visible').click()
 		cy.get('#create-star-role').click()
 
 		cy.get('ion-input[label="Title"]').find('input').type('Developer')
