@@ -1093,12 +1093,10 @@ function JourneyLabel({ children }: ComponentProps<typeof IonItemDivider>) {
 		// For some reason the dividing line between items sometimes disappears without h-8
 		<IonItemDivider
 			// IonItemDivider has a minimum height of 30px hence the need for min-h-fit
-			className="h-8 bg-transparent top-4 -translate-x-[calc(100%+(56px-100%)/2)] lg:-translate-x-[calc(100%+56px)] -translate-y-1/2 w-fit [--background:none] [--inner-padding-end:none] ion-no-padding max-w-[56px] lg:max-w-none min-h-fit"
+			className="h-8 bg-transparent top-4 -translate-x-[calc(100%+(56px-100%)/2)] lg:-translate-x-[calc(100%+56px)] -translate-y-1/2 w-fit [--background:none] [--inner-padding-end:none] ion-no-padding max-w-[56px] lg:max-w-none min-h-fit [text-shadow:0_1px_4px_rgba(0,0,0,0.95),0_0_8px_rgba(0,0,0,0.9)]"
 			sticky
 		>
-			<span className="inline-flex items-center rounded-full border border-white/10 bg-neutral-950/50 px-2 py-0.5 text-xs backdrop-blur-md">
-				{children}
-			</span>
+			{children}
 		</IonItemDivider>
 	)
 }
