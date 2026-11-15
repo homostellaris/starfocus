@@ -551,9 +551,9 @@ export const TodoLists = ({
 				}
 			>
 			<IonGrid className="h-full min-h-full ion-no-padding">
-				<IonRow className="h-full min-h-full">
+				<IonRow className="h-full min-h-full flex-nowrap">
 					<IonCol
-						className="relative h-full min-h-full"
+						className="relative h-full min-h-full shrink-0"
 						size="auto"
 						sizeMd="3"
 						sizeLg="3"
@@ -566,6 +566,7 @@ export const TodoLists = ({
 						/>
 					</IonCol>
 					<IonCol
+						className="min-w-0 flex-1"
 						sizeMd="6"
 						sizeLg="6"
 					>
@@ -977,6 +978,7 @@ export const TodoLists = ({
 						)}
 					</IonCol>
 					<IonCol
+						className="hidden md:block min-w-0"
 						size="0"
 						sizeMd="3"
 						sizeLg="3"
@@ -1091,11 +1093,12 @@ function JourneyLabel({ children }: ComponentProps<typeof IonItemDivider>) {
 		// For some reason the dividing line between items sometimes disappears without h-8
 		<IonItemDivider
 			// IonItemDivider has a minimum height of 30px hence the need for min-h-fit
-			// Tried these shadows to blend the background but didn't like them: bg-black shadow-[0_0_6px_6px] shadow-black
-			className="h-8 bg-[--ion-background-color] top-4 -translate-x-[calc(100%+(56px-100%)/2)] lg:-translate-x-[calc(100%+56px)] -translate-y-1/2 w-fit [--background:none] [--inner-padding-end:none] ion-no-padding max-w-[56px] lg:max-w-none min-h-fit"
+			className="h-8 bg-transparent top-4 -translate-x-[calc(100%+(56px-100%)/2)] lg:-translate-x-[calc(100%+56px)] -translate-y-1/2 w-fit [--background:none] [--inner-padding-end:none] ion-no-padding max-w-[56px] lg:max-w-none min-h-fit"
 			sticky
 		>
-			{children}
+			<span className="inline-flex items-center rounded-full border border-white/10 bg-neutral-950/50 px-2 py-0.5 text-xs backdrop-blur-md">
+				{children}
+			</span>
 		</IonItemDivider>
 	)
 }
