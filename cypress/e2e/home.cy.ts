@@ -667,3 +667,140 @@ describe('mobile visual gutter layout', () => {
 		})
 	})
 })
+
+describe('starship trajectory layout', () => {
+	function getInnerContentMetrics(contentElement: HTMLElement) {
+		const scrollElement = contentElement.shadowRoot?.querySelector(
+			'.inner-scroll',
+		) as HTMLElement
+		const scrollStyle = getComputedStyle(scrollElement)
+		const verticalPadding =
+			parseFloat(scrollStyle.paddingTop) + parseFloat(scrollStyle.paddingBottom)
+		return {
+			viewportContentHeight: scrollElement.clientHeight - verticalPadding,
+			totalContentHeight: scrollElement.scrollHeight - verticalPadding,
+		}
+	}
+
+	function assertTrajectorySpansContentHeight() {
+		cy.get('#main-content ion-content').then(contentElements => {
+			const contentElement = contentElements[0] as HTMLElement
+			const { viewportContentHeight, totalContentHeight } =
+				getInnerContentMetrics(contentElement)
+
+			cy.get('#main-content ion-grid > ion-row > ion-col').then(columns => {
+				const journeyColumn = columns[0]
+				const listColumn = columns[1]
+				const journeyColumnBoundingRect = journeyColumn.getBoundingClientRect()
+				const listColumnBoundingRect = listColumn.getBoundingClientRect()
+				const journeyWrapper = journeyColumn.firstElementChild as HTMLElement
+				const journeyWrapperBoundingRect =
+					journeyWrapper.getBoundingClientRect()
+				const trajectoryElements = Array.from(journeyWrapper.children).slice(
+					0,
+					2,
+				) as HTMLElement[]
+
+				const expectedHeight = Math.max(
+					viewportContentHeight,
+					totalContentHeight,
+					listColumnBoundingRect.height,
+				)
+
+				expect(journeyColumnBoundingRect.height).to.be.closeTo(expectedHeight, 4)
+				expect(journeyWrapperBoundingRect.height).to.be.closeTo(
+					journeyColumnBoundingRect.height,
+					2,
+				)
+
+				expect(trajectoryElements).to.have.length(2)
+				const [futureTrajectoryElement, activeTrailElement] = trajectoryElements
+				const futureTrajectoryBoundingRect =
+					futureTrajectoryElement.getBoundingClientRect()
+				const activeTrailBoundingRect =
+					activeTrailElement.getBoundingClientRect()
+
+				expect(futureTrajectoryBoundingRect.top).to.be.closeTo(
+					journeyColumnBoundingRect.top,
+					2,
+				)
+				expect(futureTrajectoryBoundingRect.bottom).to.be.closeTo(
+					journeyColumnBoundingRect.bottom,
+					2,
+				)
+				expect(futureTrajectoryBoundingRect.height).to.be.closeTo(
+					journeyColumnBoundingRect.height,
+					2,
+				)
+				expect(activeTrailBoundingRect.height).to.be.closeTo(
+					journeyColumnBoundingRect.height,
+					2,
+				)
+			})
+		})
+	}
+
+	it('fills the screen height when the todo list is short', () => {
+		cy.viewport(412, 915)
+
+		cy.db(async db => {
+			const todoId = (await db.todos.add({
+				title: 'Short list todo',
+			})) as string
+			await db.wayfinderOrder.add({
+				todoId,
+				order: 'a0',
+			})
+		})
+
+		cy.contains('[data-class="todo"]', 'Short list todo').should('be.visible')
+		cy.get('#starship').should('be.visible')
+
+		cy.get('#main-content ion-content').then(contentElements => {
+			const contentElement = contentElements[0] as HTMLElement
+			const scrollElement = contentElement.shadowRoot?.querySelector(
+				'.inner-scroll',
+			) as HTMLElement
+			expect(scrollElement.scrollHeight).to.be.at.most(
+				scrollElement.clientHeight + 2,
+			)
+		})
+
+		assertTrajectorySpansContentHeight()
+	})
+
+	it('extends the trajectory to the bottom of a long scrolling todo list', () => {
+		cy.viewport(412, 915)
+
+		cy.db(async db => {
+			const todoIds = (await db.todos.bulkAdd(
+				Array.from({ length: 28 }, (_, index) => ({
+					title: `Long list todo ${index + 1}`,
+				})),
+				{ allKeys: true },
+			)) as string[]
+
+			await db.wayfinderOrder.bulkAdd(
+				todoIds.map((todoId, index) => ({
+					todoId,
+					order: `a${String(index).padStart(3, '0')}`,
+				})),
+			)
+		})
+
+		cy.contains('[data-class="todo"]', 'Long list todo 1').should('be.visible')
+		cy.get('#starship').should('be.visible')
+
+		cy.get('#main-content ion-content').then(contentElements => {
+			const contentElement = contentElements[0] as HTMLElement
+			const scrollElement = contentElement.shadowRoot?.querySelector(
+				'.inner-scroll',
+			) as HTMLElement
+			expect(scrollElement.scrollHeight).to.be.greaterThan(
+				scrollElement.clientHeight + 200,
+			)
+		})
+
+		assertTrajectorySpansContentHeight()
+	})
+})

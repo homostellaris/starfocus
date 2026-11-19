@@ -439,10 +439,10 @@ export const TodoLists = ({
 					<IonIcon icon={add}></IonIcon>
 				</IonFabButton>
 			</IonFab>
-			<IonGrid className="h-full min-h-full ion-no-padding">
-				<IonRow className="h-full min-h-full flex-nowrap">
+			<IonGrid className="flex flex-col min-h-full ion-no-padding">
+				<IonRow className="flex-1 min-h-full flex-nowrap">
 					<IonCol
-						className="relative h-full min-h-full shrink-0"
+						className="relative min-h-full shrink-0"
 						size="auto"
 						sizeMd="3"
 						sizeLg="3"
