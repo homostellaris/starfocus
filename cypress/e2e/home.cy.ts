@@ -739,12 +739,30 @@ describe('starship trajectory layout', () => {
 					2,
 				)
 
-				const scrollRect = scrollElement.getBoundingClientRect()
-				expect(futureTrajectoryBoundingRect.bottom - scrollRect.top + scrollElement.scrollTop).to.be.closeTo(
-					totalHeight,
-					2,
-				)
+				const scrollBoundingRect = scrollElement.getBoundingClientRect()
+				expect(
+					futureTrajectoryBoundingRect.bottom -
+						scrollBoundingRect.top +
+						scrollElement.scrollTop,
+				).to.be.closeTo(totalHeight, 2)
 			})
+		})
+	}
+
+	function assertTrajectoryExtendsBehindFab() {
+		cy.get('#main-content ion-content > ion-fab').then(fabElements => {
+			const fabBoundingRect = fabElements[0].getBoundingClientRect()
+			cy.get('#main-content ion-grid > ion-row > ion-col')
+				.first()
+				.then(journeyColumns => {
+					const futureTrajectoryElement = journeyColumns[0].firstElementChild
+						?.firstElementChild as HTMLElement
+					const futureTrajectoryBoundingRect =
+						futureTrajectoryElement.getBoundingClientRect()
+					expect(futureTrajectoryBoundingRect.bottom).to.be.at.least(
+						fabBoundingRect.bottom - 2,
+					)
+				})
 		})
 	}
 
@@ -775,19 +793,7 @@ describe('starship trajectory layout', () => {
 		})
 
 		assertTrajectorySpansContentHeight()
-
-		cy.get('#main-content ion-content > ion-fab').then(fabElements => {
-			const fabRect = fabElements[0].getBoundingClientRect()
-			cy.get('#main-content ion-grid > ion-row > ion-col')
-				.first()
-				.then(journeyColumns => {
-					const futureTrajectoryElement = journeyColumns[0].firstElementChild
-						?.firstElementChild as HTMLElement
-					const futureTrajectoryRect =
-						futureTrajectoryElement.getBoundingClientRect()
-					expect(futureTrajectoryRect.bottom).to.be.at.least(fabRect.bottom - 2)
-				})
-		})
+		assertTrajectoryExtendsBehindFab()
 	})
 
 	it('extends the trajectory to the bottom of a long scrolling todo list including behind the FAB', () => {
@@ -810,32 +816,26 @@ describe('starship trajectory layout', () => {
 		})
 
 		cy.contains('[data-class="todo"]', 'Long list todo 1').should('be.visible')
+		cy.contains('[data-class="todo"]', 'Long list todo 28').should('exist')
 		cy.get('#starship').should('be.visible')
 
-		cy.get('#main-content ion-content').then(contentElements => {
-			const contentElement = contentElements[0] as HTMLElement
+		cy.get('#main-content ion-content').then(async contentElements => {
+			const contentElement = contentElements[0] as HTMLIonContentElement
 			const scrollElement = contentElement.shadowRoot?.querySelector(
 				'.inner-scroll',
 			) as HTMLElement
 			expect(scrollElement.scrollHeight).to.be.greaterThan(
 				scrollElement.clientHeight + 200,
 			)
-			scrollElement.scrollTop = scrollElement.scrollHeight
+			scrollElement.style.scrollBehavior = 'auto'
+			await contentElement.scrollToBottom(0)
+			expect(scrollElement.scrollTop + scrollElement.clientHeight).to.be.closeTo(
+				scrollElement.scrollHeight,
+				2,
+			)
 		})
 
 		assertTrajectorySpansContentHeight()
-
-		cy.get('#main-content ion-content > ion-fab').then(fabElements => {
-			const fabRect = fabElements[0].getBoundingClientRect()
-			cy.get('#main-content ion-grid > ion-row > ion-col')
-				.first()
-				.then(journeyColumns => {
-					const futureTrajectoryElement = journeyColumns[0].firstElementChild
-						?.firstElementChild as HTMLElement
-					const futureTrajectoryRect =
-						futureTrajectoryElement.getBoundingClientRect()
-					expect(futureTrajectoryRect.bottom).to.be.at.least(fabRect.bottom - 2)
-				})
-		})
+		assertTrajectoryExtendsBehindFab()
 	})
 })
