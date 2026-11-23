@@ -385,7 +385,6 @@ export const TodoLists = ({
 		<IonContent
 			className="relative"
 			ref={contentRef}
-			style={{ '--padding-bottom': '80px' } as React.CSSProperties}
 			onIonScroll={() => setIsScrolling(true)}
 			onIonScrollEnd={() => setIsScrolling(false)}
 			scrollEvents={true}
@@ -450,7 +449,7 @@ export const TodoLists = ({
 						<Journey commonAncestor={contentRef} />
 					</IonCol>
 					<IonCol
-						className="min-w-0 flex-1"
+						className="min-w-0 flex-1 pb-20"
 						sizeMd="6"
 						sizeLg="6"
 					>

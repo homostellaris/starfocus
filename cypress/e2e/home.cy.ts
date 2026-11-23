@@ -674,19 +674,21 @@ describe('starship trajectory layout', () => {
 			'.inner-scroll',
 		) as HTMLElement
 		const scrollStyle = getComputedStyle(scrollElement)
-		const verticalPadding =
-			parseFloat(scrollStyle.paddingTop) + parseFloat(scrollStyle.paddingBottom)
 		return {
-			viewportContentHeight: scrollElement.clientHeight - verticalPadding,
-			totalContentHeight: scrollElement.scrollHeight - verticalPadding,
+			scrollElement,
+			paddingBottom: parseFloat(scrollStyle.paddingBottom),
+			viewportHeight: scrollElement.clientHeight,
+			totalHeight: scrollElement.scrollHeight,
 		}
 	}
 
 	function assertTrajectorySpansContentHeight() {
 		cy.get('#main-content ion-content').then(contentElements => {
 			const contentElement = contentElements[0] as HTMLElement
-			const { viewportContentHeight, totalContentHeight } =
+			const { scrollElement, paddingBottom, viewportHeight, totalHeight } =
 				getInnerContentMetrics(contentElement)
+
+			expect(paddingBottom).to.equal(0)
 
 			cy.get('#main-content ion-grid > ion-row > ion-col').then(columns => {
 				const journeyColumn = columns[0]
@@ -702,8 +704,8 @@ describe('starship trajectory layout', () => {
 				) as HTMLElement[]
 
 				const expectedHeight = Math.max(
-					viewportContentHeight,
-					totalContentHeight,
+					viewportHeight,
+					totalHeight,
 					listColumnBoundingRect.height,
 				)
 
@@ -736,11 +738,17 @@ describe('starship trajectory layout', () => {
 					journeyColumnBoundingRect.height,
 					2,
 				)
+
+				const scrollRect = scrollElement.getBoundingClientRect()
+				expect(futureTrajectoryBoundingRect.bottom - scrollRect.top + scrollElement.scrollTop).to.be.closeTo(
+					totalHeight,
+					2,
+				)
 			})
 		})
 	}
 
-	it('fills the screen height when the todo list is short', () => {
+	it('fills the screen height behind the bottom FAB when the todo list is short', () => {
 		cy.viewport(412, 915)
 
 		cy.db(async db => {
@@ -767,9 +775,22 @@ describe('starship trajectory layout', () => {
 		})
 
 		assertTrajectorySpansContentHeight()
+
+		cy.get('#main-content ion-content > ion-fab').then(fabElements => {
+			const fabRect = fabElements[0].getBoundingClientRect()
+			cy.get('#main-content ion-grid > ion-row > ion-col')
+				.first()
+				.then(journeyColumns => {
+					const futureTrajectoryElement = journeyColumns[0].firstElementChild
+						?.firstElementChild as HTMLElement
+					const futureTrajectoryRect =
+						futureTrajectoryElement.getBoundingClientRect()
+					expect(futureTrajectoryRect.bottom).to.be.at.least(fabRect.bottom - 2)
+				})
+		})
 	})
 
-	it('extends the trajectory to the bottom of a long scrolling todo list', () => {
+	it('extends the trajectory to the bottom of a long scrolling todo list including behind the FAB', () => {
 		cy.viewport(412, 915)
 
 		cy.db(async db => {
@@ -799,8 +820,22 @@ describe('starship trajectory layout', () => {
 			expect(scrollElement.scrollHeight).to.be.greaterThan(
 				scrollElement.clientHeight + 200,
 			)
+			scrollElement.scrollTop = scrollElement.scrollHeight
 		})
 
 		assertTrajectorySpansContentHeight()
+
+		cy.get('#main-content ion-content > ion-fab').then(fabElements => {
+			const fabRect = fabElements[0].getBoundingClientRect()
+			cy.get('#main-content ion-grid > ion-row > ion-col')
+				.first()
+				.then(journeyColumns => {
+					const futureTrajectoryElement = journeyColumns[0].firstElementChild
+						?.firstElementChild as HTMLElement
+					const futureTrajectoryRect =
+						futureTrajectoryElement.getBoundingClientRect()
+					expect(futureTrajectoryRect.bottom).to.be.at.least(fabRect.bottom - 2)
+				})
+		})
 	})
 })
