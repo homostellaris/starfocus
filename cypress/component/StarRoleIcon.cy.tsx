@@ -39,7 +39,7 @@ it('allows explicit color prop overrides', () => {
 	)
 })
 
-it('does not set data-star-role or hardcoded color when no star role is provided', () => {
+it('renders with light placeholder color and no data-star-role when no star role is provided', () => {
 	cy.mount(
 		<IonApp>
 			<StarRoleIcon />
@@ -49,5 +49,18 @@ it('does not set data-star-role or hardcoded color when no star role is provided
 		'not.have.attr',
 		'data-star-role',
 	)
-	cy.get('[data-class="star-role-icon"]').should('not.have.attr', 'color')
+	cy.get('[data-class="star-role-icon"]').should('have.attr', 'color', 'light')
+})
+
+it('allows explicit color override when no star role is provided', () => {
+	cy.mount(
+		<IonApp>
+			<StarRoleIcon color="medium" />
+		</IonApp>,
+	)
+	cy.get('[data-class="star-role-icon"]').should(
+		'have.attr',
+		'color',
+		'medium',
+	)
 })

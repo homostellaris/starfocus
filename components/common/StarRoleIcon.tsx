@@ -12,6 +12,7 @@ export const StarRoleIcon = ({
 	return (
 		<IonIcon
 			className={className}
+			color={starRole ? undefined : 'light'}
 			data-class="star-role-icon"
 			data-star-role={starRole?.title}
 			icon={starRole ? getIonIcon(starRole.icon.name) : rocketSharp}

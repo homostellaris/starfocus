@@ -72,7 +72,7 @@ it('renders default 0 points when star points are missing', () => {
 	cy.get('[data-testid="todo-chip-star-points"]').should('have.text', '0')
 })
 
-it('renders without error when star role is undefined', () => {
+it('renders muted placeholder role icon when star role is undefined', () => {
 	cy.mount(
 		<IonApp>
 			<TodoChip todo={sampleTodo} />
@@ -81,6 +81,8 @@ it('renders without error when star role is undefined', () => {
 
 	cy.get('[data-testid="todo-chip"]').should('be.visible')
 	cy.get('[data-class="star-role-icon"]').should('not.have.attr', 'data-star-role')
+	cy.get('[data-class="star-role-icon"]').should('have.class', 'text-neutral-500')
+	cy.get('[data-class="star-role-icon"]').should('not.have.attr', 'color')
 })
 
 it('invokes onSelectExisting with the exact todo when clicking a chip in DuplicateChips', () => {

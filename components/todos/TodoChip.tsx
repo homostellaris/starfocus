@@ -58,7 +58,11 @@ export function TodoChip({
 
 			<StarRoleIcon
 				starRole={starRole}
-				className="text-xs shrink-0 text-neutral-300 pointer-events-none"
+				color={undefined}
+				className={cn(
+					'text-xs shrink-0 pointer-events-none',
+					starRole ? 'text-neutral-300' : 'text-neutral-500',
+				)}
 				style={{ margin: 0, marginInlineStart: '-2px', marginInlineEnd: 0 }}
 			/>
 		</IonChip>
