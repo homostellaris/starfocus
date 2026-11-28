@@ -55,8 +55,11 @@ import {
 	TodoListItemBase,
 	WayfinderTodoListItem,
 } from '../db'
+import ErrorBoundary from '../ErrorBoundary'
 import { markdownExportService } from '../export/markdownExportService'
 import { ViewMenu } from '../focus/ViewMenu'
+import StarRoleSwitcherOverlay from '../focus/StarRoleSwitcherOverlay'
+import { useStarRoleSwipe } from '../focus/useStarRoleSwipe'
 import useView, { ViewProvider } from '../focus/view'
 import Mood from '../mood'
 import { MoodProvider } from '../mood/MoodContext'
@@ -92,14 +95,10 @@ const Home = () => {
 					<TodoContextProvider>
 						<ViewMenu />
 						<SettingsMenu />
-						<IonPage id="main-content">
-							<Header title="Home"></Header>
-							<TodoLists openSearchRef={openSearchRef} />
-							<div className="absolute hidden xl:block bottom-4 left-4">
-								<Mood />
-							</div>
-							<Search modalRef={searchModalRef} openRef={openSearchRef} />
-						</IonPage>
+						<HomeShell
+							openSearchRef={openSearchRef}
+							searchModalRef={searchModalRef}
+						/>
 					</TodoContextProvider>
 				</ViewProvider>
 			</MoodProvider>
@@ -107,14 +106,50 @@ const Home = () => {
 	)
 }
 
-export default Home
-
-export const TodoLists = ({
+function HomeShell({
 	openSearchRef,
+	searchModalRef,
 }: {
 	openSearchRef: RefObject<
 		((focus?: boolean, breakpoint?: number, initialQuery?: string) => Promise<void>) | null
 	>
+	searchModalRef: RefObject<HTMLIonModalElement | null>
+}) {
+	const starRoles = useLiveQuery(() => db.starRoles.toArray())
+	const { headerTitle, onPointerDown, overlayProps } =
+		useStarRoleSwipe(starRoles)
+
+	return (
+		<IonPage id="main-content">
+			<Header title={headerTitle}></Header>
+			<TodoLists
+				onContentPointerDown={onPointerDown}
+				openSearchRef={openSearchRef}
+				starRoles={starRoles}
+			/>
+			<div className="absolute hidden xl:block bottom-4 left-4">
+				<Mood />
+			</div>
+			<Search modalRef={searchModalRef} openRef={openSearchRef} />
+			<ErrorBoundary fallback={null}>
+				<StarRoleSwitcherOverlay {...overlayProps} />
+			</ErrorBoundary>
+		</IonPage>
+	)
+}
+
+export default Home
+
+export const TodoLists = ({
+	onContentPointerDown,
+	openSearchRef,
+	starRoles,
+}: {
+	onContentPointerDown: (event: PointerEvent) => void
+	openSearchRef: RefObject<
+		((focus?: boolean, breakpoint?: number, initialQuery?: string) => Promise<void>) | null
+	>
+	starRoles: StarRole[] | undefined
 }) => {
 	const posthog = usePostHog()
 	// Initial loading & scrolling stuff
@@ -311,8 +346,6 @@ export const TodoLists = ({
 		logLimit,
 	)
 
-	const starRoles = useLiveQuery(() => db.starRoles.toArray())
-
 	const nextTodo = useRef<HTMLIonItemElement>(null)
 	const {
 		nextTodo: {
@@ -381,9 +414,22 @@ export const TodoLists = ({
 	const [presentCompletionPopover] = useTodoPopover()
 	const { helpEnabled } = useHelp()
 
+	// Ionic's React wrapper registers camelCase "pointerDown" instead of "pointerdown" on web components, so attach natively.
+	useEffect(() => {
+		const contentElement = contentRef.current
+		if (!contentElement) {
+			return
+		}
+
+		contentElement.addEventListener('pointerdown', onContentPointerDown)
+		return () => {
+			contentElement.removeEventListener('pointerdown', onContentPointerDown)
+		}
+	}, [onContentPointerDown])
+
 	return (
 		<IonContent
-			className="relative"
+			className="relative touch-pan-y"
 			ref={contentRef}
 			onIonScroll={() => setIsScrolling(true)}
 			onIonScrollEnd={() => setIsScrolling(false)}

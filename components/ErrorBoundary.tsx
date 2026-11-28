@@ -3,6 +3,7 @@ import { Component, ErrorInfo, ReactNode } from 'react'
 
 interface Props {
 	children?: ReactNode
+	fallback?: ReactNode
 }
 
 interface State {
@@ -25,6 +26,9 @@ class ErrorBoundary extends Component<Props, State> {
 
 	public render() {
 		if (this.state.hasError) {
+			if (this.props.fallback !== undefined) {
+				return this.props.fallback
+			}
 			return (
 				<div>
 					<p className="mx-auto my-4 text-xl text-center max-w-prose">

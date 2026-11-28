@@ -10,59 +10,50 @@ import {
 } from '@ionic/react'
 import { pauseCircleSharp, playCircleSharp } from 'ionicons/icons'
 import posthog from 'posthog-js'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId } from 'react'
 import { cn } from '../common/cn'
-import { useMood } from './MoodContext'
+import { type Mode, useMood } from './MoodContext'
 
 setupIonicReact({})
 
-type mode = 'chill' | 'hype'
-
-const MUSIC_FILES = {
-	chill: [
-		'/music/chill/Melodysheep - Water Worlds.mp3',
-		'/music/chill/Melodysheep - Sights of Space 1.mp3',
-		'/music/chill/Melodysheep - Sights of Space 2.mp3',
-		'/music/chill/Melodysheep - Sights of Space 3.mp3',
-		'/music/chill/Melodysheep - Sights of Space 4.mp3',
-		'/music/chill/Melodysheep - Sights of Space 5.mp3',
-		'/music/chill/Melodysheep - Sights of Space 6.mp3',
-	],
-	hype: [
-		'music/hype/Karl Casey - Black Lotus.mp3',
-		'music/hype/Karl Casey - Lucid Dream.mp3',
-		'music/hype/Karl Casey - Radiation Sickness.mp3',
-		'music/hype/Karl Casey - Replicant Hunter.mp3',
-	],
-}
-
 export default function Mood() {
-	const audio = useRef<HTMLAudioElement>(null)
-	const [playing, setPlaying] = useState<boolean>(false)
-	const { mode, setMode } = useMood()
-	const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(0)
+	const instanceIdentifier = useId()
+	const {
+		mode,
+		setMode,
+		playing,
+		togglePlayback,
+		currentTrack,
+		handleTrackEnd,
+		audioReference,
+		audioHostIdentifier,
+		claimAudioHost,
+		releaseAudioHost,
+	} = useMood()
 
-	const currentPlaylist = MUSIC_FILES[mode]
-	const currentTrack = currentPlaylist[currentTrackIndex] || null
-
-	const prevModeRef = useRef(mode)
-	// eslint-disable-next-line react-hooks/refs -- React-recommended "adjust state during render" pattern
-	if (prevModeRef.current !== mode) {
-		// eslint-disable-next-line react-hooks/refs -- React-recommended "adjust state during render" pattern
-		prevModeRef.current = mode
-		setCurrentTrackIndex(0)
-	}
+	const isAudioHost = audioHostIdentifier === instanceIdentifier
 
 	useEffect(() => {
-		if (audio.current && currentTrack) {
-			audio.current.load()
+		claimAudioHost(instanceIdentifier)
+		return () => {
+			releaseAudioHost(instanceIdentifier)
+		}
+	}, [claimAudioHost, instanceIdentifier, releaseAudioHost])
+
+	useEffect(() => {
+		if (isAudioHost && audioReference.current && currentTrack) {
+			audioReference.current.load()
 			if (playing) {
-				audio.current.play()
+				audioReference.current.play()?.catch(() => {})
 			}
 		}
-	}, [currentTrack, playing])
+	}, [audioReference, currentTrack, isAudioHost, playing])
 
 	useEffect(() => {
+		if (!isAudioHost) {
+			return
+		}
+
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (event.target !== document.body) return
 
@@ -74,24 +65,14 @@ export default function Mood() {
 				setMode('hype')
 			} else if (event.code === 'Space') {
 				event.preventDefault()
-				setPlaying(playing => !playing)
-				if (audio.current?.paused) {
-					audio.current?.play()
-				} else {
-					audio.current?.pause()
-				}
+				togglePlayback()
 			}
 		}
 		document.addEventListener('keydown', handleKeyDown)
 		return () => {
 			document.removeEventListener('keydown', handleKeyDown)
 		}
-	}, [setMode])
-
-	const handleTrackEnd = () => {
-		const nextIndex = (currentTrackIndex + 1) % currentPlaylist.length
-		setCurrentTrackIndex(nextIndex)
-	}
+	}, [isAudioHost, setMode, togglePlayback])
 
 	return (
 		<div
@@ -101,10 +82,12 @@ export default function Mood() {
 					? 'border-red-500 bg-red-600/15'
 					: 'border-blue-500 bg-blue-600/15',
 			)}
+			data-mood={mode}
+			data-testid="mood-control"
 		>
-			{currentTrack && (
+			{isAudioHost && currentTrack && (
 				<audio
-					ref={audio}
+					ref={audioReference}
 					onEnded={handleTrackEnd}
 				>
 					<source
@@ -116,15 +99,9 @@ export default function Mood() {
 			<IonButton
 				fill="clear"
 				onClick={() => {
-					const wasPlaying = playing
-					setPlaying(playing => !playing)
-					if (audio.current?.paused) {
-						audio.current?.play()
-						if (!wasPlaying) {
-							posthog.capture('music_played', { mode })
-						}
-					} else {
-						audio.current?.pause()
+					const startedPlaying = togglePlayback()
+					if (startedPlaying) {
+						posthog.capture('music_played', { mode })
 					}
 				}}
 			>
@@ -138,7 +115,7 @@ export default function Mood() {
 				color={mode === 'hype' ? 'danger' : 'primary'}
 				value={mode}
 				onIonChange={event => {
-					const newMode = event.detail.value as mode
+					const newMode = event.detail.value as Mode
 					setMode(newMode)
 					posthog.capture('music_mode_changed', { mode: newMode })
 				}}

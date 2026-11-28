@@ -1,6 +1,7 @@
 import {
 	IonButton,
 	IonContent,
+	IonFooter,
 	IonHeader,
 	IonIcon,
 	IonItem,
@@ -35,6 +36,7 @@ import { cn } from '../common/cn'
 import { usePostHog } from 'posthog-js/react'
 import { StarRoleOrderMap } from '../todos/starSort'
 import { computeVisibleStarSortUpdates } from './starSortToManualOrder'
+import Mood from '../mood'
 
 export const ViewMenu = () => {
 	const posthog = usePostHog()
@@ -84,6 +86,7 @@ export const ViewMenu = () => {
 			contentId="main-content"
 			id="view-menu"
 			side="start"
+			swipeGesture={false}
 			type="push"
 		>
 			<IonHeader>
@@ -157,6 +160,13 @@ export const ViewMenu = () => {
 					</div>
 				)}
 			</IonContent>
+			<IonFooter className="xl:hidden">
+				<IonToolbar>
+					<div className="flex justify-center py-1">
+						<Mood />
+					</div>
+				</IonToolbar>
+			</IonFooter>
 		</IonMenu>
 	)
 }

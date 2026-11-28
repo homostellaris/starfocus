@@ -59,6 +59,10 @@
 	scroll-behavior: smooth;
 }
 
+ion-content.touch-pan-y::part(scroll) {
+	touch-action: pan-y pinch-zoom;
+}
+
 body::-webkit-scrollbar {
 	display: none;
 }

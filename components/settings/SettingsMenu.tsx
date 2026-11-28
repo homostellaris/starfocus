@@ -59,6 +59,7 @@ export const SettingsMenu = () => {
 			contentId="main-content"
 			id="settings-menu"
 			side="end"
+			swipeGesture={false}
 			type="push"
 		>
 			<IonHeader>
